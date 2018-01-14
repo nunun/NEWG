@@ -1,0 +1,19 @@
+{
+  "name": "mindlink-client",
+  "version": "0.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "config": "*",
+    "log4js": "*",
+    "yaml": "*",
+    "string.prototype.trim": "*",
+    "ws": "*"
+  },
+  "repository": "",
+  "author": "nunun",
+  "license": "MIT"
+}

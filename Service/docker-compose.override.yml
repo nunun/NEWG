@@ -1,0 +1,27 @@
+version: '3.3'
+services:
+  client:
+    build: ./client
+    volumes:
+      - ./client/Builds:/usr/share/nginx/html
+
+  server:
+    build: ./server
+    volumes:
+      - ./server/Builds:/server
+    network_mode: host # NOTE Docker for Win, Docker for Mac の場合は 10.0.75.2 に接続
+
+  matching:
+    build: ./matching
+
+  mindlink:
+    environment:
+      - LOG_LEVEL=debug
+      - DEBUG_HTTP_CHANNEL_ENABLE=1
+    ports:
+      - 7780:7780
+
+  rabbitmq:
+    image: rabbitmq:3.7.0-management-alpine
+    ports:
+      - 15672:15672
