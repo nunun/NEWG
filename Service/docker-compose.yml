@@ -1,18 +1,18 @@
 version: '3.3'
 services:
   client:
-    image: NEWG/client:1
+    image: newg/client:1
     depends_on:
       - server
       - matching
 
   server:
-    image: NEWG/server:1
+    image: newg/server:1
     depends_on:
       - mindlink
 
   matching:
-    image: NEWG/matching:1
+    image: newg/matching:1
     ports:
       - 7790:7790
     depends_on:

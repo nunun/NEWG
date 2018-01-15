@@ -1,11 +1,14 @@
 CWD=$(cd `dirname ${0}`; pwd)
-PUBLISH_TO="fu-n.net:5000/NEWG/compose"
+PUBLISH_TO="fu-n.net:5000/newg/compose"
 set -e
 cd "${CWD}"
 
-task_up() { task_down; task_build; docker-compose up; }
+task_up() { task_down; docker-compose up; }
 task_down() { docker-compose down; }
-task_build() { task_down; docker-compose build; }
+task_build() { task_down; docker-compose build; task_npm; }
+task_npm() {
+        docker-compose run --rm --no-deps matching npm install
+}
 task_publish() {
         local publish_to="${1:-"${PUBLISH_TO}"}"
         echo "publish compose image to '${publish_to}' ..."
@@ -15,7 +18,7 @@ task_publish() {
 }
 task() {
         local task_name="${1:-up}"
-        shift
+        shift || :
         task_${task_name} ${*}
 }
 task ${*}

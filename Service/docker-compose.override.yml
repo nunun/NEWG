@@ -3,7 +3,7 @@ services:
   client:
     build: ./client
     volumes:
-      - ./client/Builds:/usr/share/nginx/html
+      - ./client/Builds/Client:/usr/share/nginx/html
 
   server:
     build: ./server
