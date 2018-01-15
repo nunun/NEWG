@@ -7,9 +7,9 @@ using UnityEngine.Networking;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 
-// ゲームビルドメニューアイテム
+// ゲームメニューアイテム
 public partial class GameBuildMenuItems {
-    //-------------------------------------------------------------------------- ビルド
+    //-------------------------------------------------------------------------- ビルド (デバッグ)
     [MenuItem("Game/ビルド/デバッグ クライアント (WebGL)", false, 0)]
     public static void BuildDebugClientWebGL() {
         Build(new GameBuildSettings() {
@@ -54,10 +54,11 @@ public partial class GameBuildMenuItems {
     //    });
     //}
 
+    //-------------------------------------------------------------------------- ビルド (公開用)
     [MenuItem("Game/ビルド/公開用クライアント (WebGL)", false, 100)]
     public static void BuildReleaseClientWebGL() {
         Build(new GameBuildSettings() {
-            outputPath  = "Builds/Release/Client",
+            outputPath  = "Service/client/Builds/Client",
             buildTarget = BuildTarget.WebGL,
             headless    = false,
             autoRun     = false,
@@ -68,7 +69,7 @@ public partial class GameBuildMenuItems {
     [MenuItem("Game/ビルド/公開用サーバ (Linux ヘッドレス)", false, 101)]
     public static void BuildReleaseServerLinuxHeadless() {
         Build(new GameBuildSettings() {
-            outputPath  = "Builds/Release/Server/Server",
+            outputPath  = "Service/server/Builds/Server",
             buildTarget = BuildTarget.StandaloneLinux64,
             headless    = true,
             autoRun     = false,
@@ -76,7 +77,7 @@ public partial class GameBuildMenuItems {
         });
     }
 
-    [MenuItem("Game/ビルド/公開用バイナリを全てビルド", false, 200)]
+    [MenuItem("Game/ビルド/公開用バイナリを全てビルド", false, 102)]
     public static void BuildReleaseAll() {
         BuildReleaseClientWebGL();
         BuildReleaseServerLinuxHeadless();
