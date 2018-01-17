@@ -10,15 +10,17 @@ using UnityEditor.Callbacks;
 // ゲームビルドプロセッサ
 public partial class GameBuildProcessor : IPreprocessBuild, IProcessScene, IPostprocessBuild {
     //---------------------------------------------------------------------- 定義
-    // バイナリ名
+    // サービスタイプ別バイナリ名
     public const string CLIENT_BINARY_NAME = "Client";
     public const string SERVER_BINARY_NAME = "Server";
     public const string HOST_BINARY_NAME   = "Host";
-    public const string DEBUG_BINARY_NAME  = "Debug";
+
+    // 種別判定用バイナリ名
+    public const string DEBUG_BINARY_NAME = "Debug";
 
     // 使用するポート
-    public const int    DEBUG_PORT         = 7777;
-    public const int    RELEASE_PORT       = 17777;
+    public const int DEBUG_PORT   = 7777;
+    public const int RELEASE_PORT = 17777;
 
     //---------------------------------------------------------------------- 変数
     static GameMain.ServiceMode gameMainServiceMode = GameMain.ServiceMode.Host;
@@ -75,6 +77,7 @@ public partial class GameBuildProcessor {
         var gameMain = FindObjectOfType<GameMain>();
         if (gameMain != null) {
             gameMain.serviceMode = gameMainServiceMode;
+            gameMain.isDebug     = isDebug;
         }
 
         // ネットワークマネージャ

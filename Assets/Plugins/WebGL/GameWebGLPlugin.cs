@@ -18,7 +18,7 @@ public class GameWebGLPlugin {
     // URL を取得
     public static string GetLocationURL() {
         #if UNITY_EDITOR
-        return "http://localhost/?a=localhost&p=7777";
+        return "http://localhost/";
         #else
         return _GetLocationURL();
         #endif
@@ -32,21 +32,22 @@ public class GameWebGLPlugin {
         }
         return u.Host;
     }
-
-    // クエリパラメータの辞書で取得
-    public static Dictionary<string,string> GetLocationQueryParameters() {
-        var u = new Uri(GetLocationURL());
-        var q = u.Query;
-        var p = new Dictionary<string,string>();
-        if (q.StartsWith("?")) {
-            q = q.Substring(1);
-            foreach (var i in q.Split('&')) {
-                var kv = i.Split('=');
-                if (kv.Length == 2) {
-                    p.Add(kv[0], kv[1]);
-                }
-            }
-        }
-        return p;
-    }
 }
+
+//return "http://localhost/?a=localhost&p=7777";
+// クエリパラメータの辞書で取得
+//public static Dictionary<string,string> GetLocationQueryParameters() {
+//    var u = new Uri(GetLocationURL());
+//    var q = u.Query;
+//    var p = new Dictionary<string,string>();
+//    if (q.StartsWith("?")) {
+//        q = q.Substring(1);
+//        foreach (var i in q.Split('&')) {
+//            var kv = i.Split('=');
+//            if (kv.Length == 2) {
+//                p.Add(kv[0], kv[1]);
+//            }
+//        }
+//    }
+//    return p;
+//}

@@ -43,17 +43,6 @@ public partial class GameBuildMenuItems {
         });
     }
 
-    //[MenuItem("Game/ビルド/デバッグ ホスト (スタンドアローン)", false, 3)]
-    //public static void BuildDebugHostStandalone() {
-    //    Build(new GameBuildSettings() {
-    //        outputPath  = "Builds/Debug/DebugHost.Standalone",
-    //        buildTarget = (Application.platform == RuntimePlatform.WindowsEditor)? BuildTarget.StandaloneWindows64 : BuildTarget.StandaloneOSXUniversal,
-    //        headless    = false,
-    //        autoRun     = true,
-    //        openFolder  = false,
-    //    });
-    //}
-
     //-------------------------------------------------------------------------- ビルド (公開用)
     [MenuItem("Game/ビルド/公開用クライアント (WebGL)", false, 100)]
     public static void BuildReleaseClientWebGL() {
@@ -175,3 +164,14 @@ public partial class GameBuildMenuItems {
         }
     }
 }
+
+//[MenuItem("Game/ビルド/デバッグ ホスト (スタンドアローン)", false, 3)]
+//public static void BuildDebugHostStandalone() {
+//    Build(new GameBuildSettings() {
+//        outputPath  = "Builds/Debug/DebugHost.Standalone",
+//        buildTarget = (Application.platform == RuntimePlatform.WindowsEditor)? BuildTarget.StandaloneWindows64 : BuildTarget.StandaloneOSXUniversal,
+//        headless    = false,
+//        autoRun     = true,
+//        openFolder  = false,
+//    });
+//}

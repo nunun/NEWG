@@ -13,6 +13,7 @@ public class GameMain : MonoBehaviour {
 
     //-------------------------------------------------------------------------- 変数
     public ServiceMode serviceMode = ServiceMode.Host; // サービスモード
+    public bool        isDebug     = false;            // デバッグフラグ
     public TitleUI     titleUI     = null;             // タイトルの UI
     public BattleUI    battleUI    = null;             // バトルの UI
     public ResultUI    resultUI    = null;             // 結果画面の UI
@@ -85,10 +86,16 @@ public class GameMain : MonoBehaviour {
         resultUI.gameObject.SetActive(false);
 
         // 接続先をチェック
-        // WebGL プレイヤーの時はホスト名をチェック
-        if (Application.platform == RuntimePlatform.WebGLPlayer) {
+        // WebGL プレイヤーの時はブラウザのホスト名をチェック。
+        // ただし、ローカルホスト上の Docker で動くサーバに接続する場合は
+        // サーバが network_mode=host で動作するので、OS 上の moby linux (10.0.75.2) に接続する。
+        if (!isDebug && Application.platform == RuntimePlatform.WebGLPlayer) {
             var hostName = GameWebGLPlugin.GetLocationHostName();
-            networkManager.networkAddress = hostName;
+            if (hostName == "localhost") {
+                networkManager.networkAddress = "10.0.75.2";
+            } else {
+                networkManager.networkAddress = hostName;
+            }
         }
 
         // サービス開始

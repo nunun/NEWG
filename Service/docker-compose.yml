@@ -2,6 +2,8 @@ version: '3.3'
 services:
   client:
     image: newg/client:1
+    ports:
+      - 80:80
     depends_on:
       - server
       - matching
