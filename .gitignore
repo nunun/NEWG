@@ -35,6 +35,8 @@ sysinfo.txt
 *.unitypackage
 
 # Project definitions
+Assets/tags
+Assets/tags.meta
 Service/client/Builds
 Service/server/Builds
 Service/matching/app/node_modules

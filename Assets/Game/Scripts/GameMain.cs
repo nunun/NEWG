@@ -90,7 +90,7 @@ public class GameMain : MonoBehaviour {
         // ただし、ローカルホスト上の Docker で動くサーバに接続する場合は
         // サーバが network_mode=host で動作するので、OS 上の moby linux (10.0.75.2) に接続する。
         if (!isDebug && Application.platform == RuntimePlatform.WebGLPlayer) {
-            var hostName = GameWebGLPlugin.GetLocationHostName();
+            var hostName = WebBrowser.GetLocationHostName();
             if (hostName == "localhost") {
                 networkManager.networkAddress = "10.0.75.2";
             } else {
