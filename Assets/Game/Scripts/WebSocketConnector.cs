@@ -10,18 +10,22 @@ public class WebSocketConnector : MonoBehaviour {
     enum State { Init, Connecting, Connected, Error }
 
     //-------------------------------------------------------------------------- 変数
-    State       state         = State.Init; // 状態
-    WebSocket   ws            = null;       // ウェブソケット
-    IEnumerator connector     = null;       // 接続制御用列挙子
+    State       state     = State.Init; // 状態
+    WebSocket   ws        = null;       // ウェブソケット
+    IEnumerator connector = null;       // 接続制御用列挙子
 
-    // イベント
-    Action           onConnect    = null; // 接続時
-    Action<string>   onDisconnect = null; // 切断時
-    Func<string,int> onParseType  = null; // 型判別時
+    // 接続時イベントハンドラ
+    Action onConnect = null;
+    // 切断時イベントハンドラ
+    Action<string> onDisconnect = null;
+    // 型判別時イベントハンドラ
+    Func<string,int> onParseType  = null;
+    // 受信時イベントハンドラ (型別)
+    Dictionary<int,Action<string>> onRecv = new Dictionary<int,Action<string>>();
 
     // TODO
+    // データの送信
     // リクエスト機能
-    // 受信機能 (型ディスパッチ)
 
     //-------------------------------------------------------------------------- 接続と切断
     public void Connect(string url) {
@@ -71,7 +75,14 @@ public class WebSocketConnector : MonoBehaviour {
     }
 
     public void OnRecv<TRecv>(int type, Action<TRecv> callback) {
-        // TODO
+        onRecv[type] = (string message) => {
+            try {
+                var data = UnityEngine.JsonUtility.FromJson<TRecv>(message);
+                callback(data);
+            } catch (Exception e) {
+                Debug.LogError(e.ToString());
+            }
+        };
     }
 
     //-------------------------------------------------------------------------- イベント発行
@@ -94,12 +105,22 @@ public class WebSocketConnector : MonoBehaviour {
         return -1;
     }
 
+    void InvokeOnRecv(string message) {
+        var type = InvokeOnParseType(message);
+        if (type < 0) {
+            Debug.LogError(string.Format("型番号が判別不可 ({0})", message));
+            return;
+        }
+        if (!onRecv.ContainsKey(type)) {
+            Debug.LogError(string.Format("型番号の登録がないため転送不可 ({0}, {1})", type, message));
+            return;
+        }
+        onRecv[type](message);
+    }
+
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     void Start() {
-        // NOTE
-        // 更新は標準で停止。
-        // Connect, Disconnect 時にオンオフ。
-        this.enabled = false;
+        this.enabled = false; // NOTE デフォルト停止, 接続時および切断時にオンオフ。
     }
 
     void Update() {
@@ -119,7 +140,7 @@ public class WebSocketConnector : MonoBehaviour {
                 return;
             }
             var message = ws.RecvString();
-            Debug.Log(message); // TODO
+            InvokeOnRecv(message);
             break;
         default:
             Debug.LogError("不明な状態 (" + state + ")");
