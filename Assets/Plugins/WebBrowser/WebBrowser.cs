@@ -7,7 +7,7 @@ using UnityEngine.Assertions;
 using UnityEngine.Networking;
 
 // WebGL用ウェブブラウザプラグイン
-// ブラウザのロケーション URL を取得する、等。
+// このアプリを動かしているブラウザのロケーション URL を取得する、等。
 public class WebBrowser {
     //---------------------------------------------------------------------- DLL インポート (GameWebGLPlugin.jslib)
     [DllImport("__Internal")]
