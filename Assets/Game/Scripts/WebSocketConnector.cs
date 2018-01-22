@@ -7,21 +7,30 @@ using System;
 // WebSocket クラスを使って実際に通信を行うコンポーネント。
 public class WebSocketConnector : MonoBehaviour {
     //-------------------------------------------------------------------------- 定義
-    enum State { Init, Connecting, Connected, Error }
+    // 状態
+    enum State { Init, Connecting, Connected }
+
+    // 型パーサ
+    class TypeParser {
+        public int type;
+    }
+
+    // 型パーサプール最大数
+    public static readonly int TYPE_PARSER_POOL_MAX_COUNT = 256;
 
     //-------------------------------------------------------------------------- 変数
     State       state     = State.Init; // 状態
     WebSocket   ws        = null;       // ウェブソケット
     IEnumerator connector = null;       // 接続制御用列挙子
 
-    // 接続時イベントハンドラ
-    Action onConnect = null;
-    // 切断時イベントハンドラ
-    Action<string> onDisconnect = null;
-    // 型判別時イベントハンドラ
-    Func<string,int> onParseType  = null;
-    // 受信時イベントハンドラ (型別)
-    Dictionary<int,Action<string>> onRecv = new Dictionary<int,Action<string>>();
+    // イベント
+    Action                         onConnect    = null; // 接続時イベントハンドラ
+    Action<string>                 onDisconnect = null; // 切断時イベントハンドラ
+    Func<string,int>               onParseType  = null; // 型判別時イベントハンドラ
+    Dictionary<int,Action<string>> onRecv       = null; // 受信時イベントハンドラ (型別)
+
+    // 型パーサプール
+    static Queue<TypeParser> typeParserPool = new Queue<TypeParser>();
 
     // TODO
     // データの送信
@@ -81,6 +90,7 @@ public class WebSocketConnector : MonoBehaviour {
                 callback(data);
             } catch (Exception e) {
                 Debug.LogError(e.ToString());
+                return;
             }
         };
     }
@@ -111,7 +121,7 @@ public class WebSocketConnector : MonoBehaviour {
             Debug.LogError(string.Format("型番号が判別不可 ({0})", message));
             return;
         }
-        if (!onRecv.ContainsKey(type)) {
+        if (!onRecv.ContainsKey(type) || onRecv[type] == null) {
             Debug.LogError(string.Format("型番号の登録がないため転送不可 ({0}, {1})", type, message));
             return;
         }
@@ -119,8 +129,19 @@ public class WebSocketConnector : MonoBehaviour {
     }
 
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
-    void Start() {
-        this.enabled = false; // NOTE デフォルト停止, 接続時および切断時にオンオフ。
+    void Awake() {
+        // NOTE
+        // 初期化。
+        // イベントハンドラは最初に Awake したときだけ初期化。
+        Disconnect();
+        this.onConnect    = null;
+        this.onDisconnect = null;
+        this.onParseType  = DefaultTypeParser;
+        this.onRecv       = new Dictionary<int,Action<string>>();
+
+        // NOTE
+        // デフォルト停止, 接続時および切断時にオンオフ。
+        this.enabled = false;
     }
 
     void Update() {
@@ -146,6 +167,29 @@ public class WebSocketConnector : MonoBehaviour {
             Debug.LogError("不明な状態 (" + state + ")");
             break;
         }
+    }
+
+    //-------------------------------------------------------------------------- その他
+    // 標準型パーサー
+    static int DefaultTypeParser(message) {
+        var typeParser = default(TypeParser);
+        if (typeParserPool.Count > 0) {
+            typeParser = TypeParserPool.Dequeue();
+        } else {
+            typeParser = new TypeParser();
+        }
+        typeParser.type = -1;
+        try {
+            JsonUtility.FromJsonOverwrite(message, typeParser);
+        } catch (Exception e) [
+            Debug.LogError(e.ToString());
+            return -1;
+        }
+        var type = typeParser.type;
+        if (typeParserPool.Count < TYPE_PARSER_POOL_MAX_COUNT) {
+            TypeParser.Enqueue(typeParser);//再利用
+        }
+        return type;
     }
 }
 
