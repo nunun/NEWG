@@ -37,7 +37,7 @@ public partial class WebSocketConnector : MonoBehaviour {
         this.enabled        = false;
     }
 
-    //-------------------------------------------------------------------------- 操作 (接続と切断)
+    //-------------------------------------------------------------------------- 接続と切断
     public void Connect(string url) {
         Disconnect();
         state       = State.Connecting;
@@ -69,7 +69,7 @@ public partial class WebSocketConnector : MonoBehaviour {
         enabled     = false;
     }
 
-    //-------------------------------------------------------------------------- 操作 (送信)
+    //-------------------------------------------------------------------------- 送信とリクエスト
     // 送信
     public void Send<TSend>(TSend data) {
         Debug.Assert(state != State.Connected);
@@ -114,7 +114,7 @@ public partial class WebSocketConnector : MonoBehaviour {
         }
     }
 
-    //-------------------------------------------------------------------------- 操作 (イベント設定)
+    //-------------------------------------------------------------------------- イベントコールバック設定
     public void OnConnect(Action callback) {
         onConnect = callback;
     }
@@ -139,7 +139,7 @@ public partial class WebSocketConnector : MonoBehaviour {
         };
     }
 
-    //-------------------------------------------------------------------------- イベント発行
+    //-------------------------------------------------------------------------- イベントコールバック発行
     void InvokeOnConnect() {
         if (onConnect != null) {
             onConnect();
