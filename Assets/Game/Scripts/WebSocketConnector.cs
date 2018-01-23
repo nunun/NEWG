@@ -45,12 +45,13 @@ public partial class WebSocketConnector : MonoBehaviour {
             ws.Close();
         }
         if (requestList != null) {
-            for (int i = requestList.Length - 1; i >= 0; i--) {
+            for (int i = requestList.Count - 1; i >= 0; i--) {
                 var request = requestList[i];
-                request.Free(error);
+                request.Response(error ?? "abort.", null);
+                request.Free();
                 requestList.RemoveAt(i);
             }
-            requsetList.Clear();
+            requestList.Clear();
         }
         state       = State.Init;
         ws          = null;
@@ -61,47 +62,65 @@ public partial class WebSocketConnector : MonoBehaviour {
 
     //-------------------------------------------------------------------------- 送信とリクエスト
     // 送信
-    public void Send<TSend>(TSend data) {
-        Debug.Assert(state != State.Connected);
+    public bool Send<TSend>(TSend data) {
         try {
+            // 接続チェック
+            if (state != State.Connected) {
+                throw new Exception("WebSocket is not connected.");
+            }
+
             // 文字列変換
             var message = JsonUtility.ToJson(data);
 
             // 送信
             ws.SendString(message);
+
         } catch (Exception e) {
             Debug.LogError(e.ToString());
-            return;
+            return false;
         }
+        return true;
     }
 
     // レスポンスを期待する送信
-    public void Send<TSend,TRecv>(TSend data, Action<string,TRecv> callback, int timeout = 0) {
-        Debug.Assert(state != State.Connected);
+    public bool Send<TSend,TRecv>(TSend data, Action<string,TRecv> callback, int timeout = 0) {
+        var requestNew = default(Request<TRecv>);
         try {
+            // 接続チェック
+            if (state != State.Connected) {
+                throw new Exception("WebSocket is not connected.");
+            }
+
             // 文字列変換
             var message = JsonUtility.ToJson(data);
 
             // message に "_requestId" プロパティをねじ込む。
             // サーバが "_requestId" プロパティを返すと
             // callback が呼び出される仕組み。
-            var requstId = requestIdCounter++;
+            var requestId = requestIdCounter++;
             message  = message.Remove(message.Length -1);
             message += string.Format("\"_requestId\":{0}}", requestId);
 
             // リクエストを作成して追加
             // レスポンスを待つ。
-            var request = Request<TRecv>.Alloc(callback);
-            request.requestId            = requestId;
-            request.timeoutRemainingTime = (timeout > 0)? timeout : REQUEST_DEFAULT_TIMEOUT;
-            requestList.Add(request);
+            requestNew = Request<TRecv>.Alloc(callback);
+            requestNew.requestId            = requestId;
+            requestNew.timeoutRemainingTime = (float)((timeout > 0)? timeout : REQUEST_DEFAULT_TIMEOUT) / 1000.0f;
+            requestList.Add(requestNew);
 
             // 送信
             ws.SendString(message);
+
         } catch (Exception e) {
             Debug.LogError(e.ToString());
-            return;
+            if (requestNew != null) {
+                requestList.Remove(requestNew);
+                requestNew.Free();
+            }
+            callback(e.ToString(), default(TRecv));
+            return false;
         }
+        return true;
     }
 
     //-------------------------------------------------------------------------- イベントコールバック設定
@@ -165,12 +184,13 @@ public partial class WebSocketConnector : MonoBehaviour {
 
         // リクエストのタイムアウトチェック
         if (requestList != null) {
-            for (int i = requestList.Length - 1; i >= 0; i--) {
+            for (int i = requestList.Count - 1; i >= 0; i--) {
                 var request = requestList[i];
                 request.timeoutRemainingTime -= deltaTime;
-                if (request.timeoutRemainingTime <= 0) {
-                    requestList.RemoveAt[i];
-                    request.Free("timeout."));
+                if (request.timeoutRemainingTime <= 0.0f) {
+                    requestList.RemoveAt(i);
+                    request.Response("timeout.", null);
+                    request.Free();
                 }
             }
         }
@@ -209,10 +229,10 @@ public partial class WebSocketConnector : MonoBehaviour {
             MessagePropertyParser.ParseRequestIdProperty(message, out requestId, out hasRequestId);
             if (hasRequestId) {
                 var found = false;
-                for (int i = requestList.Length - 1; i >= 0; i--) {
+                for (int i = requestList.Count - 1; i >= 0; i--) {
                     var request = requestList[i];
                     if (request.requestId == requestId) {
-                        requsetList.RemoveAt(i);
+                        requestList.RemoveAt(i);
                         request.Response(null, message);
                         request.Free();
                         found = true;
@@ -236,7 +256,7 @@ public partial class WebSocketConnector : MonoBehaviour {
             break;
 
         default:
-            Debug.LogError(string.Format("状態不明 ({0})", state);
+            Debug.LogError(string.Format("状態不明 ({0})", state));
             break;
         }
     }
@@ -252,17 +272,17 @@ public partial class WebSocketConnector {
     class MessagePropertyParser {
         //---------------------------------------------------------------------- 定義
         // タイププロパティコンテナ
-        class TypePropertyContainer { int type; }
+        class TypePropertyContainer { public int type; }
 
         // リクエスト番号プロパティコンテナ
-        class RequestIdPropertyContainer { int _requestId; }
+        class RequestIdPropertyContainer { public int _requestId; }
 
         // プロパティコンテナ用インスタンスプール
         class Pool<T> where T : class, new() {
             static readonly int MAX_POOL_COUNT = 8;
             static Queue<T> pool = null;
             public static T Alloc() {
-                return (pool != null && pool.Length > 0)? pool.Dequeue() : new T();
+                return (pool != null && pool.Count > 0)? pool.Dequeue() : new T();
             }
             public static void Free(T propertyContainer) {
                 pool = pool ?? new Queue<T>();
@@ -276,7 +296,7 @@ public partial class WebSocketConnector {
         public static void ParseTypeProperty(string message, out int propertyValue, out bool hasProperty) {
             propertyValue = -1;
             hasProperty   = false;
-            var propertyContainer = Pool<TypePropertyContainer>();
+            var propertyContainer = Pool<TypePropertyContainer>.Alloc();
             propertyContainer.type = -1;
             try {
                 JsonUtility.FromJsonOverwrite(message, propertyContainer);
@@ -286,23 +306,23 @@ public partial class WebSocketConnector {
                 Debug.LogError(e.ToString());
             }
             propertyContainer.type = -1;
-            Free(propertyContainer);
+            Pool<TypePropertyContainer>.Free(propertyContainer);
         }
 
         public static void ParseRequestIdProperty(string message, out int propertyValue, out bool hasProperty) {
             propertyValue = 0;
             hasProperty   = false;
-            var propertyContainer = Pool<RequestIdPropertyContainer>();
+            var propertyContainer = Pool<RequestIdPropertyContainer>.Alloc();
             propertyContainer._requestId = 0;
             try {
                 JsonUtility.FromJsonOverwrite(message, propertyContainer);
-                propertyValue = requestIdPropertyParser._requestId;
+                propertyValue = propertyContainer._requestId;
                 hasProperty   = true;
             } catch (Exception e) {
                 Debug.LogError(e.ToString());
             }
             propertyContainer._requestId = 0;
-            Free(requestIdPropertyParser);
+            Pool<RequestIdPropertyContainer>.Free(propertyContainer);
         }
 
         //---------------------------------------------------------------------- 操作 (おまけエイリアス)
@@ -323,24 +343,24 @@ public partial class WebSocketConnector {
 public partial class WebSocketConnector {
     class Request {
         //---------------------------------------------------------------------- 変数
-        public int requestId            = 0; // リクエスト番号
-        public int timeoutRemainingTime = 0; // タイムアウト残り時間
+        public int   requestId            = 0;    // リクエスト番号
+        public float timeoutRemainingTime = 0.0f; // タイムアウト残り時間
 
         // 転送および解放コールバック
-        protected Action<Request,string> dispatch = null;
-        protected Action<Request,string> free     = null;
+        protected Action<Request,string,string> dispatch = null;
+        protected Action<Request>               free     = null;
 
         //---------------------------------------------------------------------- リクエスト操作
         // レスポンス
-        public void Response(string message) {
+        public void Response(string error, string message) {
             Debug.Assert(dispatch != null);
-            dispatch(this, message);
+            dispatch(this, error, message);
         }
 
         // 解放
-        public void Free(string error = null) {
+        public void Free() {
             Debug.Assert(free != null);
-            free(this, error);
+            free(this);
         }
     }
 }
@@ -363,7 +383,7 @@ public partial class WebSocketConnector {
         public static Request<TRecv> Alloc(Action<string,TRecv> callback) {
             var req = ((pool != null) && (pool.Count > 0))? pool.Dequeue() : new Request<TRecv>();
             req.requestId            = 0;
-            req.timeoutRemainingTime = 0;
+            req.timeoutRemainingTime = 0.0f;
             req.callback             = callback;
             req.dispatch             = Request<TRecv>.Dispatch;
             req.free                 = Request<TRecv>.Free;
@@ -372,11 +392,14 @@ public partial class WebSocketConnector {
 
         //---------------------------------------------------------------------- 内部コールバック用
         // 転送
-        static void Dispatch(Request request, string message) {
+        static void Dispatch(Request request, string error, string message) {
             var req = request as Request<TRecv>;
             Debug.Assert(req != null);
             Debug.Assert(req.callback != null);
             try {
+                if (error != null) {
+                    throw new Exception(error);
+                }
                 var data = JsonUtility.FromJson<TRecv>(message);
                 req.callback(null, data);
             } catch (Exception e) {
@@ -385,14 +408,11 @@ public partial class WebSocketConnector {
         }
 
         // 解放
-        static void Free(Request request, string error) {
+        static void Free(Request request) {
             var req = request as Request<TRecv>;
             Debug.Assert(req != null);
-            if (req.callback != null) {
-                req.callback(error, default(TRecv));
-            }
-            req.requstId             = 0;
-            req.timeoutRemainingTime = 0;
+            req.requestId            = 0;
+            req.timeoutRemainingTime = 0.0f;
             req.callback             = null;
             req.dispatch             = null;
             req.free                 = null;
