@@ -9,7 +9,7 @@ public partial class WebSocketConnector : MonoBehaviour {
     //-------------------------------------------------------------------------- 定義
     enum State { Init, Connecting, Connected }
 
-    // リクエストのデフォルトタイムアウト時間[ms]
+    // リクエストのデフォルトタイムアウト時間 [ms]
     static readonly int REQUEST_DEFAULT_TIMEOUT = 5000;
 
     //-------------------------------------------------------------------------- 変数
@@ -19,23 +19,13 @@ public partial class WebSocketConnector : MonoBehaviour {
     List<Request> requestList = null;       // リクエストリスト
 
     // イベント
-    Action                         onConnect      = null; // 接続時イベントハンドラ
-    Action<string>                 onDisconnect   = null; // 切断時イベントハンドラ
-    Func<string,int>               onIdentifyType = null; // 型識別時イベントハンドラ
-    Dictionary<int,Action<string>> onRecv         = null; // 受信時イベントハンドラ (型別)
+    Action                         onConnect      = null;                                 // 接続時イベントハンドラ
+    Action<string>                 onDisconnect   = null;                                 // 切断時イベントハンドラ
+    Func<string,int>               onIdentifyType = null;                                 // 型識別時イベントハンドラ
+    Dictionary<int,Action<string>> onRecv         = new Dictionary<int,Action<string>>(); // 受信時イベントハンドラ (型別)
 
     // リクエストカウンター (リクエスト毎に +1)
     static int requestIdCounter = 0;
-
-    //-------------------------------------------------------------------------- 初期化
-    void Init() {
-        Disconnect();
-        this.onConnect      = null;
-        this.onDisconnect   = null;
-        this.onIdentifyType = MessagePropertyParser.IdentifyType;
-        this.onRecv         = new Dictionary<int,Action<string>>();
-        this.enabled        = false;
-    }
 
     //-------------------------------------------------------------------------- 接続と切断
     public void Connect(string url) {
@@ -156,22 +146,20 @@ public partial class WebSocketConnector : MonoBehaviour {
         if (onIdentifyType != null) {
             return onIdentifyType(message);
         }
-        return -1;
+        return MessagePropertyParser.IdentifyType(message);
     }
 
     void InvokeOnRecv(int type, string message) {
         if (!onRecv.ContainsKey(type) || onRecv[type] == null) {
-            Debug.LogError(string.Format("型番号の登録がないため転送不可 ({0}, {1})", type, message));
+            // NOTE
+            // OnRecv していない型は何もログ出力せずに消える。
+            //Debug.LogError(string.Format("型番号の登録がないため転送不可 ({0}, {1})", type, message));
             return;
         }
         onRecv[type](message);
     }
 
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
-    void Awake() {
-        Init();
-    }
-
     void Update() {
         var deltaTime = Time.deltaTime;
 
@@ -190,7 +178,10 @@ public partial class WebSocketConnector : MonoBehaviour {
         // 状態毎の処理
         switch (state) {
         case State.Init:
-            // 今のところ処理なし
+            // NOTE
+            // 初期状態では停止させる。
+            // Connect, Disconnect したとき改めて設定される。
+            enabled = false;
             break;
 
         case State.Connecting:
@@ -414,8 +405,3 @@ public partial class WebSocketConnector {
         }
     }
 }
-
-// BACKUP
-//if (!string.IsNullOrEmpty(connectKey)) {
-//    uriBuilder.Query += ((string.IsNullOrEmpty(uriBuilder.Query))? "?" : "&") + "ck=" + connectKey;
-//}
