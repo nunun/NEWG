@@ -123,7 +123,7 @@ public partial class WebSocketConnector : MonoBehaviour {
         onDisconnect = callback;
     }
 
-    public void OnIdentify(Func<string,int> callback) {
+    public void OnIdentifyType(Func<string,int> callback) {
         onIdentifyType = callback;
     }
 
