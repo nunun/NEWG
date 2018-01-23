@@ -9,24 +9,42 @@ public partial class WebSocketConnector : MonoBehaviour {
     //-------------------------------------------------------------------------- 定義
     enum State { Init, Connecting, Connected }
 
+    // リクエストのデフォルトタイムアウト時間[ms]
+    static readonly int REQUEST_DEFAULT_TIMEOUT = 5000;
+
     //-------------------------------------------------------------------------- 変数
-    State       state     = State.Init; // 状態
-    WebSocket   ws        = null;       // ウェブソケット
-    IEnumerator connector = null;       // 接続制御用列挙子
+    State         state       = State.Init; // 状態
+    WebSocket     ws          = null;       // ウェブソケット
+    IEnumerator   connector   = null;       // 接続制御用列挙子
+    List<Request> requestList = null;       // リクエストリスト
 
     // イベント
-    Action                         onConnect    = null; // 接続時イベントハンドラ
-    Action<string>                 onDisconnect = null; // 切断時イベントハンドラ
-    Func<string,int>               onParseType  = null; // 型判別時イベントハンドラ
-    Dictionary<int,Action<string>> onRecv       = null; // 受信時イベントハンドラ (型別)
+    Action                         onConnect      = null; // 接続時イベントハンドラ
+    Action<string>                 onDisconnect   = null; // 切断時イベントハンドラ
+    Func<string,int>               onIdentifyType = null; // 型識別時イベントハンドラ
+    Dictionary<int,Action<string>> onRecv         = null; // 受信時イベントハンドラ (型別)
 
-    //-------------------------------------------------------------------------- 接続と切断
+    // リクエストカウンター (リクエスト毎に +1)
+    static int requestIdCounter = 0;
+
+    //-------------------------------------------------------------------------- 初期化
+    void Init() {
+        Disconnect();
+        this.onConnect      = null;
+        this.onDisconnect   = null;
+        this.onIdentifyType = MessagePropertyParser.IdentifyType;
+        this.onRecv         = new Dictionary<int,Action<string>>();
+        this.enabled        = false;
+    }
+
+    //-------------------------------------------------------------------------- 操作 (接続と切断)
     public void Connect(string url) {
         Disconnect();
-        state        = State.Connecting;
-        ws           = new WebSocket(new Uri(url));
-        connector    = ws.Connect();
-        enabled      = true;
+        state       = State.Connecting;
+        ws          = new WebSocket(new Uri(url));
+        connector   = ws.Connect();
+        requestList = new List<Request>();
+        enabled     = true;
     }
 
     public void Disconnect(string error = null) {
@@ -36,17 +54,30 @@ public partial class WebSocketConnector : MonoBehaviour {
         if (ws != null) {
             ws.Close();
         }
-        state     = State.Init;
-        ws        = null;
-        connector = null;
-        enabled   = false;
+        if (requestList != null) {
+            for (int i = requestList.Length - 1; i >= 0; i--) {
+                var request = requestList[i];
+                request.Free(error);
+                requestList.RemoveAt(i);
+            }
+            requsetList.Clear();
+        }
+        state       = State.Init;
+        ws          = null;
+        connector   = null;
+        requestList = null;
+        enabled     = false;
     }
 
-    //-------------------------------------------------------------------------- 送信
+    //-------------------------------------------------------------------------- 操作 (送信)
+    // 送信
     public void Send<TSend>(TSend data) {
         Debug.Assert(state != State.Connected);
         try {
+            // 文字列変換
             var message = JsonUtility.ToJson(data);
+
+            // 送信
             ws.SendString(message);
         } catch (Exception e) {
             Debug.LogError(e.ToString());
@@ -54,13 +85,36 @@ public partial class WebSocketConnector : MonoBehaviour {
         }
     }
 
-    public void Send<TSend,TRecv>(TSend data, Action<TRecv> callback = null, int timeout = 0) {
-        // TODO
-        // 最後の "}" の前に ",_reqId:10}" のように挿入する。
-        // 戻ってきたら _reqId をチェックする。
+    // レスポンスを期待する送信
+    public void Send<TSend,TRecv>(TSend data, Action<string,TRecv> callback, int timeout = 0) {
+        Debug.Assert(state != State.Connected);
+        try {
+            // 文字列変換
+            var message = JsonUtility.ToJson(data);
+
+            // message に "_requestId" プロパティをねじ込む。
+            // サーバが "_requestId" プロパティを返すと
+            // callback が呼び出される仕組み。
+            var requstId = requestIdCounter++;
+            message  = message.Remove(message.Length -1);
+            message += string.Format("\"_requestId\":{0}}", requestId);
+
+            // リクエストを作成して追加
+            // レスポンスを待つ。
+            var request = Request<TRecv>.Alloc(callback);
+            request.requestId            = requestId;
+            request.timeoutRemainingTime = (timeout > 0)? timeout : REQUEST_DEFAULT_TIMEOUT;
+            requestList.Add(request);
+
+            // 送信
+            ws.SendString(message);
+        } catch (Exception e) {
+            Debug.LogError(e.ToString());
+            return;
+        }
     }
 
-    //-------------------------------------------------------------------------- 受信
+    //-------------------------------------------------------------------------- 操作 (イベント設定)
     public void OnConnect(Action callback) {
         onConnect = callback;
     }
@@ -69,8 +123,8 @@ public partial class WebSocketConnector : MonoBehaviour {
         onDisconnect = callback;
     }
 
-    public void OnParseType(Func<string,int> callback) {
-        onParseType = callback;
+    public void OnIdentify(Func<string,int> callback) {
+        onIdentifyType = callback;
     }
 
     public void OnRecv<TRecv>(int type, Action<TRecv> callback) {
@@ -98,9 +152,9 @@ public partial class WebSocketConnector : MonoBehaviour {
         }
     }
 
-    int InvokeOnParseType(string message) {
-        if (onParseType != null) {
-            return onParseType(message);
+    int InvokeOnIdentifyType(string message) {
+        if (onIdentifyType != null) {
+            return onIdentifyType(message);
         }
         return -1;
     }
@@ -115,54 +169,83 @@ public partial class WebSocketConnector : MonoBehaviour {
 
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     void Awake() {
-        // NOTE
-        // 初期化。
-        // イベントハンドラは最初に Awake したときだけ初期化。
-        Disconnect();
-        this.onConnect    = null;
-        this.onDisconnect = null;
-        this.onParseType  = DefaultTypeParser.ParseType;
-        this.onRecv       = new Dictionary<int,Action<string>>();
-
-        // NOTE
-        // デフォルト停止, 接続時および切断時にオンオフ。
-        this.enabled = false;
+        Init();
     }
 
     void Update() {
+        var deltaTime = Time.deltaTime;
+
+        // リクエストのタイムアウトチェック
+        if (requestList != null) {
+            for (int i = requestList.Length - 1; i >= 0; i--) {
+                var request = requestList[i];
+                request.timeoutRemainingTime -= deltaTime;
+                if (request.timeoutRemainingTime <= 0) {
+                    requestList.RemoveAt[i];
+                    request.Free("timeout."));
+                }
+            }
+        }
+
+        // 状態毎の処理
         switch (state) {
         case State.Init:
+            // 今のところ処理なし
             break;
+
         case State.Connecting:
             if (connector.MoveNext()) {
+                return;
+            }
+            if (ws.error != null) {
+                Disconnect(ws.error);
                 return;
             }
             state = State.Connected;
             InvokeOnConnect();
             break;
+
         case State.Connected:
-            if (ws.error != null) { // NOTE 接続エラーもここで処理
+            if (ws.error != null) {
                 Disconnect(ws.error);
                 return;
             }
             var message = ws.RecvString();
+
+            // リクエストのレスポンスであれば処理
             var requestId    = 0;
             var hasRequestId = false;
-            DefaultRequestIdParser.ParseRequestId(message, out requestId, out hasRequestId);
+            MessagePropertyParser.ParseRequestIdProperty(message, out requestId, out hasRequestId);
             if (hasRequestId) {
-                // TODO
-                // リクエストレスポンス
+                var found = false;
+                for (int i = requestList.Length - 1; i >= 0; i--) {
+                    var request = requestList[i];
+                    if (request.requestId == requestId) {
+                        requsetList.RemoveAt(i);
+                        request.Response(null, message);
+                        request.Free();
+                        found = true;
+                    }
+                }
+                if (!found) {
+                    Debug.LogError(string.Format("リクエスト番号不明 ({0}, {1})", requestId, message));
+                }
                 return;
             }
-            var type = InvokeOnParseType(message);
+
+            // 型識別
+            var type = InvokeOnIdentifyType(message);
             if (type < 0) {
-                Debug.LogError(string.Format("型番号が判別不可 ({0})", message));
+                Debug.LogError(string.Format("型番号識別不可 ({0})", message));
                 return;
             }
+
+            // ユーザコールバックに転送
             InvokeOnRecv(type, message);
             break;
+
         default:
-            Debug.LogError("不明な状態 (" + state + ")");
+            Debug.LogError(string.Format("状態不明 ({0})", state);
             break;
         }
     }
@@ -172,109 +255,84 @@ public partial class WebSocketConnector : MonoBehaviour {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-// 標準型パーサ
-// 受け取ったメッセージの "type" プロパティで型番号取得。
+// メッセージプロパティパーサー
+// メッセージ先読み用
 public partial class WebSocketConnector {
-    class DefaultTypeParser {
+    class MessagePropertyParser {
         //---------------------------------------------------------------------- 定義
-        static readonly int MAX_POOL_COUNT = 16;
+        // タイププロパティコンテナ
+        class TypePropertyContainer { int type; }
 
-        //---------------------------------------------------------------------- 変数
-        // 判別した型番号
-        public int type;
+        // リクエスト番号プロパティコンテナ
+        class RequestIdPropertyContainer { int _requestId; }
 
-        // 型パーサプール
-        static Queue<DefaultTypeParser> pool = null;
+        // プロパティコンテナ用インスタンスプール
+        class Pool<T> where T : class, new() {
+            static readonly int MAX_POOL_COUNT = 8;
+            static Queue<T> pool = null;
+            public static T Alloc() {
+                return (pool != null && pool.Length > 0)? pool.Dequeue() : new T();
+            }
+            public static void Free(T propertyContainer) {
+                pool = pool ?? new Queue<T>();
+                if (pool.Count < MAX_POOL_COUNT) {
+                    pool.Enqueue(propertyContainer);
+                }
+            }
+        }
 
         //---------------------------------------------------------------------- 操作
-        public static int ParseType(string message) {
-            var value = -1;
-            var defaultTypeParser = Alloc();
+        public static void ParseTypeProperty(string message, out int propertyValue, out bool hasProperty) {
+            propertyValue = -1;
+            hasProperty   = false;
+            var propertyContainer = Pool<TypePropertyContainer>();
+            propertyContainer.type = -1;
             try {
-                JsonUtility.FromJsonOverwrite(message, defaultTypeParser);
-                value = defaultTypeParser.type;
+                JsonUtility.FromJsonOverwrite(message, propertyContainer);
+                propertyValue = propertyContainer.type;
+                hasProperty   = true;
             } catch (Exception e) {
                 Debug.LogError(e.ToString());
             }
-            Free(defaultTypeParser);
-            return value;
+            propertyContainer.type = -1;
+            Free(propertyContainer);
         }
 
-        //---------------------------------------------------------------------- 確保と解放
-        // 確保
-        static DefaultTypeParser Alloc() {
-            var defaultTypeParser = ((pool != null) && (pool.Count > 0))? pool.Dequeue() : new DefaultTypeParser();
-            defaultTypeParser.type = -1;
-            return defaultTypeParser;
+        public static void ParseRequestIdProperty(string message, out int propertyValue, out bool hasProperty) {
+            propertyValue = 0;
+            hasProperty   = false;
+            var propertyContainer = Pool<RequestIdPropertyContainer>();
+            propertyContainer._requestId = 0;
+            try {
+                JsonUtility.FromJsonOverwrite(message, propertyContainer);
+                propertyValue = requestIdPropertyParser._requestId;
+                hasProperty   = true;
+            } catch (Exception e) {
+                Debug.LogError(e.ToString());
+            }
+            propertyContainer._requestId = 0;
+            Free(requestIdPropertyParser);
         }
 
-        // 解放
-        static void Free(DefaultTypeParser defaultTypeParser) {
-            defaultTypeParser.type = -1;
-            if (pool == null) {
-                pool = new Queue<DefaultTypeParser>();
+        //---------------------------------------------------------------------- 操作 (おまけエイリアス)
+        // 型識別の実行
+        public static int IdentifyType(string message) {
+            var type    = -1;
+            var hasType = false;
+            ParseTypeProperty(message, out type, out hasType);
+            if (!hasType) {
+                return -1;
             }
-            if (pool.Count < MAX_POOL_COUNT) {
-                pool.Enqueue(defaultTypeParser);
-            }
+            return type;
         }
     }
 }
 
-// リクエスト番号パーサ
-// 受け取ったメッセージの "requestId" プロパティでリクエスト番号取得。
-public partial class WebSocketConnector {
-    class DefaultRequestIdParser {
-        //---------------------------------------------------------------------- 定義
-        static readonly int MAX_POOL_COUNT = 16;
-
-        //---------------------------------------------------------------------- 変数
-        // 判別したリクエスト番号
-        public int requestId;
-
-        // リクエスト番号パーサプール
-        static Queue<DefaultRequestIdParser> pool = null;
-
-        //---------------------------------------------------------------------- 操作
-        public static void ParseRequestId(string message, out int value, out bool hasValue) {
-            value    = 0;
-            hasValue = false;
-            var defaultRequestIdParser = Alloc();
-            try {
-                JsonUtility.FromJsonOverwrite(message, defaultRequestIdParser);
-                value    = defaultRequestIdParser.requestId;
-                hasValue = true;
-            } catch (Exception e) {
-                Debug.LogError(e.ToString());
-            }
-            Free(defaultRequestIdParser);
-        }
-
-        //---------------------------------------------------------------------- 確保と解放
-        // 確保
-        static DefaultRequestIdParser Alloc() {
-            var defaultRequestIdParser = ((pool != null) && (pool.Count > 0))? pool.Dequeue() : new DefaultRequestIdParser();
-            defaultRequestIdParser.requestId = 0;
-            return defaultRequestIdParser;
-        }
-
-        // 解放
-        static void Free(DefaultRequestIdParser defaultRequestIdParser) {
-            defaultRequestIdParser.requestId = 0;
-            if (pool == null) {
-                pool = new Queue<DefaultRequestIdParser>();
-            }
-            if (pool.Count < MAX_POOL_COUNT) {
-                pool.Enqueue(defaultRequestIdParser);
-            }
-        }
-    }
-}
-
-// リクエスト
+// リクエスト (基本クラス)
 public partial class WebSocketConnector {
     class Request {
         //---------------------------------------------------------------------- 変数
+        public int requestId            = 0; // リクエスト番号
         public int timeoutRemainingTime = 0; // タイムアウト残り時間
 
         // 転送および解放コールバック
@@ -313,10 +371,11 @@ public partial class WebSocketConnector {
         // 確保
         public static Request<TRecv> Alloc(Action<string,TRecv> callback) {
             var req = ((pool != null) && (pool.Count > 0))? pool.Dequeue() : new Request<TRecv>();
+            req.requestId            = 0;
             req.timeoutRemainingTime = 0;
+            req.callback             = callback;
             req.dispatch             = Request<TRecv>.Dispatch;
             req.free                 = Request<TRecv>.Free;
-            req.callback             = callback;
             return req;
         }
 
@@ -341,10 +400,11 @@ public partial class WebSocketConnector {
             if (req.callback != null) {
                 req.callback(error, default(TRecv));
             }
+            req.requstId             = 0;
             req.timeoutRemainingTime = 0;
+            req.callback             = null;
             req.dispatch             = null;
             req.free                 = null;
-            req.callback             = null;
             if (pool == null) {
                 pool = new Queue<Request<TRecv>>();
             }
@@ -355,6 +415,7 @@ public partial class WebSocketConnector {
     }
 }
 
+// BACKUP
 //if (!string.IsNullOrEmpty(connectKey)) {
 //    uriBuilder.Query += ((string.IsNullOrEmpty(uriBuilder.Query))? "?" : "&") + "ck=" + connectKey;
 //}
