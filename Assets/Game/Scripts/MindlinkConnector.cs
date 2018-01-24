@@ -33,6 +33,7 @@ public partial class MindlinkConnector : WebSocketConnector {
         if (instance == this) {
             instance = null;
         }
+        Disconnect();
     }
 
     void Start() {
@@ -60,10 +61,10 @@ public partial class MindlinkConnector : WebSocketConnector {
     void OnMindlinkConnectorDisconnect(string error) {
         if (error != null) {
             Debug.LogError(error);
-        }
-        if (currentRetryCount++ < retryCount) {
-            Invoke("StartConnect", retryInterval); // NOTE しばらく待って再接続
-            return;
+            if (currentRetryCount++ < retryCount) {
+                Invoke("StartConnect", retryInterval); // NOTE しばらく待って再接続
+                return;
+            }
         }
         Application.Quit(); // NOTE 接続終了時 (再接続失敗時も含む) はアプリ毎落とす
     }
