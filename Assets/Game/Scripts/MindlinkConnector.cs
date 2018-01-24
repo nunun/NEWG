@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System;
 
 // マインドリンクコネクタ
-// TODO CONNECT_KEY_FILE 環境変数の値のファイルから接続キーを読み込む。
 public partial class MindlinkConnector : WebSocketConnector {
     //-------------------------------------------------------------------------- 変数
     public string url           = "ws://localhost:7766"; // 接続先URL
@@ -12,18 +11,41 @@ public partial class MindlinkConnector : WebSocketConnector {
     public int    retryCount    = 10;                    // 接続リトライ回数
     public float  retryInterval = 3.0f;                  // 接続リトライ間隔
 
-    int currentRetryCount;
+    // 現在のリトライ回数
+    int currentRetryCount = 0;
+
+    // インスタンス
+    static MindlinkConnector instance = null;
+
+    // インスタンスの取得
+    public static MindlinkConnector Instance { get { return instance; }}
 
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
-    void Start() {
-        currentRetryCount = 0;
-        OnConnect(OnMindlinkConnectorConnect);
-        OnDisconnect(OnMindlinkConnectorDisconnect);
-        StartConnect();
+    void Awake() {
+        if (instance != null) {
+            GameObject.Destroy(this.gameObject);
+            return;
+        }
+        instance = this;
     }
 
-    //-------------------------------------------------------------------------- イベントハンドラその他
-    void StartConnect() {
+    void OnDestroy() {
+        if (instance == this) {
+            instance = null;
+        }
+    }
+
+    void Start() {
+        OnConnect(OnMindlinkConnectorConnect);
+        OnDisconnect(OnMindlinkConnectorDisconnect);
+        // TODO
+        // CONNECT_KEY または CONNECT_KEY_FILE から接続キーを読み込んで
+        // connectKey にセット
+        StartConnect(); // NOTE 自動接続
+    }
+
+    //-------------------------------------------------------------------------- 接続ハンドリング
+    public void StartConnect() {
         var uriBuilder = new UriBuilder(url);
         if (!string.IsNullOrEmpty(connectKey)) {
             uriBuilder.Query += ((string.IsNullOrEmpty(uriBuilder.Query))? "?" : "&") + "ck=" + connectKey;
@@ -36,11 +58,13 @@ public partial class MindlinkConnector : WebSocketConnector {
     }
 
     void OnMindlinkConnectorDisconnect(string error) {
-        Debug.LogError(error);
+        if (error != null) {
+            Debug.LogError(error);
+        }
         if (currentRetryCount++ < retryCount) {
-            Invoke("StartConnect", 3.0f);
+            Invoke("StartConnect", retryInterval); // NOTE しばらく待って再接続
             return;
         }
-        Application.Quit();
+        Application.Quit(); // NOTE 接続終了時 (再接続失敗時も含む) はアプリ毎落とす
     }
 }
