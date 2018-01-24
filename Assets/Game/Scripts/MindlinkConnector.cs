@@ -6,10 +6,12 @@ using System;
 // マインドリンクコネクタ
 public partial class MindlinkConnector : WebSocketConnector {
     //-------------------------------------------------------------------------- 変数
-    public string url           = "ws://localhost:7766"; // 接続先URL
-    public string connectKey    = "";                    // 接続キー
-    public int    retryCount    = 10;                    // 接続リトライ回数
-    public float  retryInterval = 3.0f;                  // 接続リトライ間隔
+    public string url              = "ws://localhost:7766"; // 接続先URL
+    public string connectKey       = "";                    // 接続キー
+    public int    retryCount       = 10;                    // 接続リトライ回数
+    public float  retryInterval    = 3.0f;                  // 接続リトライ間隔
+    public bool   connectOnStart   = true;                  // 自動接続
+    public bool   quitOnDisconnect = true;                  // 切断終了
 
     // 現在のリトライ回数
     int currentRetryCount = 0;
@@ -37,12 +39,28 @@ public partial class MindlinkConnector : WebSocketConnector {
     }
 
     void Start() {
+        // イベントハンドラ設定
         OnConnect(OnMindlinkConnectorConnect);
         OnDisconnect(OnMindlinkConnectorDisconnect);
-        // TODO
-        // CONNECT_KEY または CONNECT_KEY_FILE から接続キーを読み込んで
-        // connectKey にセット
-        StartConnect(); // NOTE 自動接続
+
+        // connectKey 調整
+        var connectKeyValue = Environment.GetEnvironmentVariable("CONNECT_KEY");
+        if (!string.IsNullOrEmpty(connectKeyValue)) {
+            connectKey = connectKeyValue;
+        }
+        var connectKeyFileValue = Environment.GetEnvironmentVariable("CONNECT_KEY_FILE");
+        if (!string.IsNullOrEmpty(connectKeyFileValue)) {
+            try {
+                connectKey = string.Join("", File.ReadAllText(connectKeyFileValue));
+            } catch (Exception e) {
+                Debug.LogError(e.ToString());
+            }
+        }
+
+        // 接続開始
+        if (connectOnStart) {
+            StartConnect();
+        }
     }
 
     //-------------------------------------------------------------------------- 接続ハンドリング
@@ -62,10 +80,12 @@ public partial class MindlinkConnector : WebSocketConnector {
         if (error != null) {
             Debug.LogError(error);
             if (currentRetryCount++ < retryCount) {
-                Invoke("StartConnect", retryInterval); // NOTE しばらく待って再接続
+                Invoke("StartConnect", retryInterval); // NOTE 再接続
                 return;
             }
         }
-        Application.Quit(); // NOTE 接続終了時 (再接続失敗時も含む) はアプリ毎落とす
+        if (quitOnDisconnect) {
+            Application.Quit(); // NOTE 切断時 (再接続失敗時含む) はアプリ終了
+        }
     }
 }
