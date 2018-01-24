@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
+using System;
+using System.IO;
 using System.Collections;
 using System.Collections.Generic;
-using System;
 
 // マインドリンクコネクタ
 public partial class MindlinkConnector : WebSocketConnector {
@@ -51,7 +52,7 @@ public partial class MindlinkConnector : WebSocketConnector {
         var connectKeyFileValue = Environment.GetEnvironmentVariable("CONNECT_KEY_FILE");
         if (!string.IsNullOrEmpty(connectKeyFileValue)) {
             try {
-                connectKey = string.Join("", File.ReadAllText(connectKeyFileValue));
+                connectKey = File.ReadAllText(connectKeyFileValue).Trim();
             } catch (Exception e) {
                 Debug.LogError(e.ToString());
             }

@@ -8,7 +8,7 @@ using System;
 [Serializable]
 public partial class ServerStateData {
     //-------------------------------------------------------------------------- 変数
-    public string parameter = 0;
+    public int parameter = 0;
 
     //-------------------------------------------------------------------------- 操作
     // サーバ状態公開
@@ -18,7 +18,6 @@ public partial class ServerStateData {
 }
 
 // サーバ状態データ一覧のリクエスト
-[Serializable]
 public partial class ServerStateData {
     // TODO
     // 一覧の定義とリクエスト
@@ -28,7 +27,7 @@ public partial class ServerStateData {
 public partial class ServerStateData {
     //-------------------------------------------------------------------------- 変数
     // 現在のサーバ状態情報
-    static ServerStateData current = new ServiceStateInfo();
+    static ServerStateData current = new ServerStateData();
 
     // 現在のサーバ状態情報の取得
     public static ServerStateData Current { get { return current; }}
