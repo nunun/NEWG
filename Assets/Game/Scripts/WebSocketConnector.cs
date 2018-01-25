@@ -264,6 +264,9 @@ public partial class WebSocketConnector : MonoBehaviour {
                 return;
             }
             var message = ws.RecvString();
+            if (message == null) {
+                return;
+            }
 
             // リクエストのレスポンスであれば処理
             var requestId    = 0;
