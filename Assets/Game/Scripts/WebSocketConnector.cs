@@ -25,7 +25,7 @@ public partial class WebSocketConnector : MonoBehaviour {
 
     // イベントリスナ (外部ユーザ向け)
     Action                         connectEventListener    = null;                                 // 接続時イベントリスナ
-    Action                         disconnectEventListener = null;                                 // 切断時イベントリスナ
+    Action<string>                 disconnectEventListener = null;                                 // 切断時イベントリスナ
     Dictionary<int,Action<string>> recvEventListener       = new Dictionary<int,Action<string>>(); // 受信時イベントリスナ (型別)
 
     // リクエストカウンター (リクエスト毎に +1)
@@ -156,11 +156,11 @@ public partial class WebSocketConnector : MonoBehaviour {
         connectEventListener = null;
     }
 
-    public void AddDisconnectEventListner(Action eventListener) {
+    public void AddDisconnectEventListner(Action<string> eventListener) {
         disconnectEventListener += eventListener;
     }
 
-    public void RemoveDisconnectEventListner(Action eventListener) {
+    public void RemoveDisconnectEventListner(Action<string> eventListener) {
         disconnectEventListener -= eventListener;
     }
 

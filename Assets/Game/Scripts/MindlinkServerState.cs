@@ -1,15 +1,16 @@
 ﻿using UnityEngine;
+using System;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
-using System;
 
 // マインドリンク サーバ状態
 // サーバの状態をマインドリンクを経由して共有。
-public class MindlinkServerState {
+public partial class MindlinkServerState {
     //-------------------------------------------------------------------------- 定義
     // サーバ状態情報
     [Serializable]
-    class ServerStateInfo {
+    public class ServerStateInfo {
         public int parameter = 0;
 
         // 公開処理
@@ -39,11 +40,14 @@ public class MindlinkServerState {
     }
 
     protected static void PublishDefferedServerState() {
+        if (defferedServerStateHashSet.Count <= 0) {
+            return;
+        }
         var serverStates = defferedServerStateHashSet.ToArray();
         defferedServerStateHashSet.Clear();
         for (int i = serverStates.Length - 1; i >= 0; i--) {
             var serverStateInfo = serverStates[i];
-            PublishDefferedServerState(serverStateInfo);
+            PublishServerState(serverStateInfo);
         }
     }
 }
@@ -69,13 +73,10 @@ public partial class MindlinkServerState : MonoBehaviour {
 
     //-------------------------------------------------------------------------- 接続時、切断時
     void OnConnect() {
-        if (isPublishDeffered) {
-            isPublishDeffered = false; // NOTE 送信延期を解除して、送信を実行
-            PublishDefferedServerState();
-        }
+        PublishDefferedServerState();
     }
 
-    void OnDisconnect() {
+    void OnDisconnect(string error) {
         // 今のところ処理なし
     }
 }
