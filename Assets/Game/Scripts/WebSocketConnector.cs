@@ -184,7 +184,7 @@ public partial class WebSocketConnector : MonoBehaviour {
         };
     }
 
-    //-------------------------------------------------------------------------- イベントコールバック発行
+    //-------------------------------------------------------------------------- イベント発行
     void InvokeConnectEvent() {
         if (connectEventHandler != null) {
             connectEventHandler();
