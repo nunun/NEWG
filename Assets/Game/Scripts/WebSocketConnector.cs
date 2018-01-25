@@ -18,14 +18,21 @@ public partial class WebSocketConnector : MonoBehaviour {
     IEnumerator   connector   = null;       // 接続制御用列挙子
     List<Request> requestList = null;       // リクエストリスト
 
-    // イベント
-    Action                         onConnect      = null;                                 // 接続時イベントハンドラ
-    Action<string>                 onDisconnect   = null;                                 // 切断時イベントハンドラ
-    Func<string,int>               onIdentifyType = null;                                 // 型識別時イベントハンドラ
-    Dictionary<int,Action<string>> onRecv         = new Dictionary<int,Action<string>>(); // 受信時イベントハンドラ (型別)
+    // イベントハンドラ (内部システム向け)
+    Action           connectEventHandler      = null; // 接続時イベントハンドラ
+    Action<string>   disconnectEventHandler   = null; // 切断時イベントハンドラ
+    Func<string,int> identifyTypeEventHandler = null; // 型識別時イベントハンドラ
+
+    // イベントリスナ (外部ユーザ向け)
+    Action                         connectEventListener    = null;                                 // 接続時イベントリスナ
+    Action                         disconnectEventListener = null;                                 // 切断時イベントリスナ
+    Dictionary<int,Action<string>> recvEventListener       = new Dictionary<int,Action<string>>(); // 受信時イベントリスナ (型別)
 
     // リクエストカウンター (リクエスト毎に +1)
     static int requestIdCounter = 0;
+
+    // 接続済かどうか
+    public bool IsConnected { get { return (state == State.Connected); }}
 
     //-------------------------------------------------------------------------- 接続と切断
     public void Connect(string url) {
@@ -39,7 +46,7 @@ public partial class WebSocketConnector : MonoBehaviour {
 
     public void Disconnect(string error = null) {
         if (state != State.Init) {
-            InvokeOnDisconnect(error);
+            InvokeDisconnectEvent(error);
         }
         if (ws != null) {
             ws.Close();
@@ -123,24 +130,53 @@ public partial class WebSocketConnector : MonoBehaviour {
         return true;
     }
 
-    //-------------------------------------------------------------------------- イベントコールバック設定
-    public void OnConnect(Action callback) {
-        onConnect = callback;
+    //-------------------------------------------------------------------------- イベントハンドラ設定
+    protected void SetConnectEventHandler(Action eventHandler) {
+        connectEventHandler = eventHandler;
     }
 
-    public void OnDisconnect(Action<string> callback) {
-        onDisconnect = callback;
+    protected void SetDisconnectEventHandler(Action<string> eventHandler) {
+        disconnectEventHandler = eventHandler;
     }
 
-    public void OnIdentifyType(Func<string,int> callback) {
-        onIdentifyType = callback;
+    protected void SetIdentifyTypeEventHandler(Func<string,int> eventHandler) {
+        identifyTypeEventHandler = eventHandler;
     }
 
-    public void OnRecv<TRecv>(int type, Action<TRecv> callback) {
-        onRecv[type] = (string message) => {
+    //-------------------------------------------------------------------------- イベントリスナ設定
+    public void AddConnectEventListner(Action eventListener) {
+        connectEventListener += eventListener;
+    }
+
+    public void RemoveConnectEventListner(Action eventListener) {
+        connectEventListener -= eventListener;
+    }
+
+    public void ClearConnectEventListner() {
+        connectEventListener = null;
+    }
+
+    public void AddDisconnectEventListner(Action eventListener) {
+        disconnectEventListener += eventListener;
+    }
+
+    public void RemoveDisconnectEventListner(Action eventListener) {
+        disconnectEventListener -= eventListener;
+    }
+
+    public void ClearDisconnectEventListner() {
+        disconnectEventListener = null;
+    }
+
+    public void SetRecvEventListener<TRecv>(int type, Action<TRecv> eventListener) {
+        if (eventListener == null) {
+            recvEventListener.Remove(type);
+            return;
+        }
+        recvEventListener[type] = (string message) => {
             try {
                 var data = JsonUtility.FromJson<TRecv>(message);
-                callback(data);
+                eventListener(data);
             } catch (Exception e) {
                 Debug.LogError(e.ToString());
                 return;
@@ -149,33 +185,39 @@ public partial class WebSocketConnector : MonoBehaviour {
     }
 
     //-------------------------------------------------------------------------- イベントコールバック発行
-    void InvokeOnConnect() {
-        if (onConnect != null) {
-            onConnect();
+    void InvokeConnectEvent() {
+        if (connectEventHandler != null) {
+            connectEventHandler();
+        }
+        if (connectEventListener != null) {
+            connectEventListener();
         }
     }
 
-    void InvokeOnDisconnect(string error = null) {
-        if (onDisconnect != null) {
-            onDisconnect(error);
+    void InvokeDisconnectEvent(string error = null) {
+        if (disconnectEventHandler != null) {
+            disconnectEventHandler(error);
+        }
+        if (disconnectEventListener != null) {
+            disconnectEventListener(error);
         }
     }
 
-    int InvokeOnIdentifyType(string message) {
-        if (onIdentifyType != null) {
-            return onIdentifyType(message);
+    int InvokeIdentifyTypeEvent(string message) {
+        if (identifyTypeEventHandler != null) {
+            return identifyTypeEventHandler(message);
         }
         return MessagePropertyParser.IdentifyType(message);
     }
 
-    void InvokeOnRecv(int type, string message) {
-        if (!onRecv.ContainsKey(type) || onRecv[type] == null) {
+    void InvokeRecvEvent(int type, string message) {
+        if (!recvEventListener.ContainsKey(type) || recvEventListener[type] == null) {
             // NOTE
             // OnRecv していない型は何もログ出力せずに消える。
             //Debug.LogError(string.Format("型番号の登録がないため転送不可 ({0}, {1})", type, message));
             return;
         }
-        onRecv[type](message);
+        recvEventListener[type](message);
     }
 
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
@@ -213,7 +255,7 @@ public partial class WebSocketConnector : MonoBehaviour {
                 return;
             }
             state = State.Connected;
-            InvokeOnConnect();
+            InvokeConnectEvent();
             break;
 
         case State.Connected:
@@ -245,14 +287,14 @@ public partial class WebSocketConnector : MonoBehaviour {
             }
 
             // 型識別
-            var type = InvokeOnIdentifyType(message);
+            var type = InvokeIdentifyTypeEvent(message);
             if (type < 0) {
                 Debug.LogError(string.Format("型番号識別不可 ({0})", message));
                 return;
             }
 
             // ユーザコールバックに転送
-            InvokeOnRecv(type, message);
+            InvokeRecvEvent(type, message);
             break;
 
         default:

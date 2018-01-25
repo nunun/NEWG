@@ -40,10 +40,11 @@ public partial class MindlinkConnector : WebSocketConnector {
 
     void Start() {
         // イベントハンドラ設定
-        OnConnect(OnMindlinkConnectorConnect);
-        OnDisconnect(OnMindlinkConnectorDisconnect);
+        SetConnectEventHandler(OnConnect);
+        SetDisconnectEventHandler(OnDisconnect);
 
         // connectKey 調整
+        // 環境変数からシークレットを取得して付与。
         var connectKeyValue = Environment.GetEnvironmentVariable("CONNECT_KEY");
         if (!string.IsNullOrEmpty(connectKeyValue)) {
             connectKey = connectKeyValue;
@@ -72,11 +73,11 @@ public partial class MindlinkConnector : WebSocketConnector {
         Connect(uriBuilder.ToString());
     }
 
-    void OnMindlinkConnectorConnect() {
+    void OnConnect() {
         currentRetryCount = 0; // NOTE 接続成功で接続リトライ回数リセット
     }
 
-    void OnMindlinkConnectorDisconnect(string error) {
+    void OnDisconnect(string error) {
         if (error != null) {
             Debug.LogError(error);
             if (currentRetryCount++ < retryCount) {
