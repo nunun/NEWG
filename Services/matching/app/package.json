@@ -8,10 +8,11 @@
   },
   "dependencies": {
     "config": "*",
+    "libmindlink": "git+https://github.com/nunun/libmindlink.git#master",
     "log4js": "*",
-    "yaml": "*",
     "string.prototype.trim": "*",
-    "ws": "*"
+    "ws": "*",
+    "yaml": "*"
   },
   "repository": "",
   "author": "nunun",

@@ -4,7 +4,7 @@ var config = require('./config');
 log4js.configure(config.log4js);
 
 module.exports = {
-    test:           log4js.getLogger('test'),
+    matchingServer: log4js.getLogger('matchingServer'),
     mindlinkClient: log4js.getLogger('mindlinkClient'),
-    appServer:      log4js.getLogger('appServer'),
+    test:           log4js.getLogger('test'),
 };

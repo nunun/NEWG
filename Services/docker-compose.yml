@@ -29,3 +29,4 @@ services:
 
   rabbitmq:
     image: rabbitmq:3.7.0-alpine
+

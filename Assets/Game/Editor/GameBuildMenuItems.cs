@@ -47,7 +47,7 @@ public partial class GameBuildMenuItems {
     [MenuItem("Game/ビルド/公開用クライアント (WebGL)", false, 100)]
     public static void BuildReleaseClientWebGL() {
         Build(new GameBuildSettings() {
-            outputPath  = "Service/client/Builds/Client",
+            outputPath  = "Services/client/Builds/Client",
             buildTarget = BuildTarget.WebGL,
             headless    = false,
             autoRun     = false,
@@ -58,7 +58,7 @@ public partial class GameBuildMenuItems {
     [MenuItem("Game/ビルド/公開用サーバ (Linux ヘッドレス)", false, 101)]
     public static void BuildReleaseServerLinuxHeadless() {
         Build(new GameBuildSettings() {
-            outputPath  = "Service/server/Builds/Server",
+            outputPath  = "Services/server/Builds/Server",
             buildTarget = BuildTarget.StandaloneLinux64,
             headless    = true,
             autoRun     = false,

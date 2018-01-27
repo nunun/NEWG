@@ -1,0 +1,28 @@
+# matching server
+matchingServer:
+  port: 7790
+
+# mindlink client
+mindlinkClient:
+  url: "ws://mindlink:7766/"
+  retryCount: 20
+
+# log4js
+log4js:
+  appenders:
+    console:
+      type: console
+  categories:
+    default:
+      appenders: [console]
+      level: info
+    matchingServer:
+      appenders: [console]
+      level: info
+    mindlinkClient:
+      appenders: [console]
+      level: info
+    test:
+      appenders: [console]
+      level: info
+

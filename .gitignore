@@ -37,6 +37,6 @@ sysinfo.txt
 # Project definitions
 Assets/tags
 Assets/tags.meta
-Service/client/Builds
-Service/server/Builds
-Service/matching/app/node_modules
+Services/client/Builds
+Services/server/Builds
+Services/matching/app/node_modules
