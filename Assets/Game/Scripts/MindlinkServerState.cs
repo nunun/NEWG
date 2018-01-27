@@ -11,12 +11,20 @@ public partial class MindlinkServerState {
     // サーバ状態情報
     [Serializable]
     public class ServerStateInfo {
+        // TODO
+        // ダミーパラメータ
         public int parameter = 0;
 
         // 公開処理
         public void Publish() {
             MindlinkServerState.PublishServerState(this);
         }
+    }
+
+    // 送信データ用
+    public struct SendData {
+        public int             type;
+        public ServerStateInfo service;
     }
 
     //-------------------------------------------------------------------------- 変数
@@ -36,7 +44,10 @@ public partial class MindlinkServerState {
             defferedServerStateHashSet.Add(serverStateInfo);
             return;
         }
-        MindlinkConnector.Instance.Send<ServerStateInfo>(serverStateInfo);
+        var sendData = new SendData();
+        sendData.type    = (int)MindlinkConnector.DataType.S;
+        sendData.service = currentServerState;
+        MindlinkConnector.Instance.Send<SendData>(sendData);
     }
 
     protected static void PublishDefferedServerState() {

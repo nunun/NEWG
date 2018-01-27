@@ -7,6 +7,26 @@ using System.Collections.Generic;
 // マインドリンクコネクタ
 public partial class MindlinkConnector : WebSocketConnector {
     //-------------------------------------------------------------------------- 変数
+    // マインドリンクデータタイプ
+    public enum DataType {
+        S = 1,
+        Q = 2,
+        M = 3,
+    }
+
+    // サービスデータ
+    public struct ServiceData<T> {
+        public int type;
+        public T   service;
+    }
+
+    // サービスクエリ
+    public struct QueryData<T> {
+        public int type;
+        public T   service;
+    }
+
+    //-------------------------------------------------------------------------- 変数
     public string url              = "ws://localhost:7766"; // 接続先URL
     public string connectKey       = "";                    // 接続キー
     public int    retryCount       = 10;                    // 接続リトライ回数
