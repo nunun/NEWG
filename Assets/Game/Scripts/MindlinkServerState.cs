@@ -67,6 +67,9 @@ public partial class MindlinkServerState : MonoBehaviour {
     }
 
     void OnDestroy() {
+        if (MindlinkConnector.Instance == null) {
+            return;
+        }
         MindlinkConnector.Instance.RemoveConnectEventListner(OnConnect);
         MindlinkConnector.Instance.RemoveDisconnectEventListner(OnDisconnect);
     }

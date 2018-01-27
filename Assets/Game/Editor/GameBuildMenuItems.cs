@@ -13,7 +13,7 @@ public partial class GameBuildMenuItems {
     [MenuItem("Game/ビルド/デバッグ クライアント (WebGL)", false, 0)]
     public static void BuildDebugClientWebGL() {
         Build(new GameBuildSettings() {
-            outputPath  = "Builds/Debug/DebugClient.WebGL",
+            outputPath  = "Builds/Debug/Client.Debug.WebGL",
             buildTarget = BuildTarget.WebGL,
             headless    = false,
             autoRun     = false,
@@ -24,7 +24,7 @@ public partial class GameBuildMenuItems {
     [MenuItem("Game/ビルド/デバッグ クライアント (スタンドアローン)", false, 1)]
     public static void BuildDebugClientStandalone() {
         Build(new GameBuildSettings() {
-            outputPath  = "Builds/Debug/DebugClient.Standalone",
+            outputPath  = "Builds/Debug/Client.Debug.Standalone",
             buildTarget = (Application.platform == RuntimePlatform.WindowsEditor)? BuildTarget.StandaloneWindows64 : BuildTarget.StandaloneOSXUniversal,
             headless    = false,
             autoRun     = true,
@@ -35,7 +35,7 @@ public partial class GameBuildMenuItems {
     [MenuItem("Game/ビルド/デバッグ サーバ (スタンドアローン)", false, 2)]
     public static void BuildDebugServerStandalone() {
         Build(new GameBuildSettings() {
-            outputPath  = "Builds/Debug/DebugServer.Standalone",
+            outputPath  = "Builds/Debug/Server.Debug.Standalone",
             buildTarget = (Application.platform == RuntimePlatform.WindowsEditor)? BuildTarget.StandaloneWindows64 : BuildTarget.StandaloneOSXUniversal,
             headless    = false,
             autoRun     = true,

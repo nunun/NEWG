@@ -98,6 +98,19 @@ public class GameMain : MonoBehaviour {
             }
         }
 
+        // サーバならマインドリンクを開始する
+        if (serviceMode == ServiceMode.Server) {
+            var mindlinkConnector = MindlinkConnector.Instance;
+            Debug.Assert(mindlinkConnector != null, "マインドリンクコネクタなし？");
+            mindlinkConnector.StartConnect();
+
+            // TODO
+            // 仮のサーバ状態設定
+            var currentServerState = MindlinkServerState.CurrentServerState;
+            currentServerState.parameter = 100;
+            currentServerState.Publish();
+        }
+
         // サービス開始
         switch (serviceMode) {
         case ServiceMode.Client:

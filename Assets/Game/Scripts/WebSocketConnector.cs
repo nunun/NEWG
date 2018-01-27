@@ -31,6 +31,9 @@ public partial class WebSocketConnector : MonoBehaviour {
     // リクエストカウンター (リクエスト毎に +1)
     static int requestIdCounter = 0;
 
+    // 次のリクエスト番号を取得する
+    static int NextRequestId { get { return (++requestIdCounter == 0)? ++requestIdCounter : requestIdCounter; }}
+
     // 接続済かどうか
     public bool IsConnected { get { return (state == State.Connected); }}
 
@@ -104,7 +107,7 @@ public partial class WebSocketConnector : MonoBehaviour {
             // message に "_requestId" プロパティをねじ込む。
             // サーバが "_requestId" プロパティを返すと
             // callback が呼び出される仕組み。
-            var requestId = requestIdCounter++;
+            var requestId = NextRequestId;
             message  = message.Remove(message.Length -1);
             message += string.Format("\"_requestId\":{0}}", requestId);
 
@@ -362,7 +365,7 @@ public partial class WebSocketConnector {
             try {
                 JsonUtility.FromJsonOverwrite(message, propertyContainer);
                 propertyValue = propertyContainer._requestId;
-                hasProperty   = true;
+                hasProperty   = (propertyValue != 0);
             } catch (Exception e) {
                 Debug.LogError(e.ToString());
             }

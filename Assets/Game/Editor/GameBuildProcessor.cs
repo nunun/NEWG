@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,13 +11,11 @@ using UnityEditor.Callbacks;
 // ゲームビルドプロセッサ
 public partial class GameBuildProcessor : IPreprocessBuild, IProcessScene, IPostprocessBuild {
     //---------------------------------------------------------------------- 定義
-    // サービスタイプ別バイナリ名
-    public const string CLIENT_BINARY_NAME = "Client";
-    public const string SERVER_BINARY_NAME = "Server";
-    public const string HOST_BINARY_NAME   = "Host";
-
-    // 種別判定用バイナリ名
-    public const string DEBUG_BINARY_NAME = "Debug";
+    // バイナリ名バリアント文字列
+    public const string BINARY_NAME_VARIANT_CLIENT = "Client";
+    public const string BINARY_NAME_VARIANT_SERVER = "Server";
+    public const string BINARY_NAME_VARIANT_HOST   = "Host";
+    public const string BINARY_NAME_VARIANT_DEBUG  = "Debug";
 
     // 使用するポート
     public const int DEBUG_PORT   = 7777;
@@ -31,20 +30,21 @@ public partial class GameBuildProcessor : IPreprocessBuild, IProcessScene, IPost
     public void OnPreprocessBuild(UnityEditor.BuildTarget target, string path) {
         //Debug.Log("OnPreprocessBuild: target = " + target + ", path = " + path);
         var binaryName = Path.GetFileNameWithoutExtension(path);
+        var variants   = binaryName.Split('.').ToList();
 
         // 動作モード判定
-        if (binaryName.IndexOf(CLIENT_BINARY_NAME) >= 0) {
+        if (variants.IndexOf(BINARY_NAME_VARIANT_CLIENT) >= 0) {
             gameMainServiceMode = GameMain.ServiceMode.Client;
-        } else if (binaryName.IndexOf(SERVER_BINARY_NAME) >= 0) {
+        } else if (variants.IndexOf(BINARY_NAME_VARIANT_SERVER) >= 0) {
             gameMainServiceMode = GameMain.ServiceMode.Server;
-        } else if (binaryName.IndexOf(HOST_BINARY_NAME) >= 0) {
+        } else if (variants.IndexOf(BINARY_NAME_VARIANT_HOST) >= 0) {
             gameMainServiceMode = GameMain.ServiceMode.Host;
         } else {
             gameMainServiceMode = GameMain.ServiceMode.Host;
         }
 
         // デバッグバイナリ判定
-        isDebug = (binaryName.IndexOf(DEBUG_BINARY_NAME) >= 0);
+        isDebug = (variants.IndexOf(BINARY_NAME_VARIANT_DEBUG) >= 0);
     }
 
     // シーン処理
@@ -64,7 +64,7 @@ public partial class GameBuildProcessor : IPreprocessBuild, IProcessScene, IPost
         //Debug.Log("OnPostprocessBuild: target = " + target + ", path = " + path);
     }
 
-    // 実行順
+    // このプロセッサの実行順
     public int callbackOrder { get { return int.MaxValue; }}
 }
 
@@ -74,17 +74,29 @@ public partial class GameBuildProcessor {
     // ゲーム設定の適用
     static void Apply(GameMain.ServiceMode gameMainServiceMode, bool isDebug) {
         // ゲームメイン
+        // 動作モードとデバッグフラグを変更。
         var gameMain = FindObjectOfType<GameMain>();
         if (gameMain != null) {
             gameMain.serviceMode = gameMainServiceMode;
             gameMain.isDebug     = isDebug;
         }
 
-        // ネットワークマネージャ
-        var networkManager = FindObjectOfType<NetworkManager>();
-        if (networkManager != null) {
-            networkManager.logLevel    = (isDebug)? LogFilter.FilterLevel.Debug : LogFilter.FilterLevel.Error;
-            networkManager.networkPort = (isDebug)? DEBUG_PORT : RELEASE_PORT;
+        // ゲームネットワークマネージャ
+        // ログレベルとサービスポートを調整。
+        var gameNetworkManager = FindObjectOfType<GameNetworkManager>();
+        if (gameNetworkManager != null) {
+            gameNetworkManager.logLevel    = (isDebug)? LogFilter.FilterLevel.Debug : LogFilter.FilterLevel.Error;
+            gameNetworkManager.networkPort = (isDebug)? DEBUG_PORT : RELEASE_PORT;
+        }
+
+        // マインドリンクコネクタ
+        // サーバでない場合はマインドリンクにサーバ状態を
+        // 伝える必要がないのでオブジェクトごと削除。
+        var mindlinkConnector = FindObjectOfType<MindlinkConnector>();
+        if (mindlinkConnector != null) {
+            if (gameMainServiceMode != GameMain.ServiceMode.Server) {
+                GameObject.Destroy(mindlinkConnector.gameObject);
+            }
         }
     }
 
