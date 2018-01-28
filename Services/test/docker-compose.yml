@@ -1,0 +1,22 @@
+version: '3.3'
+services:
+  test_server:
+    image: test/test_server
+    build: ./test_server
+    environment:
+      - LOG_LEVEL=debug
+    volumes:
+      - ./test_server/app:/app
+      - ../.libmindlink:/usr/local/lib/node_modules/libmindlink
+
+  test_client:
+    image: test/test_client
+    build: ./test_client
+    environment:
+      - LOG_LEVEL=debug
+    volumes:
+      - ./test_client/app:/app
+      - ../.libmindlink:/usr/local/lib/node_modules/libmindlink
+    depends_on:
+      - test_server
+

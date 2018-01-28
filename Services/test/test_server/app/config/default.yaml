@@ -1,0 +1,23 @@
+# test server
+#testServer:
+
+# websocket server
+webSocketServer:
+  port: 7788
+
+# log4js
+log4js:
+  appenders:
+    console:
+      type: console
+  categories:
+    default:
+      appenders: [console]
+      level: info
+    testServer:
+      appenders: [console]
+      level: info
+    webSocketServer:
+      appenders: [console]
+      level: info
+

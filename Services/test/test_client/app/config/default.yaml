@@ -1,0 +1,23 @@
+# test client
+#testClient:
+
+# websocket client
+webSocketClient:
+  url: "ws://test_server:7788/"
+  retryCount: 20
+
+# log4js
+log4js:
+  appenders:
+    console:
+      type: console
+  categories:
+    default:
+      appenders: [console]
+      level: info
+    testClient:
+      appenders: [console]
+      level: info
+    webSocketClient:
+      appenders: [console]
+      level: info

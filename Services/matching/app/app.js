@@ -1,10 +1,12 @@
 var url            = require('url');
 var config         = require('./config');
 var logger         = require('./logger');
-var matchingServer = require('libmindlink').WebSocketServer.activate(config.matchingServer, logger.matchingServer);
-var mindlinkClient = require('libmindlink').MindlinkClient.activate(config.mindlinkClient, logger.mindlinkClient);
+var mindlinkClient = require('libmindlink').MindlinkClient.activate();
+var matchingServer = require('libmindlink').WebSocketServer.activate();
 
 // mindlink client
+mindlinkClient.setConfig(config.mindlinkClient);
+mindlinkClient.setLogger(logger.mindlinkClient);
 mindlinkClient.on('connect', function() {
     matchingServer.start();
 });
@@ -14,6 +16,8 @@ mindlinkClient.on('connect', function() {
 //});
 
 // matching server
+matchingServer.setConfig(config.matchingServer);
+matchingServer.setLogger(logger.matchingServer);
 matchingServer.setAccepter(function(req) {
     var location = url.parse(req.url, true);
     if (!location.query.ck) {
