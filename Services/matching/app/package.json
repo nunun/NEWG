@@ -7,13 +7,14 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "config": "*",
+    "config": "^1.29.2",
+    "libmindlink": "git+https://github.com/nunun/libservices.git#master",
     "libservices": "git+https://github.com/nunun/libservices.git#master",
-    "log4js": "*",
-    "string.prototype.trim": "*",
-    "uuid": "*",
-    "ws": "*",
-    "yaml": "*"
+    "log4js": "^2.5.2",
+    "string.prototype.trim": "^1.1.2",
+    "uuid": "^3.2.1",
+    "ws": "^4.0.0",
+    "yaml": "^0.3.0"
   },
   "repository": "",
   "author": "nunun",
