@@ -1,0 +1,7 @@
+version: '3.3'
+services:
+  matching:
+    build: ./matching
+    volumes:
+      - ./matching/app:/app
+
