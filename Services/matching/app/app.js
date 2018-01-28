@@ -1,7 +1,7 @@
 var config         = require('./config');
 var logger         = require('./logger');
 var matchingServer = require('./matching_server');
-var MatchingClient = require('libmindlink').MindlinkClient;
+var MindlinkClient = require('libmindlink').MindlinkClient;
 var mindlinkClient = new MindlinkClient(config.mindlinkClient);
 
 // mindlink client

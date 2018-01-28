@@ -13,6 +13,9 @@ services:
 
   matching:
     build: ./matching
+    volumes:
+      - ./matching/app:/app
+      - ./.libmindlink:/app/node_modules/libmindlink
 
   mindlink:
     environment:

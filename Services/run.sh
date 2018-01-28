@@ -9,9 +9,8 @@ task_up() { task_down; docker-compose up; }
 task_down() { docker-compose down; }
 task_matching() { docker-compose run --rm matching node app.js; }
 task_build() {
-        task_down;
+        task_down; docker-compose build;
         git submodule init; git submodule update;
-        docker-compose build;
         docker-compose run --rm --no-deps matching npm update
 }
 task_publish() {
