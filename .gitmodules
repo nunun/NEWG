@@ -1,0 +1,4 @@
+
+[submodule "Services/.libmindlink"]
+	path = Services/.libmindlink
+	url = https://github.com/nunun/libmindlink

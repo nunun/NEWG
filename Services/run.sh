@@ -7,9 +7,11 @@ cd "${CWD}"
 
 task_up() { task_down; docker-compose up; }
 task_down() { docker-compose down; }
-task_build() { task_down; docker-compose build; task_npm; }
 task_matching() { docker-compose run --rm matching node app.js; }
-task_npm() {
+task_build() {
+        task_down;
+        git submodule init; git submodule update;
+        docker-compose build;
         docker-compose run --rm --no-deps matching npm update
 }
 task_publish() {
