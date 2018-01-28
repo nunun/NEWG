@@ -10,10 +10,11 @@ task_down() { docker-compose down; }
 task_matching() { docker-compose run --rm matching node app.js; }
 task_build() {
         task_down; docker-compose build --force-rm --pull
-        git submodule init; git submodule update
-        NPM_COMPOSES="-f docker-compose.yml -f .docker-compose.npm.yml"
-        docker-compose ${NPM_COMPOSES} \
-                run --rm --no-deps matching npm update
+        git submodule update --init --recursive --remote
+        docker-compose run --rm --no-deps matching npm update
+        docker-compose run --rm --no-deps matching npm link libmindlink
+        docker-compose run --rm --no-deps matching \
+                sh -c "(cd /usr/local/lib/node_modules/libmindlink && npm install)"
 }
 task_publish() {
         local publish_to="${1:-"${PUBLISH_TO}"}"
