@@ -1,4 +1,3 @@
-
-[submodule "Services/.libmindlink"]
-	path = Services/.libmindlink
-	url = https://github.com/nunun/libmindlink
+[submodule "Services/.libservices"]
+	path = Services/.libservices
+	url = http://github.com/nunun/libservices

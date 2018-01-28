@@ -1,6 +1,6 @@
 var config          = require('./config');
 var logger          = require('./logger');
-var webSocketServer = require('libmindlink').WebSocketServer.activate();
+var webSocketServer = require('libservices').WebSocketServer.activate();
 
 // websocket server
 webSocketServer.setConfig(config.webSocketServer);

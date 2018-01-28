@@ -12,9 +12,9 @@ task_build() {
         task_down; docker-compose build --force-rm --pull
         git submodule update --init --recursive --remote
         docker-compose run --rm --no-deps matching sh -c \
-                "(cd /usr/local/lib/node_modules/libmindlink && npm install)"
+                "(cd /usr/local/lib/node_modules/libservices && npm install)"
         docker-compose run --rm --no-deps matching npm update
-        docker-compose run --rm --no-deps matching npm link libmindlink
+        docker-compose run --rm --no-deps matching npm link libservices
 }
 task_publish() {
         local publish_to="${1:-"${PUBLISH_TO}"}"

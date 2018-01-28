@@ -15,7 +15,7 @@ services:
     build: ./matching
     volumes:
       - ./matching/app:/app
-      - ./.libmindlink:/usr/local/lib/node_modules/libmindlink
+      - ./.libservices:/usr/local/lib/node_modules/libservices
 
   mindlink:
     environment:

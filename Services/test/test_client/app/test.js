@@ -1,7 +1,7 @@
 var assert          = require('assert');
 var config          = require('./config');
 var logger          = require('./logger');
-var webSocketClient = require('libmindlink').WebSocketClient.activate();
+var webSocketClient = require('libservices').WebSocketClient.activate();
 var clients = [webSocketClient];
 
 webSocketClient.setConfig(config.webSocketClient);
