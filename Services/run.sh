@@ -11,7 +11,8 @@ task_matching() { docker-compose run --rm matching node app.js; }
 task_build() {
         task_down; docker-compose build --force-rm --pull
         git submodule init; git submodule update
-        docker-compose -f docker-compose.yml -f .docker-compose.npm.yml \
+        NPM_COMPOSES="-f docker-compose.yml -f .docker-compose.npm.yml"
+        docker-compose ${NPM_COMPOSES} \
                 run --rm --no-deps matching npm update
 }
 task_publish() {
