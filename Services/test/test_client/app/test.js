@@ -2,12 +2,29 @@ var assert          = require('assert');
 var config          = require('./config');
 var logger          = require('./logger');
 var webSocketClient = require('libservices').WebSocketClient.activate(config.webSocketClient, logger.webSocketClient);
+var couchClient     = require('libservices').CouchClient.activate(config.couchClient, logger.couchClient);
 var redisClient     = require('libservices').RedisClient.activate(config.redisClient, logger.redisClient);
 
 describe('test client', function () {
     describe('websocket client', function () {
         this.timeout(10000);
         it('smoke test', function (done) {
+            couchClient.test([
+                {connect: function() {
+                    var conn = couchClient.getConnection();
+                    conn.server.db.destroy(conn.config.db, function(err, body) {
+                        assert.ok(!err, 'db destroy error.');
+                        conn.server.db.create(conn.config.db, function(err, body) {
+                            assert.ok(!err, 'db create error.');
+                            conn.insert({happy: true}, function(err, body) {
+                                assert.ok(!err, 'document insert error.');
+                                redisClient.start();
+                            });
+                        });
+                    });
+                }},
+            ]);
+
             redisClient.test([
                 {connect: function() {
                     webSocketClient.start();
@@ -28,7 +45,7 @@ describe('test client', function () {
                 }},
             ]);
 
-            redisClient.start();
+            couchClient.start();
         });
     });
 });
@@ -50,6 +67,15 @@ var profiles = [{
         webSocketClient.removeAllListeners('connect');
         webSocketClient.removeAllListeners('disconnect');
         webSocketClient.removeAllListeners('data');
+    }
+}, {
+    // couch client
+    testee: couchClient,
+    listen: function(check) {
+        couchClient.on('connect', function() { check('connect', null); });
+    },
+    unlisten: function() {
+        couchClient.removeAllListeners('connect');
     }
 }, {
     // redis client

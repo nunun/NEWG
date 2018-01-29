@@ -3,7 +3,12 @@
 
 # websocket client
 webSocketClient:
-  url: "ws://test_server:7788/"
+  url: "ws://test_server:7788"
+  retryCount: 20
+
+# couch client
+couchClient:
+  url: "http://couchdb:5984/test"
   retryCount: 20
 
 # redis client
@@ -26,6 +31,10 @@ log4js:
     webSocketClient:
       appenders: [console]
       level: info
+    couchClient:
+      appenders: [console]
+      level: info
     redisClient:
       appenders: [console]
       level: info
+
