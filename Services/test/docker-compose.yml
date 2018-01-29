@@ -1,7 +1,7 @@
 version: '3.3'
 services:
   test_server:
-    image: test/test_server
+    image: newg_test/test_server
     build: ./test_server
     environment:
       - LOG_LEVEL=debug
@@ -10,7 +10,7 @@ services:
       - ../.libservices:/usr/local/lib/node_modules/libservices
 
   test_client:
-    image: test/test_client
+    image: newg_test/test_client
     build: ./test_client
     environment:
       - LOG_LEVEL=debug
