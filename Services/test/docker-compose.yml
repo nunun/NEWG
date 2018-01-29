@@ -19,4 +19,8 @@ services:
       - ../.libservices:/usr/local/lib/node_modules/libservices
     depends_on:
       - test_server
+      - redis
+
+  redis:
+    image: redis:4.0.6-alpine
 

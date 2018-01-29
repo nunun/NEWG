@@ -6,6 +6,11 @@ webSocketClient:
   url: "ws://test_server:7788/"
   retryCount: 20
 
+# redis client
+redisClient:
+  url: "redis://redis:6379"
+  retryCount: 20
+
 # log4js
 log4js:
   appenders:
@@ -19,5 +24,8 @@ log4js:
       appenders: [console]
       level: info
     webSocketClient:
+      appenders: [console]
+      level: info
+    redisClient:
       appenders: [console]
       level: info

@@ -15,6 +15,7 @@ if (process.env.REQUEST_TIMEOUT) {
 if (process.env.LOG_LEVEL) {
     config.log4js.categories.testClient.level      = process.env.LOG_LEVEL;
     config.log4js.categories.webSocketClient.level = process.env.LOG_LEVEL;
+    config.log4js.categories.redisClient.level     = process.env.LOG_LEVEL;
 }
 
 module.exports = config;

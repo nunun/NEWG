@@ -6,4 +6,5 @@ log4js.configure(config.log4js);
 module.exports = {
     testClient:      log4js.getLogger('testClient'),
     webSocketClient: log4js.getLogger('webSocketClient'),
+    redisClient:     log4js.getLogger('redisClient'),
 };
