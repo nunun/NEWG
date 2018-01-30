@@ -13,11 +13,11 @@ log4js:
   categories:
     default:
       appenders: [console]
-      level: info
+      level: [info, "${LOG_LEVEL}"]
     testServer:
       appenders: [console]
-      level: info
+      level: [info, "${LOG_LEVEL}"]
     webSocketServer:
       appenders: [console]
-      level: info
+      level: [info, "${LOG_LEVEL}"]
 

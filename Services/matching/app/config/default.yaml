@@ -1,11 +1,12 @@
 # matching server
 matchingServer:
-  port: 7790
+  port: [7755, "${PORT}"]
 
 # mindlink client
 mindlinkClient:
-  url: "ws://mindlink:7766/"
-  retryCount: 20
+  url:           ["ws://mindlink:7766/", "${MINDLINK_URL}"]
+  retryCount:    [20,                    "${MINDLINK_RETRY_COUNT}"]
+  retryInterval: [3000,                  "${MINDLINK_RETRY_INTERVAL}"]
 
 # log4js
 log4js:
@@ -15,14 +16,10 @@ log4js:
   categories:
     default:
       appenders: [console]
-      level: info
+      level: [info, "${LOG_LEVEL}"]
     matchingServer:
       appenders: [console]
-      level: info
+      level: [info, "${LOG_LEVEL}"]
     mindlinkClient:
       appenders: [console]
-      level: info
-    test:
-      appenders: [console]
-      level: info
-
+      level: [info, "${LOG_LEVEL}"]

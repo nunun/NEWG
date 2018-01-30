@@ -1,6 +1,6 @@
 var url            = require('url');
-var config         = require('./config');
-var logger         = require('./logger');
+var config         = require('libservices').config;
+var logger         = require('libservices').logger;
 var mindlinkClient = require('libservices').MindlinkClient.activate();
 var matchingServer = require('libservices').WebSocketServer.activate();
 

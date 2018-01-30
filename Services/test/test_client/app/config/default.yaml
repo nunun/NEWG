@@ -4,17 +4,14 @@
 # websocket client
 webSocketClient:
   url: "ws://test_server:7788"
-  retryCount: 20
 
 # couch client
 couchClient:
   url: "http://couchdb:5984/test"
-  retryCount: 20
 
 # redis client
 redisClient:
   url: "redis://redis:6379"
-  retryCount: 20
 
 # log4js
 log4js:
@@ -24,17 +21,17 @@ log4js:
   categories:
     default:
       appenders: [console]
-      level: info
+      level: [info, "${LOG_LEVEL}"]
     testClient:
       appenders: [console]
-      level: info
+      level: [info, "${LOG_LEVEL}"]
     webSocketClient:
       appenders: [console]
-      level: info
+      level: [info, "${LOG_LEVEL}"]
     couchClient:
       appenders: [console]
-      level: info
+      level: [info, "${LOG_LEVEL}"]
     redisClient:
       appenders: [console]
-      level: info
+      level: [info, "${LOG_LEVEL}"]
 

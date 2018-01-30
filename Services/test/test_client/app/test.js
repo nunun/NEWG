@@ -1,6 +1,6 @@
 var assert          = require('assert');
-var config          = require('./config');
-var logger          = require('./logger');
+var config          = require('libservices').config;
+var logger          = require('libservices').logger;
 var webSocketClient = require('libservices').WebSocketClient.activate(config.webSocketClient, logger.webSocketClient);
 var couchClient     = require('libservices').CouchClient.activate(config.couchClient, logger.couchClient);
 var redisClient     = require('libservices').RedisClient.activate(config.redisClient, logger.redisClient);

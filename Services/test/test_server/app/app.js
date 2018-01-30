@@ -1,5 +1,5 @@
-var config          = require('./config');
-var logger          = require('./logger');
+var config          = require('libservices').config;
+var logger          = require('libservices').logger;
 var webSocketServer = require('libservices').WebSocketServer.activate();
 
 // websocket server
