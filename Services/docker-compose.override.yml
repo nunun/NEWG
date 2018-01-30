@@ -2,30 +2,45 @@ version: '3.3'
 services:
   client:
     build: ./client
+    environment:
+      - LOG_LEVEL=debug
     volumes:
       - ./client/Builds/Client:/usr/share/nginx/html
 
   server:
     build: ./server
+    environment:
+      - LOG_LEVEL=debug
     volumes:
       - ./server/Builds:/server
-    network_mode: host # NOTE Docker for Win, Docker for Mac の場合は 10.0.75.2 に接続
+    network_mode: host
 
   matching:
     build: ./matching
+    environment:
+      - LOG_LEVEL=debug
     volumes:
       - ./matching/app:/app
       - ./.libservices:/usr/local/lib/node_modules/libservices
 
-  mindlink:
+  api:
+    build: ./api
     environment:
       - LOG_LEVEL=debug
+    volumes:
+      - ./api/app:/app
+      - ./.libservices:/usr/local/lib/node_modules/libservices
+
+  mindlink:
+    environment:
       - DEBUG_HTTP_CHANNEL_ENABLE=1
+      - LOG_LEVEL=debug
     ports:
-      - 7780:7780
+      - 17766:17766
 
   rabbitmq:
     image: rabbitmq:3.7.0-management-alpine
     ports:
       - 15672:15672
 
+  couchdb: {}

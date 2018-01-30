@@ -1,3 +1,18 @@
+# NOTE
+# ポート番号メモ ('*' 付きは公開ポート)
+#    80* client
+#  RAND* server
+#  7755* matching
+#  7766* mindlink
+#  7799  api
+#  5672  rabbitmq
+#  5984  couchdb
+# 15672  rabbitmq webui
+# 17766  mindlink webui
+#
+# NOTE
+# "server" はホストモードで動作する。(docker-compose.override.yml 参照)
+# Docker for Win, Docker for Mac の場合は 10.0.75.2 に接続。
 version: '3.3'
 services:
   client:
@@ -16,9 +31,15 @@ services:
   matching:
     image: newg/matching:1
     ports:
-      - 7790:7790
+      - 7755:7755
     depends_on:
       - mindlink
+
+  api:
+    image: newg/api:1
+    depends_on:
+      - mindlink
+      - couchdb
 
   mindlink:
     image: nunun/mindlink
@@ -29,4 +50,7 @@ services:
 
   rabbitmq:
     image: rabbitmq:3.7.0-alpine
+
+  couchdb:
+    image: couchdb:2.1.1
 

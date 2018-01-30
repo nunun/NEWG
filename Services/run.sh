@@ -7,6 +7,7 @@ cd "${CWD}"
 
 task_up() { task_down; docker-compose up; }
 task_down() { docker-compose down; }
+task_api() { docker-compose run --rm --no-deps api node app.js; }
 task_test() { sh ./test/test.sh ${*}; }
 task_build() {
         task_down; docker-compose build --force-rm --pull
@@ -14,7 +15,9 @@ task_build() {
         docker-compose run --rm --no-deps matching sh -c \
                 "(cd /usr/local/lib/node_modules/libservices && npm install)"
         docker-compose run --rm --no-deps matching npm update
+        docker-compose run --rm --no-deps api      npm update
         docker-compose run --rm --no-deps matching npm link libservices
+        docker-compose run --rm --no-deps api      npm link libservices
 }
 task_publish() {
         local publish_to="${1:-"${PUBLISH_TO}"}"

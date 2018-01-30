@@ -1,0 +1,26 @@
+# api server
+apiServer:
+  port: [7799, "${PORT}"]
+
+# mindlink client
+mindlinkClient:
+  url:           ["ws://mindlink:7766/", "${MINDLINK_URL}"]
+  retryCount:    [20,                    "${MINDLINK_RETRY_COUNT}"]
+  retryInterval: [1000,                  "${MINDLINK_RETRY_INTERVAL}"]
+
+# log4js
+log4js:
+  appenders:
+    console:
+      type: console
+  categories:
+    default:
+      appenders: [console]
+      level: [info, "${LOG_LEVEL}"]
+    apiServer:
+      appenders: [console]
+      level: [info, "${LOG_LEVEL}"]
+    mindlinkClient:
+      appenders: [console]
+      level: [info, "${LOG_LEVEL}"]
+
