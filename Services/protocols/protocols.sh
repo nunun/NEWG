@@ -6,6 +6,9 @@ cd "${CWD}"
 
 task_up() { task_down; docker-compose up; }
 task_down() { docker-compose down; }
+task_go() {
+        docker-compose run --rm --no-deps generator ruby generate.rb -c
+}
 task_generate() {
         docker-compose run --rm --no-deps generator ruby generate.rb
 }
