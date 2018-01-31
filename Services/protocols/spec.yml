@@ -1,0 +1,9 @@
+StartGame:
+  sceneName: ["string",  ""]
+  time:      ["integer", 300]
+  user:      ["UserInfo"]
+  users:     ["list:UserInfo"]
+
+UserInfo:
+  name: ["string", "null"]
+

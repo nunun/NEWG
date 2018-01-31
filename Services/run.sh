@@ -8,6 +8,7 @@ cd "${CWD}"
 task_up() { task_down; docker-compose up; }
 task_down() { docker-compose down; }
 task_api() { docker-compose run --rm --no-deps api node app.js; }
+task_protocols() { sh ./protocols/protocols.sh ${*}; }
 task_test() { sh ./test/test.sh ${*}; }
 task_build() {
         task_down; docker-compose build --force-rm --pull
