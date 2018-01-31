@@ -4,6 +4,12 @@ models:
   properties:
   - name: sceneName
     type: string
+  - name: sceneNum
+    type: integer
+    def:  10
+  - name: isSwitch
+    type: boolean
+    def:  true
   - name: users
     type: list
     cont: User
@@ -24,13 +30,16 @@ templates:
       <%- t["properties"].each do |p| -%>
       <%- case p["type"]
            when "string" -%>
-          <%= p["name"] %>: "",
+          <%= p["name"] %>: <%= (p.key?("def"))? "\"#{p["def"]}\"" : "null" %>,
+      <%- when "integer" -%>
+          <%= p["name"] %>: <%= (p.key?("def"))? "#{p["def"]}" : 0 %>,
+      <%- when "boolean" -%>
+          <%= p["name"] %>: <%= (p.key?("def"))? "#{p["def"]}" : false %>,
       <%- when "list" -%>
           <%= p["name"] %>: [],
-      <%- else -%>
-          <%= p["name"] %>: null,
       <%- end -%>
       <%- end -%>
       };
     }
     <% end %>
+
