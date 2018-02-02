@@ -1,38 +1,42 @@
 var url            = require('url');
 var config         = require('libservices').config;
 var logger         = require('libservices').logger;
-var mindlinkClient = require('libservices').MindlinkClient.activate();
-var matchingServer = require('libservices').WebSocketServer.activate();
+var mindlinkClient = require('libservices').MindlinkClient.activate(config.mindlinkClient, logger.mindlinkClient);
+var matchingServer = require('libservices').WebSocketServer.activate(config.matchingServer, logger.matchingServer);
 
 // mindlink client
-mindlinkClient.setConfig(config.mindlinkClient);
-mindlinkClient.setLogger(logger.mindlinkClient);
 mindlinkClient.on('connect', function() {
-    matchingServer.start();
+    // NOTE
+    // エイリアスを張ってからマッチングサーバ開始
+    mindlinkClient.sendState({alias:'matching'}, function(err) {
+        if (err) {
+            logger.mindlinkClient.error(err.toString());
+            process.exit(1);
+            return;
+        }
+        logger.mindlinkClient.info('starting matching server.');
+        matchingServer.start();
+    });
 });
-//mindlinkClient.on('disconnect', function() {
-//});
-//mindlinkClient.on('data', function(data) {
-//});
 
 // matching server
-matchingServer.setConfig(config.matchingServer);
-matchingServer.setLogger(logger.matchingServer);
 matchingServer.setAccepter(function(req) {
     var location = url.parse(req.url, true);
-    if (!location.query.ck) {
+    if (!location.query.user_id) {
         return null;
     }
-    return location.query.ck;
+    return {userId:location.query.user_id};
 });
-//matchingServer.on('start', function(webSocketClient) {
-//});
-//matchingServer.on('connect', function(webSocketClient) {
-//});
-//matchingServer.on('disconnect', function(webSocketClient) {
-//});
-//matchingServer.on('data', function(webSocketClient, data) {
-//});
+matchingServer.on('connect', function(matchingClient) {
+    var userId = matchingClient.accepted.userId;
+    matchingClient.requestId = mindlinkClient.sendMessage('api', {cmd:'matching', userId:userId}, function(err, data) {
+        matchingClient.send({err:((err)? err.toString() : null), data:data});
+        matchingClient.stop();
+    }, config.matchingServer.timeout);
+});
+matchingServer.on('disconnect', function(matchingClient) {
+    mindlinkClient.cancelRequest(matchingClient.requestId);
+});
 
 // start app ...
 mindlinkClient.start();

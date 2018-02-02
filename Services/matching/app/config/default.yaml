@@ -1,6 +1,7 @@
 # matching server
 matchingServer:
   port: [7755, "${PORT}"]
+  timeout: 300000
 
 # mindlink client
 mindlinkClient:

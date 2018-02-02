@@ -1,14 +1,5 @@
 version: '3.3'
 services:
-  test_server:
-    image: newg_test/test_server
-    build: ./test_server
-    environment:
-      - LOG_LEVEL=debug
-    volumes:
-      - ./test_server/app:/app
-      - ../.libservices:/usr/local/lib/node_modules/libservices
-
   test_client:
     image: newg_test/test_client
     build: ./test_client
@@ -21,6 +12,49 @@ services:
       - test_server
       - couchdb
       - redis
+
+  test_server:
+    image: newg_test/test_server
+    build: ./test_server
+    environment:
+      - LOG_LEVEL=debug
+    volumes:
+      - ./test_server/app:/app
+      - ../.libservices:/usr/local/lib/node_modules/libservices
+
+  matching:
+    image: newg_test/test_matching
+    build: ../matching
+    environment:
+      - LOG_LEVEL=debug
+    volumes:
+      - ../matching/app:/app
+      - ../.libservices:/usr/local/lib/node_modules/libservices
+    depends_on:
+      - mindlink
+      - api
+
+  api:
+    image: newg_test/test_api
+    build: ../api
+    environment:
+      - LOG_LEVEL=debug
+    volumes:
+      - ../api/app:/app
+      - ../.libservices:/usr/local/lib/node_modules/libservices
+    depends_on:
+      - mindlink
+      - couchdb
+
+  mindlink:
+    image: nunun/mindlink
+    depends_on:
+      - rabbitmq
+
+  rabbitmq:
+    image: rabbitmq:3.7.0-management-alpine
+    ports:
+      - 15672:15672
 
   couchdb:
     image: couchdb:2.1.1
