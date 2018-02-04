@@ -13,6 +13,10 @@ couchClient:
 redisClient:
   url: "redis://redis:6379"
 
+# matching client
+matchingClient:
+  url: "ws://matching:7755"
+
 # log4js
 log4js:
   appenders:
@@ -32,6 +36,9 @@ log4js:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
     redisClient:
+      appenders: [console]
+      level: [info, "${LOG_LEVEL}"]
+    matchingClient:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
 

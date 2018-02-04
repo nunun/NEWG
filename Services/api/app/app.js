@@ -1,20 +1,26 @@
 var url            = require('url');
 var config         = require('libservices').config;
 var logger         = require('libservices').logger;
-var mindlinkClient = require('libservices').MindlinkClient.activate();
+var mindlinkClient = require('libservices').MindlinkClient.activate(config.mindlinkClient, logger.mindlinkClient);
+var protocols      = require('./protocols');
 
 // mindlink client
-mindlinkClient.setConfig(config.mindlinkClient);
-mindlinkClient.setLogger(logger.mindlinkClient);
+mindlinkClient.on('connect', function() {
+    mindlinkClient.sendState({alias:'api'}, function(err) {
+        if (err) {
+            logger.mindlinkClient.error(err.toString());
+            process.exit(1);
+            return;
+        }
+        logger.mindlinkClient.info('mindlink client initialized.');
+        logger.mindlinkClient.info('listeing api requests through mindlink ...');
+    });
+});
 mindlinkClient.on('request', function(data) {
-    switch (data.type) {
-    case 100: // [server] match start.
-        mindlinkClient.response(data, {param:'hoge'});
+    switch (data.cmd) {
+    case protocols.CMD.API.MATCHING_REQUEST:
+        mindlinkClient.sendResponse(data, {cmd:protocols.CMD.API.MATCHING_RESPONSE, address:'example.com:80'});
         break;
-    //case 101: // [matching] join user.
-    //  break;
-    //case 102: // [matching] get user.
-    //  break;
     }
 });
 

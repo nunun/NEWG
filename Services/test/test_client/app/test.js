@@ -4,10 +4,11 @@ var logger          = require('libservices').logger;
 var webSocketClient = require('libservices').WebSocketClient.activate(config.webSocketClient, logger.webSocketClient);
 var couchClient     = require('libservices').CouchClient.activate(config.couchClient, logger.couchClient);
 var redisClient     = require('libservices').RedisClient.activate(config.redisClient, logger.redisClient);
+var matchingClient  = require('libservices').WebSocketClient.activate(config.matchingClient, logger.matchingClient);
 
 describe('test client', function () {
     describe('websocket client', function () {
-        this.timeout(10000);
+        this.timeout(30000);
         it('smoke test', function (done) {
             couchClient.test([
                 {connect: function() {
@@ -40,6 +41,19 @@ describe('test client', function () {
                 //    webSocketClient.send({type:webSocketClient.DATA_TYPE.Q, jspath:'.*'});
                 //}},
                 {disconnect: function() {
+                    matchingClient.start({user_id:'test'});
+                }},
+            ]);
+
+            matchingClient.test([
+                {connect: function() {
+                    // NOTE
+                    // nothing to do
+                }},
+                {data: function(data) {
+                    logger.matchingClient.info(data);
+                }},
+                {disconnect: function() {
                     redisClient.stop();
                     done();
                 }},
@@ -57,13 +71,11 @@ var profiles = [{
     // websocket client
     testee: webSocketClient,
     listen: function(check) {
-        //webSocketClient.on('start',    function()     { check('start',      null); });
         webSocketClient.on('connect',    function()     { check('connect',    null); });
         webSocketClient.on('disconnect', function()     { check('disconnect', null); });
         webSocketClient.on('data',       function(data) { check('data',       data); });
     },
     unlisten: function() {
-        //webSocketClient.removeAllListeners('start');
         webSocketClient.removeAllListeners('connect');
         webSocketClient.removeAllListeners('disconnect');
         webSocketClient.removeAllListeners('data');
@@ -87,6 +99,19 @@ var profiles = [{
     unlisten: function() {
         redisClient.removeAllListeners('connect');
         redisClient.removeAllListeners('disconnect');
+    }
+}, {
+    // matching client
+    testee: matchingClient,
+    listen: function(check) {
+        matchingClient.on('connect',    function()     { check('connect',    null); });
+        matchingClient.on('disconnect', function()     { check('disconnect', null); });
+        matchingClient.on('data',       function(data) { check('data',       data); });
+    },
+    unlisten: function() {
+        matchingClient.removeAllListeners('connect');
+        matchingClient.removeAllListeners('disconnect');
+        matchingClient.removeAllListeners('data');
     }
 }];
 

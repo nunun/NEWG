@@ -1,5 +1,6 @@
 # api server
-#apiServer:
+apiServer:
+  port: [7799, "${PORT}"]
 
 # mindlink client
 mindlinkClient:
@@ -14,6 +15,9 @@ log4js:
       type: console
   categories:
     default:
+      appenders: [console]
+      level: [info, "${LOG_LEVEL}"]
+    apiServer:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
     mindlinkClient:

@@ -12,8 +12,6 @@ services:
       - ../matching/app:/generate/nodejs/matching/
       - ../test/test_client/app:/generate/nodejs/test_client/
       - ../test/test_server/app:/generate/nodejs/test_server/
-      - ../test/matching/app:/generate/nodejs/test_matching/
-      - ../test/api/app:/generate/nodejs/test_api/
       # C# 出力先 (/generate/cs/xxx)
       - ../../Assets:/generate/cs/Assets/
 

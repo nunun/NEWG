@@ -9,6 +9,7 @@ services:
       - ./test_client/app:/app
       - ../.libservices:/usr/local/lib/node_modules/libservices
     depends_on:
+      - matching
       - test_server
       - couchdb
       - redis
