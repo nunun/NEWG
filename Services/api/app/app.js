@@ -22,17 +22,17 @@ mindlinkClient.on('request', function(data) {
         var jspath= '.*{.address != ""}'; // TODO population & capacity
         mindlinkClient.send({type:mindlinkClient.DATA_TYPE.Q, jspath:jspath}, function(err,responseData) {
             if (err) {
-                mindlinkClient.sendResponse(data, {err:err.toString()});
+                mindlinkClient.sendReply(data, {err:err.toString()});
                 return;
             }
             var services = responseData.services;
             if (!services || services.length <= 0) {
-                mindlinkClient.sendResponse(data, {err:'no server found.'});
+                mindlinkClient.sendReply(data, {err:'no server found.'});
                 return;
             }
             var service = services[0];
             logger.mindlinkClient.debug('service found: service[' + service + ']');
-            mindlinkClient.sendResponse(data, service);
+            mindlinkClient.sendReply(data, service);
         });
         break;
     }
