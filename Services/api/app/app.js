@@ -19,7 +19,9 @@ mindlinkClient.on('connect', function() {
 mindlinkClient.on('request', function(data) {
     switch (data.cmd) {
     case protocols.CMD.API.MATCHING_REQUEST:
-        mindlinkClient.sendResponse(data, {cmd:protocols.CMD.API.MATCHING_RESPONSE, address:'example.com:80'});
+        // TODO
+        // mindlink から空きサーバ検索
+        mindlinkClient.sendResponse(data, {address:'example.com:7777'});
         break;
     }
 });

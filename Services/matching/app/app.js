@@ -28,10 +28,23 @@ matchingServer.setAccepter(function(req) {
     return {userId:location.query.user_id};
 });
 matchingServer.on('connect', function(matchingClient) {
+    // 接続をマッチング開始の合図とする。
+    // 接続時の URL クエリをパラメータにして
+    // API サーバにマッチングリクエスト。
     var userId = matchingClient.accepted.userId;
     matchingClient.requestId = mindlinkClient.sendMessage('api', {cmd:protocols.CMD.API.MATCHING_REQUEST, userId:userId}, function(err, data) {
-        matchingClient.send({err:((err)? err.toString() : null), data:data});
-        matchingClient.stop();
+        // マッチング結果をレスポンス
+        // エラーまたはサーバへのアドレス。
+        if (err) {
+            matchingClient.send({err:err.toString()});
+        } else {
+            matchingClient.send({address:data.address});
+        }
+        // NOTE
+        // レスポンス後 1 秒で切断
+        setTimeout(function() {
+            matchingClient.stop();
+        }, 1000);
     }, config.matchingServer.timeout);
 });
 matchingServer.on('disconnect', function(matchingClient) {

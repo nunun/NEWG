@@ -13,6 +13,10 @@ couchClient:
 redisClient:
   url: "redis://redis:6379"
 
+# mindlink client
+mindlinkClient:
+  url: "ws://mindlink:7766"
+
 # matching client
 matchingClient:
   url: "ws://matching:7755"
@@ -36,6 +40,9 @@ log4js:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
     redisClient:
+      appenders: [console]
+      level: [info, "${LOG_LEVEL}"]
+    mindlinkClient:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
     matchingClient:

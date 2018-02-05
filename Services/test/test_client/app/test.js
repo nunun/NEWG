@@ -4,11 +4,12 @@ var logger          = require('libservices').logger;
 var webSocketClient = require('libservices').WebSocketClient.activate(config.webSocketClient, logger.webSocketClient);
 var couchClient     = require('libservices').CouchClient.activate(config.couchClient, logger.couchClient);
 var redisClient     = require('libservices').RedisClient.activate(config.redisClient, logger.redisClient);
+var mindlinkClient  = require('libservices').MindlinkClient.activate(config.mindlinkClient, logger.mindlinkClient);
 var matchingClient  = require('libservices').WebSocketClient.activate(config.matchingClient, logger.matchingClient);
 
 describe('test client', function () {
     describe('websocket client', function () {
-        this.timeout(30000);
+        this.timeout(20000);
         it('smoke test', function (done) {
             couchClient.test([
                 {connect: function() {
@@ -41,19 +42,28 @@ describe('test client', function () {
                 //    webSocketClient.send({type:webSocketClient.DATA_TYPE.Q, jspath:'.*'});
                 //}},
                 {disconnect: function() {
-                    matchingClient.start({user_id:'test'});
+                    mindlinkClient.start();
                 }},
             ]);
 
-            matchingClient.test([
+            mindlinkClient.test([
                 {connect: function() {
-                    // NOTE
-                    // nothing to do
-                }},
+                    mindlinkClient.sendState({address:'example.com:7777', population:0, capacity:16}, function(err, responseData) {
+                        assert.ok(!err,            'invalid response err');
+                        assert.ok(responseData.ok, 'invalid response responseData.ok');
+                        matchingClient.start({user_id:'test'});
+                    });
+                }}
+            ]);
+
+            matchingClient.test([
+                {connect: function() {}},
                 {data: function(data) {
-                    logger.matchingClient.info(data);
+                    assert.ok(!data.err,                          'invalid response data.err');
+                    assert.ok(data.address == 'example.com:7777', 'invalid response data.address');
                 }},
                 {disconnect: function() {
+                    mindlinkClient.stop();
                     redisClient.stop();
                     done();
                 }},
@@ -99,6 +109,19 @@ var profiles = [{
     unlisten: function() {
         redisClient.removeAllListeners('connect');
         redisClient.removeAllListeners('disconnect');
+    }
+}, {
+    // mindlink client
+    testee: mindlinkClient,
+    listen: function(check) {
+        mindlinkClient.on('connect',    function()     { check('connect',    null); });
+        mindlinkClient.on('disconnect', function()     { check('disconnect', null); });
+        mindlinkClient.on('data',       function(data) { check('data',       data); });
+    },
+    unlisten: function() {
+        mindlinkClient.removeAllListeners('connect');
+        mindlinkClient.removeAllListeners('disconnect');
+        mindlinkClient.removeAllListeners('data');
     }
 }, {
     // matching client
