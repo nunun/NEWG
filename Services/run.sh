@@ -13,6 +13,7 @@ task_test() { sh ./test/test.sh ${*}; }
 task_build() {
         task_down; docker-compose build --force-rm --pull
         git submodule update --init --recursive --remote
+        docker pull nunun/mindlink
         docker-compose run --rm --no-deps matching sh -c \
                 "(cd /usr/local/lib/node_modules/libservices && npm install)"
         docker-compose run --rm --no-deps matching npm update
