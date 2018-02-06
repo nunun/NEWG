@@ -6,33 +6,32 @@ var protocols      = require('./protocols');
 
 // mindlink client
 mindlinkClient.on('connect', function() {
-    mindlinkClient.sendState({alias:'api'}, function(err) {
+    mindlinkClient.sendUpdateRequest({alias:'api'}, function(err) {
         if (err) {
             logger.mindlinkClient.error(err.toString());
             process.exit(1);
             return;
         }
         logger.mindlinkClient.info('mindlink client initialized.');
-        logger.mindlinkClient.info('listeing api requests through mindlink ...');
+        logger.mindlinkClient.info('listening requests through mindlink ...');
     });
 });
 mindlinkClient.on('request', function(data) {
     switch (data.cmd) {
     case protocols.CMD.API.MATCHING_REQUEST:
-        var jspath= '.*{.address != ""}'; // TODO population & capacity
-        mindlinkClient.send({type:mindlinkClient.DATA_TYPE.Q, jspath:jspath}, function(err,responseData) {
+        mindlinkClient.sendServiceRequest('.*{.address != ""}', function(err,responseData) {
             if (err) {
-                mindlinkClient.sendReply(data, {err:err.toString()});
+                mindlinkClient.dispatchResponse(data, {err:err.toString()});
                 return;
             }
             var services = responseData.services;
             if (!services || services.length <= 0) {
-                mindlinkClient.sendReply(data, {err:'no server found.'});
+                mindlinkClient.dispatchResponse(data, {err:'no server found.'});
                 return;
             }
             var service = services[0];
             logger.mindlinkClient.debug('service found: service[' + service + ']');
-            mindlinkClient.sendReply(data, service);
+            mindlinkClient.dispatchResponse(data, service);
         });
         break;
     }
