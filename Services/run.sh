@@ -11,7 +11,10 @@ task_api() { docker-compose run --rm --no-deps api node app.js; }
 task_protocols() { sh ./protocols/protocols.sh ${*}; }
 task_test() { sh ./test/test.sh ${*}; }
 task_build() {
-        task_down; docker-compose build --force-rm --pull
+        task_down
+        mkdir -p ./server/Builds
+        mkdir -p ./client/Builds/Client
+        docker-compose build --force-rm --pull
         git submodule update --init --recursive --remote
         docker pull nunun/mindlink
         docker-compose run --rm --no-deps matching sh -c \
