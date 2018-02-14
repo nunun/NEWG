@@ -53,8 +53,8 @@ public partial class MindlinkConnector : WebSocketConnector {
     }
 
     // リモートにリクエスト送信
-    public bool SendRequestToRemote<TSend,TRecv>(string to, int cmd, TSend data, Action<string,TRecv> callback, int timeout = 0) {
-        var request = default(Request<TRecv>);
+    public bool RequestToRemote<TSend,TRecv>(string to, int cmd, TSend data, Action<string,TRecv> callback, int timeout = 0) {
+        var requestInfo = default(RequestInfo<TRecv>);
         try {
             // 接続チェック
             if (state != State.Connected) {
@@ -79,20 +79,20 @@ public partial class MindlinkConnector : WebSocketConnector {
 
             // リクエストを作成して追加
             // レスポンスを待つ。
-            request = Request<TRecv>.GetRequest(callback);
-            request.requestId            = requestId;
-            request.requester            = requester;
-            request.timeoutRemainingTime = (float)((timeout > 0)? timeout : REQUEST_DEFAULT_TIMEOUT) / 1000.0f;
-            requestList.Add(request);
+            requestInfo = RequestInfo<TRecv>.GetRequest(callback);
+            requestInfo.requestId            = requestId;
+            requestInfo.requester            = requester;
+            requestInfo.timeoutRemainingTime = (float)((timeout > 0)? timeout : REQUEST_DEFAULT_TIMEOUT) / 1000.0f;
+            requestList.Add(requestInfo);
 
             // 送信
             ws.SendString(message);
 
         } catch (Exception e) {
             Debug.LogError(e.ToString());
-            if (request != null) {
-                requestList.Remove(request);
-                request.ReturnToPool();
+            if (requestInfo != null) {
+                requestList.Remove(requestInfo);
+                requestInfo.ReturnToPool();
             }
             callback(e.ToString(), default(TRecv));
             return false;
@@ -101,7 +101,7 @@ public partial class MindlinkConnector : WebSocketConnector {
     }
 
     // リモートにレスポンス送信
-    public bool SendResponseToRemote<TSend>(Response response, TSend data) {
+    public bool ResponseToRemote<TSend>(ResponseInfo responseInfo, TSend data) {
         try {
             // 接続チェック
             if (state != State.Connected) {
@@ -115,8 +115,8 @@ public partial class MindlinkConnector : WebSocketConnector {
             var from       = default(string);
             var requestId  = 0;
             var requester  = default(string);
-            FromPropertyParser.TryParse(response.message, out from);
-            RequestPropertyParser.TryParse(response.message, out requestId, out requester);
+            FromPropertyParser.TryParse(responseInfo.message, out from);
+            RequestPropertyParser.TryParse(responseInfo.message, out requestId, out requester);
 
             // メッセージに "requestId", "requester" プロパティをねじ込む。
             var sb = ObjectPool<StringBuilder>.GetObject();
@@ -137,24 +137,24 @@ public partial class MindlinkConnector : WebSocketConnector {
     }
 
     //-------------------------------------------------------------------------- イベントリスナ設定
-    public void SetRequestFromRemoteEventListener<TRecv>(int cmd, Action<TRecv,Response> eventListener) {
+    public void SetRequestFromRemoteEventListener<TRecv>(int cmd, Action<TRecv,ResponseInfo> eventListener) {
         if (eventListener == null) {
             requestFromRemoteEventListener.Remove(cmd);
             return;
         }
         if (typeof(TRecv) == typeof(string)) {
             requestFromRemoteEventListener[cmd] = (message) => {
-                var data     = (TRecv)(object)message;
-                var response = new Response() { message = message };
-                eventListener(data, response);
+                var data         = (TRecv)(object)message;
+                var responseInfo = new ResponseInfo() { message = message };
+                eventListener(data, responseInfo);
             };
             return;
         }
         requestFromRemoteEventListener[cmd] = (string message) => {
             try {
-                var data     = JsonUtility.FromJson<TRecv>(message);
-                var response = new Response() { message = message };
-                eventListener(data, response);
+                var data         = JsonUtility.FromJson<TRecv>(message);
+                var responseInfo = new ResponseInfo() { message = message };
+                eventListener(data, responseInfo);
             } catch (Exception e) {
                 Debug.LogError(e.ToString());
                 return;
@@ -187,10 +187,8 @@ public partial class MindlinkConnector : WebSocketConnector {
 
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     void Awake() {
-        // NOTE
-        // リモートメッセージング型を受け取ったら
-        // 内部で保持しているユーザコールバックに繋ぐ
-        SetRequestEventListener<string>((int)DataType.M, (message, response) => {
+        // リモートメッセージングを接続
+        SetRequestEventListener<string>((int)DataType.M, (message, responseInfo) => {
             var cmd = -1;
             if (   !CmdPropertyParser.TryParse(message, out cmd)
                 || !requestFromRemoteEventListener.ContainsKey(cmd)) {

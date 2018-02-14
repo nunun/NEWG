@@ -21,10 +21,10 @@ public partial class WebSocketConnector : MonoBehaviour {
     public int      retryCount    = 10;                    // 接続リトライ回数
     public float    retryInterval = 3.0f;                  // 接続リトライ間隔
 
-    protected State         state       = State.Init; // 状態
-    protected WebSocket     ws          = null;       // ウェブソケット
-    protected IEnumerator   connector   = null;       // 接続制御用列挙子
-    protected List<Request> requestList = null;       // リクエストリスト
+    protected State             state       = State.Init; // 状態
+    protected WebSocket         ws          = null;       // ウェブソケット
+    protected IEnumerator       connector   = null;       // 接続制御用列挙子
+    protected List<RequestInfo> requestList = null;       // リクエストリスト
 
     // イベントリスナ
     Action                         connectEventListener     = null;                                 // 接続時イベントリスナ
@@ -81,7 +81,7 @@ public partial class WebSocketConnector : MonoBehaviour {
         state       = State.Connecting;
         ws          = new WebSocket(new Uri(url));
         connector   = ws.Connect();
-        requestList = new List<Request>();
+        requestList = new List<RequestInfo>();
         enabled     = true;
     }
 
@@ -146,8 +146,8 @@ public partial class WebSocketConnector : MonoBehaviour {
     }
 
     // リクエスト送信
-    public bool SendRequest<TSend,TRecv>(int type, TSend data, Action<string,TRecv> callback, int timeout = 0) {
-        var request = default(Request<TRecv>);
+    public bool Request<TSend,TRecv>(int type, TSend data, Action<string,TRecv> callback, int timeout = 0) {
+        var requestInfo = default(RequestInfo<TRecv>);
         try {
             // 接続チェック
             if (state != State.Connected) {
@@ -172,20 +172,20 @@ public partial class WebSocketConnector : MonoBehaviour {
 
             // リクエストを作成して追加
             // レスポンスを待つ。
-            request = Request<TRecv>.GetRequest(callback);
-            request.requestId            = requestId;
-            request.requester            = requester;
-            request.timeoutRemainingTime = (float)((timeout > 0)? timeout : REQUEST_DEFAULT_TIMEOUT) / 1000.0f;
-            requestList.Add(request);
+            requestInfo = RequestInfo<TRecv>.GetRequest(callback);
+            requestInfo.requestId            = requestId;
+            requestInfo.requester            = requester;
+            requestInfo.timeoutRemainingTime = (float)((timeout > 0)? timeout : REQUEST_DEFAULT_TIMEOUT) / 1000.0f;
+            requestList.Add(requestInfo);
 
             // 送信
             ws.SendString(message);
 
         } catch (Exception e) {
             Debug.LogError(e.ToString());
-            if (request != null) {
-                requestList.Remove(request);
-                request.ReturnToPool();
+            if (requestInfo != null) {
+                requestList.Remove(requestInfo);
+                requestInfo.ReturnToPool();
             }
             callback(e.ToString(), default(TRecv));
             return false;
@@ -194,7 +194,7 @@ public partial class WebSocketConnector : MonoBehaviour {
     }
 
     // レスポンス送信
-    public bool SendResponse<TSend>(Response response, TSend data) {
+    public bool Response<TSend>(ResponseInfo responseInfo, TSend data) {
         try {
             // 接続チェック
             if (state != State.Connected) {
@@ -207,7 +207,7 @@ public partial class WebSocketConnector : MonoBehaviour {
             // リクエスト番号、送信 UUID を設定
             var requestId  = 0;
             var requester  = default(string);
-            RequestPropertyParser.TryParse(response.message, out requestId, out requester);
+            RequestPropertyParser.TryParse(responseInfo.message, out requestId, out requester);
 
             // メッセージに "requestId", "requester" プロパティをねじ込む。
             var sb = ObjectPool<StringBuilder>.GetObject();
@@ -230,11 +230,11 @@ public partial class WebSocketConnector : MonoBehaviour {
     // リクエストのキャンセル
     public void CancelRequest(int requestId) {
         for (int i = requestList.Count - 1; i >= 0; i--) {
-            var request = requestList[i];
-            if (request.requestId == requestId) {
+            var requestInfo = requestList[i];
+            if (requestInfo.requestId == requestId) {
                 requestList.RemoveAt(i);
-                request.Response("cancelled.", null);
-                request.ReturnToPool();
+                requestInfo.Response("cancelled.", null);
+                requestInfo.ReturnToPool();
             }
         }
     }
@@ -264,25 +264,25 @@ public partial class WebSocketConnector : MonoBehaviour {
         disconnectEventListener = null;
     }
 
-    public void SetRequestEventListener<TRecv>(int type, Action<TRecv,Response> eventListener) {
+    public void SetRequestEventListener<TRecv>(int type, Action<TRecv,ResponseInfo> eventListener) {
         if (eventListener == null) {
             requestEventListener.Remove(type);
             return;
         }
         if (typeof(TRecv) == typeof(string)) {
             requestEventListener[type] = (message) => {
-                var data     = (TRecv)(object)message;;
-                var response = new Response() { message = message };
-                eventListener(data, response);
+                var data         = (TRecv)(object)message;;
+                var responseInfo = new ResponseInfo() { message = message };
+                eventListener(data, responseInfo);
             };
             return;
         }
         requestEventListener[type] = (message) => {
             try {
-                var data     = JsonUtility.FromJson<TRecv>(message);
-                var response = new Response() { message = message };
-                response.message = message;
-                eventListener(data, response);
+                var data         = JsonUtility.FromJson<TRecv>(message);
+                var responseInfo = new ResponseInfo() { message = message };
+                responseInfo.message = message;
+                eventListener(data, responseInfo);
             } catch (Exception e) {
                 Debug.LogError(e.ToString());
                 return;
@@ -347,12 +347,12 @@ public partial class WebSocketConnector : MonoBehaviour {
         // リクエストのタイムアウトチェック
         if (requestList != null) {
             for (int i = requestList.Count - 1; i >= 0; i--) {
-                var request = requestList[i];
-                request.timeoutRemainingTime -= deltaTime;
-                if (request.timeoutRemainingTime <= 0.0f) {
+                var requestInfo = requestList[i];
+                requestInfo.timeoutRemainingTime -= deltaTime;
+                if (requestInfo.timeoutRemainingTime <= 0.0f) {
                     requestList.RemoveAt(i);
-                    request.Response("timeout.", null);
-                    request.ReturnToPool();
+                    requestInfo.Response("timeout.", null);
+                    requestInfo.ReturnToPool();
                 }
             }
         }
@@ -396,11 +396,11 @@ public partial class WebSocketConnector : MonoBehaviour {
                 if (requester == UUID) {
                     var found = false;
                     for (int i = requestList.Count - 1; i >= 0; i--) {
-                        var request = requestList[i];
-                        if (request.requestId == requestId && requester != UUID) {
+                        var requestInfo = requestList[i];
+                        if (requestInfo.requestId == requestId && requester != UUID) {
                             requestList.RemoveAt(i);
-                            request.Response(null, message);
-                            request.ReturnToPool();
+                            requestInfo.Response(null, message);
+                            requestInfo.ReturnToPool();
                             found = true;
                         }
                     }
@@ -440,17 +440,17 @@ public partial class WebSocketConnector : MonoBehaviour {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-// リクエスト
+// リクエスト情報
 public partial class WebSocketConnector {
-    public class Request {
+    public class RequestInfo {
         //---------------------------------------------------------------------- 変数
         public int    requestId            = 0;    // リクエスト番号
         public string requester            = null; // リクエスター
         public float  timeoutRemainingTime = 0.0f; // タイムアウト残り時間
 
         // 転送および解放コールバック
-        protected Action<Request,string,string> response      = null;
-        protected Action<Request>               returnRequest = null;
+        protected Action<RequestInfo,string,string> response      = null;
+        protected Action<RequestInfo>               returnRequest = null;
 
         //---------------------------------------------------------------------- リクエスト操作
         // レスポンス
@@ -471,9 +471,9 @@ public partial class WebSocketConnector {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-// リクエスト (型別)
+// リクエスト情報 (型別)
 public partial class WebSocketConnector {
-    public class Request<TRecv> : Request {
+    public class RequestInfo<TRecv> : RequestInfo {
         //---------------------------------------------------------------------- 定義
         static readonly int MAX_POOL_COUNT = 16;
 
@@ -481,26 +481,26 @@ public partial class WebSocketConnector {
         // 受信コールバック
         protected Action<string,TRecv> callback = null;
 
-        // リクエストプール
-        static Queue<Request<TRecv>> pool = null;
+        // リクエスト情報プール
+        static Queue<RequestInfo<TRecv>> pool = null;
 
         //---------------------------------------------------------------------- 確保
         // 確保
-        public static Request<TRecv> GetRequest(Action<string,TRecv> callback) {
-            var req = ((pool != null) && (pool.Count > 0))? pool.Dequeue() : new Request<TRecv>();
+        public static RequestInfo<TRecv> GetRequest(Action<string,TRecv> callback) {
+            var req = ((pool != null) && (pool.Count > 0))? pool.Dequeue() : new RequestInfo<TRecv>();
             req.requestId            = 0;
             req.requester            = null;
             req.timeoutRemainingTime = 0.0f;
             req.callback             = callback;
-            req.response             = Request<TRecv>.Response;
-            req.returnRequest        = Request<TRecv>.ReturnRequest;
+            req.response             = RequestInfo<TRecv>.Response;
+            req.returnRequest        = RequestInfo<TRecv>.ReturnRequest;
             return req;
         }
 
         //---------------------------------------------------------------------- 内部コールバック用
         // 転送
-        static void Response(Request request, string error, string message) {
-            var req = request as Request<TRecv>;
+        static void Response(RequestInfo requestInfo, string error, string message) {
+            var req = requestInfo as RequestInfo<TRecv>;
             Debug.Assert(req != null);
             Debug.Assert(req.callback != null);
             try {
@@ -515,8 +515,8 @@ public partial class WebSocketConnector {
         }
 
         // 解放
-        static void ReturnRequest(Request request) {
-            var req = request as Request<TRecv>;
+        static void ReturnRequest(RequestInfo requestInfo) {
+            var req = requestInfo as RequestInfo<TRecv>;
             Debug.Assert(req != null);
             req.requestId            = 0;
             req.timeoutRemainingTime = 0.0f;
@@ -524,7 +524,7 @@ public partial class WebSocketConnector {
             req.response             = null;
             req.returnRequest        = null;
             if (pool == null) {
-                pool = new Queue<Request<TRecv>>();
+                pool = new Queue<RequestInfo<TRecv>>();
             }
             if (pool.Count < MAX_POOL_COUNT) {
                 pool.Enqueue(req);
@@ -537,9 +537,9 @@ public partial class WebSocketConnector {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-// レスポンス
+// レスポンス情報
 public partial class WebSocketConnector {
-    public struct Response {
+    public struct ResponseInfo {
         public string message;
     }
 }
