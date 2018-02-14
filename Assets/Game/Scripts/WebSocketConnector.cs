@@ -28,7 +28,6 @@ public partial class WebSocketConnector : MonoBehaviour {
     // イベントリスナ
     Action                         connectEventListener     = null;                                 // 接続時イベントリスナ
     Action<string>                 disconnectEventListener  = null;                                 // 切断時イベントリスナ
-    Func<string,int>               identifyTypeEventHandler = null;                                 // 型識別時イベントハンドラ
     Dictionary<int,Action<string>> requestEventListener     = new Dictionary<int,Action<string>>(); // リクエスト受信時イベントリスナ (型別)
     Dictionary<int,Action<string>> dataEventListener        = new Dictionary<int,Action<string>>(); // データ受信時イベントリスナ     (型別)
 
@@ -115,7 +114,7 @@ public partial class WebSocketConnector : MonoBehaviour {
 
     //-------------------------------------------------------------------------- 送信とリクエスト
     // 送信
-    public bool Send<TSend>(TSend data) {
+    public bool Send<TSend>(int type, TSend data) {
         try {
             // 接続チェック
             if (state != State.Connected) {
@@ -124,6 +123,16 @@ public partial class WebSocketConnector : MonoBehaviour {
 
             // 文字列変換
             var message = JsonUtility.ToJson(data);
+
+            // NOTE
+            // メッセージに "type" プロパティをねじ込む。
+            var sb = ObjectPool<StringBuilder>.GetObject();
+            sb.Append(message);
+            sb.Remove(message.Length - 1, 1); // "}" 消し
+            sb.AppendFormat(",\"type\":{0}}", type);
+            message = sb.ToString();
+            sb.Length = 0;
+            ObjectPool<StringBuilder>.ReturnObject(sb);
 
             // 送信
             ws.SendString(message);
@@ -136,7 +145,7 @@ public partial class WebSocketConnector : MonoBehaviour {
     }
 
     // リクエスト送信
-    public bool SendRequest<TSend,TRecv>(TSend data, Action<string,TRecv> callback, int timeout = 0) {
+    public bool SendRequest<TSend,TRecv>(int type, TSend data, Action<string,TRecv> callback, int timeout = 0) {
         var requestNew = default(Request<TRecv>);
         try {
             // 接続チェック
@@ -147,15 +156,16 @@ public partial class WebSocketConnector : MonoBehaviour {
             // 文字列変換
             var message = JsonUtility.ToJson(data);
 
-            // 文字列バッファ確保
-            var sb = ObjectPool<StringBuilder>.GetObject();
-
-            // message に "requestId", "requester" プロパティをねじ込む。
+            // NOTE
+            // メッセージに "requestId", "requester" プロパティをねじ込む。
             var requestId = NextRequestId;
             var requester = UUID;
+            var sb = ObjectPool<StringBuilder>.GetObject();
             sb.Append(message);
             sb.Remove(message.Length - 1, 1); // "}" 消し
-            sb.AppendFormat("\"requestId\":{0},\"requester\":\"{1}\"}", requestId, requester);
+            sb.AppendFormat(",\"type\":{0},\"requestId\":{1},\"requester\":\"{2}\"}", type, requestId, requester);
+            message = sb.ToString();
+            ObjectPool<StringBuilder>.ReturnObject(sb);
 
             // リクエストを作成して追加
             // レスポンスを待つ。
@@ -166,10 +176,7 @@ public partial class WebSocketConnector : MonoBehaviour {
             requestList.Add(requestNew);
 
             // 送信
-            ws.SendString(sb.ToString());
-
-            // 開放
-            ObjectPool<StringBuilder>.ReturnObject(sb);
+            ws.SendString(message);
 
         } catch (Exception e) {
             Debug.LogError(e.ToString());
@@ -196,26 +203,23 @@ public partial class WebSocketConnector : MonoBehaviour {
             var requestId  = default(int);
             var requester  = default(string);
             var hasRequest = default(bool);
-            MessagePropertyParser.ParseRequestProperty(requestMessage, out requestId, out requester, out hasRequest);
+            RequestPropertyParser.Parse(requestMessage, out requestId, out requester, out hasRequest);
 
             // 文字列変換 (レスポンス)
             var responseMessage = JsonUtility.ToJson(responseData);
 
-            // 文字列バッファ確保
-            var sb = ObjectPool<StringBuilder>.GetObject();
-
-            // responseMessage に "to", "requestId", "requester" プロパティをねじ込む。
+            // メッセージに "requestId", "requester" プロパティをねじ込む。
             var responseRequestId = requestId;
             var responseRequester = requester;
+            var sb = ObjectPool<StringBuilder>.GetObject();
             sb.Append(responseMessage);
             sb.Remove(responseMessage.Length - 1, 1); // "}" 消し
             sb.AppendFormat("\"requestId\":{0},\"requester\":\"{1}\"}", responseRequestId, responseRequester);
+            message = sb.ToString();
+            ObjectPool<StringBuilder>.ReturnObject(sb);
 
             // 送信
             ws.SendString(sb.ToString());
-
-            // 開放
-            ObjectPool<StringBuilder>.ReturnObject(sb);
 
         } catch (Exception e) {
             Debug.LogError(e.ToString());
@@ -263,10 +267,10 @@ public partial class WebSocketConnector : MonoBehaviour {
 
     public void SetRequestEventListener<TRecv>(int type, Action<TRecv> eventListener) {
         if (eventListener == null) {
-            requestEventListener.Remove(type);
+            SetRequestEventListener(type, null);
             return;
         }
-        requestEventListener[type] = (string message) => {
+        SetRequestEventListener(type, (message) => {
             try {
                 var data = JsonUtility.FromJson<TRecv>(message);
                 eventListener(data);
@@ -274,15 +278,15 @@ public partial class WebSocketConnector : MonoBehaviour {
                 Debug.LogError(e.ToString());
                 return;
             }
-        };
+        });
     }
 
     public void SetDataEventListener<TRecv>(int type, Action<TRecv> eventListener) {
         if (eventListener == null) {
-            dataEventListener.Remove(type);
+            SetDataEventListener(type, null);
             return;
         }
-        dataEventListener[type] = (string message) => {
+        SetDataEventListener(type, (message) => {
             try {
                 var data = JsonUtility.FromJson<TRecv>(message);
                 eventListener(data);
@@ -290,7 +294,23 @@ public partial class WebSocketConnector : MonoBehaviour {
                 Debug.LogError(e.ToString());
                 return;
             }
-        };
+        });
+    }
+
+    protected void SetRequestEventListener(int type, Action<string> eventListener) {
+        if (eventListener == null) {
+            requestEventListener.Remove(type);
+            return;
+        }
+        requestEventListener[type] = eventListener;
+    }
+
+    protected void SetDataEventListener(int type, Action<string> eventListener) {
+        if (eventListener == null) {
+            dataEventListener.Remove(type);
+            return;
+        }
+        dataEventListener[type] = eventListener;
     }
 
     //-------------------------------------------------------------------------- イベント発行
@@ -304,13 +324,6 @@ public partial class WebSocketConnector : MonoBehaviour {
         if (disconnectEventListener != null) {
             disconnectEventListener(error);
         }
-    }
-
-    int InvokeIdentifyTypeEvent(string message) {
-        if (identifyTypeEventHandler != null) {
-            return identifyTypeEventHandler(message);
-        }
-        return MessagePropertyParser.IdentifyType(message);
     }
 
     void InvokeRequestEvent(int type, string message) {
@@ -379,7 +392,7 @@ public partial class WebSocketConnector : MonoBehaviour {
             var requestId  = 0;
             var requester  = default(string);
             var hasRequest = false;
-            MessagePropertyParser.ParseRequestProperty(message, out requestId, out requester, out hasRequest);
+            MessagePropertyParser.Parse(message, out requestId, out requester, out hasRequest);
             if (hasRequest) {
                 if (requester == UUID) {
                     var found = false;
@@ -403,7 +416,7 @@ public partial class WebSocketConnector : MonoBehaviour {
             }
 
             // 型識別
-            var type = InvokeIdentifyTypeEvent(message);
+            var type = TypePropertyParser.IdentifyType(message);
             if (type < 0) {
                 Debug.LogError(string.Format("型番号識別不可 ({0})", message));
                 return;
@@ -427,67 +440,6 @@ public partial class WebSocketConnector : MonoBehaviour {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-
-// メッセージプロパティパーサー
-// メッセージ先読み用
-public partial class WebSocketConnector {
-    class MessagePropertyParser {
-        //---------------------------------------------------------------------- 定義
-        // タイププロパティコンテナ
-        class TypePropertyContainer { public int type; }
-
-        // リクエストプロパティコンテナ
-        class RequestPropertyContainer { public int requestId; public string requester; }
-
-        //---------------------------------------------------------------------- 操作
-        public static void ParseTypeProperty(string message, out int type, out bool hasType) {
-            type    = -1;
-            hasType = false;
-            var propertyContainer = ObjectPool<TypePropertyContainer>.GetObject();
-            propertyContainer.type = -1;
-            try {
-                JsonUtility.FromJsonOverwrite(message, propertyContainer);
-                type    = propertyContainer.type;
-                hasType = true;
-            } catch (Exception e) {
-                Debug.LogError(e.ToString());
-            }
-            propertyContainer.type = -1;
-            ObjectPool<TypePropertyContainer>.ReturnObject(propertyContainer);
-        }
-
-        public static void ParseRequestProperty(string message, out int requestId, out string requester, out bool hasRequest) {
-            requestId  = 0;
-            requester  = default(string);
-            hasRequest = false;
-            var propertyContainer = ObjectPool<RequestPropertyContainer>.GetObject();
-            propertyContainer.requestId = 0;
-            try {
-                JsonUtility.FromJsonOverwrite(message, propertyContainer);
-                requestId  = propertyContainer.requestId;
-                requester  = propertyContainer.requester;
-                hasRequest = (requestId != 0 && requester != default(string));
-            } catch (Exception e) {
-                Debug.LogError(e.ToString());
-            }
-            propertyContainer.requestId = 0;
-            propertyContainer.requester = default(string);
-            ObjectPool<RequestPropertyContainer>.ReturnObject(propertyContainer);
-        }
-
-        //---------------------------------------------------------------------- 操作 (おまけエイリアス)
-        // 型識別の実行
-        public static int IdentifyType(string message) {
-            var type    = -1;
-            var hasType = false;
-            ParseTypeProperty(message, out type, out hasType);
-            if (!hasType) {
-                return -1;
-            }
-            return type;
-        }
-    }
-}
 
 // リクエスト (基本クラス)
 public partial class WebSocketConnector {
@@ -574,6 +526,81 @@ public partial class WebSocketConnector {
             if (pool.Count < MAX_POOL_COUNT) {
                 pool.Enqueue(req);
             }
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+// タイププロパティパーサー
+// メッセージ先読み用
+public partial class WebSocketConnector {
+    class TypePropertyParser {
+        //---------------------------------------------------------------------- 定義
+        class Container { public int type; }
+
+        //---------------------------------------------------------------------- 操作
+        public static void Parse(string message, out int type, out bool hasType) {
+            type    = -1;
+            hasType = false;
+            var container = ObjectPool<Container>.GetObject();
+            container.type = -1;
+            try {
+                JsonUtility.FromJsonOverwrite(message, container);
+                type    = container.type;
+                hasType = true;
+            } catch (Exception e) {
+                Debug.LogError(e.ToString());
+            }
+            container.type = -1;
+            ObjectPool<Container>.ReturnObject(container);
+        }
+
+        //---------------------------------------------------------------------- 操作 (おまけエイリアス)
+        // 型識別の実行
+        public static int IdentifyType(string message) {
+            var type    = -1;
+            var hasType = false;
+            Parse(message, out type, out hasType);
+            if (!hasType) {
+                return -1;
+            }
+            return type;
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+// リクエストプロパティパーサー
+// リクエスト先読み用
+public partial class WebSocketConnector {
+    class RequestPropertyParser {
+        //---------------------------------------------------------------------- 定義
+        class Container { public int requestId; public string requester; }
+
+        //---------------------------------------------------------------------- 操作
+        public static void Parse(string message, out int requestId, out string requester, out bool hasRequest) {
+            requestId  = 0;
+            requester  = default(string);
+            hasRequest = false;
+            var container = ObjectPool<Container>.GetObject();
+            container.requestId = 0;
+            try {
+                JsonUtility.FromJsonOverwrite(message, container);
+                requestId  = container.requestId;
+                requester  = container.requester;
+                hasRequest = (requestId != 0 && requester != default(string));
+            } catch (Exception e) {
+                Debug.LogError(e.ToString());
+            }
+            container.requestId = 0;
+            container.requester = default(string);
+            ObjectPool<Container>.ReturnObject(container);
         }
     }
 }
