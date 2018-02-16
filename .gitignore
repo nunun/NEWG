@@ -41,5 +41,4 @@ Services/client/Builds
 Services/server/Builds
 Services/matching/app/node_modules
 Services/api/app/node_modules
-Services/test/test_server/app/node_modules
 Services/test/test_client/app/node_modules

@@ -10,18 +10,9 @@ services:
       - ../.libservices:/usr/local/lib/node_modules/libservices
     depends_on:
       - matching
-      - test_server
+      - mindlink
       - couchdb
       - redis
-
-  test_server:
-    image: newg_test/test_server
-    build: ./test_server
-    environment:
-      - LOG_LEVEL=debug
-    volumes:
-      - ./test_server/app:/app
-      - ../.libservices:/usr/local/lib/node_modules/libservices
 
   matching:
     image: newg_test/test_matching

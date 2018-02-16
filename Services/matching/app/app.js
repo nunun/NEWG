@@ -6,8 +6,8 @@ var matchingServer = require('libservices').WebSocketServer.activate(config.matc
 var protocols      = require('./protocols');
 
 // mindlink client
-mindlinkClient.on('connect', function() {
-    mindlinkClient.sendUpdateRequest({alias:'matching'}, function(err) {
+mindlinkClient.setConnectEventListener(function() {
+    mindlinkClient.requestUpdate({alias:'matching'}, function(err) {
         if (err) {
             logger.mindlinkClient.error(err.toString());
             process.exit(1);
@@ -27,18 +27,16 @@ matchingServer.setAccepter(function(req) {
     }
     return {userId:location.query.user_id};
 });
-matchingServer.on('connect', function(matchingClient) {
-    // 接続をマッチング開始の合図とする。
-    // 接続時の URL クエリをパラメータにして
-    // API サーバにマッチングリクエスト。
+matchingServer.setConnectEventListener(function(matchingClient) {
+    // 接続後、すぐにマッチング開始
     var userId = matchingClient.accepted.userId;
-    matchingClient.requestId = mindlinkClient.dispatchRequest('api', {cmd:protocols.CMD.API.MATCHING_REQUEST, userId:userId}, function(err,responseData) {
+    matchingClient.requestId = mindlinkClient.requestToRemote('api', protocols.CMD.API.MATCHING_REQUEST, {userId:userId}, function(err,responseData) {
         // マッチング結果をレスポンス
         // エラーまたはサーバへのアドレス。
         if (err) {
-            matchingClient.send({err:err.toString()});
+            matchingClient.send(0, {err:err.toString()});
         } else {
-            matchingClient.send({address:responseData.address});
+            matchingClient.send(0, {address:responseData.address});
         }
         // NOTE
         // レスポンス後 1 秒で切断
@@ -47,7 +45,7 @@ matchingServer.on('connect', function(matchingClient) {
         }, 1000);
     }, config.matchingServer.timeout);
 });
-matchingServer.on('disconnect', function(matchingClient) {
+matchingServer.setDisconnectEventListener(function(matchingClient) {
     mindlinkClient.cancelRequest(matchingClient.requestId);
 });
 

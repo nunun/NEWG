@@ -15,11 +15,9 @@ task_build() {
         docker-compose run --rm --no-deps test_client sh -c \
                 "(cd /usr/local/lib/node_modules/libservices && npm install)"
         docker-compose run --rm --no-deps test_client npm update
-        docker-compose run --rm --no-deps test_server npm update
         docker-compose run --rm --no-deps matching    npm update
         docker-compose run --rm --no-deps api         npm update
         docker-compose run --rm --no-deps test_client npm link libservices
-        docker-compose run --rm --no-deps test_server npm link libservices
         docker-compose run --rm --no-deps matching    npm link libservices
         docker-compose run --rm --no-deps api         npm link libservices
 }
