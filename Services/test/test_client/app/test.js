@@ -10,7 +10,7 @@ describe('test client', function () {
         it('smoke test', function (done) {
             mindlinkClient.test([
                 {connect: function() {
-                    mindlinkClient.requestUpdate({address:'example.com:7777', population:0, capacity:16}, function(err, responseData) {
+                    mindlinkClient.sendStatus({address:'example.com:7777', population:0, capacity:16}, function(err, responseData) {
                         assert.ok(!err,            'invalid response err');
                         assert.ok(responseData.ok, 'invalid response responseData.ok');
                         matchingClient.start({user_id:'test'});

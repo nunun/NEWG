@@ -190,19 +190,19 @@ public partial class MindlinkConnector : WebSocketConnector {
         // リモートメッセージングを接続
         SetRequestEventListener<string>((int)DataType.M, (message, responseInfo) => {
             var cmd = -1;
-            if (   !CmdPropertyParser.TryParse(message, out cmd)
-                || !requestFromRemoteEventListener.ContainsKey(cmd)) {
-                return; // NOTE サイレントディスカード
+            if (   CmdPropertyParser.TryParse(message, out cmd)
+                && requestFromRemoteEventListener.ContainsKey(cmd)
+                && requestFromRemoteEventListener[cmd] != null) {
+                requestFromRemoteEventListener[cmd](message);
             }
-            requestFromRemoteEventListener[cmd](message);
         });
         SetDataEventListener<string>((int)DataType.M, (message) => {
-            var cmd    = -1;
-            if (   !CmdPropertyParser.TryParse(message, out cmd)
-                || !requestFromRemoteEventListener.ContainsKey(cmd)) {
-                return; // NOTE サイレントディスカード
+            var cmd = -1;
+            if (   CmdPropertyParser.TryParse(message, out cmd)
+                && requestFromRemoteEventListener.ContainsKey(cmd)
+                && requestFromRemoteEventListener[cmd] != null) {
+                dataFromRemoteEventListener[cmd](message);
             }
-            dataFromRemoteEventListener[cmd](message);
         });
     }
 }

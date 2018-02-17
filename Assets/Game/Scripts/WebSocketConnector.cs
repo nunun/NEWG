@@ -327,17 +327,15 @@ public partial class WebSocketConnector : MonoBehaviour {
     }
 
     void InvokeRequestEvent(int type, string message) {
-        if (!requestEventListener.ContainsKey(type) || requestEventListener[type] == null) {
-            return; // NOTE サイレントディスカード
+        if (requestEventListener.ContainsKey(type) && requestEventListener[type] != null) {
+            requestEventListener[type](message);
         }
-        requestEventListener[type](message);
     }
 
     void InvokeDataEvent(int type, string message) {
-        if (!dataEventListener.ContainsKey(type) || dataEventListener[type] == null) {
-            return; // NOTE サイレントディスカード
+        if (dataEventListener.ContainsKey(type) && dataEventListener[type] != null) {
+            dataEventListener[type](message);
         }
-        dataEventListener[type](message);
     }
 
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)

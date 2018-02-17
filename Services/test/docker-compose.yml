@@ -11,8 +11,6 @@ services:
     depends_on:
       - matching
       - mindlink
-      - couchdb
-      - redis
 
   matching:
     image: newg_test/test_matching
@@ -37,6 +35,7 @@ services:
     depends_on:
       - mindlink
       - couchdb
+      - redis
 
   mindlink:
     image: nunun/mindlink

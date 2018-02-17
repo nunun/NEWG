@@ -7,7 +7,7 @@ var protocols      = require('./protocols');
 
 // mindlink client
 mindlinkClient.setConnectEventListener(function() {
-    mindlinkClient.requestUpdate({alias:'matching'}, function(err) {
+    mindlinkClient.sendStatus({alias:'matching'}, function(err) {
         if (err) {
             logger.mindlinkClient.error(err.toString());
             process.exit(1);
@@ -30,7 +30,7 @@ matchingServer.setAccepter(function(req) {
 matchingServer.setConnectEventListener(function(matchingClient) {
     // 接続後、すぐにマッチング開始
     var userId = matchingClient.accepted.userId;
-    matchingClient.requestId = mindlinkClient.requestToRemote('api', protocols.CMD.API.MATCHING_REQUEST, {userId:userId}, function(err,responseData) {
+    matchingClient.requestId = mindlinkClient.sendToRemote('api', protocols.CMD.API.MATCHING_REQUEST, {userId:userId}, function(err,responseData) {
         // マッチング結果をレスポンス
         // エラーまたはサーバへのアドレス。
         if (err) {
