@@ -1,4 +1,5 @@
 var url            = require('url');
+var util           = require('util');
 var config         = require('libservices').config;
 var logger         = require('libservices').logger;
 var mindlinkClient = require('libservices').MindlinkClient.activate(config.mindlinkClient, logger.mindlinkClient);
@@ -33,7 +34,7 @@ mindlinkClient.setDataFromRemoteEventListener(protocols.CMD.API.MATCHING_REQUEST
         }
         // 最初のサービスをとって返却
         var service = services[0];
-        logger.mindlinkClient.debug('service found: service[' + service + ']');
+        logger.mindlinkClient.debug('service found: service[' + util.inspect(service) + ']');
         res.send(service);
     });
 });
