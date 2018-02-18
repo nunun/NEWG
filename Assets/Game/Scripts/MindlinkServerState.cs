@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 // マインドリンク サーバ状態
 // サーバの状態をマインドリンクを経由して共有。
-public partial class MindlinkServerState {
+//public partial class MindlinkServerState {
 // TODO
 //    //-------------------------------------------------------------------------- 定義
 //    // サーバ状態情報
@@ -105,4 +105,4 @@ public partial class MindlinkServerState {
 //    void OnDisconnect(string error) {
 //        // 今のところ処理なし
 //    }
-}
+//}

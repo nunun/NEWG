@@ -89,15 +89,16 @@ public partial class GameBuildProcessor {
             gameNetworkManager.networkPort = (isDebug)? DEBUG_PORT : RELEASE_PORT;
         }
 
+        // TODO
         // マインドリンクコネクタ
         // サーバでない場合はマインドリンクにサーバ状態を
         // 伝える必要がないのでオブジェクトごと削除。
-        var mindlinkConnector = FindObjectOfType<MindlinkConnector>();
-        if (mindlinkConnector != null) {
-            if (gameMainServiceMode != GameMain.ServiceMode.Server) {
-                GameObject.Destroy(mindlinkConnector.gameObject);
-            }
-        }
+        //var mindlinkConnector = FindObjectOfType<MindlinkConnector>();
+        //if (mindlinkConnector != null) {
+        //    if (gameMainServiceMode != GameMain.ServiceMode.Server) {
+        //        GameObject.Destroy(mindlinkConnector.gameObject);
+        //    }
+        //}
     }
 
     //-------------------------------------------------------------------------- ビルド
