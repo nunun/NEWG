@@ -5,6 +5,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+// TODO
+// RequestContext を書いて Send まわりを実装
+// Response を使って SetDataEventListener まわりを実装
+// SetDataEventListener はレスポンスの型を期待するようになる。
+
 // ウェブソケットコネクタ
 // WebSocket クラスを使って実際に通信を行うコンポーネント。
 public partial class WebSocketConnector : MonoBehaviour {
@@ -13,12 +18,12 @@ public partial class WebSocketConnector : MonoBehaviour {
     public enum State { Init, Connecting, Connected }
 
     //-------------------------------------------------------------------------- 変数
-    State       state             = State.Init; // 状態
-    WebSocket   ws                = null;       // WebSocket
-    IEnumerator connector         = null;       // 接続制御用列挙子
-    int         currentRetryCount = 0;          // 現在のリトライ回数
-    string      uuid              = null;       // UUID
-    string[]    options           = null;       // 接続時オプション
+    protected State       state             = State.Init; // 状態
+    protected WebSocket   ws                = null;       // WebSocket
+    protected IEnumerator connector         = null;       // 接続制御用列挙子
+    protected int         currentRetryCount = 0;          // 現在のリトライ回数
+    protected string      uuid              = null;       // UUID
+    protected string[]    options           = null;       // 接続時オプション
 
     // イベントリスナ
     Action                         connectEventListener    = null;                                 // 接続時イベントリスナ
@@ -488,11 +493,131 @@ public partial class WebSocketConnector {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
+// リクエストコンテキスト
+// 送信済リクエスト情報を保持
+public partial class WebSocketConnector {
+    public class RequestContext {
+        // TODO
+    }
+}
 
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
+// リクエスト
+// 送信済リクエスト情報を保持
+public partial class WebSocketConnector {
+    public class Request {
+        //---------------------------------------------------------------------- 変数
+        public int    requestId            = 0;    // リクエスト番号
+        public string requester            = null; // リクエスター
+        public float  timeoutRemainingTime = 0.0f; // タイムアウト残り時間
 
+        // 転送および解放コールバック
+        // サブクラスが設定
+        protected Action<Request,string,string> setResponse  = null;
+        protected Action<Request>               returnToPool = null;
 
+        //---------------------------------------------------------------------- 操作
+        // レスポンスデータを設定
+        public void SetResponse(string error, string message) {
+            Debug.Assert(setResponse != null);
+            setResponse(this, error, message);
+        }
+
+        // 解放
+        public void ReturnToPool() {
+            Debug.Assert(returnToPool != null);
+            returnToPool(this);
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+// リクエスト (型別)
+// 送信済リクエスト情報を保持
+public partial class WebSocketConnector {
+    public class Request<TRecv> : Request {
+        //---------------------------------------------------------------------- 変数
+        // 受信コールバック
+        protected Action<string,TRecv> callback = null;
+
+        //---------------------------------------------------------------------- 確保
+        // 確保
+        public static Request<TRecv> GetRequest(int requestId, string ruquester, Action<string,TRecv> callback) {
+            var req = ObjectPool<Request<TRecv>>.GetObject();
+            req.requestId            = 0;
+            req.requester            = null;
+            req.timeoutRemainingTime = 0.0f;
+            req.callback             = callback;
+            req.setResponse          = Request<TRecv>.SetResponse;
+            req.returnToPool         = Request<TRecv>.ReturnToPool;
+            return req;
+        }
+
+        //---------------------------------------------------------------------- 内部コールバック用
+        // レスポンスデータを設定
+        static void SetResponse(Request request, string error, string message) {
+            var req = request as Request<TRecv>;
+            Debug.Assert(req != null);
+            Debug.Assert(req.callback != null);
+            try {
+                if (error != null) {
+                    throw new Exception(error);
+                }
+                var data = JsonUtility.FromJson<TRecv>(message);
+                req.callback(null, data);
+            } catch (Exception e) {
+                req.callback(e.ToString(), default(TRecv));
+            }
+        }
+
+        // 解放
+        static void ReturnToPool(Request request) {
+            var req = request as Request<TRecv>;
+            Debug.Assert(req != null);
+            req.requestId            = 0;
+            req.requester            = null;
+            req.timeoutRemainingTime = 0.0f;
+            req.callback             = null;
+            req.setResponse          = null;
+            req.returnToPool         = null;
+            ObjectPool<Request<TRecv>>.ReturnObject(req);
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+// レスポンス
+// レスポンス情報を保持
+// Send のコールバックで res.Send(data) を実現するためのクラス。
+public partial class WebSocketConnector {
+    public struct Response<TResponse> {
+        //---------------------------------------------------------------------- 変数
+        WebSocketConnector connector;
+        int                type;
+        int                requestId;
+        string             requester;
+
+        //---------------------------------------------------------------------- 操作
+        public void Send(TResponse data) {
+            // TODO
+            // connector を使ってレスポンスデータを送信
+            // JsonUtility.ToJson したのち、type, requestId, requester をねじ込む？
+        }
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
