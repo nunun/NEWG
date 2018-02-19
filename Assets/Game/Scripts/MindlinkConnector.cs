@@ -5,6 +5,110 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+// マインドリンクコネクタ
+// Mindlink と実際に通信を行うコンポーネント。
+public partial class MindlinkConnector : WebSocketConnector {
+    //-------------------------------------------------------------------------- 定義
+    // マインドリンクデータタイプ
+    public enum DataType {
+        S = 1, // サービス更新
+        Q = 2, // サービスクエリ
+        M = 3, // メッセージ転送
+    }
+
+    //-------------------------------------------------------------------------- 変数
+    Dictionary<int,Action<string>> dataFromRemoteEventListener = new Dictionary<int,Action<string>>(); // リモートデータ受信時イベントリスナ (型別)
+
+    //-------------------------------------------------------------------------- 実装 (WebSocketConnector)
+    // 初期化
+    protected override void Init() {
+        base.Init();
+
+        // データイベントリスナに接続
+        SetDataMessageEventListener((int)DataType.M, (message) => {
+            if (PayloadTypePropertyParser.TryParse(message, out type)) {
+                if (dataFromRemoteEventListener.ContainsKey(type)) {
+                    dataFromRemoteEventListener[type](message);
+                }
+            }
+        });
+    }
+
+    // クリア
+    protected override void Clear() {
+        base.Clear();
+    }
+
+    //-------------------------------------------------------------------------- 送信とキャンセル
+    // リモートに送信 (リクエスト)
+    public int SendToRemote<TSend,TRecv>(int type, TSend data, Action<string,TRecv> callback, int timeout = 0) {
+        var requestId = requestContext.NextRequestId();
+        var requester = UUID;
+
+        // TODO
+        // リクエスト作成
+        //var request = RequestToRemote<TRecv>.GetRequest(requestId, callback, timeout);
+        //requestContext.SetRequest(request);
+
+        // 送信
+        var error = Transmit<TSend>(type, data, requestId, requester);
+        if (error != null) {
+            requestContext.CancelRequest(requestId);
+            return 0;
+        }
+        return requestId;
+    }
+
+    //-------------------------------------------------------------------------- イベントリスナ
+    public void SetDataFromRemoteEventListener<TRecv>(int type, Action<TRecv> eventListener) { // NOTE レスポンスしないデータイベントリスナ
+        if (eventListener == null) {
+            dataFromRemoteEventListener.Remove(type);
+            return;
+        }
+        dataFromRemoteEventListener[type] = (message) => {
+            try {
+                var data = JsonUtility.FromJson<TRecv>(message);
+                eventListener(data);
+            } catch (Exception e) {
+                Debug.LogError(e.ToString());
+                return;
+            }
+        };
+    }
+
+    public void SetDataFromRemoteEventListener<TRecv,TResponse>(int type, Action<TRecv,ResponseToRemote<TResponse>> eventListener) { // NOTE レスポンスするデータイベントリスナ
+        if (eventListener == null) {
+            dataFromRemoteEventListener.Remove(type);
+            return;
+        }
+        dataFromRemoteEventListener[type] = (message) => {
+            try {
+                // TODO
+                //var data = JsonUtility.FromJson<TRecv>(message);
+                //var res  = new ResponseToRemote<TResponse>();
+                //res.connector = this;
+                //res.type      = type;
+                //RequestPropertyParser.TryParse(message, out res.requestId, out res.requester);
+                //eventListener(data, res);
+            } catch (Exception e) {
+                Debug.LogError(e.ToString());
+                return;
+            }
+        };
+    }
+
+    protected void SetDataMessageFromRemoteEventListener(int type Actoin<string> eventListener) { // NOTE メッセージそのままを受け取るデータイベントリスナ (継承用)
+        if (eventListener == null) {
+            dataFromRemoteEventListener.Remove(type);
+            return;
+        }
+        dataFromRemoteEventListener[type] = eventListener;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 //// マインドリンクコネクタ
 //public partial class MindlinkConnector : WebSocketConnector {
 //    //-------------------------------------------------------------------------- 定義

@@ -5,9 +5,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// TODO
-// MindlinkConnector の実装
-
 // ウェブソケットコネクタ
 // WebSocket クラスを使って実際に通信を行うコンポーネント。
 public partial class WebSocketConnector : MonoBehaviour {
@@ -61,13 +58,8 @@ public partial class WebSocketConnector : MonoBehaviour {
         ws                = null;
         connector         = null;
         currentRetryCount = 0;
-        requestContext    = null;
+        requestContext    = new RequestContext();
         enabled           = false; // NOTE Update 無効化
-    }
-
-    // 実装のカスタマイズ
-    protected virtual void CustomizeBehaviour() {
-        requestContext = new RequestContext();
     }
 
     //-------------------------------------------------------------------------- 接続と切断
@@ -136,7 +128,7 @@ public partial class WebSocketConnector : MonoBehaviour {
         enabled   = true; // NOTE Update 有効化
     }
 
-    //-------------------------------------------------------------------------- 送信とリクエスト
+    //-------------------------------------------------------------------------- 送信とキャンセル
     // 送信
     public bool Send<TSend>(int type, TSend data) {
         var error = Transmit<TSend>(type, data);
@@ -148,10 +140,12 @@ public partial class WebSocketConnector : MonoBehaviour {
 
     // 送信 (リクエスト)
     public int Send<TSend,TRecv>(int type, TSend data, Action<string,TRecv> callback, int timeout = 0) {
-        // リクエスト作成
         var requestId = requestContext.NextRequestId();
         var requester = UUID;
-        requestContext.SetRequest(type, callback, requestId, requester);
+
+        // リクエスト作成
+        var request = Request<TRecv>.GetRequest(requestId, callback, timeout);
+        requestContext.SetRequest(request);
 
         // 送信
         var error = Transmit<TSend>(type, data, requestId, requester);
@@ -285,8 +279,7 @@ public partial class WebSocketConnector : MonoBehaviour {
             // リクエストのレスポンスであれば処理
             var requestId  = 0;
             var requester  = default(string);
-            var hasRequest = RequestPropertyParser.TryParse(message, out requestId, out requester);
-            if (hasRequest) {
+            if (RequestPropertyParser.TryParse(message, out requestId, out requester)) {
                 if (requester == UUID) {
                     if (requestContext != null) {
                         requestContext.SetResponse(requestId, null, message);
@@ -323,21 +316,21 @@ public partial class WebSocketConnector : MonoBehaviour {
 ////////////////////////////////////////////////////////////////////////////////
 
 // リクエストコンテキスト
-// 送信済リクエスト情報を保持
+// 送信済リクエスト情報を保持し、管理します。
 public partial class WebSocketConnector {
     public class RequestContext {
         //-------------------------------------------------------------------------- 変数
         List<Request> requestList      = new List<Request>() // 送信中のリクエスト一覧
         int           requestIdCounter = 0;                  // リクエストIDカウンタ
 
-        //-------------------------------------------------------------------------- 実装ポイント
+        //-------------------------------------------------------------------------- 実装
         // 次のリクエストID の取得
-        public virtual int NextRequestId() {
+        public int NextRequestId() {
             return ((++requestIdCounter == 0)? ++requestIdCounter : requestIdCounter);
         }
 
         // クリア
-        public virtual void Clear() {
+        public void Clear() {
             for (int i = requestList.Count - 1; i >= 0; i--) {
                 var request = requestList[i];
                 requestList.RemoveAt(i);
@@ -347,13 +340,12 @@ public partial class WebSocketConnector {
         }
 
         // リクエストを設定
-        public virtual void SetRequest<TRecv>(int type, int requestId, Actoin<string,TRecv> callback, float timeout = 10.0f) {
-            var request = Request<TRecv>.GetRequest(requestId, callback, timeout);
+        public void SetRequest(Request request) {
             requestList.Add(request);
         }
 
         // レスポンスを設定
-        public virtual void SetResponse(int requestId, string error, string message) {
+        public void SetResponse(int requestId, string error, string message) {
             for (int i = requestList.Count - 1; i >= 0; i--) {
                 var request = requestList[i];
                 if (request.requestId == requestId) {
@@ -365,13 +357,13 @@ public partial class WebSocketConnector {
         }
 
         // リクエストをキャンセル
-        public virtual void CancelResponse(int requestId) {
+        public void CancelResponse(int requestId) {
             this.setResponse(requestId, "cancelled.", null);
         }
 
-        //-------------------------------------------------------------------------- 実装ポイント (言語特有のもの)
+        //-------------------------------------------------------------------------- 実装 (その他)
         // リクエストのタイムアウトチェック
-        public virtual void CheckTimeout(float deltaTime) {
+        public void CheckTimeout(float deltaTime) {
             for (int i = requestList.Count - 1; i >= 0; i--) {
                 var request = requestList[i];
                 request.timeoutRemainingTime -= deltaTime;
