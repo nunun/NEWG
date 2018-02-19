@@ -7,8 +7,8 @@ using UnityEngine;
 
 // TODO
 // RequestContext を書いて Send まわりを実装
-// Response を使って SetDataEventListener まわりを実装
-// SetDataEventListener はレスポンスの型を期待するようになる。
+// Send は内部で Transmit を呼ぶ
+// リクエスト関連のパラメータが来たら RequestContext に任せる。
 
 // ウェブソケットコネクタ
 // WebSocket クラスを使って実際に通信を行うコンポーネント。
@@ -41,12 +41,6 @@ public partial class WebSocketConnector : MonoBehaviour {
 
     // UUID を取得する
     public string UUID { get { return uuid; }}
-
-    // リクエスト番号カウンター
-    protected static int requestIdCounter = 0;
-
-    // リクエスト番号取得用 (コール毎にリクエスト番号カウンターを +1)
-    protected static int NextRequestId { get { return (++requestIdCounter == 0)? ++requestIdCounter : requestIdCounter; }}
 
     //-------------------------------------------------------------------------- 実装ポイント
     // 初期化
@@ -81,8 +75,28 @@ public partial class WebSocketConnector : MonoBehaviour {
         Reconnect();
     }
 
+    // 切断
+    public void Disconnect(string error = null) {
+        // NOTE
+        // 接続中にエラーになった場合は再接続
+        if (state == State.Connecting && !string.IsNullOrEmpty(error)) {
+            Debug.LogError(error);
+            if (currentRetryCount++ < retryCount) {
+                Invoke("Reconnect", retryInterval);
+                return;
+            }
+        }
+
+        // クリアして切断
+        var eventListener = disconnectEventListener;
+        Clear();
+        if (eventListener != null) {
+            eventListener(error);
+        }
+    }
+
     // 再接続
-    public void Reconnect() {
+    private void Reconnect() {
         // 初期状態でないなら一旦切断
         if (state != State.Init) {
             Disconnect();
@@ -117,26 +131,6 @@ public partial class WebSocketConnector : MonoBehaviour {
         ws        = new WebSocket(new Uri(url));
         connector = ws.Connect();
         enabled   = true; // NOTE Update 有効化
-    }
-
-    // 切断
-    public void Disconnect(string error = null) {
-        // NOTE
-        // 接続中にエラーになった場合は再接続
-        if (state == State.Connecting && !string.IsNullOrEmpty(error)) {
-            Debug.LogError(error);
-            if (currentRetryCount++ < retryCount) {
-                Invoke("Reconnect", retryInterval);
-                return;
-            }
-        }
-
-        // クリアして切断
-        var eventListener = disconnectEventListener;
-        Clear();
-        if (eventListener != null) {
-            eventListener(error);
-        }
     }
 
     //-------------------------------------------------------------------------- 送信とリクエスト
@@ -291,32 +285,49 @@ public partial class WebSocketConnector : MonoBehaviour {
         disconnectEventListener = null;
     }
 
-    // TODO
-    //public void SetDataEventListener<TRecv>(int type, Action<TRecv,ResponseInfo> eventListener) {
-    //    if (eventListener == null) {
-    //        dataEventListener.Remove(type);
-    //        return;
-    //    }
-    //    if (typeof(TRecv) == typeof(string)) {
-    //        dataEventListener[type] = (message) => {
-    //            var data         = (TRecv)(object)message;
-    //            var responseInfo = new ResponseInfo() { message = message };
-    //            eventListener(data, responseInfo);
-    //        };
-    //        return;
-    //    }
-    //    dataEventListener[type] = (message) => {
-    //        try {
-    //            var data         = JsonUtility.FromJson<TRecv>(message);
-    //            var responseInfo = new ResponseInfo() { message = message };
-    //            responseInfo.message = message;
-    //            eventListener(data, responseInfo);
-    //        } catch (Exception e) {
-    //            Debug.LogError(e.ToString());
-    //            return;
-    //        }
-    //    };
-    //}
+    public void SetDataEventListener<TRecv>(int type, Action<TRecv> eventListener) { // NOTE レスポンスしないデータイベントリスナ
+        if (eventListener == null) {
+            dataEventListener.Remove(type);
+            return;
+        }
+        dataEventListener[type] = (message) => {
+            try {
+                var data = JsonUtility.FromJson<TRecv>(message);
+                eventListener(data);
+            } catch (Exception e) {
+                Debug.LogError(e.ToString());
+                return;
+            }
+        };
+    }
+
+    public void SetDataEventListener<TRecv,TResponse>(int type, Action<TRecv,Response<TResponse>> eventListener) { // NOTE レスポンスするデータイベントリスナ
+        if (eventListener == null) {
+            dataEventListener.Remove(type);
+            return;
+        }
+        dataEventListener[type] = (message) => {
+            try {
+                var data = JsonUtility.FromJson<TRecv>(message);
+                var res  = new Response<TResponse>();
+                res.connector = this;
+                res.type      = type;
+                RequestPropertyParser.TryParse(message, out res.requestId, out res.requester);
+                eventListener(data, res);
+            } catch (Exception e) {
+                Debug.LogError(e.ToString());
+                return;
+            }
+        };
+    }
+
+    protected void SetDataMessageEventListener(int type Actoin<string> eventListener) { // NOTE メッセージそのままを受け取るデータイベントリスナ (継承用)
+        if (eventListener == null) {
+            dataEventListener.Remove(type);
+            return;
+        }
+        dataEventListener[type] = eventListener;
+    }
 
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     void Awake() {
@@ -416,79 +427,6 @@ public partial class WebSocketConnector : MonoBehaviour {
         default:
             Debug.LogError(string.Format("状態不明 ({0})", state));
             break;
-        }
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
-// タイププロパティパーサー
-// メッセージ先読み用
-public partial class WebSocketConnector {
-    public class TypePropertyParser {
-        //---------------------------------------------------------------------- 定義
-        class Container { public int type; }
-
-        //---------------------------------------------------------------------- 操作
-        public static bool TryParse(string message, out int type) {
-            var hasType = false;
-            type = -1;
-            var container = ObjectPool<Container>.GetObject();
-            container.type = -1;
-            try {
-                JsonUtility.FromJsonOverwrite(message, container);
-                type    = container.type;
-                hasType = true;
-            } catch (Exception e) {
-                Debug.LogError(e.ToString());
-            }
-            container.type = -1;
-            ObjectPool<Container>.ReturnObject(container);
-            return hasType;
-        }
-
-        //---------------------------------------------------------------------- 操作 (おまけエイリアス)
-        // 型識別の実行
-        public static int IdentifyType(string message) {
-            var type = -1;
-            TryParse(message, out type);
-            return type;
-        }
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
-// リクエストプロパティパーサー
-// リクエスト先読み用
-public partial class WebSocketConnector {
-    public class RequestPropertyParser {
-        //---------------------------------------------------------------------- 定義
-        class Container { public int requestId; public string requester; }
-
-        //---------------------------------------------------------------------- 操作
-        public static bool TryParse(string message, out int requestId, out string requester) {
-            var hasRequest = false;
-            requestId  = 0;
-            requester  = default(string);
-            var container = ObjectPool<Container>.GetObject();
-            container.requestId = 0;
-            try {
-                JsonUtility.FromJsonOverwrite(message, container);
-                requestId  = container.requestId;
-                requester  = container.requester;
-                hasRequest = (requestId != 0 && requester != default(string));
-            } catch (Exception e) {
-                Debug.LogError(e.ToString());
-            }
-            container.requestId = 0;
-            container.requester = default(string);
-            ObjectPool<Container>.ReturnObject(container);
-            return hasRequest;
         }
     }
 }
@@ -611,10 +549,9 @@ public partial class WebSocketConnector {
         string             requester;
 
         //---------------------------------------------------------------------- 操作
+        // 送信元に向けて送り返す
         public void Send(TResponse data) {
-            // TODO
-            // connector を使ってレスポンスデータを送信
-            // JsonUtility.ToJson したのち、type, requestId, requester をねじ込む？
+            connector.Transmit<TResponse>(type, data, requestId, requester);
         }
     }
 }
@@ -622,6 +559,126 @@ public partial class WebSocketConnector {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
+
+// タイププロパティパーサー
+// メッセージ先読み用
+public partial class WebSocketConnector {
+    public class TypePropertyParser {
+        //---------------------------------------------------------------------- 定義
+        class Container { public int type; }
+
+        //---------------------------------------------------------------------- 操作
+        public static bool TryParse(string message, out int type) {
+            var hasType = false;
+            type = -1;
+            var container = ObjectPool<Container>.GetObject();
+            container.type = -1;
+            try {
+                JsonUtility.FromJsonOverwrite(message, container);
+                type    = container.type;
+                hasType = true;
+            } catch (Exception e) {
+                Debug.LogError(e.ToString());
+            }
+            container.type = -1;
+            ObjectPool<Container>.ReturnObject(container);
+            return hasType;
+        }
+
+        //---------------------------------------------------------------------- 操作 (おまけエイリアス)
+        // 型識別の実行
+        public static int IdentifyType(string message) {
+            var type = -1;
+            TryParse(message, out type);
+            return type;
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+// リクエストプロパティパーサー
+// リクエスト先読み用
+public partial class WebSocketConnector {
+    public class RequestPropertyParser {
+        //---------------------------------------------------------------------- 定義
+        class Container { public int requestId; public string requester; }
+
+        //---------------------------------------------------------------------- 操作
+        public static bool TryParse(string message, out int requestId, out string requester) {
+            var hasRequest = false;
+            requestId  = 0;
+            requester  = default(string);
+            var container = ObjectPool<Container>.GetObject();
+            container.requestId = 0;
+            try {
+                JsonUtility.FromJsonOverwrite(message, container);
+                requestId  = container.requestId;
+                requester  = container.requester;
+                hasRequest = (requestId != 0 && requester != default(string));
+            } catch (Exception e) {
+                Debug.LogError(e.ToString());
+            }
+            container.requestId = 0;
+            container.requester = default(string);
+            ObjectPool<Container>.ReturnObject(container);
+            return hasRequest;
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+// 送出
+// 送出ロジックは繰り返し使うのでユーティリティとして外に出しておく。
+public partial class WebSocketConnector {
+    //-------------------------------------------------------------------------- 操作
+    // 送出
+    protected string Trasmit<TSend>(int type, TSend data, int requestId = -1, string requester = null) {
+        try {
+            // 接続チェック
+            if (state != State.Connected) {
+                throw new Exception("WebSocket is not connected.");
+            }
+
+            // 文字列変換
+            var message = JsonUtility.ToJson(data);
+
+            // NOTE
+            // メッセージに "type", "requestId", "requester" プロパティをねじ込む。
+            var sb = ObjectPool<StringBuilder>.GetObject();
+            sb.Append(message);
+            sb.Remove(message.Length - 1, 1); // "}" 消し
+            if (requestId >= 0 && requester != null) {
+                sb.AppendFormat(",\"type\":{0},\"requestId\":{1},\"requester\":\"{2}\"}", type, requestId, requester);
+            } else {
+                sb.AppendFormat(",\"type\":{0}}", type);
+            }
+            message = sb.ToString();
+            ObjectPool<StringBuilder>.ReturnObject(sb);
+
+            // 送信
+            ws.SendString(message);
+
+        } catch (Exception e) {
+            return e.ToString();
+        }
+        return null;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/////    // リクエスト番号カウンター
+//    protected static int requestIdCounter = 0;
+//
+//    // リクエスト番号取得用 (コール毎にリクエスト番号カウンターを +1)
+//    protected static int NextRequestId { get { return (++requestIdCounter == 0)? ++requestIdCounter : requestIdCounter; }}
 //
 //// リクエスト情報
 //public partial class WebSocketConnector {
