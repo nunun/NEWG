@@ -54,12 +54,19 @@ public partial class WebSocketConnector : MonoBehaviour {
         if (ws != null) {
             ws.Close();
         }
+
+        // インスタンスメンバ
         state             = State.Init;
         ws                = null;
         connector         = null;
         currentRetryCount = 0;
-        requestContext    = new RequestContext();
-        enabled           = false; // NOTE Update 無効化
+
+        // リクエストコンテキスト
+        requestContext = new RequestContext();
+
+        // NOTE
+        // Upate 無効化
+        enabled = false;
     }
 
     //-------------------------------------------------------------------------- 接続と切断
@@ -99,7 +106,6 @@ public partial class WebSocketConnector : MonoBehaviour {
 
         // セットアップ
         Clear();
-        CustomizeBehaviour();
 
         // URL 作成
         if (options.Length > 0 || queries.Length > 0) {
@@ -323,24 +329,37 @@ public partial class WebSocketConnector {
         List<Request> requestList      = new List<Request>() // 送信中のリクエスト一覧
         int           requestIdCounter = 0;                  // リクエストIDカウンタ
 
-        //-------------------------------------------------------------------------- 実装
-        // 次のリクエストID の取得
-        public int NextRequestId() {
-            return ((++requestIdCounter == 0)? ++requestIdCounter : requestIdCounter);
+        //-------------------------------------------------------------------------- 初期化とクリア
+        // コンストラクタ
+        public RequestContext() {
+            this.Init();
+        }
+
+        // 初期化
+        public virtual void Init() {
+            this.Clear();
         }
 
         // クリア
-        public void Clear() {
+        public virtual void Clear() {
             for (int i = requestList.Count - 1; i >= 0; i--) {
                 var request = requestList[i];
                 requestList.RemoveAt(i);
                 request.SetResponse("abort.", null);
                 request.ReturnToPool();
             }
+            requestList.Clear();
+            requestIdCounter = 0;
+        }
+
+        //-------------------------------------------------------------------------- 操作
+        // 次のリクエストID の取得
+        public int NextRequestId() {
+            return ((++requestIdCounter == 0)? ++requestIdCounter : requestIdCounter);
         }
 
         // リクエストを設定
-        public void SetRequest(Request request) {
+        public virtual void SetRequest(Request request) {
             requestList.Add(request);
         }
 
@@ -361,7 +380,7 @@ public partial class WebSocketConnector {
             this.setResponse(requestId, "cancelled.", null);
         }
 
-        //-------------------------------------------------------------------------- 実装 (その他)
+        //-------------------------------------------------------------------------- 操作 (その他)
         // リクエストのタイムアウトチェック
         public void CheckTimeout(float deltaTime) {
             for (int i = requestList.Count - 1; i >= 0; i--) {
