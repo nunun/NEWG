@@ -1,7 +1,3 @@
-CWD=$(cd `dirname ${0}`; pwd)
-TASK="${1:-"test"}"
-shift; set -e; cd "${CWD}"
-
 task_up() { task_down; docker-compose up; }
 task_down() { docker-compose down; }
 task_test() {
@@ -20,4 +16,4 @@ task_build() {
         docker-compose run --rm --no-deps matching    npm link libservices
         docker-compose run --rm --no-deps api         npm link libservices
 }
-task_${TASK} ${*}
+. "`dirname ${0}`/../../../run.sh" task test ${*}

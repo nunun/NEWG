@@ -1,20 +1,20 @@
-CWD=$(cd `dirname ${0}`; pwd)
-TASK="${1:-"up"}"
-PUBLISH_TO="fu-n.net:5000/newg/compose"
-shift
-set -e
-cd "${CWD}"
+if [ "${1}" = "task" ]; then
+        DEFAULT_TASK="${2}"; shift 2; TASK="${1:-"${DEFAULT_TASK}"}"; shift
+        cd "`dirname ${0}`"; set -e; [ -f ~/.newg ] && . ~/.newg
+        task_${TASK} ${*}
+        exit
+fi
 
 task_up() { task_down; docker-compose up; }
 task_down() { docker-compose down; }
 task_protocols() { sh ./protocols/protocols.sh ${*}; }
 task_test() { sh ./test/test.sh ${*}; }
 task_unity() {
-        UNITY_PATH="/Applications/Unity5.6.0f3/Unity.app/Contents/MacOS/Unity"
         PROJECT_PATH=$(cd ..; pwd)
+        [ "${OSTYPE}" = "cygwin" ] && PROJECT_PATH=`cygpath -w ${PROJECT_PATH}`
         OPTIONS="-batchmode -quit -logFile /dev/stdout -projectPath ${PROJECT_PATH}"
-        ${UNITY_PATH} ${OPTIONS} -executeMethod GameBuildMenuItems.BuildReleaseClientWebGL \
-        ${UNITY_PATH} ${OPTIONS} -executeMethod GameBuildMenuItems.BuildReleaseServerLinuxHeadless
+        ${UNITY_PATH?} ${OPTIONS} -executeMethod GameBuildMenuItems.BuildReleaseClientWebGL
+        ${UNITY_PATH?} ${OPTIONS} -executeMethod GameBuildMenuItems.BuildReleaseServerLinuxHeadless
 }
 task_build() {
         task_down
@@ -30,10 +30,9 @@ task_build() {
         docker-compose run --rm --no-deps api      npm link libservices
 }
 task_publish() {
-        local publish_to="${1:-"${PUBLISH_TO}"}"
-        echo "publish compose image to '${publish_to}' ..."
+        echo "publish compose image to '${PUBLISH_TO?}' ..."
         task_build
         curl -sSL https://raw.githubusercontent.com/nunun/swarm-builder/master/push.sh \
-                | sh -s docker-compose.* "${publish_to}"
+                | sh -s docker-compose.* "${PUBLISH_TO?}"
 }
-task_${TASK} ${*}
+. "`dirname ${0}`/run.sh" task up ${*}
