@@ -1,20 +1,10 @@
-if [ "${1}" = "task" ]; then
-        DEFAULT_TASK="${2}"; shift 2; TASK="${1:-"${DEFAULT_TASK}"}"; shift
-        cd "`dirname ${0}`"; set -e; [ -f ~/.newg ] && . ~/.newg
-        task_${TASK} ${*}
-        exit
-fi
-
 task_up() { task_down; docker-compose up; }
 task_down() { docker-compose down; }
 task_protocols() { sh ./protocols/protocols.sh ${*}; }
 task_test() { sh ./test/test.sh ${*}; }
 task_unity() {
-        PROJECT_PATH=$(cd ..; pwd)
-        [ "${OSTYPE}" = "cygwin" ] && PROJECT_PATH=`cygpath -w ${PROJECT_PATH}`
-        OPTIONS="-batchmode -quit -logFile /dev/stdout -projectPath ${PROJECT_PATH}"
-        ${UNITY_PATH?} ${OPTIONS} -executeMethod GameBuildMenuItems.BuildReleaseClientWebGL
-        ${UNITY_PATH?} ${OPTIONS} -executeMethod GameBuildMenuItems.BuildReleaseServerLinuxHeadless
+        unity ./.. -executeMethod GameBuildMenuItems.BuildReleaseClientWebGL
+        unity ./.. -executeMethod GameBuildMenuItems.BuildReleaseServerLinuxHeadless
 }
 task_build() {
         task_down
@@ -35,4 +25,4 @@ task_publish() {
         curl -sSL https://raw.githubusercontent.com/nunun/swarm-builder/master/push.sh \
                 | sh -s docker-compose.* "${PUBLISH_TO?}"
 }
-. "`dirname ${0}`/run.sh" task up ${*}
+. "`dirname ${0}`/.task.sh" up ${*}

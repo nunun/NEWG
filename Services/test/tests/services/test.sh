@@ -16,4 +16,4 @@ task_build() {
         docker-compose run --rm --no-deps matching    npm link libservices
         docker-compose run --rm --no-deps api         npm link libservices
 }
-. "`dirname ${0}`/../../../run.sh" task test ${*}
+. "`dirname ${0}`/../../../.task.sh" test ${*}
