@@ -10,6 +10,11 @@ task_down() { docker-compose down; }
 task_api() { docker-compose run --rm --no-deps api node app.js; }
 task_protocols() { sh ./protocols/protocols.sh ${*}; }
 task_test() { sh ./test/test.sh ${*}; }
+task_unity() {
+        UNITY_PATH="/Applications/Unity5.6.0f3/Unity.app/Contents/MacOS/Unity"
+        PROJECT_PATH=$(cd ..; pwd)
+        # TODO
+}
 task_build() {
         task_down
         mkdir -p ./server/Builds
