@@ -13,7 +13,9 @@ task_test() { sh ./test/test.sh ${*}; }
 task_unity() {
         UNITY_PATH="/Applications/Unity5.6.0f3/Unity.app/Contents/MacOS/Unity"
         PROJECT_PATH=$(cd ..; pwd)
-        # TODO
+        OPTIONS="-batchmode -quit -logFile /dev/stdout -projectPath ${PROJECT_PATH}"
+           ${UNITY_PATH} ${OPTIONS} -executeMethod GameBuildMenuItems.BuildReleaseClientWebGL \
+        && ${UNITY_PATH} ${OPTIONS} -executeMethod GameBuildMenuItems.BuildReleaseServerLinuxHeadless
 }
 task_build() {
         task_down
