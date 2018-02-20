@@ -1,37 +1,37 @@
 version: '3.3'
 services:
   test_client:
-    image: newg_test/test_client
-    build: ./test_client
+    image: newg_test_services/test_client
+    build: ./../../test_client
     environment:
       - LOG_LEVEL=debug
     volumes:
-      - ./test_client/app:/app
-      - ../.libservices:/usr/local/lib/node_modules/libservices
+      - ./../../test_client/app:/app
+      - ./../../../.libservices:/usr/local/lib/node_modules/libservices
     depends_on:
       - matching
       - mindlink
 
   matching:
-    image: newg_test/test_matching
-    build: ../matching
+    image: newg_test_services/test_matching
+    build: ./../../../matching
     environment:
       - LOG_LEVEL=debug
     volumes:
-      - ../matching/app:/app
-      - ../.libservices:/usr/local/lib/node_modules/libservices
+      - ./../../../matching/app:/app
+      - ./../../../.libservices:/usr/local/lib/node_modules/libservices
     depends_on:
       - mindlink
       - api
 
   api:
-    image: newg_test/test_api
-    build: ../api
+    image: newg_test_services/test_api
+    build: ./../../../api
     environment:
       - LOG_LEVEL=debug
     volumes:
-      - ../api/app:/app
-      - ../.libservices:/usr/local/lib/node_modules/libservices
+      - ./../../../api/app:/app
+      - ./../../../.libservices:/usr/local/lib/node_modules/libservices
     depends_on:
       - mindlink
       - couchdb

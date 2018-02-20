@@ -1,13 +1,12 @@
 CWD=$(cd `dirname ${0}`; pwd)
-PUBLISH_TO="fu-n.net:5000/newg/compose"
 TASK="${1:-"up"}"
+PUBLISH_TO="fu-n.net:5000/newg/compose"
 shift
 set -e
 cd "${CWD}"
 
 task_up() { task_down; docker-compose up; }
 task_down() { docker-compose down; }
-task_api() { docker-compose run --rm --no-deps api node app.js; }
 task_protocols() { sh ./protocols/protocols.sh ${*}; }
 task_test() { sh ./test/test.sh ${*}; }
 task_unity() {
