@@ -34,7 +34,7 @@ mindlinkClient.setDataFromRemoteEventListener(protocols.CMD.API.MATCHING_REQUEST
         }
         // 最初のサービスをとって返却
         var service = services[0];
-        logger.mindlinkClient.debug('service found: service[' + util.inspect(service) + ']');
+        logger.mindlinkClient.debug('service found: service[' + util.inspect(service, {depth:null,breakLength:Infinity}) + ']');
         res.send(service);
     });
 });
