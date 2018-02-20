@@ -3,10 +3,29 @@ shift 2
 set -e
 cd "`dirname ${0}`"
 
-# load env file
-[ -f ~/.env.newg ] && . ~/.env.newg
+# project name
+project_name() {
+        local f="prj"
+        local d=`pwd`
+        while [ ! "${d}" = "/" ]; do
+                [ -f "${d}/.task.sh" -o -d "${d}/Assets" ] && f=`basename ${d}`
+                d=`dirname "${d}"`
+        done
+        echo "${f}"
+}
 
-# execute unity
+# project dir
+project_dir() {
+        local f=`pwd`
+        local d=`pwd`
+        while [ ! "${d}" = "/" ]; do
+                [ -f "${d}/.task.sh" ] && f="${d}" && break
+                d=`dirname "${d}"`
+        done
+        echo "${f}"
+}
+
+# unity
 unity() {
         PROJECT_PATH="$(cd "${1?}"; pwd)"
         LOG_FILE="/tmp/unity.log"
@@ -19,6 +38,20 @@ unity() {
                 ${*} & PID="${!}"
         sleep 1 && tail -F /tmp/unity.log --pid="${PID}" & wait ${PID}
 }
+
+# setup environment variables
+PROJECT_NAME=`project_name`
+PROJECT_DIR=`project_dir`
+
+# load env file
+[ -f ~/.env.${PROJECT_NAME} ] && . ~/.env.${PROJECT_NAME}
+
+# debug message
+#echo "PROJECT_NAME=${PROJECT_NAME}"
+#echo "PROJECT_DIR=${PROJECT_DIR}"
+#echo "TASK=${TASK}"
+#echo "(on `pwd`)"
+#echo ""
 
 # execute task
 task_${TASK} ${*}
