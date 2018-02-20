@@ -228,7 +228,7 @@ public partial class WebSocketConnector : MonoBehaviour {
         };
     }
 
-    protected void SetDataMessageEventListener(int type Actoin<string> eventListener) { // NOTE メッセージそのままを受け取るデータイベントリスナ (継承用)
+    protected void SetDataMessageEventListener(int type, Action<string> eventListener) { // NOTE メッセージそのままを受け取るデータイベントリスナ (継承用)
         if (eventListener == null) {
             dataEventListener.Remove(type);
             return;
@@ -326,8 +326,8 @@ public partial class WebSocketConnector : MonoBehaviour {
 public partial class WebSocketConnector {
     public class RequestContext {
         //-------------------------------------------------------------------------- 変数
-        List<Request> requestList      = new List<Request>() // 送信中のリクエスト一覧
-        int           requestIdCounter = 0;                  // リクエストIDカウンタ
+        List<Request> requestList      = new List<Request>(); // 送信中のリクエスト一覧
+        int           requestIdCounter = 0;                   // リクエストIDカウンタ
 
         //-------------------------------------------------------------------------- 初期化とクリア
         // コンストラクタ
@@ -401,7 +401,7 @@ public partial class WebSocketConnector {
 ////////////////////////////////////////////////////////////////////////////////
 
 // リクエスト
-// 送信済リクエスト情報を保持
+// リクエスト中の情報を保持するためのクラス。
 public partial class WebSocketConnector {
     public class Request {
         //---------------------------------------------------------------------- 変数
@@ -433,7 +433,7 @@ public partial class WebSocketConnector {
 ////////////////////////////////////////////////////////////////////////////////
 
 // リクエスト (型別)
-// 送信済リクエスト情報を保持
+// リクエスト中の情報を保持するためのクラス。
 public partial class WebSocketConnector {
     public class Request<TRecv> : Request {
         //---------------------------------------------------------------------- 変数
@@ -487,8 +487,7 @@ public partial class WebSocketConnector {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-// レスポンス
-// レスポンス情報を保持
+// レスポンス (型別)
 // Send のコールバックで res.Send(data) を実現するためのクラス。
 public partial class WebSocketConnector {
     public struct Response<TResponse> {
@@ -563,6 +562,7 @@ public partial class WebSocketConnector {
             requester  = default(string);
             var container = ObjectPool<Container>.GetObject();
             container.requestId = 0;
+            container.requester = default(string);
             try {
                 JsonUtility.FromJsonOverwrite(message, container);
                 requestId  = container.requestId;
