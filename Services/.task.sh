@@ -5,17 +5,20 @@ cd "`dirname ${0}`"
 
 # project name
 project_name() {
-        local f="prj"
-        local d=`pwd`
-        while [ ! "${d}" = "/" ]; do
-                [ -f "${d}/.task.sh" -o -d "${d}/Assets" ] && f=`basename ${d}`
-                d=`dirname "${d}"`
-        done
-        echo "${f}"
+        local d=`project_dir`
+        d=`basename "${d}"`
+        echo "${d}"
 }
 
 # project dir
 project_dir() {
+        local d=`project_task_dir`
+        [ -d "${d}/../Assets" ] && d=`dirname "${d}"`
+        echo "${d}"
+}
+
+# project task dir
+project_task_dir() {
         local f=`pwd`
         local d=`pwd`
         while [ ! "${d}" = "/" ]; do
@@ -25,33 +28,44 @@ project_dir() {
         echo "${f}"
 }
 
-# unity
+# unity project path
+unity_project_path() {
+        local f=""
+        local d=`pwd`
+        while [ ! "${d}" = "/" ]; do
+                [ -d "${d}/Assets" ] && f="${d}" && break
+                d=`dirname "${d}"`
+        done
+        echo "${f}"
+}
+
+# unity execute shorthand
 unity() {
-        PROJECT_PATH="$(cd "${1?}"; pwd)"
-        LOG_FILE="/tmp/unity.log"
+        local unity_project_path=`unity_project_path`
+        local log_file="/dev/stdout"
+        [ "${unity_project_path}" = "" ] \
+                && "Unity ProjectPath could not detected." && exit 1
         [ "${OSTYPE}" = "cygwin" ] \
-                && PROJECT_PATH=`cygpath -w ${PROJECT_PATH}` \
-                && LOG_FILE=`cygpath -w "${LOG_FILE}"`
-        shift
-        ${UNITY_PATH?} -batchmode -quit \
-                -logFile ${LOG_FILE} -projectPath ${PROJECT_PATH} \
+                && unity_project_path=`cygpath -w ${unity_project_path}` \
+                && log_file=`cygpath -w "/tmp/unity.log"`
+        [ ! -x ${UNITY_PATH?} ] && \
+                echo "'${UNITY_PATH}' is not executable." && exit 1
+        ${UNITY_PATH} -batchmode -quit \
+                -logFile ${log_file} -projectPath ${unity_project_path} \
                 ${*} & PID="${!}"
-        sleep 1 && tail -F /tmp/unity.log --pid="${PID}" & wait ${PID}
+        [ "${OSTYPE}" = "cygwin" ] \
+                && sleep 1 \
+                && tail -F /tmp/unity.log --pid="${PID}" & wait ${PID}
 }
 
 # setup environment variables
 PROJECT_NAME=`project_name`
 PROJECT_DIR=`project_dir`
+PROJECT_TASK_DIR=`project_task_dir`
+ENV_FILE="${HOME}/.env.${PROJECT_NAME}"
 
 # load env file
-[ -f ~/.env.${PROJECT_NAME} ] && . ~/.env.${PROJECT_NAME}
-
-# debug message
-#echo "PROJECT_NAME=${PROJECT_NAME}"
-#echo "PROJECT_DIR=${PROJECT_DIR}"
-#echo "TASK=${TASK}"
-#echo "(on `pwd`)"
-#echo ""
+[ -f "${ENV_FILE}" ] && . "${ENV_FILE}"
 
 # execute task
 task_${TASK} ${*}

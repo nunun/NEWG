@@ -3,8 +3,8 @@ task_down() { docker-compose down; }
 task_protocols() { sh ./protocols/protocols.sh ${*}; }
 task_test() { sh ./test/test.sh ${*}; }
 task_unity() {
-        unity ./.. -executeMethod GameBuildMenuItems.BuildReleaseClientWebGL
-        unity ./.. -executeMethod GameBuildMenuItems.BuildReleaseServerLinuxHeadless
+        unity -executeMethod GameBuildMenuItems.BuildReleaseClientWebGL
+        unity -executeMethod GameBuildMenuItems.BuildReleaseServerLinuxHeadless
 }
 task_build() {
         task_down
