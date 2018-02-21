@@ -18,7 +18,7 @@ public partial class MindlinkConnector : WebSocketConnector {
 
     // ペイロード付きデータ
     public struct DataWithPayload<TPayload> {
-        TPayload payload;
+        public TPayload payload;
     }
 
     //-------------------------------------------------------------------------- 変数
@@ -31,6 +31,7 @@ public partial class MindlinkConnector : WebSocketConnector {
 
         // データイベントリスナに接続
         SetDataMessageEventListener((int)DataType.M, (message) => {
+            int type = -1;
             if (PayloadTypePropertyParser.TryParse(message, out type)) {
                 if (dataFromRemoteEventListener.ContainsKey(type)) {
                     dataFromRemoteEventListener[type](message);
@@ -46,7 +47,7 @@ public partial class MindlinkConnector : WebSocketConnector {
 
     //-------------------------------------------------------------------------- 送信とキャンセル
     // リモートに送信 (リクエスト)
-    public int SendToRemote<TSend,TRecv>(int type, TSend data, Action<string,TRecv> callback, int timeout = 0) {
+    public int SendToRemote<TSend,TRecv>(string to, int type, TSend data, Action<string,TRecv> callback, int timeout = 0) {
         var requestId = requestContext.NextRequestId();
         var requester = UUID;
 
@@ -54,7 +55,7 @@ public partial class MindlinkConnector : WebSocketConnector {
         requestContext.SetRequest(request);
 
         // 送信
-        var error = Transmit<TSend>(type, data, requestId, requester);
+        var error = TransmitToRemote<TSend>(to, type, data, requestId, requester);
         if (error != null) {
             requestContext.CancelRequest(requestId);
             return 0;
@@ -100,7 +101,7 @@ public partial class MindlinkConnector : WebSocketConnector {
         };
     }
 
-    protected void SetDataMessageFromRemoteEventListener(int type, Actoin<string> eventListener) { // NOTE メッセージそのままを受け取るデータイベントリスナ (継承用)
+    protected void SetDataMessageFromRemoteEventListener(int type, Action<string> eventListener) { // NOTE メッセージそのままを受け取るデータイベントリスナ (継承用)
         if (eventListener == null) {
             dataFromRemoteEventListener.Remove(type);
             return;
@@ -143,7 +144,7 @@ public partial class WebSocketConnector {
                 if (err != null) {
                     throw new Exception(err);
                 }
-                var data = JsonUtility.FromJson<DataWithPayload<TRecv>>(message);
+                var data = JsonUtility.FromJson<MindlinkConnector.DataWithPayload<TRecv>>(message);
                 req.callback(null, data.payload);
             } catch (Exception e) {
                 req.callback(e.ToString(), default(TRecv));
@@ -173,11 +174,11 @@ public partial class WebSocketConnector {
 public partial class MindlinkConnector {
     public struct ResponseToRemote<TResponse> {
         //---------------------------------------------------------------------- 変数
-        WebSocketConnector connector;
-        string             to;
-        int                type;
-        int                requestId;
-        string             requester;
+        public MindlinkConnector connector;
+        public string            to;
+        public int               type;
+        public int               requestId;
+        public string            requester;
 
         //---------------------------------------------------------------------- 操作
         // 送信元に向けて送り返す
@@ -232,7 +233,7 @@ public partial class WebSocketConnector {
         class PayloadContainer { public int type; }
 
         //---------------------------------------------------------------------- 操作
-        public static bool TryParse(string message, out string type) {
+        public static bool TryParse(string message, out int type) {
             var hasType = false;
             type = -1;
             var container = ObjectPool<Container>.GetObject();
@@ -287,7 +288,7 @@ public partial class MindlinkConnector {
             } else {
                 ssb.AppendFormat("{\"type\":{0},\"to\":{1},\"payload\":{2}}", (int)DataType.M, to, message);
             }
-            sendMessage = ssb.ToString();
+            var sendMessage = ssb.ToString();
             ObjectPool<StringBuilder>.ReturnObject(ssb);
 
             // 送信

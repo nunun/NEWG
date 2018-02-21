@@ -369,15 +369,15 @@ public partial class WebSocketConnector {
                 var request = requestList[i];
                 if (request.requestId == requestId) {
                     requestList.RemoveAt(i);
-                    request.SetResponse(err, message);
+                    request.SetResponse(error, message);
                     request.ReturnToPool();
                 }
             }
         }
 
         // リクエストをキャンセル
-        public void CancelResponse(int requestId) {
-            this.setResponse(requestId, "cancelled.", null);
+        public void CancelRequest(int requestId) {
+            this.SetResponse(requestId, "cancelled.", null);
         }
 
         //-------------------------------------------------------------------------- 操作 (その他)
@@ -492,10 +492,10 @@ public partial class WebSocketConnector {
 public partial class WebSocketConnector {
     public struct Response<TResponse> {
         //---------------------------------------------------------------------- 変数
-        WebSocketConnector connector;
-        int                type;
-        int                requestId;
-        string             requester;
+        public WebSocketConnector connector;
+        public int                type;
+        public int                requestId;
+        public string             requester;
 
         //---------------------------------------------------------------------- 操作
         // 送信元に向けて送り返す
