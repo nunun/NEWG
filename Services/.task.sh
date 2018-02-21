@@ -1,7 +1,8 @@
 # task example:
 # task_example() { echo "this is a task example."; }
 # . "`dirname ${0}`/.task.sh" up ${*}
-TASK="${2:-"${1?}"}"
+DEFAULT_TASK="${1?}"
+TASK="${2:-"${DEFAULT_TASK}"}"
 shift 2
 set -e
 cd "`dirname ${0}`"
@@ -59,6 +60,17 @@ unity() {
         [ "${OSTYPE}" = "cygwin" ] \
                 && sleep 1 \
                 && tail -F /tmp/unity.log --pid="${PID}" & wait ${PID}
+}
+
+# help
+task_help() {
+        local tasks=`declare -f | grep "^task_" | sed "s/^task_\(.*\) ()/\1/g"`
+        for t in ${tasks}; do
+                [ "${t}" = "${DEFAULT_TASK}" ] \
+                        && printf " [${t}]" \
+                        || printf " ${t}"
+        done
+        echo ""
 }
 
 # setup environment variables
