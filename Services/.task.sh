@@ -1,5 +1,5 @@
 # task example:
-# task_example { echo "this is a task example."; }
+# task_example() { echo "this is a task example."; }
 # . "`dirname ${0}`/.task.sh" up ${*}
 TASK="${2:-"${1?}"}"
 shift 2
