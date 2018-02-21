@@ -54,12 +54,13 @@ unity() {
                 && log_file=`cygpath -w "/tmp/unity.log"`
         [ ! -x ${UNITY_PATH?} ] && \
                 echo "'${UNITY_PATH}' is not executable." && exit 1
-        ${UNITY_PATH} -batchmode -quit \
+        ${UNITY_PATH} \
                 -logFile ${log_file} -projectPath ${unity_project_path} \
                 ${*} & PID="${!}"
         [ "${OSTYPE}" = "cygwin" ] \
-                && sleep 1 \
-                && tail -F /tmp/unity.log --pid="${PID}" & wait ${PID}
+                && sleep 2 \
+                && tail -n 1000 -F /tmp/unity.log --pid="${PID}" & wait ${PID}
+        return ${?}
 }
 
 # help
