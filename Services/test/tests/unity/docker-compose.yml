@@ -1,0 +1,43 @@
+version: '3.3'
+services:
+  matching:
+    image: newg_test_unity/test_matching
+    build: ./../../../matching
+    environment:
+      - LOG_LEVEL=debug
+    volumes:
+      - ./../../../matching/app:/app
+      - ./../../../.libservices:/usr/local/lib/node_modules/libservices
+    depends_on:
+      - mindlink
+      - api
+
+  api:
+    image: newg_test_unity/test_api
+    build: ./../../../api
+    environment:
+      - LOG_LEVEL=debug
+    volumes:
+      - ./../../../api/app:/app
+      - ./../../../.libservices:/usr/local/lib/node_modules/libservices
+    depends_on:
+      - mindlink
+      - couchdb
+      - redis
+
+  mindlink:
+    image: nunun/mindlink
+    depends_on:
+      - rabbitmq
+
+  rabbitmq:
+    image: rabbitmq:3.7.0-management-alpine
+    ports:
+      - 15672:15672
+
+  couchdb:
+    image: couchdb:2.1.1
+
+  redis:
+    image: redis:4.0.6-alpine
+
