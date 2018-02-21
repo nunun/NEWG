@@ -6,7 +6,7 @@ task_test() {
         [ "${OSTYPE}" = "cygwin" ] \
                 && platform="StandaloneWindows" \
                 && xml="cygpath -w ${xml}"
-        docker-compose up &
+        docker-compose up -d
         unity -runTests -testPlatform "${platform}" -testResults "${xml}"
 }
 task_build() {
