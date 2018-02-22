@@ -2,10 +2,12 @@ task_up() { task_down; docker-compose up; }
 task_down() { docker-compose down; }
 task_test() {
         local platform="StandaloneOSX"
+        local xml="/tmp/result.xml"
         [ "${OSTYPE}" = "cygwin" ] \
-                && platform="StandaloneWindows"
+                && platform="StandaloneWindows" \
+                && xml=`cygwin -w "${xml}"`
         docker-compose up -d
-        unity -runTests -testPlatform playmode \
+        unity -runTests -testPlatform playmode -testResults "${xml}" \
                 && echo "tests for services with unity are succeeded." \
                 || echo "tests for services with unity are failed."
 }
