@@ -37,6 +37,8 @@ sysinfo.txt
 # Project definitions
 Assets/tags
 Assets/tags.meta
+Assets/InitTestScene*
+TestResults-*
 Services/client/Builds
 Services/server/Builds
 Services/matching/app/node_modules
