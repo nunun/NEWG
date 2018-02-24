@@ -1,8 +1,8 @@
 var url            = require('url');
-var config         = require('libservices').config;
-var logger         = require('libservices').logger;
-var mindlinkClient = require('libservices').MindlinkClient.activate(config.mindlinkClient, logger.mindlinkClient);
-var matchingServer = require('libservices').WebSocketServer.activate(config.matchingServer, logger.matchingServer);
+var config         = require('services-library').config;
+var logger         = require('services-library').logger;
+var mindlinkClient = require('services-library').MindlinkClient.activate(config.mindlinkClient, logger.mindlinkClient);
+var matchingServer = require('services-library').WebSocketServer.activate(config.matchingServer, logger.matchingServer);
 var protocols      = require('./protocols');
 
 // mindlink client

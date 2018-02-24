@@ -5,7 +5,7 @@ task_test() {
         local xml="/tmp/result.xml"
         [ "${OSTYPE}" = "cygwin" ] \
                 && platform="StandaloneWindows" \
-                && xml=`cygwin -w "${xml}"`
+                && xml=`cygpath -w "${xml}"`
         docker-compose up -d
         unity -runTests -testPlatform playmode -testResults "${xml}" \
                 && echo "tests for services with unity are succeeded." \

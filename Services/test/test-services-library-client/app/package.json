@@ -1,17 +1,16 @@
 {
-  "name": "mindlink-client",
+  "name": "test-services-library-client",
   "version": "0.0.0",
   "description": "",
-  "main": "app.js",
+  "main": "test.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "config": "^1.29.4",
     "log4js": "^2.5.3",
-    "services-library": "git+https://github.com/nunun/services-library.git#master",
+    "services-library": "git+https://github.com/nunun/services-library-node.git#master",
     "string.prototype.trim": "^1.1.2",
-    "uuid": "^3.2.1",
     "ws": "^4.1.0",
     "yaml": "^0.3.0"
   },

@@ -1,7 +1,7 @@
 version: '3.3'
 services:
   matching:
-    image: newg-test-unity/test-matching
+    image: newg-test-unity/matching
     build: ./../../../matching
     environment:
       - LOG_LEVEL=debug
@@ -13,7 +13,7 @@ services:
       - api
 
   api:
-    image: newg-test-unity/test-api
+    image: newg-test-unity/api
     build: ./../../../api
     environment:
       - LOG_LEVEL=debug
@@ -26,7 +26,7 @@ services:
       - redis
 
   mindlink:
-    image: newg-test-unity/test-mindlink
+    image: newg-test-unity/mindlink
     build: ./../../../mindlink
     volumes:
       - ./../../../mindlink/app:/app

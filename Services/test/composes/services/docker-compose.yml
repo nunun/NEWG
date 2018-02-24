@@ -1,31 +1,19 @@
 version: '3.3'
 services:
-  test-client:
-    image: newg-test-services/test-client
-    build: ./../../test-client
+  test-services-client:
+    image: newg-test-services/test-services-client
+    build: ./../../test-services-client
     environment:
       - LOG_LEVEL=debug
     volumes:
-      - ./../../test-client/app:/app
-      - ./../../../services-library:/usr/local/lib/node_modules/services-library
-    depends_on:
-      - matching
-      - mindlink
-
-  test-server:
-    image: newg-test-services/test-server
-    build: ./../../test-server
-    environment:
-      - LOG_LEVEL=debug
-    volumes:
-      - ./../../test-server/app:/app
+      - ./../../test-services-client/app:/app
       - ./../../../services-library:/usr/local/lib/node_modules/services-library
     depends_on:
       - matching
       - mindlink
 
   matching:
-    image: newg-test-services/test-matching
+    image: newg-test-services/matching
     build: ./../../../matching
     environment:
       - LOG_LEVEL=debug
@@ -37,7 +25,7 @@ services:
       - api
 
   api:
-    image: newg-test-services/test-api
+    image: newg-test-services/api
     build: ./../../../api
     environment:
       - LOG_LEVEL=debug
@@ -50,7 +38,7 @@ services:
       - redis
 
   mindlink:
-    image: newg-test-mindlink/test-mindlink
+    image: newg-test-services/mindlink
     build: ./../../../mindlink
     volumes:
       - ./../../../mindlink/app:/app
