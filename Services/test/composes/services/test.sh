@@ -5,6 +5,7 @@ task_test() {
 }
 task_build() {
         task_down; docker-compose build --force-rm --pull
+        git submodule update --init --recursive --remote
         docker-compose run --rm --no-deps test-client sh -c \
                 "(cd /usr/local/lib/node_modules/services-library && npm install)"
         docker-compose run --rm --no-deps test-client npm update

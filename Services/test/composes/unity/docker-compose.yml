@@ -26,7 +26,11 @@ services:
       - redis
 
   mindlink:
-    image: nunun/mindlink
+    image: newg-test-unity/test-mindlink
+    build: ./../../../mindlink
+    volumes:
+      - ./../../../mindlink/app:/app
+      - ./../../../services-library:/usr/local/lib/node_modules/services-library
     depends_on:
       - rabbitmq
 

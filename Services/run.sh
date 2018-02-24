@@ -10,6 +10,7 @@ task_build() {
         task_down
         task_unity
         docker-compose build --force-rm --pull
+        git submodule update --init --recursive --remote
         docker-compose run --rm --no-deps matching sh -c \
                 "(cd /usr/local/lib/node_modules/services-library && npm install)"
         docker-compose run --rm --no-deps matching npm update
