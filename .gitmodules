@@ -1,0 +1,3 @@
+[submodule "Services/services-library"]
+	path = Services/services-library
+	url = https://github.com/nunun/services-library
