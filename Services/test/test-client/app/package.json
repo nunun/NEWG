@@ -8,11 +8,11 @@
   },
   "dependencies": {
     "config": "^1.29.4",
-    "libservices": "git+https://github.com/nunun/libservices.git#master",
     "log4js": "^2.5.3",
+    "services-library": "git+https://github.com/nunun/services-library.git#master",
     "string.prototype.trim": "^1.1.2",
     "uuid": "^3.2.1",
-    "ws": "^4.0.0",
+    "ws": "^4.1.0",
     "yaml": "^0.3.0"
   },
   "repository": "",

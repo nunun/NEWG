@@ -7,7 +7,7 @@ services:
       - LOG_LEVEL=debug
     volumes:
       - ./../../test-client/app:/app
-      - ./../../../servies-library:/usr/local/lib/node_modules/servies-library
+      - ./../../../services-library:/usr/local/lib/node_modules/services-library
     depends_on:
       - matching
       - mindlink
@@ -19,7 +19,7 @@ services:
       - LOG_LEVEL=debug
     volumes:
       - ./../../test-server/app:/app
-      - ./../../../servies-library:/usr/local/lib/node_modules/servies-library
+      - ./../../../services-library:/usr/local/lib/node_modules/services-library
     depends_on:
       - matching
       - mindlink

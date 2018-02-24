@@ -13,5 +13,5 @@ services:
       - ../test/test_client/app:/generate/nodejs/test_client/
       - ../test/test_server/app:/generate/nodejs/test_server/
       # C# 出力先 (/generate/cs/xxx)
-      - ../../Assets:/generate/cs/Assets/
+      - ../../Assets/Game/Scripts/Services:/generate/cs/Assets/
 
