@@ -21,7 +21,7 @@ services:
       - LOG_LEVEL=debug
     volumes:
       - ./matching/app:/app
-      - ./.libservices:/usr/local/lib/node_modules/libservices
+      - ./services-library:/usr/local/lib/node_modules/services-library
 
   api:
     build: ./api
@@ -29,12 +29,16 @@ services:
       - LOG_LEVEL=debug
     volumes:
       - ./api/app:/app
-      - ./.libservices:/usr/local/lib/node_modules/libservices
+      - ./services-library:/usr/local/lib/node_modules/services-library
 
   mindlink:
+    build: ./mindlink
     environment:
       - DEBUG_HTTP_CHANNEL_ENABLE=1
       - LOG_LEVEL=debug
+    volumes:
+      - ./mindlink/app:/app
+      - ./services-library:/usr/local/lib/node_modules/services-library
     ports:
       - 17766:17766
 
@@ -44,3 +48,6 @@ services:
       - 15672:15672
 
   couchdb: {}
+
+  redis: {}
+

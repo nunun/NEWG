@@ -1,25 +1,25 @@
 version: '3.3'
 services:
   matching:
-    image: newg_test_unity/test_matching
+    image: newg-test-unity/test-matching
     build: ./../../../matching
     environment:
       - LOG_LEVEL=debug
     volumes:
       - ./../../../matching/app:/app
-      - ./../../../.libservices:/usr/local/lib/node_modules/libservices
+      - ./../../../services-library:/usr/local/lib/node_modules/services-library
     depends_on:
       - mindlink
       - api
 
   api:
-    image: newg_test_unity/test_api
+    image: newg-test-unity/test-api
     build: ./../../../api
     environment:
       - LOG_LEVEL=debug
     volumes:
       - ./../../../api/app:/app
-      - ./../../../.libservices:/usr/local/lib/node_modules/libservices
+      - ./../../../services-library:/usr/local/lib/node_modules/services-library
     depends_on:
       - mindlink
       - couchdb

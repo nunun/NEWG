@@ -1,0 +1,49 @@
+# server
+#server:
+
+# mindlink server
+mindlinkServer:
+  servers:
+    keepalive:
+      sendInterval:  [10000, "${KEEPALIVE_SEND_INTERVAL}"]
+      checkInterval: [20000, "${KEEPALIVE_CHECK_INTERVAL}"]
+      downCount:     [2,     "${KEEPALIVE_DOWN_COUNT}"]
+      deleteCount:   [30,    "${KEEPALIVE_DELETE_COUNT}"]
+
+# amqp channel
+amqpChannel:
+  url: ["amqp://rabbitmq:5672", "${AMQP_URL}"]
+  exchange:
+    name: ["mindlink_exchange", "${AMQP_EXCHANGE_NAME}"]
+
+# public channel
+publicChannel:
+  port: [7766, "${PORT}"]
+
+# debug http channel
+debugHttpChannel:
+  port:   [17766, "${DEBUG_HTTP_CHANNEL_PORT}"]
+  enable: [0,     "${DEBUG_HTTP_CHANNEL_ENABLE}"]
+
+# log4js
+log4js:
+  appenders:
+    console:
+      type: console
+  categories:
+    default:
+      appenders: [console]
+      level: [info, "${LOG_LEVEL}"]
+    mindlinkServer:
+      appenders: [console]
+      level: [info, "${LOG_LEVEL}"]
+    amqpChannel:
+      appenders: [console]
+      level: [info, "${LOG_LEVEL}"]
+    publicChannel:
+      appenders: [console]
+      level: [info, "${LOG_LEVEL}"]
+    debugHttpChannel:
+      appenders: [console]
+      level: [info, "${LOG_LEVEL}"]
+
