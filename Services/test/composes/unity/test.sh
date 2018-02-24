@@ -1,14 +1,15 @@
 task_up() { task_down; docker-compose up; }
 task_down() { docker-compose down; }
 task_test() {
-        local filter="${PROJECT_DIR}/Library/ScriptAssemblies/Assembly-CSharp.dll"
+        local platform="StandaloneOSX"
         local xml="/tmp/result.xml"
         [ "${OSTYPE}" = "cygwin" ] \
-                && filter=`cygpath -w "${filter}" | sed -e "s/\\\\\\/\\//g"` \
-                && xml=`cygpath -w "${xml}"`
+                && platform="StandaloneWindows" \
+                && xml=`cygwin -w "${xml}"`
         docker-compose up -d
-        unity -runTests -testFilter ${filter} -testResults "${xml}"
-        cat /tmp/result.xml
+        unity -runTests -testPlatform playmode -testResults "${xml}" \
+                && echo "tests for services with unity are succeeded." \
+                || echo "tests for services with unity are failed."
 }
 task_build() {
         task_down; docker-compose build --force-rm --pull
