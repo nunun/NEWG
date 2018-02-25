@@ -47,7 +47,7 @@ public partial class MindlinkConnector : WebSocketConnector {
 
     //-------------------------------------------------------------------------- 送信とキャンセル
     // リモートに送信 (リクエスト)
-    public int SendToRemote<TSend,TRecv>(string to, int type, TSend data, Action<string,TRecv> callback, int timeout = 0) {
+    public int SendToRemote<TSend,TRecv>(string to, int type, TSend data, Action<string,TRecv> callback, float timeout = 10.0f) {
         var requestId = requestContext.NextRequestId();
         var requester = UUID;
 
@@ -57,7 +57,7 @@ public partial class MindlinkConnector : WebSocketConnector {
         // 送信
         var error = TransmitToRemote<TSend>(to, type, data, requestId, requester);
         if (error != null) {
-            requestContext.CancelRequest(requestId);
+            requestContext.CancelRequest(requestId, error);
             return 0;
         }
         return requestId;
@@ -274,21 +274,25 @@ public partial class MindlinkConnector {
             // NOTE
             // メッセージに "type" プロパティをねじ込む。
             var sb = ObjectPool<StringBuilder>.GetObject();
+            sb.Length = 0;
             sb.Append(message);
             sb.Remove(message.Length - 1, 1); // "}" 消し
-            sb.AppendFormat(",\"type\":{1}}}", type);
+            sb.AppendFormat(",\"type\":{0}}}", type);
             message = sb.ToString();
+            sb.Length = 0;
             ObjectPool<StringBuilder>.ReturnObject(sb);
 
             // NOTE
             // ラッパーメッセージを "type", "to", "payload", "requestId", "requester" で構成する。
             var ssb = ObjectPool<StringBuilder>.GetObject();
+            ssb.Length = 0;
             if (requestId >= 0 && requester != null) {
-                ssb.AppendFormat("{\"type\":{0},\"to\":{1},\"payload\":{2},\"requestId\":{3},\"requester\":\"{4}\"}}", (int)DataType.M, to, message, requestId, requester);
+                ssb.AppendFormat("{{\"type\":{0},\"to\":\"{1}\",\"payload\":{2},\"requestId\":{3},\"requester\":\"{4}\"}}", (int)DataType.M, to, message, requestId, requester);
             } else {
-                ssb.AppendFormat("{\"type\":{0},\"to\":{1},\"payload\":{2}}}", (int)DataType.M, to, message);
+                ssb.AppendFormat("{{\"type\":{0},\"to\":\"{1}\",\"payload\":{2}}}", (int)DataType.M, to, message);
             }
             var sendMessage = ssb.ToString();
+            ssb.Length = 0;
             ObjectPool<StringBuilder>.ReturnObject(ssb);
 
             // 送信

@@ -111,6 +111,7 @@ public partial class WebSocketConnector : MonoBehaviour {
         if (   (options != null && options.Length > 0)
             || (queries != null && queries.Length > 0)) {
             var sb = ObjectPool<StringBuilder>.GetObject();
+            sb.Length = 0;
             sb.Append(url);
             if (options != null && options.Length > 0) {
                 for (int i = 0; i < (options.Length - 2); i += 2) {
@@ -125,6 +126,7 @@ public partial class WebSocketConnector : MonoBehaviour {
                 }
             }
             url = sb.ToString();
+            sb.Length = 0;
             ObjectPool<StringBuilder>.ReturnObject(sb);
         }
 
@@ -157,15 +159,15 @@ public partial class WebSocketConnector : MonoBehaviour {
         // 送信
         var error = Transmit<TSend>(type, data, requestId, requester);
         if (error != null) {
-            requestContext.CancelRequest(requestId);
+            requestContext.CancelRequest(requestId, error);
             return 0;
         }
         return requestId;
     }
 
     // リクエストのキャンセル
-    public void CancelRequest(int requestId) {
-        requestContext.CancelRequest(requestId);
+    public void CancelRequest(int requestId, string error = null) {
+        requestContext.CancelRequest(requestId, error);
     }
 
     //-------------------------------------------------------------------------- イベントリスナ設定
@@ -377,8 +379,8 @@ public partial class WebSocketConnector {
         }
 
         // リクエストをキャンセル
-        public void CancelRequest(int requestId) {
-            this.SetResponse(requestId, "cancelled.", null);
+        public void CancelRequest(int requestId, string error = null) {
+            this.SetResponse(requestId, error ?? "cancelled.", null);
         }
 
         //-------------------------------------------------------------------------- 操作 (その他)
@@ -602,15 +604,16 @@ public partial class WebSocketConnector {
             // NOTE
             // メッセージに "type", "requestId", "requester" プロパティをねじ込む。
             var sb = ObjectPool<StringBuilder>.GetObject();
-			sb.Length = 0;
+            sb.Length = 0;
             sb.Append(message);
             sb.Remove(message.Length - 1, 1); // "}" 消し
             if (requestId >= 0 && requester != null) {
-				sb.AppendFormat(",\"type\":{0},\"requestId\":{1},\"requester\":\"{2}\"}}", type, requestId, requester);
+                sb.AppendFormat(",\"type\":{0},\"requestId\":{1},\"requester\":\"{2}\"}}", type, requestId, requester);
             } else {
-				sb.AppendFormat(",\"type\":{0}}}", type);
+                sb.AppendFormat(",\"type\":{0}}}", type);
             }
             message = sb.ToString();
+            sb.Length = 0;
             ObjectPool<StringBuilder>.ReturnObject(sb);
 
             // 送信

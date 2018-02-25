@@ -117,8 +117,8 @@ PublicChannel.prototype.start = function() {
                     throw new Error('data is null.');
                 }
             } catch (e) {
-                logger.publicChannel.debug(clientName + ': ' + mindlinkServer.uuid + ': ' + mindlinkClient.uuid +': message: failed to parse json. (e = "' + util.inspect(err) + '")');
-                mindlinkClient.ng('failed to parse json. (' + err.toString() + ')');
+                logger.publicChannel.debug(clientName + ': ' + mindlinkServer.uuid + ': ' + mindlinkClient.uuid +': message: failed to parse json. (e = "' + e.toString() + '")');
+                mindlinkClient.ng('failed to parse json. (' + e.toString() + ')');
                 return;
             }
 

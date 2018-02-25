@@ -41,6 +41,8 @@ services:
   mindlink:
     image: newg-test-unity/mindlink
     build: ./../../../mindlink
+    environment:
+      - LOG_LEVEL=debug
     volumes:
       - ./../../../mindlink/app:/app
       - ./../../../services-library:/usr/local/lib/node_modules/services-library

@@ -17,4 +17,9 @@ public class SmokeTest {
         //Assert.AreEqual(true, false);
         yield return new MonoBehaviourTest<WebSocketConnectorTest>();
     }
+
+    [UnityTest]
+    public IEnumerator MindlinkConnectorTest() {
+        yield return new MonoBehaviourTest<MindlinkConnectorTest>();
+    }
 }
