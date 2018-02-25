@@ -45,6 +45,6 @@ Services/matching/app/node_modules
 Services/api/app/node_modules
 Services/mindlink/app/node_modules
 Services/services-library/node_modules
+Services/test/test-matching-client/app/node_modules
 Services/test/test-services-client/app/node_modules
-Services/test/test-services-library-client/app/node_modules
-Services/test/test-services-library-server/app/node_modules
+Services/test/test-services-server/app/node_modules

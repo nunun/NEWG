@@ -1,21 +1,9 @@
-# testClient
+# test client
 #testClient:
-
-# mindlink client 1
-mindlinkClient1:
-  url: "ws://mindlink1:7766/"
-
-# mindlink client 2
-mindlinkClient2:
-  url: "ws://mindlink2:7766/"
-
-# mindlink client 3
-mindlinkClient3:
-  url: "ws://mindlink1:7766/"
 
 # websocket client
 webSocketClient:
-  url: "ws://test-services-library-server:7788"
+  url: "ws://test_server:7788"
 
 # couch client
 couchClient:
@@ -24,6 +12,14 @@ couchClient:
 # redis client
 redisClient:
   url: "redis://redis:6379"
+
+# mindlink client
+mindlinkClient:
+  url: "ws://mindlink:7766"
+
+# matching client
+matchingClient:
+  url: "ws://matching:7755"
 
 # log4js
 log4js:
@@ -37,9 +33,6 @@ log4js:
     testClient:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
-    mindlinkClient:
-      appenders: [console]
-      level: [info, "${LOG_LEVEL}"]
     webSocketClient:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
@@ -47,6 +40,12 @@ log4js:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
     redisClient:
+      appenders: [console]
+      level: [info, "${LOG_LEVEL}"]
+    mindlinkClient:
+      appenders: [console]
+      level: [info, "${LOG_LEVEL}"]
+    matchingClient:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
 

@@ -9,12 +9,10 @@ task_build() {
         docker-compose run --rm --no-deps test-services-client sh -c \
                 "(cd /usr/local/lib/node_modules/services-library && npm install)"
         docker-compose run --rm --no-deps test-services-client npm update
-        docker-compose run --rm --no-deps matching             npm update
-        docker-compose run --rm --no-deps api                  npm update
-        docker-compose run --rm --no-deps mindlink             npm update
+        docker-compose run --rm --no-deps test-services-server npm update
+        docker-compose run --rm --no-deps mindlink1            npm update
         docker-compose run --rm --no-deps test-services-client npm link services-library
-        docker-compose run --rm --no-deps matching             npm link services-library
-        docker-compose run --rm --no-deps api                  npm link services-library
-        docker-compose run --rm --no-deps mindlink             npm link services-library
+        docker-compose run --rm --no-deps test-services-server npm link services-library
+        docker-compose run --rm --no-deps mindlink1            npm link services-library
 }
 . "`dirname ${0}`/../../../.task.sh" test ${*}

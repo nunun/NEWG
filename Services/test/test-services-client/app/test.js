@@ -1,35 +1,142 @@
-var assert         = require('assert');
-var config         = require('services-library').config;
-var logger         = require('services-library').logger;
-var mindlinkClient = require('services-library').MindlinkClient.activate(config.mindlinkClient, logger.mindlinkClient);
-var matchingClient = require('services-library').WebSocketClient.activate(config.matchingClient, logger.matchingClient);
+var assert          = require('assert');
+var config          = require('services-library').config;
+var logger          = require('services-library').logger;
+var mindlinkClient1 = require('services-library').MindlinkClient.activate(config.mindlinkClient1, logger.mindlinkClient);
+var mindlinkClient2 = require('services-library').MindlinkClient.activate(config.mindlinkClient2, logger.mindlinkClient);
+var mindlinkClient3 = require('services-library').MindlinkClient.activate();
+var webSocketClient = require('services-library').WebSocketClient.activate(config.webSocketClient, logger.webSocketClient);
+var couchClient     = require('services-library').CouchClient.activate(config.couchClient, logger.couchClient);
+var redisClient     = require('services-library').RedisClient.activate(config.redisClient, logger.redisClient);
 
-describe('smoke test', function () {
-    describe('smoke test', function () {
+// 'setXxx' pattern ...
+mindlinkClient3.setConfig(config.mindlinkClient3);
+mindlinkClient3.setLogger(logger.mindlinkClient);
+
+describe('mindlink', function () {
+    describe('mindlink client', function () {
         this.timeout(20000);
         it('smoke test', function (done) {
-            mindlinkClient.test([
+            mindlinkClient1.test([
                 {connect: function() {
-                    mindlinkClient.sendStatus({address:'example.com:7777', population:0, capacity:16}, function(err, responseData) {
+                    mindlinkClient1.send(mindlinkClient1.DATA_TYPE.S, {service:{data:'init', alias:'a_client'}});
+                }},
+                {S: function(data) {
+                    assert.ok(data.ok, 'invalid response data.ok');
+                    mindlinkClient1.sendStatus({data:'test', alias:'a_client'}, function(err, responseData) {
                         assert.ok(!err,            'invalid response err');
                         assert.ok(responseData.ok, 'invalid response responseData.ok');
-                        matchingClient.start({user_id:'test'});
+                        mindlinkClient1.send(mindlinkClient1.DATA_TYPE.Q, {jspath:'.*'});
                     });
-                }}
+                }},
+                {Q: function(data) {
+                    assert.ok(data.ok,                         'invalid response data.ok');
+                    assert.ok(data.clientUuid,                 'invalid response data.clientUuid');
+                    assert.ok(data.serverUuid,                 'invalid response data.serverUuid');
+                    assert.ok(data.services,                   'invalid response data.services');
+                    assert.ok(data.services[0],                'invalid response data.services[0]');
+                    assert.ok(data.services[0].clientUuid,     'invalid response data.services[0].clientUuid');
+                    assert.ok(data.services[0].serverUuid,     'invalid response data.services[0].serverUuid');
+                    assert.ok(data.services[0],                'invalid response data.services[0]');
+                    assert.ok(data.services[0].data == 'test', 'invalid response data.services[0].data');
+                    mindlinkClient1.uuid = data.clientUuid;
+                    mindlinkClient2.start();
+                }},
+                {data_type0: function(data) {
+                    assert.ok(data.type == 0,          'invalid response data.type');
+                    assert.ok(data.message == 'test1', 'invalid response data.message');
+                    mindlinkClient3.start();
+                }},
+                {data_type1: function(data) {
+                    assert.ok(data.type == 1,          'invalid response data.type');
+                    assert.ok(data.message == 'test2', 'invalid response data.message');
+                    mindlinkClient1.sendToRemote('client3', 2, {value:123}, function(err, data) {
+                        assert.ok(data.type  == 2,   'invalid response data.type');
+                        assert.ok(data.value == 123, 'invalid response data.value');
+                        couchClient.start();
+                    });
+                }},
             ]);
 
-            matchingClient.test([
-                {connect: function() {}},
-                {data_type0: function(data) {
-                    assert.ok(!data.err,                          'invalid response data.err');
-                    assert.ok(data.address == 'example.com:7777', 'invalid response data.address');
+            mindlinkClient2.test([
+                {connect: function() {
+                    mindlinkClient2.send(mindlinkClient2.DATA_TYPE.Q, {jspath:'.*'});
+                }},
+                {Q: function(data) {
+                    assert.ok(data.ok,                         'invalid response data.ok');
+                    assert.ok(data.services,                   'invalid response data.services');
+                    assert.ok(data.services[0],                'invalid response data.services[0]');
+                    assert.ok(data.services[0].clientUuid,     'invalid response data.services.clientUuid');
+                    assert.ok(data.services[0].serverUuid,     'invalid response data.services.serverUuid');
+                    assert.ok(data.services[0],                'invalid response data.services[0]');
+                    assert.ok(data.services[0].data == 'test', 'invalid response data.services[0].data');
+                    mindlinkClient2.sendToRemote(data.services[0].clientUuid, 0, {message:'test1'});
+                }},
+            ]);
+
+            mindlinkClient3.test([
+                {connect: function() {
+                    mindlinkClient3.sendStatus({alias:'client3'}, function(err, responseData) {
+                        mindlinkClient3.send(mindlinkClient3.DATA_TYPE.Q, {jspath:'.*'});
+                    });
+                }},
+                {Q: function(data) {
+                    assert.ok(data.ok,                         'invalid response data.ok');
+                    assert.ok(data.services,                   'invalid response data.services');
+                    assert.ok(data.services[0].clientUuid,     'invalid response data.services.clientUuid');
+                    assert.ok(data.services[0].serverUuid,     'invalid response data.services.serverUuid');
+                    assert.ok(data.services[0],                'invalid response data.services[0]');
+                    assert.ok(data.services[0].data == 'test', 'invalid response data.services[0].data');
+                    mindlinkClient3.sendToRemote('a_client', 1, {message:'test2'});
+                }},
+                {data_type2: function(receivedData) {
+                    var data = receivedData[0];
+                    var res  = receivedData[1];
+                    res.send(data);
+                }},
+            ]);
+
+            couchClient.test([
+                {connect: function() {
+                    var conn = couchClient.getConnection();
+                    conn.server.db.destroy(conn.config.db, function(err, body) {
+                        assert.ok(!err, 'db destroy error.');
+                        conn.server.db.create(conn.config.db, function(err, body) {
+                            assert.ok(!err, 'db create error.');
+                            conn.insert({happy: true}, function(err, body) {
+                                assert.ok(!err, 'document insert error.');
+                                redisClient.start();
+                            });
+                        });
+                    });
+                }},
+            ]);
+
+            redisClient.test([
+                {connect: function() {
+                    webSocketClient.start();
+                }},
+            ]);
+
+            webSocketClient.test([
+                {connect: function() {
+                    webSocketClient.send(0, {value: 10}, function(err, responseData) {
+                        assert.ok(!err,                     'invalid response err');
+                        assert.ok(responseData,             'invalid response responseData');
+                        assert.ok(responseData.value == 10, 'invalid response responseData.value');
+                        webSocketClient.send(1, {value: 20});
+                    });
+                }},
+                {data_type1: function(responseData) {
+                    assert.ok(responseData,             'invalid response responseData');
+                    assert.ok(responseData.value == 20, 'invalid response responseData.value');
+                    webSocketClient.stop();
                 }},
                 {disconnect: function() {
                     done();
                 }},
             ]);
 
-            mindlinkClient.start();
+            mindlinkClient1.start();
         });
     });
 });
@@ -37,38 +144,98 @@ describe('smoke test', function () {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
+var util = require('util');
 var profiles = [{
-    // mindlink client
-    testee: mindlinkClient,
+    // mindlink client 1
+    testee: mindlinkClient1,
     listen: function(check) {
-        mindlinkClient.setConnectEventListener(function() { check('connect', null); });
-        mindlinkClient.setDisconnectEventListener(function() { check('disconnect', null); });
-        mindlinkClient.setDataEventListener(mindlinkClient.DATA_TYPE.S, function(data) { check('S', data); });
-        mindlinkClient.setDataEventListener(mindlinkClient.DATA_TYPE.Q, function(data) { check('Q', data); });
-        mindlinkClient.setDataEventListener(mindlinkClient.DATA_TYPE.M, function(data) { check('M', data); });
+        mindlinkClient1.setConnectEventListener(function() { check('connect', null); });
+        mindlinkClient1.setDisconnectEventListener(function() { check('disconnect', null); });
+        mindlinkClient1.setDataEventListener(mindlinkClient1.DATA_TYPE.S, function(data) { check('S', data); });
+        mindlinkClient1.setDataEventListener(mindlinkClient1.DATA_TYPE.Q, function(data) { check('Q', data); });
+        mindlinkClient1.setDataFromRemoteEventListener(0, function(data, res) { check('data_type0', data); });
+        mindlinkClient1.setDataFromRemoteEventListener(1, function(data, res) { check('data_type1', data); });
     },
     unlisten: function() {
-        mindlinkClient.setConnectEventListener(null);
-        mindlinkClient.setDisconnectEventListener(null);
-        mindlinkClient.setDataEventListener(mindlinkClient.DATA_TYPE.S, null);
-        mindlinkClient.setDataEventListener(mindlinkClient.DATA_TYPE.Q, null);
-        mindlinkClient.setDataEventListener(mindlinkClient.DATA_TYPE.M, null);
-        mindlinkClient.stop();
+        mindlinkClient1.setConnectEventListener(null);
+        mindlinkClient1.setDisconnectEventListener(null);
+        mindlinkClient1.setDataEventListener(mindlinkClient1.DATA_TYPE.S, null);
+        mindlinkClient1.setDataEventListener(mindlinkClient1.DATA_TYPE.Q, null);
+        //mindlinkClient1.setDataEventListener(mindlinkClient1.DATA_TYPE.M, null); // NOTE this remove default event listener ...
+        mindlinkClient1.stop();
     }
 }, {
-    // matching client
-    testee: matchingClient,
+    // mindlink client 2
+    testee: mindlinkClient2,
     listen: function(check) {
-        matchingClient.setConnectEventListener(function()     { check('connect',    null); });
-        matchingClient.setDisconnectEventListener(function()  { check('disconnect', null); });
-        matchingClient.setDataEventListener(0, function(data) { check('data_type0', data); });
+        mindlinkClient2.setConnectEventListener(function() { check('connect', null); });
+        mindlinkClient2.setDisconnectEventListener(function() { check('disconnect', null); });
+        mindlinkClient2.setDataEventListener(mindlinkClient2.DATA_TYPE.S, function(data) { check('S', data); });
+        mindlinkClient2.setDataEventListener(mindlinkClient2.DATA_TYPE.Q, function(data) { check('Q', data); });
+        //mindlinkClient2.setDataEventListener(mindlinkClient2.DATA_TYPE.M, function(data) { check('M', data); });
     },
     unlisten: function() {
-        matchingClient.setConnectEventListener(null);
-        matchingClient.setDisconnectEventListener(null);
-        matchingClient.setDataEventListener(0, null);
-        matchingClient.stop();
+        mindlinkClient2.setConnectEventListener(null);
+        mindlinkClient2.setDisconnectEventListener(null);
+        mindlinkClient2.setDataEventListener(mindlinkClient2.DATA_TYPE.S, null);
+        mindlinkClient2.setDataEventListener(mindlinkClient2.DATA_TYPE.Q, null);
+        //mindlinkClient2.setDataEventListener(mindlinkClient2.DATA_TYPE.M, null);
+        mindlinkClient2.stop();
+    }
+}, {
+    // mindlink client 3
+    testee: mindlinkClient3,
+    listen: function(check) {
+        mindlinkClient3.setConnectEventListener(function() { check('connect', null); });
+        mindlinkClient3.setDisconnectEventListener(function() { check('disconnect', null); });
+        mindlinkClient3.setDataEventListener(mindlinkClient3.DATA_TYPE.S, function(data) { check('S', data); });
+        mindlinkClient3.setDataEventListener(mindlinkClient3.DATA_TYPE.Q, function(data) { check('Q', data); });
+        //mindlinkClient3.setDataEventListener(mindlinkClient3.DATA_TYPE.M, function(data) { check('M', data); });
+        mindlinkClient3.setDataFromRemoteEventListener(2, function(data, res) { check('data_type2', [data, res]); });
     },
+    unlisten: function() {
+        mindlinkClient3.setConnectEventListener(null);
+        mindlinkClient3.setDisconnectEventListener(null);
+        mindlinkClient3.setDataEventListener(mindlinkClient3.DATA_TYPE.S, null);
+        mindlinkClient3.setDataEventListener(mindlinkClient3.DATA_TYPE.Q, null);
+        //mindlinkClient3.setDataEventListener(mindlinkClient3.DATA_TYPE.M, null);
+        mindlinkClient3.stop();
+    }
+}, {
+    // websocket client
+    testee: webSocketClient,
+    listen: function(check) {
+        webSocketClient.setConnectEventListener(function() { check('connect', null); });
+        webSocketClient.setDisconnectEventListener(function() { check('disconnect', null); });
+        webSocketClient.setDataEventListener(1, function(data) { check('data_type1', data); });
+    },
+    unlisten: function() {
+        webSocketClient.setConnectEventListener(null);
+        webSocketClient.setDisconnectEventListener(null);
+        webSocketClient.setDataEventListener(1, null);
+        webSocketClient.stop();
+    }
+}, {
+    // couch client
+    testee: couchClient,
+    listen: function(check) {
+        couchClient.setConnectEventListener(function() { check('connect', null); });
+    },
+    unlisten: function() {
+        couchClient.setConnectEventListener(null);
+    }
+}, {
+    // redis client
+    testee: redisClient,
+    listen: function(check) {
+        redisClient.setConnectEventListener(function() { check('connect', null); });
+        redisClient.setDisconnectEventListener(function() { check('disconnect', null); });
+    },
+    unlisten: function() {
+        redisClient.setConnectEventListener(null);
+        redisClient.setDisconnectEventListener(null);
+        redisClient.stop();
+    }
 }];
 
 before(function (done) {

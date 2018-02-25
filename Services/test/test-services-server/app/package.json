@@ -1,5 +1,5 @@
 {
-  "name": "test-services-library-server",
+  "name": "test-services-server",
   "version": "0.0.0",
   "description": "",
   "main": "app.js",

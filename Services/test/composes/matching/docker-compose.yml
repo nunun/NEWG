@@ -1,53 +1,48 @@
 version: '3.3'
 services:
-  test-services-client:
-    image: newg-test-services/test-services-client
-    build: ./../../test-services-client
+  test-matching-client:
+    image: newg-test-matching/test-matching-client
+    build: ./../../test-matching-client
     environment:
       - LOG_LEVEL=debug
     volumes:
-      - ./../../test-services-client/app:/app
+      - ./../../test-matching-client/app:/app
       - ./../../../services-library:/usr/local/lib/node_modules/services-library
     depends_on:
-      - mindlink1
-      - mindlink2
-      - test-services-server
+      - matching
+      - mindlink
+
+  matching:
+    image: newg-test-matching/matching
+    build: ./../../../matching
+    environment:
+      - LOG_LEVEL=debug
+    volumes:
+      - ./../../../matching/app:/app
+      - ./../../../services-library:/usr/local/lib/node_modules/services-library
+    depends_on:
+      - mindlink
+      - api
+
+  api:
+    image: newg-test-matching/api
+    build: ./../../../api
+    environment:
+      - LOG_LEVEL=debug
+    volumes:
+      - ./../../../api/app:/app
+      - ./../../../services-library:/usr/local/lib/node_modules/services-library
+    depends_on:
+      - mindlink
       - couchdb
       - redis
 
-  test-services-server:
-    image: newg-test-services/test-services-server
-    build: ./../../test-services-server
-    environment:
-      - LOG_LEVEL=debug
-    volumes:
-      - ./../../test-services-server/app:/app
-      - ./../../../services-library:/usr/local/lib/node_modules/services-library
-
-  mindlink1:
-    image: newg-test-services/mindlink
+  mindlink:
+    image: newg-test-matching/mindlink
     build: ./../../../mindlink
-    environment:
-      - DEBUG_HTTP_CHANNEL_ENABLE=1
-      - LOG_LEVEL=debug
     volumes:
       - ./../../../mindlink/app:/app
       - ./../../../services-library:/usr/local/lib/node_modules/services-library
-    ports:
-      - 17766:17766
-    depends_on:
-      - rabbitmq
-
-  mindlink2:
-    image: newg-test-services/mindlink
-    environment:
-      - DEBUG_HTTP_CHANNEL_ENABLE=1
-      - LOG_LEVEL=debug
-    volumes:
-      - ./../../../mindlink/app:/app
-      - ./../../../services-library:/usr/local/lib/node_modules/services-library
-    ports:
-      - 17767:17766
     depends_on:
       - rabbitmq
 
