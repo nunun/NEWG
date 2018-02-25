@@ -1,0 +1,20 @@
+﻿using UnityEngine;
+using UnityEngine.TestTools;
+using NUnit.Framework;
+using System.Collections;
+
+public class SmokeTest {
+    //-------------------------------------------------------------------------- WebSocketConnectorのテスト
+    //[SetUp]
+    //public void Init() {
+    //    SceneManager.LoadScene("Main");
+    //}
+
+    [UnityTest]
+    public IEnumerator TestWebSocketConnector() {
+        //yield return null;
+        //yield return new WaitForSeconds (1);
+        //Assert.AreEqual(true, false);
+        yield return new MonoBehaviourTest<WebSocketConnectorTest>();
+    }
+}
