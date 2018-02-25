@@ -23,6 +23,8 @@ public class WebSocketConnectorTest : WebSocketConnector, IMonoBehaviourTest {
 
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     IEnumerator Start() {
+        bool dataType1 = false;
+
         // イベント登録
         AddConnectEventListner(() => {
             Debug.Log("Connected!");
@@ -31,6 +33,10 @@ public class WebSocketConnectorTest : WebSocketConnector, IMonoBehaviourTest {
             Assert.IsNull(error, "エラー発生:" + error);
             IsTestFinished = true;
         });
+        SetDataEventListener<TestData>(1, (recvTestData) => {
+            Assert.AreEqual(15, recvTestData.data, "レスポンスがおかしい？");
+            dataType1 = true;
+        });
 
         // 接続開始
         // テストウェブソケットサーバにつなげる
@@ -38,14 +44,26 @@ public class WebSocketConnectorTest : WebSocketConnector, IMonoBehaviourTest {
         Connect();
 
         // Update (接続メイン処理) を実行
-        yield return new WaitForSeconds(1);
+        while (state != State.Connected) {
+            yield return null;
+        }
 
         // type "0" はリクエストをレスポンスで返してくる。
         var sendTestData = new TestData();
         sendTestData.data = 10;
         Send<TestData,TestData>(0, sendTestData, (error,recvTestData) => {
             Assert.AreEqual(10, recvTestData.data, "レスポンスがおかしい？");
-            Disconnect(error);
+            Assert.IsNull(error, "エラー発生: " + error);
+            sendTestData.data = 15;
+            Send<TestData>(1, sendTestData);
         });
+
+        // data type "1" を受信するまで待つ
+        while (!dataType1) {
+            yield return null;
+        }
+
+        // 完了
+        Disconnect();
     }
 }

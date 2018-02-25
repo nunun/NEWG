@@ -146,7 +146,7 @@ public partial class WebSocketConnector : MonoBehaviour {
     }
 
     // 送信 (リクエスト)
-    public int Send<TSend,TRecv>(int type, TSend data, Action<string,TRecv> callback, int timeout = 0) {
+    public int Send<TSend,TRecv>(int type, TSend data, Action<string,TRecv> callback, float timeout = 10.0f) {
         var requestId = requestContext.NextRequestId();
         var requester = UUID;
 
@@ -602,12 +602,13 @@ public partial class WebSocketConnector {
             // NOTE
             // メッセージに "type", "requestId", "requester" プロパティをねじ込む。
             var sb = ObjectPool<StringBuilder>.GetObject();
+			sb.Length = 0;
             sb.Append(message);
             sb.Remove(message.Length - 1, 1); // "}" 消し
             if (requestId >= 0 && requester != null) {
-                sb.AppendFormat(",\"type\":{0},\"requestId\":{1},\"requester\":\"{2}\"}", type, requestId, requester);
+				sb.AppendFormat(",\"type\":{0},\"requestId\":{1},\"requester\":\"{2}\"}}", type, requestId, requester);
             } else {
-                sb.AppendFormat(",\"type\":{0}}", type);
+				sb.AppendFormat(",\"type\":{0}}}", type);
             }
             message = sb.ToString();
             ObjectPool<StringBuilder>.ReturnObject(sb);

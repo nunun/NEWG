@@ -276,17 +276,17 @@ public partial class MindlinkConnector {
             var sb = ObjectPool<StringBuilder>.GetObject();
             sb.Append(message);
             sb.Remove(message.Length - 1, 1); // "}" 消し
-            sb.AppendFormat(",\"type\":{1}}", type);
+            sb.AppendFormat(",\"type\":{1}}}", type);
             message = sb.ToString();
             ObjectPool<StringBuilder>.ReturnObject(sb);
 
             // NOTE
-            // ラッパーメッセージに "type", "to", "payload", "requestId", "requester" プロパティをねじ込む。
+            // ラッパーメッセージを "type", "to", "payload", "requestId", "requester" で構成する。
             var ssb = ObjectPool<StringBuilder>.GetObject();
             if (requestId >= 0 && requester != null) {
-                ssb.AppendFormat("{\"type\":{0},\"to\":{1},\"payload\":{2},\"requestId\":{3},\"requester\":\"{4}\"}", (int)DataType.M, to, message, requestId, requester);
+                ssb.AppendFormat("{\"type\":{0},\"to\":{1},\"payload\":{2},\"requestId\":{3},\"requester\":\"{4}\"}}", (int)DataType.M, to, message, requestId, requester);
             } else {
-                ssb.AppendFormat("{\"type\":{0},\"to\":{1},\"payload\":{2}}", (int)DataType.M, to, message);
+                ssb.AppendFormat("{\"type\":{0},\"to\":{1},\"payload\":{2}}}", (int)DataType.M, to, message);
             }
             var sendMessage = ssb.ToString();
             ObjectPool<StringBuilder>.ReturnObject(ssb);

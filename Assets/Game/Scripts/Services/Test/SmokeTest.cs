@@ -11,7 +11,7 @@ public class SmokeTest {
     //}
 
     [UnityTest]
-    public IEnumerator TestWebSocketConnector() {
+    public IEnumerator WebSocketConnectorTest() {
         //yield return null;
         //yield return new WaitForSeconds (1);
         //Assert.AreEqual(true, false);

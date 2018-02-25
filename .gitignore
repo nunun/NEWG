@@ -37,6 +37,8 @@ sysinfo.txt
 # Assets
 Assets/tags
 Assets/tags.meta
+Assets/InitTestScene*.unity
+Assets/InitTestScene*.unity.meta
 
 # Services
 Services/client/Builds
