@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
-// ¥×¥ì¥¤¥ä¡¼¥³¥é¥¤¥À¡¼¤Î¼ÂÁõ
+// ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã‚³ãƒ©ã‚¤ãƒ€ãƒ¼ã®å®Ÿè£…
 public class PlayerCollider : MonoBehaviour {
-    //-------------------------------------------------------------------------- ÊÑ¿ô
-    public Player player     = null; // ¥×¥ì¥¤¥ä¡¼¤ÎÀßÄê
-    public float  damageBuff = 1.0f; // ¥Ò¥Ã¥È»ş¤Î¥À¥á¡¼¥¸ÇÜÎ¨
+    //-------------------------------------------------------------------------- å¤‰æ•°
+    public Player player     = null; // ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®è¨­å®š
+    public float  damageBuff = 1.0f; // ãƒ’ãƒƒãƒˆæ™‚ã®ãƒ€ãƒ¡ãƒ¼ã‚¸å€ç‡
 }

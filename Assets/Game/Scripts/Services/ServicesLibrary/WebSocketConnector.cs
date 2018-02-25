@@ -108,16 +108,17 @@ public partial class WebSocketConnector : MonoBehaviour {
         Clear();
 
         // URL 作成
-        if (options.Length > 0 || queries.Length > 0) {
+        if (   (options != null && options.Length > 0)
+            || (queries != null && queries.Length > 0)) {
             var sb = ObjectPool<StringBuilder>.GetObject();
             sb.Append(url);
-            if (options.Length > 0) {
+            if (options != null && options.Length > 0) {
                 for (int i = 0; i < (options.Length - 2); i += 2) {
                     sb.Append((i == 0)? "?" : "&");
                     sb.Append(options[i + 0]); sb.Append("="); sb.Append(options[i + 1]);
                 }
             }
-            if (queries.Length > 0) {
+            if (queries != null && queries.Length > 0) {
                 for (int i = 0; i < (queries.Length - 2); i += 2) {
                     sb.Append((i == 0)? "?" : "&");
                     sb.Append(queries[i + 0]); sb.Append("="); sb.Append(queries[i + 1]);

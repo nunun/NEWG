@@ -1,5 +1,16 @@
 version: '3.3'
 services:
+  test-services-server:
+    image: newg-test-unity/test-services-server
+    build: ./../../test-services-server
+    environment:
+      - LOG_LEVEL=debug
+    volumes:
+      - ./../../test-services-server/app:/app
+      - ./../../../services-library:/usr/local/lib/node_modules/services-library
+    ports:
+      - 7788:7788
+
   matching:
     image: newg-test-unity/matching
     build: ./../../../matching
@@ -8,6 +19,8 @@ services:
     volumes:
       - ./../../../matching/app:/app
       - ./../../../services-library:/usr/local/lib/node_modules/services-library
+    ports:
+      - 7755:7755
     depends_on:
       - mindlink
       - api
@@ -31,6 +44,9 @@ services:
     volumes:
       - ./../../../mindlink/app:/app
       - ./../../../services-library:/usr/local/lib/node_modules/services-library
+    ports:
+      - 7766:7766
+      - 17766:17766
     depends_on:
       - rabbitmq
 
