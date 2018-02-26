@@ -240,7 +240,8 @@ public partial class WebSocketConnector : MonoBehaviour {
                 res.type      = type;
                 res.requestId = 0;
                 var response  = false;
-                RequestPropertyParser.TryParse(message, out res.requestId, out response);
+                var error     = default(string);
+                RequestPropertyParser.TryParse(message, out res.requestId, out response, out error);
                 eventListener(recvData.data, res);
             } catch (Exception e) {
                 Debug.LogError(e.ToString());
@@ -249,7 +250,7 @@ public partial class WebSocketConnector : MonoBehaviour {
         };
     }
 
-    protected void SetDataMessageEventListener(int type, Action<string> eventListener) { // NOTE メッセージそのままを受け取るデータイベントリスナ (継承用)
+    protected void SetDataThruEventListener(int type, Action<string> eventListener) { // NOTE メッセージそのままを受け取るデータイベントリスナ (継承用)
         if (eventListener == null) {
             dataEventListener.Remove(type);
             return;
@@ -306,9 +307,10 @@ public partial class WebSocketConnector : MonoBehaviour {
             // リクエストのレスポンスであれば処理
             var requestId = 0;
             var response  = false;
-            if (RequestPropertyParser.TryParse(message, out requestId, out response)) {
+            var error     = default(string);
+            if (RequestPropertyParser.TryParse(message, out requestId, out response, out error)) {
                 if (requestContext != null) {
-                    requestContext.SetResponse(requestId, null, message);
+                    requestContext.SetResponse(requestId, error, message);
                 }
                 return;
             }
@@ -470,13 +472,13 @@ public partial class WebSocketConnector {
 
         //---------------------------------------------------------------------- 内部コールバック用
         // レスポンスデータを設定
-        protected static void SetResponse(Request request, string err, string message) {
+        protected static void SetResponse(Request request, string error, string message) {
             var req = request as Request<TRecv>;
             Debug.Assert(req != null);
             Debug.Assert(req.callback != null);
             try {
-                if (err != null) {
-                    throw new Exception(err);
+                if (!string.IsNullOrEmpty(error)) {
+                    throw new Exception(error);
                 }
                 var recvData = JsonUtility.FromJson<RecvData<TRecv>>(message);
                 req.callback(null, recvData.data);
@@ -573,26 +575,30 @@ public partial class WebSocketConnector {
 public partial class WebSocketConnector {
     public class RequestPropertyParser {
         //---------------------------------------------------------------------- 定義
-        class Container { public int requestId; public bool response; }
+        class Container { public int requestId; public bool response; public string error; }
 
         //---------------------------------------------------------------------- 操作
-        public static bool TryParse(string message, out int requestId, out bool response) {
+        public static bool TryParse(string message, out int requestId, out bool response, out string error) {
             var hasRequest = false;
             requestId = 0;
             response  = false;
+            error     = null;
             var container = ObjectPool<Container>.GetObject();
             container.requestId = 0;
             container.response  = false;
+            container.error     = null;
             try {
                 JsonUtility.FromJsonOverwrite(message, container);
                 requestId  = container.requestId;
                 response   = container.response;
+                error      = container.error;
                 hasRequest = (requestId != 0 && response);
             } catch (Exception e) {
                 Debug.LogError(e.ToString());
             }
             container.requestId = 0;
             container.response  = false;
+            container.error     = null;
             ObjectPool<Container>.ReturnObject(container);
             return hasRequest;
         }

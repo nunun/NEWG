@@ -39,12 +39,12 @@ amqpChannel.on('data', function(data) {
     case amqpChannel.DATA_TYPE.M: // send message
        logger.amqpChannel.debug(mindlinkServer.uuid + ': M: messageData[' + util.inspect(data.messageData, {depth:null,breakLength:Infinity}) + ']');
        if (data.messageData) {
-           var messageData = data.messageData;
-           var innerData   = messageData.data;
-           if (mindlinkServer.clients[innerData.to] != undefined) {
-               mindlinkServer.clients[innerData.to].send(messageData); // NOTE send to client on *this* server
+           var messageData  = data.messageData;
+           var remoteHeader = messageData.remote;
+           if (mindlinkServer.clients[remoteHeader.to] != undefined) {
+               mindlinkServer.clients[remoteHeader.to].send(messageData); // NOTE send to client on *this* server
            } else {
-               logger.amqpChannel.error('no uuid to foward message. (' + innerData.to + ')');
+               logger.amqpChannel.error('no uuid to foward message. (' + remoteHeader.to + ')');
            }
        } else {
            logger.amqpChannel.error('no data to foward message. (' + util.inspect(data, {depth:null,breakLength:Infinity}) + ')');
@@ -128,21 +128,22 @@ publicChannel.on('data', function(mindlinkClient, data) {
         break;
     case publicChannel.DATA_TYPE.M: // send message to remote client
         logger.publicChannel.debug(mindlinkServer.uuid + ': ' + mindlinkClient.uuid + ': M: data[' + util.inspect(data, {depth:null,breakLength:Infinity}) + ']');
-        var innerData = data.data;
-        innerData.from = mindlinkClient.uuid;
+        var remoteHeader = data.remote;
+        remoteHeader.from = mindlinkClient.uuid;
         var sendFail = false;
-        var aliasedServices = mindlinkServer.findAliasedServices(innerData.to); // NOTE solve alias
+        var aliasedServices = mindlinkServer.findAliasedServices(remoteHeader.to); // NOTE solve alias
         do {
-            innerData.to = (aliasedServices && aliasedServices.length > 0)? aliasedServices.shift().clientUuid : innerData.to;
-            if (mindlinkServer.clients[innerData.to] != undefined) {
-                mindlinkServer.clients[innerData.to].send(data); // NOTE send message to client on *this* server
-            } else if (mindlinkServer.services[innerData.to] != undefined) {
-                var s = mindlinkServer.services[innerData.to];
+            remoteHeader.to = (aliasedServices && aliasedServices.length > 0)? aliasedServices.shift().clientUuid : remoteHeader.to;
+            if (mindlinkServer.clients[remoteHeader.to] != undefined) {
+                mindlinkServer.clients[remoteHeader.to].send(data); // NOTE send message to client on *this* server
+            } else if (mindlinkServer.services[remoteHeader.to] != undefined) {
+                var s = mindlinkServer.services[remoteHeader.to];
                 amqpChannel.sendMessage(s.serverUuid, data); // NOTE send message to client on *other* server
             } else {
                 if (!sendFail) {
                     sendFail = true;
-                    mindlinkClient.res(data, 'no uuid to send message (' + innerData.to + ')');
+                    logger.publicChannel.debug('no uuid to send message (' + remoteHeader.to + ')');
+                    mindlinkClient.res(data, 'no uuid to send message (' + remoteHeader.to + ')');
                 }
             }
         } while(aliasedServices && aliasedServices.length > 0)

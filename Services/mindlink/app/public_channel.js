@@ -72,7 +72,7 @@ PublicChannel.prototype.start = function() {
             sendData.data      = responseData;
             sendData.requestId = data.requestId;
             sendData.response  = true;
-            sendData.error     = null;
+            sendData.error     = error;
             mindlinkClient.send(sendData);
         }
 

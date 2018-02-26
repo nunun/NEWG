@@ -36,12 +36,12 @@ public partial class MindlinkConnector : WebSocketConnector {
 
     // リモートヘッダ
     [Serializable]
-    public class RemoteHeader {
-        public string from      = null;
-        public string to        = null;
-        public int    type      = 0;
-        public int    requestId = 0;
-        public bool   response  = false;
+    public struct RemoteHeader {
+        public string from;
+        public string to;
+        public int    type;
+        public int    requestId;
+        public bool   response;
     }
 
     //-------------------------------------------------------------------------- 変数
@@ -53,7 +53,14 @@ public partial class MindlinkConnector : WebSocketConnector {
         base.Init();
 
         // データイベントリスナに接続
-        SetDataMessageEventListener((int)DataType.M, (message) => {
+        SetDataThruEventListener((int)DataType.M, (message) => {
+            var requestId = 0;
+            var response  = false;
+            var error     = default(string);
+            if (RemoteHeaderRequestPropertyParser.TryParse(message, out requestId, out response, out error)) {
+                requestContext.SetResponse(requestId, error, message);
+                return;
+            }
             int type = -1;
             if (RemoteHeaderTypePropertyParser.TryParse(message, out type)) {
                 if (dataFromRemoteEventListener.ContainsKey(type)) {
@@ -216,6 +223,50 @@ public partial class WebSocketConnector {
         }
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+// リモートヘッダーリクエストプロパティパーサー
+// リクエスト先読み用
+public partial class WebSocketConnector {
+    public class RemoteHeaderRequestPropertyParser {
+        //---------------------------------------------------------------------- 定義
+        [Serializable]
+        class Container { public RemoteHeaderContainer remote = new RemoteHeaderContainer(); }
+
+        [Serializable]
+        class RemoteHeaderContainer { public int requestId; public bool response; public string error; }
+
+        //---------------------------------------------------------------------- 操作
+        public static bool TryParse(string message, out int requestId, out bool response, out string error) {
+            var hasRequest = false;
+            requestId = 0;
+            response  = false;
+            error     = null;
+            var container = ObjectPool<Container>.GetObject();
+            container.remote.requestId = 0;
+            container.remote.response  = false;
+            container.remote.error     = null;
+            try {
+                JsonUtility.FromJsonOverwrite(message, container);
+                requestId  = container.remote.requestId;
+                response   = container.remote.response;
+                error      = container.remote.error;
+                hasRequest = (requestId != 0 && response);
+            } catch (Exception e) {
+                Debug.LogError(e.ToString());
+            }
+            container.remote.requestId = 0;
+            container.remote.response  = false;
+            container.remote.error     = null;
+            ObjectPool<Container>.ReturnObject(container);
+            return hasRequest;
+        }
+    }
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
