@@ -45,7 +45,7 @@ MindlinkServer.prototype.findServices = function(serverUuid) {
     var services = []
     for (var i in this.services) {
         var s = this.services[i];
-        if (!serverUuid || s.serverUuid == serverUuid) {
+        if (!serverUuid || s._serverUuid == serverUuid) {
             services.push(s)
         }
     }
@@ -62,7 +62,7 @@ MindlinkServer.prototype.findAliasedServices = function(alias) {
     }
     for (var i in this.services) {
         var s = this.services[i];
-        if (s.alias && s.alias == alias) {
+        if (s._alias && s._alias == alias) {
             if (!aliasedServices) {
                 aliasedServices = [];
             }

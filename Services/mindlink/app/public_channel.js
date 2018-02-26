@@ -82,7 +82,7 @@ PublicChannel.prototype.start = function() {
             if (typeof(data) === 'string') {
                 data = {message: data};
             }
-            data.ok = (ok)? true : false;
+            data._ok = (ok)? true : false;
             mindlinkClient.ws.emit('send', data);
         }
 

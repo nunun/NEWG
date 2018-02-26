@@ -7,7 +7,7 @@ var protocols      = require('./protocols');
 
 // mindlink client
 mindlinkClient.setConnectEventListener(function() {
-    mindlinkClient.sendStatus({alias:'matching'}, function(err) {
+    mindlinkClient.sendStatus({_alias:'matching'}, function(err) {
         if (err) {
             logger.mindlinkClient.error(err.toString());
             process.exit(1);

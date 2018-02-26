@@ -7,7 +7,7 @@ var protocols      = require('./protocols');
 
 // mindlink client
 mindlinkClient.setConnectEventListener(function() {
-    mindlinkClient.sendStatus({alias:'api'}, function(err) {
+    mindlinkClient.sendStatus({_alias:'api'}, function(err) {
         if (err) {
             logger.mindlinkClient.error(err.toString());
             process.exit(1);
@@ -21,15 +21,14 @@ mindlinkClient.setDataFromRemoteEventListener(protocols.CMD.API.MATCHING_REQUEST
     // マッチング開始
     // サービス一覧からゲームサーバをとって返却
     // TODO 将来的には人数や空部屋などもチェック。
-    mindlinkClient.sendQuery('.*{.address != ""}', function(err,responseData) {
+    mindlinkClient.sendQuery('.*{.address != ""}', function(err,services) {
         if (err) {
             res.send({err:err.toString()});
             return;
         }
         // サービスがあるか確認
-        var services = responseData.services;
-        if (!services || services.length <= 0) {
-            res.send({err:'no server found.'});
+        if (services.length <= 0) {
+            res.send({err:'no service found.'});
             return;
         }
         // 最初のサービスをとって返却

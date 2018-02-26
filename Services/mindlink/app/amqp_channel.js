@@ -107,7 +107,7 @@ AmqpChannel.prototype.start = function(uuid) {
 
     // on publish
     self.amqp.on('publish', function(key, sendData) {
-        logger.amqpChannel.debug(self.uuid + ': publish: key[' + key + '] sendData[' + sendData + ']');
+        logger.amqpChannel.debug(self.uuid + ': publish: key[' + key + '] sendData[' + util.inspect(sendData, {depth:null,breakLength:Infinity}) + ']');
         if (!self.defaultExchange) {
             logger.amqpChannel.debug(self.uuid + ': exchange is not initialized yet.');
             return;
