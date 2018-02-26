@@ -60,38 +60,28 @@ PublicChannel.prototype.start = function() {
         mindlinkClient.uuid = uuid();
         self.emit('connect', mindlinkClient);
 
-        // send
-        mindlinkClient.ok = function(data) {
-            mindlinkClient.send(true, data);
-        }
-        mindlinkClient.ng = function(data, message) {
-            if (message) {
-                data.message = message;
+        // response
+        mindlinkClient.res = function(data, responseData) {
+            var error = null;
+            if (typeof(responseData) === 'string') {
+                error        = responseData;
+                responseData = null;
             }
-            mindlinkClient.send(false, data);
-        }
-        mindlinkClient.send = function(ok, data) {
-            if (!data) {
-                data = ok;
-                ok = true;
-            }
-            if (typeof(data) === 'boolean') {
-                ok = data;
-                data = {};
-            }
-            if (typeof(data) === 'string') {
-                data = {message: data};
-            }
-            data._ok = (ok)? true : false;
-            mindlinkClient.ws.emit('send', data);
+            var sendData = {};
+            sendData.type      = data.type;
+            sendData.data      = responseData;
+            sendData.requestId = data.requestId;
+            sendData.response  = true;
+            sendData.error     = null;
+            mindlinkClient.send(sendData);
         }
 
-        // on send
-        mindlinkClient.ws.on('send', function(data) {
+        // send
+        mindlinkClient.send = function(data) {
             logger.publicChannel.debug(clientName + ': ' + mindlinkServer.uuid + ': ' + mindlinkClient.uuid +': send: data[' + util.inspect(data, {depth:null,breakLength:Infinity}) + ']');
             var message = JSON.stringify(data);
             mindlinkClient.ws.send(message);
-        });
+        }
 
         // on message
         mindlinkClient.ws.on('message', function(message){
@@ -118,7 +108,6 @@ PublicChannel.prototype.start = function() {
                 }
             } catch (e) {
                 logger.publicChannel.debug(clientName + ': ' + mindlinkServer.uuid + ': ' + mindlinkClient.uuid +': message: failed to parse json. (e = "' + e.toString() + '")');
-                mindlinkClient.ng('failed to parse json. (' + e.toString() + ')');
                 return;
             }
 

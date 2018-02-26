@@ -62,7 +62,7 @@ MindlinkServer.prototype.findAliasedServices = function(alias) {
     }
     for (var i in this.services) {
         var s = this.services[i];
-        if (s._alias && s._alias == alias) {
+        if (s.alias && s.alias == alias) {
             if (!aliasedServices) {
                 aliasedServices = [];
             }

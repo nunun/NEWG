@@ -29,8 +29,8 @@ amqpChannel.on('data', function(data) {
     switch(data.type) {
     case amqpChannel.DATA_TYPE.U: // client update
        logger.amqpChannel.debug(mindlinkServer.uuid + ': U: service[' + data.service + '] serverFrom[' + data.serverFrom + ']');
-       data.mindlinkServer = mindlinkServer.updateServers(data.service._serverUuid);
-       mindlinkServer.services[data.service._clientUuid] = data.service;
+       data.mindlinkServer = mindlinkServer.updateServers(data.service.serverUuid);
+       mindlinkServer.services[data.service.clientUuid] = data.service;
        break;
     case amqpChannel.DATA_TYPE.D: // client disconnect
        logger.amqpChannel.debug(mindlinkServer.uuid + ': D: uuid[' + data.uuid + '] serverFrom[' + data.serverFrom + ']');
@@ -40,10 +40,11 @@ amqpChannel.on('data', function(data) {
        logger.amqpChannel.debug(mindlinkServer.uuid + ': M: messageData[' + util.inspect(data.messageData, {depth:null,breakLength:Infinity}) + ']');
        if (data.messageData) {
            var messageData = data.messageData;
-           if (mindlinkServer.clients[messageData._to] != undefined) {
-               mindlinkServer.clients[messageData._to].send(messageData); // NOTE send to client on *this* server
+           var innerData   = messageData.data;
+           if (mindlinkServer.clients[innerData.to] != undefined) {
+               mindlinkServer.clients[innerData.to].send(messageData); // NOTE send to client on *this* server
            } else {
-               logger.amqpChannel.error('no uuid to foward message. (' + messageData._to + ')');
+               logger.amqpChannel.error('no uuid to foward message. (' + innerData.to + ')');
            }
        } else {
            logger.amqpChannel.error('no data to foward message. (' + util.inspect(data, {depth:null,breakLength:Infinity}) + ')');
@@ -62,7 +63,7 @@ amqpChannel.on('data', function(data) {
        mindlinkServer.removeServices(data.serverFrom);
        for (var i in data.services) {
            var s = data.services[i];
-           s._server = mindlinkServer.updateServers(s._serverUuid);
+           s.server = mindlinkServer.updateServers(s.serverUuid);
            mindlinkServer.services[s._clientUuid] = s;
        }
        if (data.type == amqpChannel.DATA_TYPE.SQ) {
@@ -99,54 +100,55 @@ publicChannel.on('disconnect', function(mindlinkClient) {
     amqpChannel.broadcastClientDisconnect(mindlinkClient.uuid);
 });
 publicChannel.on('data', function(mindlinkClient, data) {
-    switch (data._type) {
-    case publicChannel.DATA_TYPE.S: // update information of service
+    switch (data.type) {
+    case publicChannel.DATA_TYPE.S: // update status of service
         logger.publicChannel.debug(mindlinkServer.uuid + ': ' + mindlinkClient.uuid + ': S: data[' + util.inspect(data, {depth:null,breakLength:Infinity}) + ']');
         try {
-            var service = data;
-            service._clientUuid = mindlinkClient.uuid;
-            service._serverUuid = mindlinkServer.uuid;
-            service._server     = mindlinkServer.updateServers(mindlinkServer.uuid);
+            var service = data.data;
+            service.clientUuid = mindlinkClient.uuid;
+            service.serverUuid = mindlinkServer.uuid;
+            service.server     = mindlinkServer.updateServers(mindlinkServer.uuid);
             mindlinkServer.services[mindlinkClient.uuid] = service;
             amqpChannel.broadcastClientUpdate(service);
-            mindlinkClient.ok(data);
+            mindlinkClient.res(data, service);
         } catch(e) {
-            mindlinkClient.ng(data, 'failed to update service information (' + e.toString() + ')');
+            mindlinkClient.res(data, 'failed to update service information (' + e.toString() + ')');
         }
         break;
-    case publicChannel.DATA_TYPE.Q: // query services with jspath (ex: ".*{_clientUuid === xxxxxx}")
+    case publicChannel.DATA_TYPE.Q: // query services with jspath (ex: ".*{clientUuid === xxxxxx}")
         logger.publicChannel.debug(mindlinkServer.uuid + ': ' + mindlinkClient.uuid + ': Q: data[' + util.inspect(data, {depth:null,breakLength:Infinity}) + ']');
         try {
-            data._clientUuid = mindlinkClient.uuid;
-            data._serverUuid = mindlinkServer.uuid;
-            data._services   = mindlinkServer.applyJSPath(data._jspath);
-            mindlinkClient.ok(data);
+            var query = data.data;
+            var responseData = {};
+            responseData.services = mindlinkServer.applyJSPath(query.jspath);
+            mindlinkClient.res(data, responseData);
         } catch(e) {
-            mindlinkClient.ng(data, 'jspath failed (' + e.toString() + ')');
+            mindlinkClient.res(data, 'jspath failed (' + e.toString() + ')');
         }
         break;
     case publicChannel.DATA_TYPE.M: // send message to remote client
         logger.publicChannel.debug(mindlinkServer.uuid + ': ' + mindlinkClient.uuid + ': M: data[' + util.inspect(data, {depth:null,breakLength:Infinity}) + ']');
-        data._from = mindlinkClient.uuid;
-        var sentNg = false;
-        var aliasedServices = mindlinkServer.findAliasedServices(data._to); // NOTE solve alias
+        var innerData = data.data;
+        innerData.from = mindlinkClient.uuid;
+        var sendFail = false;
+        var aliasedServices = mindlinkServer.findAliasedServices(innerData.to); // NOTE solve alias
         do {
-            data._to = (aliasedServices && aliasedServices.length > 0)? aliasedServices.shift()._clientUuid : data._to;
-            if (mindlinkServer.clients[data._to] != undefined) {
-                mindlinkServer.clients[data._to].send(data); // NOTE send message to client on *this* server
-            } else if (mindlinkServer.services[data._to] != undefined) {
-                var s = mindlinkServer.services[data._to];
-                amqpChannel.sendMessage(s._serverUuid, data); // NOTE send message to client on *other* server
+            innerData.to = (aliasedServices && aliasedServices.length > 0)? aliasedServices.shift().clientUuid : innerData.to;
+            if (mindlinkServer.clients[innerData.to] != undefined) {
+                mindlinkServer.clients[innerData.to].send(data); // NOTE send message to client on *this* server
+            } else if (mindlinkServer.services[innerData.to] != undefined) {
+                var s = mindlinkServer.services[innerData.to];
+                amqpChannel.sendMessage(s.serverUuid, data); // NOTE send message to client on *other* server
             } else {
-                if (!sentNg) {
-                    sentNg = true;
-                    mindlinkClient.ng(data, 'no uuid to send message (' + data._to + ')');
+                if (!sendFail) {
+                    sendFail = true;
+                    mindlinkClient.res(data, 'no uuid to send message (' + innerData.to + ')');
                 }
             }
         } while(aliasedServices && aliasedServices.length > 0)
         break;
     default:
-        mindlinkClient.ng(data, 'unknown type (' + data._type + ')');
+        mindlinkClient.res(data, 'unknown type (' + data.type + ')');
         break;
     }
 });

@@ -18,39 +18,32 @@ describe('mindlink', function () {
         it('smoke test', function (done) {
             mindlinkClient1.test([
                 {connect: function() {
-                    mindlinkClient1.send(mindlinkClient1.DATA_TYPE.S, {data:'init', _alias:'a_client'});
+                    mindlinkClient1.send(mindlinkClient1.DATA_TYPE.S, {data:'init', alias:'a_client'});
                 }},
                 {S: function(data) {
-                    assert.ok(data._ok, 'invalid response data._ok');
-                    mindlinkClient1.sendStatus({data:'test', _alias:'a_client'}, function(err, responseData) {
-                        assert.ok(!err,             'invalid response err (' + err + ')');
-                        assert.ok(responseData._ok, 'invalid response responseData._ok');
-                        mindlinkClient1.send(mindlinkClient1.DATA_TYPE.Q, {_jspath:'.*'});
+                    mindlinkClient1.sendStatus({data:'test', alias:'a_client'}, function(err, responseData) {
+                        assert.ok(!err,         'invalid response err (' + err + ')');
+                        assert.ok(responseData, 'invalid response responseData');
+                        mindlinkClient1.send(mindlinkClient1.DATA_TYPE.Q, {jspath:'.*'});
                     });
                 }},
                 {Q: function(data) {
-                    assert.ok(data._ok,                         'invalid response data._ok');
-                    assert.ok(data._clientUuid,                 'invalid response data._clientUuid');
-                    assert.ok(data._serverUuid,                 'invalid response data._serverUuid');
-                    assert.ok(data._services,                   'invalid response data._services');
-                    assert.ok(data._services[0],                'invalid response data._services[0]');
-                    assert.ok(data._services[0]._clientUuid,    'invalid response data._services[0]._clientUuid');
-                    assert.ok(data._services[0]._serverUuid,    'invalid response data._services[0]._serverUuid');
-                    assert.ok(data._services[0],                'invalid response data._services[0]');
-                    assert.ok(data._services[0].data == 'test', 'invalid response data._services[0].data');
+                    assert.ok(data.services,                   'invalid response data.services');
+                    assert.ok(data.services[0],                'invalid response data.services[0]');
+                    assert.ok(data.services[0].clientUuid,     'invalid response data.services[0].clientUuid');
+                    assert.ok(data.services[0].serverUuid,     'invalid response data.services[0].serverUuid');
+                    assert.ok(data.services[0].data == 'test', 'invalid response data.services[0].data');
                     mindlinkClient2.start();
                 }},
                 {data_type0: function(data) {
-                    assert.ok(data._type == 0,         'invalid response data.type');
                     assert.ok(data.message == 'test1', 'invalid response data.message');
                     mindlinkClient3.start();
                 }},
                 {data_type1: function(data) {
-                    assert.ok(data._type == 1,         'invalid response data.type');
                     assert.ok(data.message == 'test2', 'invalid response data.message');
                     mindlinkClient1.sendToRemote('client3', 2, {value:123}, function(err, data) {
                         assert.ok(!err,              'invalid response err (' + err + ')');
-                        assert.ok(data._type == 2,   'invalid response data._type');
+                        assert.ok(data,              'invalid response data');
                         assert.ok(data.value == 123, 'invalid response data.value');
                         couchClient.start();
                     });
@@ -59,33 +52,30 @@ describe('mindlink', function () {
 
             mindlinkClient2.test([
                 {connect: function() {
-                    mindlinkClient2.send(mindlinkClient2.DATA_TYPE.Q, {_jspath:'.*'});
+                    mindlinkClient2.send(mindlinkClient2.DATA_TYPE.Q, {jspath:'.*'});
                 }},
                 {Q: function(data) {
-                    assert.ok(data._ok,                         'invalid response data._ok');
-                    assert.ok(data._services,                   'invalid response data._services');
-                    assert.ok(data._services[0],                'invalid response data._services[0]');
-                    assert.ok(data._services[0]._clientUuid,    'invalid response data._services[0]._clientUuid');
-                    assert.ok(data._services[0]._serverUuid,    'invalid response data._services[0]._serverUuid');
-                    assert.ok(data._services[0],                'invalid response data._services[0]');
-                    assert.ok(data._services[0].data == 'test', 'invalid response data._services[0].data');
-                    mindlinkClient2.sendToRemote(data._services[0]._clientUuid, 0, {message:'test1'});
+                    assert.ok(data.services,                   'invalid response data.services');
+                    assert.ok(data.services[0],                'invalid response data.services[0]');
+                    assert.ok(data.services[0].clientUuid,     'invalid response data.services[0].clientUuid');
+                    assert.ok(data.services[0].serverUuid,     'invalid response data.services[0].serverUuid');
+                    assert.ok(data.services[0].data == 'test', 'invalid response data.services[0].data');
+                    mindlinkClient2.sendToRemote(data.services[0].clientUuid, 0, {message:'test1'});
                 }},
             ]);
 
             mindlinkClient3.test([
                 {connect: function() {
-                    mindlinkClient3.sendStatus({_alias:'client3'}, function(err, responseData) {
-                        mindlinkClient3.send(mindlinkClient3.DATA_TYPE.Q, {_jspath:'.*'});
+                    mindlinkClient3.sendStatus({alias:'client3'}, function(err, responseData) {
+                        mindlinkClient3.send(mindlinkClient3.DATA_TYPE.Q, {jspath:'.*'});
                     });
                 }},
                 {Q: function(data) {
-                    assert.ok(data._ok,                         'invalid response data._ok');
-                    assert.ok(data._services,                   'invalid response data._services');
-                    assert.ok(data._services[0]._clientUuid,    'invalid response data._services[0]._clientUuid');
-                    assert.ok(data._services[0]._serverUuid,    'invalid response data._services[0]._serverUuid');
-                    assert.ok(data._services[0],                'invalid response data._services[0]');
-                    assert.ok(data._services[0].data == 'test', 'invalid response data._services[0].data');
+                    assert.ok(data.services,                   'invalid response data.services');
+                    assert.ok(data.services[0],                'invalid response data.services[0]');
+                    assert.ok(data.services[0].clientUuid,     'invalid response data.services[0].clientUuid');
+                    assert.ok(data.services[0].serverUuid,     'invalid response data.services[0].serverUuid');
+                    assert.ok(data.services[0].data == 'test', 'invalid response data.services[0].data');
                     mindlinkClient3.sendToRemote('a_client', 1, {message:'test2'});
                 }},
                 {data_type2: function(receivedData) {
