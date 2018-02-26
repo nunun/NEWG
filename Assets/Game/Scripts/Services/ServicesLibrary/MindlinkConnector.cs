@@ -16,9 +16,32 @@ public partial class MindlinkConnector : WebSocketConnector {
         M = 3, // メッセージ転送
     }
 
-    // ペイロード付きデータ
-    public struct DataWithPayload<TPayload> {
-        public TPayload payload;
+    // リモート送信データ
+    [Serializable]
+    public class SendDataToRemote<TSend> {
+        public int          type      = 0;
+        public TSend        data      = default(TSend);
+        public int          requestId = 0;
+        public bool         response  = false;
+        public string       error     = null;
+        public RemoteHeader remote    = default(RemoteHeader);
+    }
+
+    // リモート受信データ
+    [Serializable]
+    public class RecvDataFromRemote<TRecv> {
+        public TRecv        data      = default(TRecv);
+        public RemoteHeader remote    = default(RemoteHeader);
+    }
+
+    // リモートヘッダ
+    [Serializable]
+    public class RemoteHeader {
+        public string from      = null;
+        public string to        = null;
+        public int    type      = 0;
+        public int    requestId = 0;
+        public bool   response  = false;
     }
 
     //-------------------------------------------------------------------------- 変数
@@ -32,7 +55,7 @@ public partial class MindlinkConnector : WebSocketConnector {
         // データイベントリスナに接続
         SetDataMessageEventListener((int)DataType.M, (message) => {
             int type = -1;
-            if (PayloadTypePropertyParser.TryParse(message, out type)) {
+            if (RemoteHeaderTypePropertyParser.TryParse(message, out type)) {
                 if (dataFromRemoteEventListener.ContainsKey(type)) {
                     dataFromRemoteEventListener[type](message);
                 }
@@ -55,7 +78,7 @@ public partial class MindlinkConnector : WebSocketConnector {
         requestContext.SetRequest(request);
 
         // 送信
-        var error = TransmitToRemote<TSend>(to, type, data, requestId, requester);
+        var error = TransmitToRemote<TSend>(to, type, data, requestId);
         if (error != null) {
             requestContext.CancelRequest(requestId, error);
             return 0;
@@ -71,8 +94,8 @@ public partial class MindlinkConnector : WebSocketConnector {
         }
         dataFromRemoteEventListener[type] = (message) => {
             try {
-                var data = JsonUtility.FromJson<DataWithPayload<TRecv>>(message);
-                eventListener(data.payload);
+                var recvData = JsonUtility.FromJson<RecvData<TRecv>>(message);
+                eventListener(recvData.data);
             } catch (Exception e) {
                 Debug.LogError(e.ToString());
                 return;
@@ -87,13 +110,13 @@ public partial class MindlinkConnector : WebSocketConnector {
         }
         dataFromRemoteEventListener[type] = (message) => {
             try {
-                var data = JsonUtility.FromJson<DataWithPayload<TRecv>>(message);
-                var res  = new ResponseToRemote<TResponse>();
+                var recvData  = JsonUtility.FromJson<RecvDataFromRemote<TRecv>>(message);
+                var res       = new ResponseToRemote<TResponse>();
                 res.connector = this;
-                FromPropertyParser.TryParse(message, out res.to);
-                res.type = type;
-                RequestPropertyParser.TryParse(message, out res.requestId, out res.requester);
-                eventListener(data.payload, res);
+                res.to        = recvData.remote.from;
+                res.type      = recvData.remote.type;
+                res.requestId = recvData.remote.requestId;
+                eventListener(recvData.data, res);
             } catch (Exception e) {
                 Debug.LogError(e.ToString());
                 return;
@@ -117,50 +140,17 @@ public partial class MindlinkConnector : WebSocketConnector {
 // リモートへのリクエスト (型別)
 // リクエスト中の情報を保持するためのクラス。
 public partial class WebSocketConnector {
-    public class RequestToRemote<TRecv> : Request {
-        //---------------------------------------------------------------------- 変数
-        // 受信コールバック
-        protected Action<string,TRecv> callback = null;
-
+    public class RequestToRemote<TRecv> : Request<TRecv> {
         //---------------------------------------------------------------------- 確保
         // 確保
-        public static RequestToRemote<TRecv> GetRequest(int requestId, Action<string,TRecv> callback, float timeout = 10.0f) {
+        new public static RequestToRemote<TRecv> GetRequest(int requestId, Action<string,TRecv> callback, float timeout = 10.0f) {
             var req = ObjectPool<RequestToRemote<TRecv>>.GetObject();
             req.requestId            = requestId;
             req.timeoutRemainingTime = timeout;
-            req.setResponse          = RequestToRemote<TRecv>.SetResponse;
-            req.returnToPool         = RequestToRemote<TRecv>.ReturnToPool;
+            req.setResponse          = Request<TRecv>.SetResponse;
+            req.returnToPool         = Request<TRecv>.ReturnToPool;
             req.callback             = callback;
             return req;
-        }
-
-        //---------------------------------------------------------------------- 内部コールバック用
-        // レスポンスデータを設定
-        static void SetResponse(Request request, string err, string message) {
-            var req = request as RequestToRemote<TRecv>;
-            Debug.Assert(req != null);
-            Debug.Assert(req.callback != null);
-            try {
-                if (err != null) {
-                    throw new Exception(err);
-                }
-                var data = JsonUtility.FromJson<MindlinkConnector.DataWithPayload<TRecv>>(message);
-                req.callback(null, data.payload);
-            } catch (Exception e) {
-                req.callback(e.ToString(), default(TRecv));
-            }
-        }
-
-        // 解放
-        static void ReturnToPool(Request request) {
-            var req = request as RequestToRemote<TRecv>;
-            Debug.Assert(req != null);
-            req.requestId            = 0;
-            req.timeoutRemainingTime = 0.0f;
-            req.setResponse          = null;
-            req.returnToPool         = null;
-            req.callback             = null;
-            ObjectPool<RequestToRemote<TRecv>>.ReturnObject(req);
         }
     }
 }
@@ -178,12 +168,16 @@ public partial class MindlinkConnector {
         public string            to;
         public int               type;
         public int               requestId;
-        public string            requester;
 
         //---------------------------------------------------------------------- 操作
         // 送信元に向けて送り返す
         public void Send(TResponse data) {
-            connector.TransmitToRemote<TResponse>(to, type, data, requestId, requester);
+            connector.TransmitToRemote<TResponse>(to, type, data, requestId, true, null);
+        }
+
+        // 送信元に向けてエラーを送り返す
+        public void Error(string error) {
+            connector.TransmitToRemote<TResponse>(to, type, default(TResponse), requestId, true, error);
         }
     }
 }
@@ -192,60 +186,31 @@ public partial class MindlinkConnector {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-// 送信元プロパティパーサー
+// リモートデータタイププロパティパーサー
 // リクエスト先読み用
 public partial class WebSocketConnector {
-    public class FromPropertyParser {
+    public class RemoteHeaderTypePropertyParser {
         //---------------------------------------------------------------------- 定義
-        class Container { public string from; }
+        [Serializable]
+        class Container { public RemoteHeaderContainer remote = new RemoteHeaderContainer(); }
 
-        //---------------------------------------------------------------------- 操作
-        public static bool TryParse(string message, out string from) {
-            var hasFrom = false;
-            from = default(string);
-            var container = ObjectPool<Container>.GetObject();
-            container.from = null;
-            try {
-                JsonUtility.FromJsonOverwrite(message, container);
-                from = container.from;
-                hasFrom = (from != default(string));
-            } catch (Exception e) {
-                Debug.LogError(e.ToString());
-            }
-            container.from = default(string);
-            ObjectPool<Container>.ReturnObject(container);
-            return hasFrom;
-        }
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
-// ペイロードタイププロパティパーサー
-// リクエスト先読み用
-public partial class WebSocketConnector {
-    public class PayloadTypePropertyParser {
-        //---------------------------------------------------------------------- 定義
-        class Container { public PayloadContainer payload = new PayloadContainer(); }
-
-        class PayloadContainer { public int type; }
+        [Serializable]
+        class RemoteHeaderContainer { public int type; }
 
         //---------------------------------------------------------------------- 操作
         public static bool TryParse(string message, out int type) {
             var hasType = false;
             type = -1;
             var container = ObjectPool<Container>.GetObject();
-            container.payload.type = -1;
+            container.remote.type = -1;
             try {
                 JsonUtility.FromJsonOverwrite(message, container);
-                type = container.payload.type;
+                type = container.remote.type;
                 hasType = (type != -1);
             } catch (Exception e) {
                 Debug.LogError(e.ToString());
             }
-            container.payload.type = -1;
+            container.remote.type = -1;
             ObjectPool<Container>.ReturnObject(container);
             return hasType;
         }
@@ -261,7 +226,7 @@ public partial class WebSocketConnector {
 public partial class MindlinkConnector {
     //-------------------------------------------------------------------------- 操作
     // リモートに送出
-    protected string TransmitToRemote<TSend>(string to, int type, TSend data, int requestId = -1, string requester = null) {
+    protected string TransmitToRemote<TSend>(string to, int type, TSend data, int requestId = -1, bool response = false, string error = null) {
         try {
             // 接続チェック
             if (state != State.Connected) {
@@ -269,34 +234,34 @@ public partial class MindlinkConnector {
             }
 
             // 文字列変換
-            var message = JsonUtility.ToJson(data);
+            var sendData = ObjectPool<SendDataToRemote<TSend>>.GetObject();
+            sendData.type             = (int)DataType.M;
+            sendData.data             = data;
+            sendData.requestId        = 0;
+            sendData.response         = false;
+            sendData.error            = null;
+            sendData.remote.from      = null;
+            sendData.remote.to        = to;
+            sendData.remote.type      = type;
+            sendData.remote.requestId = requestId;
+            sendData.remote.response  = response;
+            var message = JsonUtility.ToJson(sendData);
 
-            // NOTE
-            // メッセージに "type" プロパティをねじ込む。
-            var sb = ObjectPool<StringBuilder>.GetObject();
-            sb.Length = 0;
-            sb.Append(message);
-            sb.Remove(message.Length - 1, 1); // "}" 消し
-            sb.AppendFormat(",\"type\":{0}}}", type);
-            message = sb.ToString();
-            sb.Length = 0;
-            ObjectPool<StringBuilder>.ReturnObject(sb);
-
-            // NOTE
-            // ラッパーメッセージを "type", "to", "payload", "requestId", "requester" で構成する。
-            var ssb = ObjectPool<StringBuilder>.GetObject();
-            ssb.Length = 0;
-            if (requestId >= 0 && requester != null) {
-                ssb.AppendFormat("{{\"type\":{0},\"to\":\"{1}\",\"payload\":{2},\"requestId\":{3},\"requester\":\"{4}\"}}", (int)DataType.M, to, message, requestId, requester);
-            } else {
-                ssb.AppendFormat("{{\"type\":{0},\"to\":\"{1}\",\"payload\":{2}}}", (int)DataType.M, to, message);
-            }
-            var sendMessage = ssb.ToString();
-            ssb.Length = 0;
-            ObjectPool<StringBuilder>.ReturnObject(ssb);
+            // プールに戻す
+            sendData.type             = 0;
+            sendData.data             = default(TSend);
+            sendData.requestId        = 0;
+            sendData.response         = false;
+            sendData.error            = null;
+            sendData.remote.from      = null;
+            sendData.remote.to        = null;
+            sendData.remote.type      = 0;
+            sendData.remote.requestId = 0;
+            sendData.remote.response  = false;
+            ObjectPool<SendDataToRemote<TSend>>.ReturnObject(sendData);
 
             // 送信
-            ws.SendString(sendMessage);
+            ws.SendString(message);
 
         } catch (Exception e) {
             return e.ToString();

@@ -33,6 +33,7 @@ public class MindlinkConnectorTest : MindlinkConnector, IMonoBehaviourTest {
         enabled = true;
     }
 
+
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     IEnumerator Start() {
         bool   alias     = false;

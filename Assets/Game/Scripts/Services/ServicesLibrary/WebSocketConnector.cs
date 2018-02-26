@@ -12,6 +12,22 @@ public partial class WebSocketConnector : MonoBehaviour {
     // ウェブソケット状態
     public enum State { Init, Connecting, Connected }
 
+    // 送信データ
+    [Serializable]
+    public class SendData<TSend> {
+        public int    type      = 0;
+        public TSend  data      = default(TSend);
+        public int    requestId = 0;
+        public bool   response  = false;
+        public string error     = null;
+    }
+
+    // 受信データ
+    [Serializable]
+    public class RecvData<TRecv> {
+        public TRecv data = default(TRecv);
+    }
+
     //-------------------------------------------------------------------------- 変数
     protected State          state             = State.Init; // 状態
     protected WebSocket      ws                = null;       // WebSocket
@@ -157,7 +173,7 @@ public partial class WebSocketConnector : MonoBehaviour {
         requestContext.SetRequest(request);
 
         // 送信
-        var error = Transmit<TSend>(type, data, requestId, requester);
+        var error = Transmit<TSend>(type, data, requestId);
         if (error != null) {
             requestContext.CancelRequest(requestId, error);
             return 0;
@@ -202,8 +218,8 @@ public partial class WebSocketConnector : MonoBehaviour {
         }
         dataEventListener[type] = (message) => {
             try {
-                var data = JsonUtility.FromJson<TRecv>(message);
-                eventListener(data);
+                var recvData = JsonUtility.FromJson<RecvData<TRecv>>(message);
+                eventListener(recvData.data);
             } catch (Exception e) {
                 Debug.LogError(e.ToString());
                 return;
@@ -218,12 +234,14 @@ public partial class WebSocketConnector : MonoBehaviour {
         }
         dataEventListener[type] = (message) => {
             try {
-                var data = JsonUtility.FromJson<TRecv>(message);
-                var res  = new Response<TResponse>();
+                var recvData  = JsonUtility.FromJson<RecvData<TRecv>>(message);
+                var res       = new Response<TResponse>();
                 res.connector = this;
                 res.type      = type;
-                RequestPropertyParser.TryParse(message, out res.requestId, out res.requester);
-                eventListener(data, res);
+                res.requestId = 0;
+                var response  = false;
+                RequestPropertyParser.TryParse(message, out res.requestId, out response);
+                eventListener(recvData.data, res);
             } catch (Exception e) {
                 Debug.LogError(e.ToString());
                 return;
@@ -286,18 +304,13 @@ public partial class WebSocketConnector : MonoBehaviour {
             }
 
             // リクエストのレスポンスであれば処理
-            var requestId  = 0;
-            var requester  = default(string);
-            if (RequestPropertyParser.TryParse(message, out requestId, out requester)) {
-                if (requester == UUID) {
-                    if (requestContext != null) {
-                        requestContext.SetResponse(requestId, null, message);
-                    }
-                    return;
+            var requestId = 0;
+            var response  = false;
+            if (RequestPropertyParser.TryParse(message, out requestId, out response)) {
+                if (requestContext != null) {
+                    requestContext.SetResponse(requestId, null, message);
                 }
-                //FALLTHROUGH
-                // リクエストだが、自分が送ったものではない。
-                // = 他のクライアントからのリクエストがあった。
+                return;
             }
 
             // 型識別
@@ -457,7 +470,7 @@ public partial class WebSocketConnector {
 
         //---------------------------------------------------------------------- 内部コールバック用
         // レスポンスデータを設定
-        static void SetResponse(Request request, string err, string message) {
+        protected static void SetResponse(Request request, string err, string message) {
             var req = request as Request<TRecv>;
             Debug.Assert(req != null);
             Debug.Assert(req.callback != null);
@@ -465,15 +478,15 @@ public partial class WebSocketConnector {
                 if (err != null) {
                     throw new Exception(err);
                 }
-                var data = JsonUtility.FromJson<TRecv>(message);
-                req.callback(null, data);
+                var recvData = JsonUtility.FromJson<RecvData<TRecv>>(message);
+                req.callback(null, recvData.data);
             } catch (Exception e) {
                 req.callback(e.ToString(), default(TRecv));
             }
         }
 
         // 解放
-        static void ReturnToPool(Request request) {
+        protected static void ReturnToPool(Request request) {
             var req = request as Request<TRecv>;
             Debug.Assert(req != null);
             req.requestId            = 0;
@@ -498,12 +511,16 @@ public partial class WebSocketConnector {
         public WebSocketConnector connector;
         public int                type;
         public int                requestId;
-        public string             requester;
 
         //---------------------------------------------------------------------- 操作
         // 送信元に向けて送り返す
         public void Send(TResponse data) {
-            connector.Transmit<TResponse>(type, data, requestId, requester);
+            connector.Transmit<TResponse>(type, data, requestId, true, null);
+        }
+
+        // 送信元に向けてエラーを送り返す
+        public void Error(string error) {
+            connector.Transmit<TResponse>(type, default(TResponse), requestId, true, error);
         }
     }
 }
@@ -556,26 +573,26 @@ public partial class WebSocketConnector {
 public partial class WebSocketConnector {
     public class RequestPropertyParser {
         //---------------------------------------------------------------------- 定義
-        class Container { public int requestId; public string requester; }
+        class Container { public int requestId; public bool response; }
 
         //---------------------------------------------------------------------- 操作
-        public static bool TryParse(string message, out int requestId, out string requester) {
+        public static bool TryParse(string message, out int requestId, out bool response) {
             var hasRequest = false;
-            requestId  = 0;
-            requester  = default(string);
+            requestId = 0;
+            response  = false;
             var container = ObjectPool<Container>.GetObject();
             container.requestId = 0;
-            container.requester = default(string);
+            container.response  = false;
             try {
                 JsonUtility.FromJsonOverwrite(message, container);
                 requestId  = container.requestId;
-                requester  = container.requester;
-                hasRequest = (requestId != 0 && requester != default(string));
+                response   = container.response;
+                hasRequest = (requestId != 0 && response);
             } catch (Exception e) {
                 Debug.LogError(e.ToString());
             }
             container.requestId = 0;
-            container.requester = default(string);
+            container.response  = false;
             ObjectPool<Container>.ReturnObject(container);
             return hasRequest;
         }
@@ -591,7 +608,7 @@ public partial class WebSocketConnector {
 public partial class WebSocketConnector {
     //-------------------------------------------------------------------------- 操作
     // 送出
-    protected string Transmit<TSend>(int type, TSend data, int requestId = -1, string requester = null) {
+    protected string Transmit<TSend>(int type, TSend data, int requestId = -1, bool response = false, string error = null) {
         try {
             // 接続チェック
             if (state != State.Connected) {
@@ -599,22 +616,21 @@ public partial class WebSocketConnector {
             }
 
             // 文字列変換
-            var message = JsonUtility.ToJson(data);
+            var sendData = ObjectPool<SendData<TSend>>.GetObject();
+            sendData.type      = type;
+            sendData.data      = data;
+            sendData.requestId = requestId;
+            sendData.response  = response;
+            sendData.error     = error;
+            var message = JsonUtility.ToJson(sendData);
 
-            // NOTE
-            // メッセージに "type", "requestId", "requester" プロパティをねじ込む。
-            var sb = ObjectPool<StringBuilder>.GetObject();
-            sb.Length = 0;
-            sb.Append(message);
-            sb.Remove(message.Length - 1, 1); // "}" 消し
-            if (requestId >= 0 && requester != null) {
-                sb.AppendFormat(",\"type\":{0},\"requestId\":{1},\"requester\":\"{2}\"}}", type, requestId, requester);
-            } else {
-                sb.AppendFormat(",\"type\":{0}}}", type);
-            }
-            message = sb.ToString();
-            sb.Length = 0;
-            ObjectPool<StringBuilder>.ReturnObject(sb);
+            // プールに戻す
+            sendData.type      = 0;
+            sendData.data      = default(TSend);
+            sendData.requestId = 0;
+            sendData.response  = false;
+            sendData.error     = null;
+            ObjectPool<SendData<TSend>>.ReturnObject(sendData);
 
             // 送信
             ws.SendString(message);

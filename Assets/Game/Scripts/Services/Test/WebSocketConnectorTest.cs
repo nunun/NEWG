@@ -1,10 +1,12 @@
 ﻿using UnityEngine;
 using UnityEngine.TestTools;
 using NUnit.Framework;
+using System;
 using System.Collections;
 
 public class WebSocketConnectorTest : WebSocketConnector, IMonoBehaviourTest {
     //-------------------------------------------------------------------------- 変数
+    [Serializable]
     public struct TestData {
         public int data;
     }
