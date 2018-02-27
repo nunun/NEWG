@@ -45,6 +45,7 @@ webapiServer.setStartEventListener(function() {
     logger.webapiServer.info('webapi server started.');
 });
 webapiServer.setSetupEventListener(function(express, app) {
+    logger.webapiServer.info('webapi server setup.');
     var router = express.Router();
     router.get('/test/', function(req, res) {
         res.send('OK');

@@ -32,6 +32,8 @@ services:
     volumes:
       - ./../../../api/app:/app
       - ./../../../services-library:/usr/local/lib/node_modules/services-library
+    ports:
+      - 7780:7780
     depends_on:
       - mindlink
       - couchdb
