@@ -1,14 +1,16 @@
 # NOTE
-# ポート番号メモ ('*' 付きは公開ポート)
-#    80* client
-#  RAND* server
-#  7755* matching
-#  7766* mindlink
-#  7799  api
-#  5672  rabbitmq
-#  5984  couchdb
-# 15672  rabbitmq webui
-# 17766  mindlink webui
+#    80 client   (http)
+#  RAND server   (Unity Networking)
+#  7755 matching (websocket)
+#  7766 mindlink (websocket)
+#  7780 api      (http)
+#  7788 api      (websocket)
+#  7799 test     (websocket)
+#
+#  5672 rabbitmq
+#  5984 couchdb
+# 15672 rabbitmq webui
+# 17766 mindlink webui
 #
 # NOTE
 # "server" はホストモードで動作する。(docker-compose.override.yml 参照)

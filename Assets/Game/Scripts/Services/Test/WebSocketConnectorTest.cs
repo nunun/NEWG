@@ -42,7 +42,7 @@ public class WebSocketConnectorTest : WebSocketConnector, IMonoBehaviourTest {
 
         // 接続開始
         // テストウェブソケットサーバにつなげる
-        url = "ws://localhost:7788";
+        url = "ws://localhost:7799";
         Connect();
 
         // Update (接続メイン処理) を実行

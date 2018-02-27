@@ -3,6 +3,7 @@ var util           = require('util');
 var config         = require('services-library').config;
 var logger         = require('services-library').logger;
 var mindlinkClient = require('services-library').MindlinkClient.activate(config.mindlinkClient, logger.mindlinkClient);
+var webapiServer   = require('services-library').WebAPIServer.activate(config.webapiServer, logger.webapiServer);
 var protocols      = require('./protocols');
 
 // mindlink client
@@ -15,6 +16,7 @@ mindlinkClient.setConnectEventListener(function() {
         }
         logger.mindlinkClient.info('mindlink client initialized.');
         logger.mindlinkClient.info('listening requests through mindlink ...');
+        webapiServer.start();
     });
 });
 mindlinkClient.setDataFromRemoteEventListener(protocols.CMD.API.MATCHING_REQUEST, function(data, res) {
@@ -36,6 +38,18 @@ mindlinkClient.setDataFromRemoteEventListener(protocols.CMD.API.MATCHING_REQUEST
         logger.mindlinkClient.debug('service found: service[' + util.inspect(service, {depth:null,breakLength:Infinity}) + ']');
         res.send(service);
     });
+});
+
+// webapi server
+webapiServer.setStartEventListener(function() {
+    logger.webapiServer.info('webapi server started.');
+});
+webapiServer.setSetupEventListener(function(express, app) {
+    var router = express.Router();
+    router.get('/test/', function(req, res) {
+        res.send('OK');
+    });
+    app.use(router);
 });
 
 // start app ...

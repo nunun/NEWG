@@ -1,5 +1,8 @@
 task_up() { task_down; docker-compose up; }
 task_down() { docker-compose down; }
+task_api() {
+        docker-compose run --rm api
+}
 task_test() {
         docker-compose run --rm test-matching-client mocha test.js
 }

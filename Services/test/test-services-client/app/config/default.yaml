@@ -15,7 +15,7 @@ mindlinkClient3:
 
 # websocket client
 webSocketClient:
-  url: "ws://test-services-server:7788"
+  url: "ws://test-services-server:7799"
 
 # couch client
 couchClient:

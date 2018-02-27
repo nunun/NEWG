@@ -3,7 +3,7 @@
 
 # websocket server
 webSocketServer:
-  port: 7788
+  port: 7799
 
 # log4js
 log4js:

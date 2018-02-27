@@ -9,7 +9,7 @@ services:
       - ./../../test-services-server/app:/app
       - ./../../../services-library:/usr/local/lib/node_modules/services-library
     ports:
-      - 7788:7788
+      - 7799:7799
 
   matching:
     image: newg-test-unity/matching
