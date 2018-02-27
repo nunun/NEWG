@@ -1,0 +1,49 @@
+version: '3.3'
+services:
+  test-webapi-client:
+    image: newg-test-webapi/test-webapi-client
+    build: ./../../test-webapi-client
+    environment:
+      - LOG_LEVEL=debug
+    volumes:
+      - ./../../test-webapi-client/app:/app
+      - ./../../../services-library:/usr/local/lib/node_modules/services-library
+    depends_on:
+      - api
+      - mindlink
+
+  api:
+    image: newg-test-webapi/api
+    build: ./../../../api
+    environment:
+      - LOG_LEVEL=debug
+    volumes:
+      - ./../../../api/app:/app
+      - ./../../../services-library:/usr/local/lib/node_modules/services-library
+    ports:
+      - 7780:7780
+    depends_on:
+      - mindlink
+      - couchdb
+      - redis
+
+  mindlink:
+    image: newg-test-webapi/mindlink
+    build: ./../../../mindlink
+    volumes:
+      - ./../../../mindlink/app:/app
+      - ./../../../services-library:/usr/local/lib/node_modules/services-library
+    depends_on:
+      - rabbitmq
+
+  rabbitmq:
+    image: rabbitmq:3.7.0-management-alpine
+    ports:
+      - 15672:15672
+
+  couchdb:
+    image: couchdb:2.1.1
+
+  redis:
+    image: redis:4.0.6-alpine
+

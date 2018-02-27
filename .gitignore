@@ -50,3 +50,4 @@ Services/services-library/node_modules
 Services/test/test-matching-client/app/node_modules
 Services/test/test-services-client/app/node_modules
 Services/test/test-services-server/app/node_modules
+Services/test/test-webapi-client/app/node_modules
