@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "amqp": "^0.2.6",
-    "config": "^1.29.4",
+    "config": "^1.30.0",
     "jspath": "^0.4.0",
     "log4js": "^2.5.3",
     "services-library": "git+https://github.com/nunun/services-library.git#master",

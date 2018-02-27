@@ -7,6 +7,10 @@ using UnityEngine;
 
 // マインドリンクコネクタ
 // Mindlink と実際に通信を行うコンポーネント。
+// NOTE
+// * SendQuery はレスポンス (QueryRecvData) にジェネリクスのリストが
+//   含まれるので実装できない。今の所使う予定は無いため後回しにし、
+//   解決策が出来次第実装する。
 public partial class MindlinkConnector : WebSocketConnector {
     //-------------------------------------------------------------------------- 定義
     // マインドリンクデータタイプ
@@ -73,6 +77,14 @@ public partial class MindlinkConnector : WebSocketConnector {
     // クリア
     protected override void Clear() {
         base.Clear();
+    }
+
+    //-------------------------------------------------------------------------- サービスリクエスト
+    // ステータス送信
+    public int SendStatus<TStatus>(TStatus status, Action<string> callback) {
+        return Send<TStatus,TStatus>((int)MindlinkConnector.DataType.S, status, (error,recvStatus) => {
+            callback(error);
+        });
     }
 
     //-------------------------------------------------------------------------- 送信とキャンセル

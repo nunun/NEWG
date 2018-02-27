@@ -60,9 +60,9 @@ public class MindlinkConnectorTest : MindlinkConnector, IMonoBehaviourTest {
         }
 
         // エイリアスを張る
-        var sendServiceData = new ServiceData();
-        sendServiceData.alias = "a_server";
-        Send<ServiceData,ServiceData>((int)MindlinkConnector.DataType.S, sendServiceData, (error,recvServiceData) => {
+        var serviceData = new ServiceData();
+        serviceData.alias = "a_server";
+        SendStatus<ServiceData>(serviceData, (error) => {
             Assert.IsNull(error, "エラー発生: " + error);
             alias = true;
         });
