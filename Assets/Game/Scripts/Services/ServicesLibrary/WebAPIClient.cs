@@ -58,14 +58,16 @@ public partial class WebAPIClient : MonoBehaviour {
         }
 
         // リクエスト作成
-        var request = parameters.CreateUnityWebRequest(method, url, apiPath);
+        Debug.LogFormat("WebAPIClient.Request: url[{0}] apiPath[{1}] parameters[{2}]", url, apiPath, parameters);
+        var unityWebRequest = parameters.CreateUnityWebRequest(method, url, apiPath);
         parameters.ReturnToPool(); // NOTE パラメータは即不要になるので返却しておく
 
-        // TODO
-        // request が isFinished になるまで待ってコールバック。
+        // リクエストリストに追加
+        AddRequest<TRes>(unityWebRequest, callback);
     }
 
     //-------------------------------------------------------------------------- インスタンス取得
+    // クライアントの取得
     public static GetClient(string name = null) {
         if (name == null) {
             return defaultClient;
@@ -93,8 +95,8 @@ public partial class WebAPIClient : MonoBehaviour {
         // 初期化
         Init();
 
-        // TODO
-        // 待ちリストクリア
+        // リクエストリストのクリア
+        ClearRequestList();
     }
 
     void OnDestroy() {
@@ -104,16 +106,152 @@ public partial class WebAPIClient : MonoBehaviour {
             defaultClient =null;
         }
 
-        // TODO
-        // 待ちリストクリア
+        // リクエストリストのクリア
+        ClearRequestList();
 
         // クリア
         Clear();
     }
 
     void Update() {
-        // TODO
-        // UnityWebRequest を待つ
+        CheckRequestList();
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+
+// リクエストまわり
+public partial class WebAPIClient {
+    //---------------------------------------------------------------------- 変数
+    List<Request> requestList = new List<Request>();
+
+    //---------------------------------------------------------------------- 操作
+    // リクエストの追加
+    void AddRequest<TRes>(UnityWebRequest unityWebRequest, Action<string,TRes> callback) {
+        var request = Request<TRes>.RentFromPool(unityWebRequest, callback);
+        requestList.Add(request);
+        enabled = true;
+    }
+
+    // リクエストのチェック
+    void CheckRequestList() {
+        for (int i = requestList.Count - 1; i >= 0; i--) {
+            var request = requestList[i];
+            var unityWebRequest = request.UnityWebRequest;
+            if (unityWebRequest.isError) {
+                var error = unityWebRequest.error;
+                requestList.RemoveAt(i);
+                request.SetResponse(error, null);
+                request.ReturnToPool();
+            } else if (unityWebRequest.isDone) {
+                var message = unityWebRequest.downloadHandler.text;
+                requestList.RemoveAt(i);
+                request.SetResponse(null, message);
+                request.ReturnToPool();
+            }
+        }
+    }
+
+    // リクエストのクリア
+    void ClearRequestList() {
+        for (int i = requestList.Count - 1; i >= 0; i--) {
+            var request = requestList[i];
+            requestList.RemoveAt(i);
+            request.SetResponse("cancelled.", null);
+            request.ReturnToPool();
+        }
+        requestList.Clear();
+        enabled = false;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+// リクエスト
+// リクエスト中の情報を保持するためのクラス。
+public partial class WebAPIClient {
+    public class Request {
+        //---------------------------------------------------------------------- 変数
+        public UnityWebRequest unityWebRequest = default(UnityWebRequest); // リクエスト実態
+
+        // 転送および解放コールバック
+        // サブクラスが設定
+        protected Action<Request,string,string> setResponse  = null;
+        protected Action<Request>               returnToPool = null;
+
+        // UnityWebRequest の取得
+        public UnityWebRequest UnityWebRequest { get { return unityWebRequest; }}
+
+        //---------------------------------------------------------------------- 操作
+        // レスポンスデータを設定
+        public void SetResponse(string error, string message) {
+            Debug.Assert(setResponse != null);
+            setResponse(this, error, message);
+        }
+
+        // 解放
+        public void ReturnToPool() {
+            Debug.Assert(returnToPool != null);
+            returnToPool(this);
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+// リクエスト (型別)
+// リクエスト中の情報を保持するためのクラス。
+public partial class WebAPIClient {
+    public class Request<TRes> : Request {
+        //---------------------------------------------------------------------- 変数
+        // 受信コールバック
+        protected Action<string,TRes> callback = null;
+
+        //---------------------------------------------------------------------- 確保
+        // プールから借りる
+        public static Request<TRes> RentFromPool(UnityWebRequest unityWebRequest, Action<string,TRes> callback) {
+            var req = ObjectPool<Request<TRes>>.GetObject();
+            req.unityWebRequest = unityWebRequest;
+            req.setResponse     = Request<TRes>.SetResponse;
+            req.returnToPool    = Request<TRes>.ReturnToPool;
+            req.callback        = callback;
+            return req;
+        }
+
+        //---------------------------------------------------------------------- 内部コールバック用
+        // レスポンスデータを設定
+        protected static void SetResponse(Request request, string error, string message) {
+            Debug.LogFormat("WebAPIClient.Request<{0}>.SetResponse: error[{1}] message[{2}]", typeof(TRes), error, message);
+            var req = request as Request<TRes>;
+            Debug.Assert(req != null);
+            Debug.Assert(req.callback != null);
+            try {
+                if (!string.IsNullOrEmpty(error)) {
+                    throw new Exception(error);
+                }
+                var data = JsonUtility.FromJson<TRes>(message);
+                req.callback(null, data);
+            } catch (Exception e) {
+                req.callback(e.ToString(), default(TRes));
+            }
+        }
+
+        // 解放
+        protected static void ReturnToPool(Request request) {
+            var req = request as Request<TRes>;
+            Debug.Assert(req != null);
+            req.unityWebRequest = default(UnityWebRequest);
+            req.setResponse     = null;
+            req.returnToPool    = null;
+            req.callback        = null;
+            ObjectPool<Request<TRes>>.ReturnObject(req);
+        }
     }
 }
 
@@ -329,6 +467,16 @@ public partial class WebAPIClient {
                     request.SetRequestHeader(element.Key, element.Value);
                 }
             }
+        }
+
+        //------------------------------------------------------------------ 実装 (ToString)
+        public override string ToString() {
+            var debugQueries = string.Join(", ", this.queries.Select((v) => v.Key + ":" + v.Value).ToArray());
+            var debugForms   = string.Join(", ", this.forms.Select((v)   => v.Key + ":" + v.Value).ToArray());
+            var debugHeaders = string.Join(", ", this.headers.Select((v) => v.Key + ":" + v.Value).ToArray());
+            var debugText    = this.text;
+            var debugFormat = "queries[{0}] forms[{1}] headers[{2}] text[{3}]";
+            return string.Format(debugFormat, debugQueries, debugForms, debugHeaders, debugText);
         }
     }
 }
