@@ -62,7 +62,7 @@ templates:
   # models.js
   - generate: WebAPI
     in: /output/nodejs
-    output: /output/nodejs/<%= output_name =>/protocols/<%= spec_name %=>.<%= generate_name =>.js
+    output: /output/nodejs/<%= output_name %>/protocols/<%= spec_name.to_snake %>.<%= generate_name.to_snake %>.js
     template: |
       // test
 
