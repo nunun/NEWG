@@ -35,17 +35,17 @@ public partial class WebAPIClient : MonoBehaviour {
 
     //-------------------------------------------------------------------------- リクエスト関連
     // Get メソッド
-    public void Get<TRes>(string apiPath, Callback<string,TRes> callback, string[] queries = null, string[] forms = null, string[] headers = null) {
-        Request<object,TRes>(HttpMethod.Get, url, default(object), callback, queries, forms, headers);
+    public Request Get<TRes>(string apiPath, Callback<string,TRes> callback, string[] queries = null, string[] forms = null, string[] headers = null) {
+        StartRequest<object,TRes>(HttpMethod.Get, url, default(object), callback, queries, forms, headers);
     }
 
     // Post メソッド
-    public void Post<TReq,TRes>(string apiPath, TReq data, Callback<string,TRes> callback, string[] queries = null, string[] forms = null, string[] headers = null) {
-        Request<TReq,TRes>(HttpMethod.Post, apiPath, data, callback, queries, forms, headers);
+    public Request Post<TReq,TRes>(string apiPath, TReq data, Callback<string,TRes> callback, string[] queries = null, string[] forms = null, string[] headers = null) {
+        StartRequest<TReq,TRes>(HttpMethod.Post, apiPath, data, callback, queries, forms, headers);
     }
 
     // リクエスト
-    public void Request<TReq,TRes>(HttpMethod method, string apiPath, TReq data, Callback<string,TRes> callback, string[] queries = null, string[] forms = null, string[] headers = null) {
+    public Request StartRequest<TReq,TRes>(HttpMethod method, string apiPath, TReq data, Callback<string,TRes> callback, string[] queries = null, string[] forms = null, string[] headers = null) {
         var parameters = Parameters.RentFromPool();
 
         // パラメータを全部追加
@@ -63,7 +63,11 @@ public partial class WebAPIClient : MonoBehaviour {
         parameters.ReturnToPool(); // NOTE パラメータは即不要になるので返却しておく
 
         // リクエストリストに追加
-        AddRequest<TRes>(unityWebRequest, callback);
+        var req = AddRequest<TRes>(unityWebRequest, callback);
+
+        // リクエストキャンセラーを返却。
+        // req.Abort() でリクエストをキャンセルできる。
+        return req;
     }
 
     //-------------------------------------------------------------------------- インスタンス取得
@@ -129,10 +133,11 @@ public partial class WebAPIClient {
 
     //---------------------------------------------------------------------- 操作
     // リクエストの追加
-    void AddRequest<TRes>(UnityWebRequest unityWebRequest, Action<string,TRes> callback) {
+    Request AddRequest<TRes>(UnityWebRequest unityWebRequest, Action<string,TRes> callback) {
         var request = Request<TRes>.RentFromPool(unityWebRequest, callback);
         requestList.Add(request);
         enabled = true;
+        return request;
     }
 
     // リクエストのチェック
@@ -176,7 +181,8 @@ public partial class WebAPIClient {
 public partial class WebAPIClient {
     public class Request {
         //---------------------------------------------------------------------- 変数
-        public UnityWebRequest unityWebRequest = default(UnityWebRequest); // リクエスト実態
+        protected WebAPIClient    client          = default(WebAPIClient);    // WebAPI クライアント
+        protected UnityWebRequest unityWebRequest = default(UnityWebRequest); // リクエスト実態
 
         // 転送および解放コールバック
         // サブクラスが設定
@@ -198,6 +204,16 @@ public partial class WebAPIClient {
             Debug.Assert(returnToPool != null);
             returnToPool(this);
         }
+
+        //---------------------------------------------------------------------- 操作 (中断)
+        // リクエスト中断
+        public void Abort() {
+            // NOTE
+            // Unity 側を中断するだけ。
+            // WebAPIClient の Update ポーリングで
+            // リクエストの終了チェックが行われる。
+            unityWebRequest.Abort();
+        }
     }
 }
 
@@ -217,6 +233,7 @@ public partial class WebAPIClient {
         // プールから借りる
         public static Request<TRes> RentFromPool(UnityWebRequest unityWebRequest, Action<string,TRes> callback) {
             var req = ObjectPool<Request<TRes>>.GetObject();
+            req.client          = client;
             req.unityWebRequest = unityWebRequest;
             req.setResponse     = Request<TRes>.SetResponse;
             req.returnToPool    = Request<TRes>.ReturnToPool;
@@ -236,9 +253,13 @@ public partial class WebAPIClient {
                     throw new Exception(error);
                 }
                 var data = JsonUtility.FromJson<TRes>(message);
-                req.callback(null, data);
+                var callback = req.callback;
+                req.callback = null;
+                callback(null, data);
             } catch (Exception e) {
-                req.callback(e.ToString(), default(TRes));
+                var callback = req.callback;
+                req.callback = null;
+                callback(e.ToString(), default(TRes));
             }
         }
 
@@ -246,10 +267,17 @@ public partial class WebAPIClient {
         protected static void ReturnToPool(Request request) {
             var req = request as Request<TRes>;
             Debug.Assert(req != null);
+            var unityWebRequest = req.unityWebRequest;
+            if (req.setResponse != null) {
+                req.setResponse("cancelled.", null);
+            }
             req.unityWebRequest = default(UnityWebRequest);
             req.setResponse     = null;
             req.returnToPool    = null;
             req.callback        = null;
+            if (unityWebRequest != null && !req.unityWebRequest.isDone) {
+                unityWebRequest.Abort(); // NOTE Unity 側も中断
+            }
             ObjectPool<Request<TRes>>.ReturnObject(req);
         }
     }
