@@ -24,7 +24,7 @@ public class ObjectPool<T> where T : new() {
     }
 
     //-------------------------------------------------------------------------- オブジェクトの確保と開放
-    public static T GetObject() {
+    public static T RentObject() {
         if (pool != null && pool.Count > 0) {
             return pool.Dequeue();
         }

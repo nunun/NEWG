@@ -93,7 +93,7 @@ public partial class MindlinkConnector : WebSocketConnector {
         var requestId = requestContext.NextRequestId();
         var requester = UUID;
 
-        var request = RequestToRemote<TRecv>.GetRequest(requestId, callback, timeout);
+        var request = RequestToRemote<TRecv>.RentFromPool(requestId, callback, timeout);
         requestContext.SetRequest(request);
 
         // 送信
@@ -162,8 +162,8 @@ public partial class WebSocketConnector {
     public class RequestToRemote<TRecv> : Request<TRecv> {
         //---------------------------------------------------------------------- 確保
         // 確保
-        new public static RequestToRemote<TRecv> GetRequest(int requestId, Action<string,TRecv> callback, float timeout = 10.0f) {
-            var req = ObjectPool<RequestToRemote<TRecv>>.GetObject();
+        new public static RequestToRemote<TRecv> RentFromPool(int requestId, Action<string,TRecv> callback, float timeout = 10.0f) {
+            var req = ObjectPool<RequestToRemote<TRecv>>.RentObject();
             req.requestId            = requestId;
             req.timeoutRemainingTime = timeout;
             req.setResponse          = Request<TRecv>.SetResponse;
@@ -220,7 +220,7 @@ public partial class WebSocketConnector {
         public static bool TryParse(string message, out int type) {
             var hasType = false;
             type = -1;
-            var container = ObjectPool<Container>.GetObject();
+            var container = ObjectPool<Container>.RentObject();
             container.remote.type = -1;
             try {
                 JsonUtility.FromJsonOverwrite(message, container);
@@ -257,7 +257,7 @@ public partial class WebSocketConnector {
             requestId = 0;
             response  = false;
             error     = null;
-            var container = ObjectPool<Container>.GetObject();
+            var container = ObjectPool<Container>.RentObject();
             container.remote.requestId = 0;
             container.remote.response  = false;
             container.remote.error     = null;
@@ -297,7 +297,7 @@ public partial class MindlinkConnector {
             }
 
             // 文字列変換
-            var sendData = ObjectPool<SendDataToRemote<TSend>>.GetObject();
+            var sendData = ObjectPool<SendDataToRemote<TSend>>.RentObject();
             sendData.type             = (int)DataType.M;
             sendData.data             = data;
             sendData.requestId        = 0;

@@ -232,7 +232,7 @@ public partial class WebAPIClient {
         //---------------------------------------------------------------------- 確保
         // プールから借りる
         public static Request<TRes> RentFromPool(UnityWebRequest unityWebRequest, Action<string,TRes> callback) {
-            var req = ObjectPool<Request<TRes>>.GetObject();
+            var req = ObjectPool<Request<TRes>>.RentObject();
             req.client          = client;
             req.unityWebRequest = unityWebRequest;
             req.setResponse     = Request<TRes>.SetResponse;
@@ -299,7 +299,7 @@ public partial class WebAPIClient {
         //------------------------------------------------------------------ 生成と破棄
         // プールから借りる
         public static Parameters RentFromPool() {
-            var parameters = ObjectPool<Parameters>.GetObject();
+            var parameters = ObjectPool<Parameters>.RentObject();
             parameters.queries.Clear();
             parameters.forms.Clear();
             parameters.headers.Clear();
@@ -425,7 +425,7 @@ public partial class WebAPIClient {
         //------------------------------------------------------------------ 各種情報の作成、取得、設定
         // クエリ URL を作成
         string CreateRequestUrl(string url, string apiPath) {
-            var sb = ObjectPool.GetObject<StringBuilder>();
+            var sb = ObjectPool.RentObject<StringBuilder>();
             sb.Length = 0;
             sb.Append(url);
             if (!url.EndsWith("/")) {

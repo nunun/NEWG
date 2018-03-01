@@ -126,7 +126,7 @@ public partial class WebSocketConnector : MonoBehaviour {
         // URL 作成
         if (   (options != null && options.Length > 0)
             || (queries != null && queries.Length > 0)) {
-            var sb = ObjectPool<StringBuilder>.GetObject();
+            var sb = ObjectPool<StringBuilder>.RentObject();
             sb.Length = 0;
             sb.Append(url);
             if (options != null && options.Length > 0) {
@@ -169,7 +169,7 @@ public partial class WebSocketConnector : MonoBehaviour {
         var requester = UUID;
 
         // リクエスト作成
-        var request = Request<TRecv>.GetRequest(requestId, callback, timeout);
+        var request = Request<TRecv>.RentFromPool(requestId, callback, timeout);
         requestContext.SetRequest(request);
 
         // 送信
@@ -460,8 +460,8 @@ public partial class WebSocketConnector {
 
         //---------------------------------------------------------------------- 確保
         // 確保
-        public static Request<TRecv> GetRequest(int requestId, Action<string,TRecv> callback, float timeout = 10.0f) {
-            var req = ObjectPool<Request<TRecv>>.GetObject();
+        public static Request<TRecv> RentFromPool(int requestId, Action<string,TRecv> callback, float timeout = 10.0f) {
+            var req = ObjectPool<Request<TRecv>>.RentObject();
             req.requestId            = requestId;
             req.timeoutRemainingTime = timeout;
             req.setResponse          = Request<TRecv>.SetResponse;
@@ -542,7 +542,7 @@ public partial class WebSocketConnector {
         public static bool TryParse(string message, out int type) {
             var hasType = false;
             type = -1;
-            var container = ObjectPool<Container>.GetObject();
+            var container = ObjectPool<Container>.RentObject();
             container.type = -1;
             try {
                 JsonUtility.FromJsonOverwrite(message, container);
@@ -583,7 +583,7 @@ public partial class WebSocketConnector {
             requestId = 0;
             response  = false;
             error     = null;
-            var container = ObjectPool<Container>.GetObject();
+            var container = ObjectPool<Container>.RentObject();
             container.requestId = 0;
             container.response  = false;
             container.error     = null;
@@ -622,7 +622,7 @@ public partial class WebSocketConnector {
             }
 
             // 文字列変換
-            var sendData = ObjectPool<SendData<TSend>>.GetObject();
+            var sendData = ObjectPool<SendData<TSend>>.RentObject();
             sendData.type      = type;
             sendData.data      = data;
             sendData.requestId = requestId;
