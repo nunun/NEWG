@@ -1,11 +1,11 @@
 Services:
-  # require('protocols').Services.WebAPI
-  # using Protocols.Services.WebAPI
+  # var WebAPI = require('protocols').Services.WebAPI
+  # using WebAPI = Protocols.Services.WebAPI
   WebAPI:
-    - apiName: test
-      APIName: Test
+    - methodName: test
+      MethodName: Test
       description: テストインターフェイス
-      api_path: /test
+      apiPath: /test
       request:
         - name: value
           type: int
@@ -13,8 +13,8 @@ Services:
         - name: value
           type: int
 
-  # require('protocols').Services.Models;
-  # using Protocols.Services.Models;
+  # var Models = require('protocols').Services.Models;
+  # using Models = Protocols.Services.Models;
   Models:
     - ModelName: Test
       description: テストモデル
@@ -28,8 +28,8 @@ Services:
         - name: value
           type: int
 
-  # require('protocols').Services.Enums;
-  # using Protocols.Services.Enums;
+  # var Enums = require('protocols').Services.Enums;
+  # using Enums = Protocols.Services.Enums;
   Enums:
     - EnumName: MyEnum
       definitions:
@@ -38,10 +38,10 @@ Services:
         - name: Bar
         - name: Qux
 
-  # require('protocols').Services.Consts;
-  # using Protocols.Services.Consts;
+  # var Consts = require('protocols').Services.Consts;
+  # using Consts = Protocols.Services.Consts;
   Consts:
-    - ConstName: MY_CONST
+    - CONST_NAME: MY_CONST
       definitions:
         - name: MY_VALUE
           type: int
