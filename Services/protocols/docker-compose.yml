@@ -6,14 +6,14 @@ services:
     volumes:
       # プロトコルジェネレータスクリプトと定義
       - ./generator/app:/app
-      - ./spec.yml:/app/spec.yml
-      # nodejs 出力先 (/generate/nodejs/xxx)
-      - ../api/app:/generate/nodejs/api/
-      - ../matching/app:/generate/nodejs/matching/
-      - ../test/test-matching-client/app:/generate/nodejs/test-matching-client/
-      - ../test/test-services-client/app:/generate/nodejs/test-services-client/
-      - ../test/test-services-server/app:/generate/nodejs/test-services-server/
-      - ../test/test-webapi-client/app:/generate/nodejs/test-webapi-client/
-      # C# 出力先 (/generate/cs/xxx)
-      - ../../Assets/Game/Scripts/Services:/generate/cs/Assets/
+      - ./specs.yml:/app/specs.yml
+      # nodejs 出力先, サービスの nodejs プロジェクトをここに追加 (/output/nodejs/*)
+      - ../api/app:/output/nodejs/api/
+      - ../matching/app:/output/nodejs/matching/
+      - ../test/test-matching-client/app:/output/nodejs/test-matching-client/
+      - ../test/test-services-client/app:/output/nodejs/test-services-client/
+      - ../test/test-services-server/app:/output/nodejs/test-services-server/
+      - ../test/test-webapi-client/app:/output/nodejs/test-webapi-client/
+      # C# 出力先, サービスの C# プロジェクトをここに追加 (/output/cs/*)
+      - ../../Assets/Game/Scripts/Services:/output/cs/Assets/
 
