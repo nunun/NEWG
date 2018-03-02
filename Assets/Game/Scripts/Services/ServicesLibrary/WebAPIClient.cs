@@ -1,9 +1,11 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Networking;
 
 // WebAPI クライアント
 public partial class WebAPIClient : MonoBehaviour {
@@ -11,14 +13,14 @@ public partial class WebAPIClient : MonoBehaviour {
     public enum HttpMethod { Get, Post };
 
     //-------------------------------------------------------------------------- 変数
-    public string   url             = false; // URL
+    public string   url             = null;  // URL
     public string[] queries         = null;  // デフォルトのクエリ
     public string[] forms           = null;  // デフォルトのフォーム
     public string[] headers         = null;  // デフォルトのヘッダ
     public bool     isDefaultClient = false; // デフォルトクライアントかどうか
 
     // クライアント一覧とデフォルトクライアント
-    static List<WebAPIClient> clients       = new List<string,WebAPIClient>();
+    static List<WebAPIClient> clients       = new List<WebAPIClient>();
     static WebAPIClient       defaultClient = null;
 
     //-------------------------------------------------------------------------- 実装ポイント
@@ -35,31 +37,31 @@ public partial class WebAPIClient : MonoBehaviour {
 
     //-------------------------------------------------------------------------- リクエスト関連
     // Get メソッド
-    public Request Get<TRes>(string apiPath, Callback<string,TRes> callback, string[] queries = null, string[] forms = null, string[] headers = null) {
-        StartRequest<object,TRes>(HttpMethod.Get, url, default(object), callback, queries, forms, headers);
+    public Request Get<TRes>(string apiPath, Action<string,TRes> callback, string[] queries = null, string[] forms = null, string[] headers = null) {
+        return StartRequest<object,TRes>(HttpMethod.Get, url, default(object), callback, queries, forms, headers);
     }
 
     // Post メソッド
-    public Request Post<TReq,TRes>(string apiPath, TReq data, Callback<string,TRes> callback, string[] queries = null, string[] forms = null, string[] headers = null) {
-        StartRequest<TReq,TRes>(HttpMethod.Post, apiPath, data, callback, queries, forms, headers);
+    public Request Post<TReq,TRes>(string apiPath, TReq data, Action<string,TRes> callback, string[] queries = null, string[] forms = null, string[] headers = null) {
+        return StartRequest<TReq,TRes>(HttpMethod.Post, apiPath, data, callback, queries, forms, headers);
     }
 
     // リクエスト
-    public Request StartRequest<TReq,TRes>(HttpMethod method, string apiPath, TReq data, Callback<string,TRes> callback, string[] queries = null, string[] forms = null, string[] headers = null) {
+    public Request StartRequest<TReq,TRes>(HttpMethod method, string apiPath, TReq data, Action<string,TRes> callback, string[] queries = null, string[] forms = null, string[] headers = null) {
         var parameters = Parameters.RentFromPool();
 
         // パラメータを全部追加
         parameters.Import(this);
         parameters.Import(queries, forms, headers);
 
-        // データを追加
-        if (data != default(TReq)) {
-            parameters.SetJsonTextContent(JsonUtility.ToJson<TReq>(data));
+        // データを追加 (POST 時)
+        if (method == HttpMethod.Post) {
+            parameters.SetJsonTextContent(JsonUtility.ToJson(data));
         }
 
         // リクエスト作成
         Debug.LogFormat("WebAPIClient.Request: url[{0}] apiPath[{1}] parameters[{2}]", url, apiPath, parameters);
-        var unityWebRequest = parameters.CreateUnityWebRequest(method, url, apiPath);
+        var unityWebRequest = parameters.CreateUnityWebRequest(this, method, url, apiPath);
         parameters.ReturnToPool(); // NOTE パラメータは即不要になるので返却しておく
 
         // リクエストリストに追加
@@ -72,7 +74,7 @@ public partial class WebAPIClient : MonoBehaviour {
 
     //-------------------------------------------------------------------------- インスタンス取得
     // クライアントの取得
-    public static GetClient(string name = null) {
+    public static WebAPIClient GetClient(string name = null) {
         if (name == null) {
             return defaultClient;
         }
@@ -134,7 +136,7 @@ public partial class WebAPIClient {
     //---------------------------------------------------------------------- 操作
     // リクエストの追加
     Request AddRequest<TRes>(UnityWebRequest unityWebRequest, Action<string,TRes> callback) {
-        var request = Request<TRes>.RentFromPool(unityWebRequest, callback);
+        var request = Request<TRes>.RentFromPool(this, unityWebRequest, callback);
         requestList.Add(request);
         enabled = true;
         return request;
@@ -231,7 +233,7 @@ public partial class WebAPIClient {
 
         //---------------------------------------------------------------------- 確保
         // プールから借りる
-        public static Request<TRes> RentFromPool(UnityWebRequest unityWebRequest, Action<string,TRes> callback) {
+        public static Request<TRes> RentFromPool(WebAPIClient client, UnityWebRequest unityWebRequest, Action<string,TRes> callback) {
             var req = ObjectPool<Request<TRes>>.RentObject();
             req.client          = client;
             req.unityWebRequest = unityWebRequest;
@@ -269,7 +271,7 @@ public partial class WebAPIClient {
             Debug.Assert(req != null);
             var unityWebRequest = req.unityWebRequest;
             if (req.setResponse != null) {
-                req.setResponse("cancelled.", null);
+                req.setResponse(req, "cancelled.", null);
             }
             req.unityWebRequest = default(UnityWebRequest);
             req.setResponse     = null;
@@ -354,7 +356,7 @@ public partial class WebAPIClient {
             // リクエスト作成
             var request = default(UnityWebRequest);
             switch (method) {
-            case Method.POST:
+            case HttpMethod.Post:
                 if (HasText()) {
                     request = UnityWebRequest.Post(url, GetText());
                 } else if (HasWWWForm()) {
@@ -364,7 +366,7 @@ public partial class WebAPIClient {
                     request.method = UnityWebRequest.kHttpVerbPOST;
                 }
                 break;
-            case Method.GET:
+            case HttpMethod.Get:
             default:
                 request = UnityWebRequest.Get(url);
                 break;
@@ -425,7 +427,7 @@ public partial class WebAPIClient {
         //------------------------------------------------------------------ 各種情報の作成、取得、設定
         // クエリ URL を作成
         string CreateRequestUrl(string url, string apiPath) {
-            var sb = ObjectPool.RentObject<StringBuilder>();
+            var sb = ObjectPool<StringBuilder>.RentObject();
             sb.Length = 0;
             sb.Append(url);
             if (!url.EndsWith("/")) {
@@ -444,7 +446,7 @@ public partial class WebAPIClient {
             }
             var message = sb.ToString();
             sb.Length = 0;
-            ObjectPool.ReturnObject(sb);
+            ObjectPool<StringBuilder>.ReturnObject(sb);
             return message;
         }
 
