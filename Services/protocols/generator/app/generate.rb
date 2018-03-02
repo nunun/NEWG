@@ -9,33 +9,43 @@ opt = OptionParser.new
 opt.on('-c') {|v| params[:go] = v }
 opt.parse!(ARGV)
 
-specs_yml = YAML.load_file('./specs.yml')
-specs     = specs_yml["specs"]
-templates = specs_yml["templates"]
-
+# class extensions
 class String
+  # to pascal case (MySymbol)
   def to_pascal()
     self.to_words.map{|w| w[0] = w[0].upcase; w}.join
   end
+
+  # to camel case (mySymbol)
   def to_camel()
     words = self.to_words.map{|w| w[0] = w[0].upcase; w}
     words[0] = words[0].downcase
     words.join
   end
+
+  # to snake case (my_symbol)
   def to_snake()
     self.to_words.join("_").downcase
   end
+
+  # to constant case (MY_SYMBOL)
   def to_const()
     self.to_words.join("_").upcase
   end
+
+  # split symbol to words
   def to_words()
-    fix_special_words(self
+    process_special_words(self
       .gsub(/([A-Z]+)([A-Z][a-z])/, '\1_\2')
       .gsub(/([a-z\d])([A-Z])/, '\1_\2')
       .tr("-", "_")
       .split("_"))
   end
-  def fix_special_words(words)
+
+  # process special words
+  # merge special words to one,
+  # or split special word to words.
+  def process_special_words(words)
     result = []
     while !words.empty?
       if words.first.casecmp("WEBAPI") == 0 # WEBAPI => Web, API
@@ -53,57 +63,69 @@ class String
   end
 end
 
-specs.each do |spec_name,spec|
-  spec.each do |spec_generate_name,spec_definitions|
-    templates.each do |template|
-      generate_name = template["generate"]
-      in_path       = template["in"]
-      output_path   = template["output"]
+# generate
+def generate(spec_name, spec, spec_generate_name, spec_definitions, templates, params, removed_dirs)
+  templates.each do |template|
+    generate_name = template["generate"]
+    in_path       = template["in"]
+    output_path   = template["output"]
+    template_text = template["template"]
+    eval_code     = template["eval"]
 
-      raise "template property 'generate' is empty" if generate_name.to_s.empty?
-      raise "template property 'in' is empty"       if in_path.to_s.empty?
-      raise "template property 'output' is empty"   if output_path.to_s.empty?
+    raise "template property 'generate' is empty" if generate_name.to_s.empty?
+    next if generate_name != spec_generate_name
 
-      break if generate_name != spec_generate_name
+    if !eval_code.to_s.empty?  # eval mode
+      raise "template property 'generate' must be 'Before'." if generate_name != 'Before'
+      raise "template property 'in' must be empty."          if !in_path.to_s.empty?
+      raise "template property 'output' must be empty."      if !output_path.to_s.empty?
+      raise "template property 'template' must be empty."    if !template_text.to_s.empty?
 
-      output_dirs = Dir["#{in_path}/*"]
-      output_dirs.map{|d| File.basename(d)}.each do |output_name|
-        output_path = ERB.new(output_path, nil, "-").result(binding);
-        p output_path
+      eval eval_code
+
+    elsif !template_text.to_s.empty?  # output mode
+      raise "template property 'in' is empty."        if in_path.to_s.empty?
+      raise "template property 'output' is empty."    if output_path.to_s.empty?
+      raise "template property 'eval' must be empty." if !eval_code.to_s.empty?
+
+      in_dirs = Dir["#{in_path}"]
+      in_dirs.each do |in_dir|
+        protocols_name = File.basename(in_dir)
+        raise "'in' directory must named 'protocols' in case insensitive." if protocols_name.casecmp("PROTOCOLS") != 0
+
+        output_path = File.join(in_dir, ERB.new(output_path, nil, "-").result(binding));
+        output_dir  = File.dirname(output_path)
+        puts "generate '#{output_path}' ..."
+        generated_text = ERB.new(template_text, nil, "-").result(binding)
+
+        if params[:go]
+          if !removed_dirs.include?(in_dir)
+            removed_dirs.push(in_dir)
+            FileUtils.rm_rf(in_dir)
+            FileUtils.mkdir_p(in_dir)
+          end
+          FileUtils.mkdir_p(output_dir)
+          File.write(output_path, generated_text)
+        else
+          puts generated_text
+        end
       end
+
+    else # error!
+      raise "template property 'template' or 'eval' is empty."
     end
   end
 end
 
-#def generate(template, models, project_name)
-#  return ERB.new(template, nil, "-").result(binding);
-#end
-#removed_dirs = {}
-#templates.each do |template_info|
-#  projects_path = template_info["projects_path"]
-#  generate_path = template_info["generate_path"]
-#  template      = template_info["template"]
-#  raise "projects path empty!" if projects_path.empty?
-#  raise "generate path empty!" if generate_path.empty?
-#  puts "projects '#{projects_path}' ..."
-#  dirs = Dir["#{projects_path}/*"]
-#  dirs.select{|p| File.directory?(p)}.each do |p|
-#    output_path  = "#{p}/#{generate_path}"
-#    output_dir   = File.dirname(output_path)
-#    remove_paths = Pathname.new(generate_path).each_filename.to_a
-#    remove_dir   = "#{p}/#{remove_paths[0]}"
-#    raise "remove path empty?" if remove_paths[0].empty?
-#    project_name = File.basename(p)
-#    puts "  generate '#{output_path}' ..."
-#    if params[:go]
-#      if !removed_dirs.key?(remove_dir)
-#        removed_dirs[remove_dir] = true; # mark once removed.
-#        FileUtils.rm_rf(remove_dir) if Dir.exists?(remove_dir)
-#      end
-#      FileUtils.mkdir_p(output_dir)
-#      File.write(output_path, generate(template, models, project_name))
-#    else
-#      puts generate(template, models, project_name)
-#    end
-#  end
-#end
+# output
+specs_yml    = YAML.load_file('./specs.yml')
+specs        = specs_yml["specs"]
+templates    = specs_yml["templates"]
+removed_dirs = []
+generate(nil, nil, "Before", {}, templates, params, removed_dirs)
+specs.each do |spec_name,spec|
+  spec.each do |spec_generate_name,spec_definitions|
+    generate(spec_name, spec, spec_generate_name, spec_definitions, templates, params, removed_dirs)
+  end
+end
+generate(nil, nil, "After", {}, templates, params, removed_dirs)
