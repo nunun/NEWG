@@ -8,8 +8,10 @@
   },
   "dependencies": {
     "config": "^1.30.0",
+    "express": "^4.16.2",
     "log4js": "^2.5.3",
-    "services-library": "git+https://github.com/nunun/services-library.git#master",
+    "nano": "^6.4.3",
+    "redis": "*",
     "string.prototype.trim": "^1.1.2",
     "uuid": "^3.2.1",
     "ws": "^4.1.0",

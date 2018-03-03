@@ -7,7 +7,7 @@ services:
       - LOG_LEVEL=debug
     volumes:
       - ./../../test-matching-client/app:/app
-      - ./../../../services-library:/usr/local/lib/node_modules/services-library
+      - ./../../../services:/app/services
     depends_on:
       - matching
       - mindlink
@@ -19,7 +19,7 @@ services:
       - LOG_LEVEL=debug
     volumes:
       - ./../../../matching/app:/app
-      - ./../../../services-library:/usr/local/lib/node_modules/services-library
+      - ./../../../services:/app/services
     depends_on:
       - mindlink
       - api
@@ -31,7 +31,7 @@ services:
       - LOG_LEVEL=debug
     volumes:
       - ./../../../api/app:/app
-      - ./../../../services-library:/usr/local/lib/node_modules/services-library
+      - ./../../../services:/app/services
     ports:
       - 7780:7780
     depends_on:
@@ -44,7 +44,7 @@ services:
     build: ./../../../mindlink
     volumes:
       - ./../../../mindlink/app:/app
-      - ./../../../services-library:/usr/local/lib/node_modules/services-library
+      - ./../../../services:/app/services
     depends_on:
       - rabbitmq
 

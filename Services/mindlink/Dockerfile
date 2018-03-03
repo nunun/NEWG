@@ -1,7 +1,10 @@
-FROM node:9.3.0-alpine
+FROM newg/node:latest
 WORKDIR /app
 ADD app /app
+RUN mv /services /app/services
 RUN rm -rf /app/node_modules
 RUN apk add --no-cache git
 RUN npm install
+#RUN npm -g install mocha
+#CMD ["mocha", "test.js"]
 CMD ["node", "app.js"]

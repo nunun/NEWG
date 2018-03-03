@@ -21,7 +21,7 @@ services:
       - LOG_LEVEL=debug
     volumes:
       - ./matching/app:/app
-      - ./services-library:/usr/local/lib/node_modules/services-library
+      - ./services:/app/services
 
   api:
     build: ./api
@@ -29,7 +29,7 @@ services:
       - LOG_LEVEL=debug
     volumes:
       - ./api/app:/app
-      - ./services-library:/usr/local/lib/node_modules/services-library
+      - ./services:/app/services
 
   mindlink:
     build: ./mindlink
@@ -38,7 +38,7 @@ services:
       - LOG_LEVEL=debug
     volumes:
       - ./mindlink/app:/app
-      - ./services-library:/usr/local/lib/node_modules/services-library
+      - ./services:/app/services
     ports:
       - 17766:17766
 

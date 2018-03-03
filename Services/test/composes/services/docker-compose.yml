@@ -7,7 +7,7 @@ services:
       - LOG_LEVEL=debug
     volumes:
       - ./../../test-services-client/app:/app
-      - ./../../../services-library:/usr/local/lib/node_modules/services-library
+      - ./../../../services:/app/services
     depends_on:
       - mindlink1
       - mindlink2
@@ -22,7 +22,7 @@ services:
       - LOG_LEVEL=debug
     volumes:
       - ./../../test-services-server/app:/app
-      - ./../../../services-library:/usr/local/lib/node_modules/services-library
+      - ./../../../services:/app/services
 
   mindlink1:
     image: newg-test-services/mindlink
@@ -32,7 +32,7 @@ services:
       - LOG_LEVEL=debug
     volumes:
       - ./../../../mindlink/app:/app
-      - ./../../../services-library:/usr/local/lib/node_modules/services-library
+      - ./../../../services:/app/services
     ports:
       - 17766:17766
     depends_on:
@@ -45,7 +45,7 @@ services:
       - LOG_LEVEL=debug
     volumes:
       - ./../../../mindlink/app:/app
-      - ./../../../services-library:/usr/local/lib/node_modules/services-library
+      - ./../../../services:/app/services
     ports:
       - 17767:17766
     depends_on:

@@ -1,9 +1,8 @@
 var url            = require('url');
-var config         = require('services-library').config;
-var logger         = require('services-library').logger;
-var mindlinkClient = require('services-library').MindlinkClient.activate(config.mindlinkClient, logger.mindlinkClient);
-var matchingServer = require('services-library').WebSocketServer.activate(config.matchingServer, logger.matchingServer);
-var protocols      = require('./protocols');
+var config         = require('./services/library/config');
+var logger         = require('./services/library/logger');
+var mindlinkClient = require('./services/library/mindlink_client').activate(config.mindlinkClient, logger.mindlinkClient);
+var matchingServer = require('./services/library/websocket_server').activate(config.matchingServer, logger.matchingServer);
 
 // mindlink client
 mindlinkClient.setConnectEventListener(function() {
@@ -30,7 +29,7 @@ matchingServer.setAccepter(function(req) {
 matchingServer.setConnectEventListener(function(matchingClient) {
     // 接続後、すぐにマッチング開始
     var userId = matchingClient.accepted.userId;
-    matchingClient.requestId = mindlinkClient.sendToRemote('api', protocols.CMD.API.MATCHING_REQUEST, {userId:userId}, function(err,responseData) {
+    matchingClient.requestId = mindlinkClient.sendToRemote('api', 1 /*protocols.CMD.API.MATCHING_REQUEST*/, {userId:userId}, function(err,responseData) {
         // マッチング結果をレスポンス
         // エラーまたはサーバへのアドレス。
         if (err) {

@@ -5,8 +5,8 @@ var uuid           = require('uuid/v1');
 var trim           = require('string.prototype.trim');
 var EventEmitter   = require('events').EventEmitter;
 var WebSocket      = require('ws');
-var config         = require('services-library').config;
-var logger         = require('services-library').logger;
+var config         = require('./services/library/config');
+var logger         = require('./services/library/logger');
 var mindlinkServer = require('./mindlink_server');
 
 // constructor

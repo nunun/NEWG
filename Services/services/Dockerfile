@@ -1,0 +1,3 @@
+FROM node:9.3.0-alpine
+ADD ./library   /services/library
+ADD ./protocols /services/protocols

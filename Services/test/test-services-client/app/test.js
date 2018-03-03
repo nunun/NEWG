@@ -1,12 +1,12 @@
 var assert          = require('assert');
-var config          = require('services-library').config;
-var logger          = require('services-library').logger;
-var mindlinkClient1 = require('services-library').MindlinkClient.activate(config.mindlinkClient1, logger.mindlinkClient);
-var mindlinkClient2 = require('services-library').MindlinkClient.activate(config.mindlinkClient2, logger.mindlinkClient);
-var mindlinkClient3 = require('services-library').MindlinkClient.activate();
-var webSocketClient = require('services-library').WebSocketClient.activate(config.webSocketClient, logger.webSocketClient);
-var couchClient     = require('services-library').CouchClient.activate(config.couchClient, logger.couchClient);
-var redisClient     = require('services-library').RedisClient.activate(config.redisClient, logger.redisClient);
+var config          = require('./services/library/config');
+var logger          = require('./services/library/logger');
+var mindlinkClient1 = require('./services/library/mindlink_client').activate(config.mindlinkClient1, logger.mindlinkClient);
+var mindlinkClient2 = require('./services/library/mindlink_client').activate(config.mindlinkClient2, logger.mindlinkClient);
+var mindlinkClient3 = require('./services/library/mindlink_client').activate();
+var webSocketClient = require('./services/library/websocket_client').activate(config.webSocketClient, logger.webSocketClient);
+var couchClient     = require('./services/library/couch_client').activate(config.couchClient, logger.couchClient);
+var redisClient     = require('./services/library/redis_client').activate(config.redisClient, logger.redisClient);
 
 // 'setXxx' pattern ...
 mindlinkClient3.setConfig(config.mindlinkClient3);

@@ -3,8 +3,8 @@ var assert       = require('assert');
 var util         = require('util');
 var jspath       = require('jspath');
 var uuid         = require('uuid/v1');
-var config       = require('services-library').config;
-var logger       = require('services-library').logger;
+var config       = require('./services/library/config');
+var logger       = require('./services/library/logger');
 
 // constructor
 function MindlinkServer() {

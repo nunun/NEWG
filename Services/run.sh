@@ -1,6 +1,6 @@
 task_up() { task_down; docker-compose up; }
 task_down() { docker-compose down; }
-task_protocols() { sh ./protocols/protocols.sh ${*}; }
+task_services() { sh ./services/services.sh ${*}; }
 task_test() { sh ./test/test.sh ${*}; }
 task_unity() {
         unity -batchmode -quit -executeMethod GameBuildMenuItems.BuildReleaseClientWebGL
@@ -8,15 +8,11 @@ task_unity() {
 }
 task_build() {
         task_down
-        task_unity
-        docker-compose build --force-rm --pull
-        git submodule update --init --recursive --remote
-        docker-compose run --rm --no-deps matching sh -c \
-                "(cd /usr/local/lib/node_modules/services-library && npm install)"
-        docker-compose run --rm --no-deps matching npm update
-        docker-compose run --rm --no-deps api      npm update
-        docker-compose run --rm --no-deps matching npm link services-library
-        docker-compose run --rm --no-deps api      npm link services-library
+        #task_unity
+        (cd ${PROJECT_TASK_DIR}; sh run.sh services build)
+        docker-compose build --force-rm
+        docker-compose run --rm --no-deps matching npm install
+        docker-compose run --rm --no-deps api      npm install
 }
 task_publish() {
         echo "publish compose image to '${PUBLISH_TO?}' ..."

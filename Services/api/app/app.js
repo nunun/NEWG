@@ -1,10 +1,9 @@
 var url            = require('url');
 var util           = require('util');
-var config         = require('services-library').config;
-var logger         = require('services-library').logger;
-var mindlinkClient = require('services-library').MindlinkClient.activate(config.mindlinkClient, logger.mindlinkClient);
-var webapiServer   = require('services-library').WebAPIServer.activate(config.webapiServer, logger.webapiServer);
-var protocols      = require('./protocols');
+var config         = require('./services/library/config');
+var logger         = require('./services/library/logger');
+var mindlinkClient = require('./services/library/mindlink_client').activate(config.mindlinkClient, logger.mindlinkClient);
+var webapiServer   = require('./services/library/webapi_server').activate(config.webapiServer, logger.webapiServer);
 
 // mindlink client
 mindlinkClient.setConnectEventListener(function() {
@@ -19,7 +18,7 @@ mindlinkClient.setConnectEventListener(function() {
         webapiServer.start();
     });
 });
-mindlinkClient.setDataFromRemoteEventListener(protocols.CMD.API.MATCHING_REQUEST, function(data, res) {
+mindlinkClient.setDataFromRemoteEventListener(1 /*protocols.CMD.API.MATCHING_REQUEST*/, function(data, res) {
     // マッチング開始
     // サービス一覧からゲームサーバをとって返却
     // TODO 将来的には人数や空部屋などもチェック。

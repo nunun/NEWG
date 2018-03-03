@@ -1,7 +1,7 @@
 var util            = require('util');
-var config          = require('services-library').config;
-var logger          = require('services-library').logger;
-var webSocketServer = require('services-library').WebSocketServer.activate(config.webSocketServer, logger.webSocketServer);
+var config          = require('./services/library/config');
+var logger          = require('./services/library/logger');
+var webSocketServer = require('./services/library/websocket_server').activate(config.webSocketServer, logger.webSocketServer);
 
 // websocket server
 //webSocketServer.setAccepter(function(req) {

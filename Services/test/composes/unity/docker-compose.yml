@@ -7,7 +7,7 @@ services:
       - LOG_LEVEL=debug
     volumes:
       - ./../../test-services-server/app:/app
-      - ./../../../services-library:/usr/local/lib/node_modules/services-library
+      - ./../../../services:/app/services
     ports:
       - 7799:7799
 
@@ -18,7 +18,7 @@ services:
       - LOG_LEVEL=debug
     volumes:
       - ./../../../matching/app:/app
-      - ./../../../services-library:/usr/local/lib/node_modules/services-library
+      - ./../../../services:/app/services
     ports:
       - 7755:7755
     depends_on:
@@ -32,7 +32,7 @@ services:
       - LOG_LEVEL=debug
     volumes:
       - ./../../../api/app:/app
-      - ./../../../services-library:/usr/local/lib/node_modules/services-library
+      - ./../../../services:/app/services
     depends_on:
       - mindlink
       - couchdb
@@ -45,7 +45,7 @@ services:
       - LOG_LEVEL=debug
     volumes:
       - ./../../../mindlink/app:/app
-      - ./../../../services-library:/usr/local/lib/node_modules/services-library
+      - ./../../../services:/app/services
     ports:
       - 7766:7766
       - 17766:17766

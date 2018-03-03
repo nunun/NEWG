@@ -1,6 +1,6 @@
 var assert = require('assert');
-var config = require('services-library').config;
-var logger = require('services-library').logger;
+var config = require('./services/library/config');
+var logger = require('./services/library/logger');
 
 describe('smoke test', function () {
     describe('smoke test', function () {

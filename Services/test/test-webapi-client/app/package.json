@@ -9,10 +9,12 @@
   "dependencies": {
     "config": "^1.30.0",
     "log4js": "^2.5.3",
-    "services-library": "git+https://github.com/nunun/services-library-node.git#master",
     "string.prototype.trim": "^1.1.2",
     "ws": "^4.1.0",
-    "yaml": "^0.3.0"
+    "yaml": "^0.3.0",
+    "express": "*",
+    "nano": "*",
+    "redis": "*"
   },
   "repository": "",
   "author": "nunun",

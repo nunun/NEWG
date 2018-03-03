@@ -2,8 +2,8 @@ var http           = require('http');
 var EventEmitter   = require('events').EventEmitter;
 var assert         = require('assert');
 var util           = require('util');
-var config         = require('services-library').config;
-var logger         = require('services-library').logger;
+var config         = require('./services/library/config');
+var logger         = require('./services/library/logger');
 var mindlinkServer = require('./mindlink_server');
 
 // constructor

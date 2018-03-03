@@ -1,8 +1,8 @@
 var assert         = require('assert');
-var config         = require('services-library').config;
-var logger         = require('services-library').logger;
-var mindlinkClient = require('services-library').MindlinkClient.activate(config.mindlinkClient, logger.mindlinkClient);
-var matchingClient = require('services-library').WebSocketClient.activate(config.matchingClient, logger.matchingClient);
+var config         = require('./services/library/config');
+var logger         = require('./services/library/logger');
+var mindlinkClient = require('./services/library/mindlink_client').activate(config.mindlinkClient, logger.mindlinkClient);
+var matchingClient = require('./services/library/websocket_client').activate(config.matchingClient, logger.matchingClient);
 
 describe('smoke test', function () {
     describe('smoke test', function () {
