@@ -8,7 +8,7 @@ task_unity() {
 }
 task_build() {
         task_down
-        #task_unity
+        task_unity
         (cd ${PROJECT_TASK_DIR}; sh run.sh services build)
         docker-compose build --force-rm
         docker-compose run --rm --no-deps matching npm install
