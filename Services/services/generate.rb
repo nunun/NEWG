@@ -65,7 +65,7 @@ class String
 end
 
 # generate
-def generate(spec_name, spec, spec_generate_name, entries, templates, params, removed_dirs)
+def generate(spec_name, entries, templates, params, removed_dirs)
   templates.each do |template|
     generate_name = template["generate"]
     in_path       = template["in"]
@@ -74,7 +74,7 @@ def generate(spec_name, spec, spec_generate_name, entries, templates, params, re
     eval_code     = template["eval"]
 
     raise "template property 'generate' is empty" if generate_name.to_s.empty?
-    next if generate_name != spec_generate_name
+    next if generate_name != spec_name
 
     if !eval_code.to_s.empty?  # eval mode
       raise "eval: property 'generate' must be 'before'." if generate_name != 'before'
@@ -126,14 +126,12 @@ def generate(spec_name, spec, spec_generate_name, entries, templates, params, re
 end
 
 # output
-spec_yml  = YAML.load_file('./spec.yml')
-spec      = spec_yml["spec"]
-templates = spec_yml["templates"]
+specs_yml = YAML.load_file('./specs.yml')
+specs     = specs_yml["specs"]["services"]["protocols"]
+templates = specs_yml["templates"]
 removed_dirs = []
-generate(nil, nil, "before", {}, templates, params, removed_dirs)
-spec.each do |spec_name,spec|
-  spec.each do |spec_generate_name,entries|
-    generate(spec_name, spec, spec_generate_name, entries, templates, params, removed_dirs)
-  end
+generate("before", {}, templates, params, removed_dirs)
+specs.each do |spec_name,entries|
+  generate(spec_name, entries, templates, params, removed_dirs)
 end
-generate(nil, nil, "after", {}, templates, params, removed_dirs)
+generate("after", {}, templates, params, removed_dirs)

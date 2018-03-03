@@ -1,47 +1,48 @@
 # var   webapi = require('./services/protocols/webapi');
 # using WebAPI = Services.Protocols.WebAPI;
-services:
-  protocols:
-    webapi:
-      - name: Test
-        desc: テストインターフェイス
-        api_path: /test
-        request:
-          - name: value
-            type: int
-        response:
-          - name: value
-            type: int
+specs:
+  services:
+    protocols:
+      webapi:
+        - name: Test
+          desc: テストインターフェイス
+          api_path: /test
+          request:
+            - name: value
+              type: int
+          response:
+            - name: value
+              type: int
 
-    models:
-      - name: MyModel
-        desc: テストモデル
-        properties:
-          - name: value
-            type: int
+      models:
+        - name: MyModel
+          desc: テストモデル
+          properties:
+            - name: value
+              type: int
 
-      - name: User
-        desc: ユーザ情報
-        properties:
-          - name: value
-            type: int
+        - name: User
+          desc: ユーザ情報
+          properties:
+            - name: value
+              type: int
 
-    enums:
-      - name: MyEnum
-        desc: テスト列挙
-        definitions:
-          - name: Foo
-            value: 0
-          - name: Bar
-          - name: Qux
+      enums:
+        - name: MyEnum
+          desc: テスト列挙
+          definitions:
+            - name: Foo
+              value: 0
+            - name: Bar
+            - name: Qux
 
-    consts:
-      - name: MY_CONST
-        desc: テスト定数
-        definitions:
-          - name: MY_VALUE
-            type: int
-            value: 1
+      consts:
+        - name: MY_CONST
+          desc: テスト定数
+          definitions:
+            - name: MY_VALUE
+              type: int
+              value: 1
 
 ################################################################################
 ################################################################################
@@ -50,14 +51,14 @@ services:
 templates:
   # nodejs
   - generate: webapi
-    in: /output/nodejs/api/protocols
-    output: <%= spec_name.to_snake %>/routes.js
+    in: /output/nodejs/services/protocols
+    output: routes.js
     template: |
       exports = {}
       exports.setup = function(router, connector) {
           <% entries.each do |entry| %>
           // <%= entry["name"] %>
-          // <%= entry["description"] %>
+          // <%= entry["desc"] %>
           var impl_<%= entry["name"] %> = connector.<%= entry["name"] %>;
           if (!impl_<%= entry["name"] %>) {
               throw new Error('connector has no implement "<%= entry["name"] %>" for route "<%= entry["api_path"] %>".');
@@ -72,14 +73,14 @@ templates:
       module.exports = exports;
 
   - generate: webapi
-    in: /output/nodejs/*/protocols
-    output: <%= spec_name.to_snake %>/<%= generate_name.to_snake %>.js
+    in: /output/nodejs/services/protocols
+    output: webapi.js
     template: |
       var client = require('services_library').WebAPIClient.getClient();
       exports = {};
       <% entries.each do |entry| %>
       // <%= entry["name"] %>
-      // <%= entry["description"] %>
+      // <%= entry["desc"] %>
       exports.<%= entry["name"].to_camel %> = function(<%-
       -%><%- entry["request"].each do |param| -%><%-
       -%><%= param["name"] -%>, <%-
@@ -107,15 +108,15 @@ templates:
 
   # cs
   - generate: webapi
-    in: /output/cs/*/Protocols
-    output: <%= spec_name.to_pascal %>/<%= generate_name.to_pascal %>.cs
+    in: /output/cs/Services/Protocols
+    output: WebAPI.cs
     template: |
       using System;
-      namespace Services.Protocols.<%= spec_name.to_pascal %> {
-          public class <%= generate_name.to_pascal %> {
+      namespace Services.Protocols.WebAPI {
+          public class WebAPI {
               <% entries.each do |entry| %>
               // <%= entry["name"] %>
-              // <%= entry["description"] %>
+              // <%= entry["desc"] %>
               public static <%= entry["name"].to_pascal %>() {
               }
               <% end %>
