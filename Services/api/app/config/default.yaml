@@ -11,13 +11,6 @@ mindlinkClient:
 webapiServer:
   port: [7780, "${PORT}"]
 
-# webapi
-webapi:
-  webapiServer:
-    url: "http://api:7780/"
-    queries:
-      value: 10
-
 # log4js
 log4js:
   appenders:

@@ -57,28 +57,38 @@ templates:
     output: routes.js
     template: |
       exports = {}
-      exports.setup = function(router, connector) {
+      exports.setup = function(router, binder, client, logger) {
           <%- entries.each do |entry| -%>
           <%- name     = entry["name"]       -%>
           <%- impl     = name + "_impl"      -%>
           <%- desc     = entry["desc"]       -%>
           <%- api_path = entry["api_path"]   -%>
           <%- auth     = entry["auth"] || [] -%>
-          // <%= name %>
-          // <%= desc %>
-          var <%= impl %> = connector.<%= name %>;
-          if (!<%= impl %>) {
-              throw new Error('connector has no implement "<%= name %>" for route "<%= api_path %>".');
-          }
-          <%- auth.each do |a| -%>
-          if (!connector["<%= a %>"]) {
-              throw new Error('connector has no auth middleware "<%= a %>" for route "<%= api_path %>".');
-          }
-          router.use("<%= api_path %>", connector["<%= a.to_camel %>"]);
+          <%- client   = entry["client"]     -%>
+          <%- if client.nil? -%>
+          if (!client) {
+          <%- else -%>
+          if (client && client == "<%= client %>") {
           <%- end -%>
-          router.post("<%= api_path %>", function(req, res) {
-              <%= impl %>(req, res);
-          });
+              logger.debug('routes.setup: binding "<%= name %>" for route "<%= api_path %>".');
+              // <%= name %>
+              // <%= desc %>
+              var <%= impl %> = binder.<%= name %>;
+              if (!<%= impl %>) {
+                  logger.error('routes.setup: binder has no implement "<%= name %>" for route "<%= api_path %>".');
+                  return;
+              }
+              <%- auth.each do |a| -%>
+              if (!binder["<%= a %>"]) {
+                  logger.error('routes.setup: binder has no auth middleware "<%= a %>" for route "<%= api_path %>".');
+                  return;
+              }
+              router.use("<%= api_path %>", binder["<%= a.to_camel %>"]);
+              <%- end -%>
+              router.post("<%= api_path %>", function(req, res) {
+                  <%= impl %>(req, res);
+              });
+          }
           <%- end -%>
       }
       module.exports = exports;
@@ -87,8 +97,8 @@ templates:
     in: /output/nodejs/services/protocols
     output: webapi.js
     template: |
-      var clients = require('./../library/webapi_client');
-      var models  = require('./models');
+      var webapiClient = require('./../library/webapi_client');
+      var models       = require('./models');
       exports = {};
       <%- entries.each do |entry| -%>
       <%- name     = entry["name"].to_camel -%>
@@ -101,9 +111,9 @@ templates:
       // <%= desc %>
       exports.<%= name %> = function(<%-
       -%><%- request.each do |param| -%><%-
-      -%><%= name -%>, <%-
+      -%><%= param["name"] -%>, <%-
       -%><% end %>callback, queries = null, forms = null, headers = null) {
-          var client = clients.getClient(<% if !client.nil? %>"<%= client %>"<% end %>);
+          var client = webapiClient.getClient(<% if !client.nil? %>"<%= client %>"<% end %>);
           var data = {};
           <%- request.each do |param| -%>
           data["<%= param["name"] %>"] = <%= param["name"] %>;<% if param.key?("desc") %> // <%= param["desc"] %><% end %>

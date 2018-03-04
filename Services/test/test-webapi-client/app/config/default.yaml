@@ -1,9 +1,9 @@
 # test client
 #testClient:
 
-# mindlink client
-#mindlinkClient:
-#  url: "ws://mindlink:7766"
+# webapi client
+webapiClient:
+  url: "http://api:7780"
 
 # log4js
 log4js:
@@ -15,5 +15,8 @@ log4js:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
     testClient:
+      appenders: [console]
+      level: [info, "${LOG_LEVEL}"]
+    webapiClient:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]

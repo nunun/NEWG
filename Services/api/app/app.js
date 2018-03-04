@@ -4,6 +4,7 @@ var config         = require('./services/library/config');
 var logger         = require('./services/library/logger');
 var mindlinkClient = require('./services/library/mindlink_client').activate(config.mindlinkClient, logger.mindlinkClient);
 var webapiServer   = require('./services/library/webapi_server').activate(config.webapiServer, logger.webapiServer);
+var routes         = require('./services/protocols/routes');
 
 // mindlink client
 mindlinkClient.setConnectEventListener(function() {
@@ -46,9 +47,12 @@ webapiServer.setStartEventListener(function() {
 webapiServer.setSetupEventListener(function(express, app) {
     logger.webapiServer.info('webapi server setup.');
     var router = express.Router();
-    router.get('/test/', function(req, res) {
-        res.send('OK');
-    });
+    var binder = {};
+    binder.Test = function(req, res) {
+        logger.webapiServer.debug(req.body);
+        res.send('this is a response.');
+    }
+    routes.setup(router, binder, null, logger.webapiServer);
     app.use(router);
 });
 

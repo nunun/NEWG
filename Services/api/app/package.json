@@ -9,6 +9,7 @@
   "dependencies": {
     "config": "^1.30.0",
     "express": "^4.16.2",
+    "body-parser": "*",
     "log4js": "^2.5.3",
     "nano": "^6.4.3",
     "redis": "*",

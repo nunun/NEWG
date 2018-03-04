@@ -1,35 +1,19 @@
-var assert = require('assert');
-var config = require('./services/library/config');
-var logger = require('./services/library/logger');
+var assert       = require('assert');
+var config       = require('./services/library/config');
+var logger       = require('./services/library/logger');
+var webapiClient = require('./services/library/webapi_client').activate(config.webapiClient, logger.webapiClient);
+var webapi       = require('./services/protocols/webapi');
 
 describe('smoke test', function () {
     describe('smoke test', function () {
         this.timeout(20000);
         it('smoke test', function (done) {
-            // TODO
-            // mindlinkClient.test([
-            //     {connect: function() {
-            //         mindlinkClient.sendStatus({address:'example.com:7777', population:0, capacity:16}, function(err, responseData) {
-            //             assert.ok(!err,         'invalid response err (' + err + ')');
-            //             assert.ok(responseData, 'invalid response responseData');
-            //             matchingClient.start({user_id:'test'});
-            //         });
-            //     }}
-            // ]);
-            //
-            // matchingClient.test([
-            //     {connect: function() {}},
-            //     {data_type0: function(data) {
-            //         assert.ok(!data.err,                          'invalid response data.err (' + data.err + ')');
-            //         assert.ok(data.address == 'example.com:7777', 'invalid response data.address');
-            //     }},
-            //     {disconnect: function() {
-            //         done();
-            //     }},
-            // ]);
-            //
-            // mindlinkClient.start();
-            done();
+            webapi.test(10, function(err, data) {
+                assert.ok(!err, 'invalid response err (' + err + ')');
+                logger.testClient.debug(err)
+                logger.testClient.debug(data)
+                done();
+            });
         });
     });
 });

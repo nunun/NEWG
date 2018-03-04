@@ -1,3 +1,4 @@
+var util    = require('util');
 var assert  = require('assert');
 var request = require('request');
 
@@ -15,7 +16,7 @@ util.inherits(WebAPIClient, function(){});
 WebAPIClient.prototype.init = function(config, logger) {
     this.config = config; // config
     this.logger = logger; // logger
-    this.uuid   = uuid(); // server  uuid
+    //this.uuid = uuid(); // server  uuid
 
     // clear
     this.clear();
@@ -41,7 +42,7 @@ WebAPIClient.prototype.startRequest = function(method, apiPath, data, callback, 
     var self = this;
 
     // build options
-    var options = {url:self.config.url + url};
+    var options = {url:self.config.url + apiPath};
     if (method == 'POST') {
         options.method = 'POST';
     }
@@ -111,10 +112,15 @@ WebAPIClient.activate = function(config, logger) {
     assert.ok(!defaultClient);
     clients       = {};
     defaultClient = null;
-    for (var name in config) {
-        var client = new WebAPIClient(config[name], logger);
-        clients[name] = client;
-        if (!defaultClient) {
+    if (!Array.isArray(config)) {
+        config = [config];
+    }
+    for (var i in config) {
+        var configEntry = config[i];
+        var client = new WebAPIClient(configEntry, logger);
+        if (configEntry.name) {
+            clients[configEntry.name] = client;
+        } else {
             defaultClient = client;
         }
     }

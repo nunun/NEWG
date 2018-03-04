@@ -7,7 +7,7 @@ services:
       - LOG_LEVEL=debug
     volumes:
       - ./../../test-webapi-client/app:/app
-      - ./../../../services-library:/usr/local/lib/node_modules/services-library
+      - ./../../../services:/app/services
     depends_on:
       - api
       - mindlink
@@ -19,7 +19,7 @@ services:
       - LOG_LEVEL=debug
     volumes:
       - ./../../../api/app:/app
-      - ./../../../services-library:/usr/local/lib/node_modules/services-library
+      - ./../../../services:/app/services
     ports:
       - 7780:7780
     depends_on:
@@ -32,7 +32,7 @@ services:
     build: ./../../../mindlink
     volumes:
       - ./../../../mindlink/app:/app
-      - ./../../../services-library:/usr/local/lib/node_modules/services-library
+      - ./../../../services:/app/services
     depends_on:
       - rabbitmq
 

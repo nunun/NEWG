@@ -3,7 +3,7 @@ var models  = require('./models');
 exports = {};
 // test
 // テストインターフェイス
-exports.test = function(test, callback, queries = null, forms = null, headers = null) {
+exports.test = function(reqValue, callback, queries = null, forms = null, headers = null) {
     var client = clients.getClient();
     var data = {};
     data["reqValue"] = reqValue; // リクエストの値
