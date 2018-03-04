@@ -8,24 +8,26 @@ specs:
           desc: テストインターフェイス
           api_path: /test
           request:
-            - name: value
+            - name: reqValue
               type: int
           response:
-            - name: value
+            - name: resValue
               type: int
 
       models:
         - name: MyModel
           desc: テストモデル
           properties:
-            - name: value
+            - name: intValue
               type: int
+            - name: stringValue
+              type: string
 
         - name: User
           desc: ユーザ情報
           properties:
-            - name: value
-              type: int
+            - name: uuid
+              type: string
 
       enums:
         - name: MyEnum
@@ -57,16 +59,22 @@ templates:
       exports = {}
       exports.setup = function(router, connector) {
           <% entries.each do |entry| %>
-          // <%= entry["name"] %>
-          // <%= entry["desc"] %>
-          var impl_<%= entry["name"] %> = connector.<%= entry["name"] %>;
-          if (!impl_<%= entry["name"] %>) {
-              throw new Error('connector has no implement "<%= entry["name"] %>" for route "<%= entry["api_path"] %>".');
+          <%- name     = entry["name"]     -%>
+          <%- impl     = name + "_impl"    -%>
+          <%- desc     = entry["desc"]     -%>
+          <%- api_path = entry["api_path"] -%>
+          // <%= name %>
+          // <%= desc %>
+          var <%= impl %> = connector.<%= name %>;
+          if (!<%= impl %>) {
+              throw new Error('connector has no implement "<%= name %>" for route "<%= api_path %>".');
           }
-          router.post("<%= entry["api_path"] %>", function(req, res) {
-              var req_data = req.body;
-              var res_data = impl_<%= entry["name"] %>(req_data);
-              res.json(res_data);
+          router.post("<%= api_path %>", function(req, res) {
+              // TODO
+              // HttpStatus & Auth
+              var data = req.body;
+              var responseData = <%= impl %>(data);
+              res.json(responseData);
           });
           <% end %>
       }
@@ -76,20 +84,25 @@ templates:
     in: /output/nodejs/services/protocols
     output: webapi.js
     template: |
-      var client = require('services_library').WebAPIClient.getClient();
+      var client = require('./../library/webapi_client').getClient();
       exports = {};
       <% entries.each do |entry| %>
-      // <%= entry["name"] %>
-      // <%= entry["desc"] %>
-      exports.<%= entry["name"].to_camel %> = function(<%-
-      -%><%- entry["request"].each do |param| -%><%-
-      -%><%= param["name"] -%>, <%-
-      -%><% end %>callback) {
-          var req_data = {};
-          <%- entry["request"].each do |param| -%>
-          req_data["<%= param["name"] %>"] = <%= param["name"] %>;
+      <%- name      = entry["name"].to_camel -%>
+      <%- desc      = entry["desc"]          -%>
+      <%- api_path  = entry["api_path"]      -%>
+      <%- request   = entry["request"]       -%>
+      <%- response  = entry["response"]      -%>
+      // <%= name %>
+      // <%= desc %>
+      exports.<%= name %> = function(<%-
+      -%><%- request.each do |param| -%><%-
+      -%><%= name -%>, <%-
+      -%><% end %>callback, queries = null, forms = null, headers = null) {
+          var data = {};
+          <%- request.each do |param| -%>
+          data["<%= param["name"] %>"] = <%= param["name"] %>;
           <%- end -%>
-          return client.post("<%= entry["api_path"] %>", req_data, function(err, res_data) {
+          return client.post("<%= api_path %>", data, function(err, responseData) {
               if (err) {
                   if (callback != null) {
                       callback(err, null);
@@ -97,11 +110,11 @@ templates:
                   return;
               }
               if (callback != null) {
-                  callback(<%- entry["response"].each_with_index do |param,i| -%><%-
-                  -%>res_data["<%= param["name"] -%>"]<%- if (i < entry["response"].size - 1) -%>, <%- end -%><%-
+                  callback(<%- response.each_with_index do |param,i| -%><%-
+                  -%>responseData["<%= name -%>"]<%- if (i < response.size - 1) -%>, <%- end -%><%-
                   -%><% end %>);
               }
-          });
+          }, queries, forms, headers);
       }
       <% end %>
       module.exports = exports;
@@ -115,9 +128,42 @@ templates:
       namespace Services.Protocols.WebAPI {
           public class WebAPI {
               <% entries.each do |entry| %>
-              // <%= entry["name"] %>
-              // <%= entry["desc"] %>
-              public static <%= entry["name"].to_pascal %>() {
+              <%- name = entry["name"].to_pascal -%>
+              <%- desc = entry["desc"]           -%>
+              <%- treq = name + "_Request"       -%>
+              <%- tres = name + "_Response"      -%>
+              [Serializable]
+              public struct <%= treq %> {
+                  <% entry["request"].each do |param| %><%
+                  %>public <%= param["type"]  %> <%
+                  %><%= param["name"] -%>;<%
+                  %><% end %>
+              }
+
+              [Serializable]
+              public struct <%= tres %> {
+                  <% entry["response"].each do |param| %><%
+                  %>public <%= param["type"]  %> <%
+                  %><%= param["name"] -%>;<%
+                  %><% end %>
+              }
+
+              // <%= name %>
+              // <%= desc %>
+              public static WebAPIClient.Request <%= name %>(<%
+              %><%
+                  %><% entry["request"].each do |param| %><%
+                  %><%= param["type"]  %> <%
+                  %><%= param["name"] -%>, <%
+                  %><% end %><%
+              %>Action<string,<%= tres %>> callback, string[] queries = null, string[] forms = null, string[] headers = null) {
+                  var client = WebAPIClient.GetClient();
+                  var data = new <%= treq %>();
+                  <% entry["request"].each do |param| %><%
+                  %>data.<%= param["name"] %> = <%
+                  %><%= param["name"] %>;<%
+                  %><% end %>
+                  return client.Post<<%= treq %>,<%= tres %>>("<%= entry["api_path"] %>", data, callback, queries, forms, headers);
               }
               <% end %>
           }

@@ -1,12 +1,12 @@
-var client = require('services_library').WebAPIClient.getClient();
+var client = require('./../library/webapi_client').getClient();
 exports = {};
 
-// Test
+// test
 // テストインターフェイス
-exports.test = function(value, callback) {
-    var req_data = {};
-    req_data["value"] = value;
-    return client.post("/test", req_data, function(err, res_data) {
+exports.test = function(test, callback, queries = null, forms = null, headers = null) {
+    var data = {};
+    data["reqValue"] = reqValue;
+    return client.post("/test", data, function(err, responseData) {
         if (err) {
             if (callback != null) {
                 callback(err, null);
@@ -14,9 +14,9 @@ exports.test = function(value, callback) {
             return;
         }
         if (callback != null) {
-            callback(res_data["value"]);
+            callback(responseData["test"]);
         }
-    });
+    }, queries, forms, headers);
 }
 
 module.exports = exports;
