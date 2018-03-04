@@ -1,6 +1,5 @@
 exports = {}
 exports.setup = function(router, connector) {
-    
     // Test
     // テストインターフェイス
     var Test_impl = connector.Test;
@@ -8,12 +7,7 @@ exports.setup = function(router, connector) {
         throw new Error('connector has no implement "Test" for route "/test".');
     }
     router.post("/test", function(req, res) {
-        // TODO
-        // HttpStatus & Auth
-        var data = req.body;
-        var responseData = Test_impl(data);
-        res.json(responseData);
+        Test_impl(req, res);
     });
-    
 }
 module.exports = exports;

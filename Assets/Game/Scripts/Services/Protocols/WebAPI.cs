@@ -1,15 +1,15 @@
 using System;
-namespace Services.Protocols.WebAPI {
+using Services.Protocols.Models;
+namespace Services.Protocols {
     public class WebAPI {
-        
         [Serializable]
         public struct Test_Request {
-            public int reqValue;
+            public int reqValue; // リクエストの値
         }
 
         [Serializable]
         public struct Test_Response {
-            public int resValue;
+            public int resValue; // レスポンスの値
         }
 
         // Test
@@ -17,9 +17,8 @@ namespace Services.Protocols.WebAPI {
         public static WebAPIClient.Request Test(int reqValue, Action<string,Test_Response> callback, string[] queries = null, string[] forms = null, string[] headers = null) {
             var client = WebAPIClient.GetClient();
             var data = new Test_Request();
-            data.reqValue = reqValue;
+            data.reqValue = reqValue; // リクエストの値
             return client.Post<Test_Request,Test_Response>("/test", data, callback, queries, forms, headers);
         }
-        
     }
 }

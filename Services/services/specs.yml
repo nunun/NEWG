@@ -9,41 +9,41 @@ specs:
           api_path: /test
           request:
             - name: reqValue
+              desc: リクエストの値
               type: int
           response:
             - name: resValue
+              desc: レスポンスの値
               type: int
 
       models:
         - name: MyModel
           desc: テストモデル
           properties:
-            - name: intValue
-              type: int
-            - name: stringValue
-              type: string
+            - name:  intValue
+              desc:  整数型
+              type:  int
+              value: 0
+            - name:  stringValue
+              desc:  文字列型
+              type:  string
+              value: null
 
         - name: User
           desc: ユーザ情報
           properties:
-            - name: uuid
-              type: string
-
-      enums:
-        - name: MyEnum
-          desc: テスト列挙
-          definitions:
-            - name: Foo
-              value: 0
-            - name: Bar
-            - name: Qux
+            - name:  uuid
+              desc:  ユーザのUUID型
+              type:  string
+              value: null
 
       consts:
         - name: MY_CONST
           desc: テスト定数
           definitions:
-            - name: MY_VALUE
-              type: int
+            - name:  MY_VALUE
+              desc:  テスト定数の値
+              type:  int
               value: 1
 
 ################################################################################
@@ -58,25 +58,28 @@ templates:
     template: |
       exports = {}
       exports.setup = function(router, connector) {
-          <% entries.each do |entry| %>
-          <%- name     = entry["name"]     -%>
-          <%- impl     = name + "_impl"    -%>
-          <%- desc     = entry["desc"]     -%>
-          <%- api_path = entry["api_path"] -%>
+          <%- entries.each do |entry| -%>
+          <%- name     = entry["name"]       -%>
+          <%- impl     = name + "_impl"      -%>
+          <%- desc     = entry["desc"]       -%>
+          <%- api_path = entry["api_path"]   -%>
+          <%- auth     = entry["auth"] || [] -%>
           // <%= name %>
           // <%= desc %>
           var <%= impl %> = connector.<%= name %>;
           if (!<%= impl %>) {
               throw new Error('connector has no implement "<%= name %>" for route "<%= api_path %>".');
           }
+          <%- auth.each do |a| -%>
+          if (!connector["<%= a %>"]) {
+              throw new Error('connector has no auth middleware "<%= a %>" for route "<%= api_path %>".');
+          }
+          router.use("<%= api_path %>", connector["<%= a.to_camel %>"]);
+          <%- end -%>
           router.post("<%= api_path %>", function(req, res) {
-              // TODO
-              // HttpStatus & Auth
-              var data = req.body;
-              var responseData = <%= impl %>(data);
-              res.json(responseData);
+              <%= impl %>(req, res);
           });
-          <% end %>
+          <%- end -%>
       }
       module.exports = exports;
 
@@ -84,23 +87,26 @@ templates:
     in: /output/nodejs/services/protocols
     output: webapi.js
     template: |
-      var client = require('./../library/webapi_client').getClient();
+      var clients = require('./../library/webapi_client');
+      var models  = require('./models');
       exports = {};
-      <% entries.each do |entry| %>
-      <%- name      = entry["name"].to_camel -%>
-      <%- desc      = entry["desc"]          -%>
-      <%- api_path  = entry["api_path"]      -%>
-      <%- request   = entry["request"]       -%>
-      <%- response  = entry["response"]      -%>
+      <%- entries.each do |entry| -%>
+      <%- name     = entry["name"].to_camel -%>
+      <%- desc     = entry["desc"]          -%>
+      <%- api_path = entry["api_path"]      -%>
+      <%- request  = entry["request"]       -%>
+      <%- response = entry["response"]      -%>
+      <%- client   = entry["client"]        -%>
       // <%= name %>
       // <%= desc %>
       exports.<%= name %> = function(<%-
       -%><%- request.each do |param| -%><%-
       -%><%= name -%>, <%-
       -%><% end %>callback, queries = null, forms = null, headers = null) {
+          var client = clients.getClient(<% if !client.nil? %>"<%= client %>"<% end %>);
           var data = {};
           <%- request.each do |param| -%>
-          data["<%= param["name"] %>"] = <%= param["name"] %>;
+          data["<%= param["name"] %>"] = <%= param["name"] %>;<% if param.key?("desc") %> // <%= param["desc"] %><% end %>
           <%- end -%>
           return client.post("<%= api_path %>", data, function(err, responseData) {
               if (err) {
@@ -116,7 +122,47 @@ templates:
               }
           }, queries, forms, headers);
       }
-      <% end %>
+      <%- end -%>
+      module.exports = exports;
+
+  - generate: models
+    in: /output/nodejs/services/protocols
+    output: models.js
+    template: |
+      var consts = require('./consts');
+      exports = {};
+      <%- entries.each do |entry| -%>
+      <%- name       = entry["name"].to_pascal -%>
+      <%- desc       = entry["desc"]           -%>
+      <%- properties = entry["properties"]     -%>
+      // <%= name %>
+      // <%= desc %>
+      exports.<%= name %> = function() {
+          var model = {};
+          <%- properties.each do |property| -%>
+          model.<%= property["name"] %> = <%= property["value"] || "null" %>;<% if property.key?("desc") %> // <%= property["desc"] %><% end %>
+          <%- end -%>
+          return model;
+      }
+      <%- end -%>
+      module.exports = exports;
+
+  - generate: consts
+    in: /output/nodejs/services/protocols
+    output: consts.js
+    template: |
+      exports = {};
+      <%- entries.each do |entry| -%>
+      <%- name        = entry["name"]        -%>
+      <%- desc        = entry["desc"]        -%>
+      <%- definitions = entry["definitions"] -%>
+      // <%= name %>
+      // <%= desc %>
+      exports.<%= name %> = {};
+      <%- definitions.each do |definition| -%>
+      exports.<%= name %>.<%= definition["name"] %> = <%= definition["value"] || "null" %>;<% if definition.key?("desc") %> // <%= definition["desc"] %><% end %>
+      <%- end -%>
+      <%- end -%>
       module.exports = exports;
 
   # cs
@@ -125,27 +171,27 @@ templates:
     output: WebAPI.cs
     template: |
       using System;
-      namespace Services.Protocols.WebAPI {
+      using Services.Protocols.Models;
+      namespace Services.Protocols {
           public class WebAPI {
-              <% entries.each do |entry| %>
-              <%- name = entry["name"].to_pascal -%>
-              <%- desc = entry["desc"]           -%>
-              <%- treq = name + "_Request"       -%>
-              <%- tres = name + "_Response"      -%>
+              <%- entries.each do |entry| -%>
+              <%- name   = entry["name"].to_pascal -%>
+              <%- desc   = entry["desc"]           -%>
+              <%- client = entry["client"]         -%>
+              <%- treq   = name + "_Request"       -%>
+              <%- tres   = name + "_Response"      -%>
               [Serializable]
               public struct <%= treq %> {
-                  <% entry["request"].each do |param| %><%
-                  %>public <%= param["type"]  %> <%
-                  %><%= param["name"] -%>;<%
-                  %><% end %>
+                  <%- entry["request"].each do |param| -%>
+                  public <%= param["type"]  %> <%= param["name"] %>;<% if param.key?("desc") %> // <%= param["desc"] %><% end %>
+                  <%- end -%>
               }
 
               [Serializable]
               public struct <%= tres %> {
-                  <% entry["response"].each do |param| %><%
-                  %>public <%= param["type"]  %> <%
-                  %><%= param["name"] -%>;<%
-                  %><% end %>
+                  <%- entry["response"].each do |param| -%>
+                  public <%= param["type"]  %> <%= param["name"] %>;<% if param.key?("desc") %> // <%= param["desc"] %><% end %>
+                  <%- end -%>
               }
 
               // <%= name %>
@@ -153,20 +199,61 @@ templates:
               public static WebAPIClient.Request <%= name %>(<%
               %><%
                   %><% entry["request"].each do |param| %><%
-                  %><%= param["type"]  %> <%
-                  %><%= param["name"] -%>, <%
+                  %><%= param["type"]  %> <%= param["name"] -%>, <%
                   %><% end %><%
               %>Action<string,<%= tres %>> callback, string[] queries = null, string[] forms = null, string[] headers = null) {
-                  var client = WebAPIClient.GetClient();
+                  var client = WebAPIClient.GetClient(<% if !client.nil? %>"<%= client %>"<% end %>);
                   var data = new <%= treq %>();
-                  <% entry["request"].each do |param| %><%
-                  %>data.<%= param["name"] %> = <%
-                  %><%= param["name"] %>;<%
-                  %><% end %>
+                  <%- entry["request"].each do |param| -%>
+                  data.<%= param["name"] %> = <%= param["name"] %>;<% if param.key?("desc") %> // <%= param["desc"] %><% end %>
+                  <%- end -%>
                   return client.Post<<%= treq %>,<%= tres %>>("<%= entry["api_path"] %>", data, callback, queries, forms, headers);
               }
-              <% end %>
+              <%- end -%>
           }
+      }
+
+  - generate: models
+    in: /output/cs/Services/Protocols
+    output: Models.cs
+    template: |
+      using System;
+      using Services.Protocols.Consts;
+      namespace Services.Protocols.Models {
+          <%- entries.each do |entry| -%>
+          <%- name       = entry["name"].to_pascal -%>
+          <%- desc       = entry["desc"]           -%>
+          <%- properties = entry["properties"]     -%>
+          // <%= name %>
+          // <%= desc %>
+          [Serializable]
+          public class <%= name %> {
+              <%- properties.each do |property| -%>
+              public <%= property["type"] %> <%= property["name"] %> = <%= property["value"] || "null" %>;<% if property.key?("desc") %> // <%= property["desc"] %><% end %>
+              <%- end -%>
+          }
+          <%- end -%>
+      }
+
+  - generate: consts
+    in: /output/cs/Services/Protocols
+    output: Consts.cs
+    template: |
+      using System;
+      namespace Services.Protocols.Consts {
+          <%- entries.each do |entry| -%>
+          <%- name        = entry["name"]        -%>
+          <%- desc        = entry["desc"]        -%>
+          <%- definitions = entry["definitions"] -%>
+          // <%= name %>
+          // <%= desc %>
+          [Serializable]
+          public class <%= name %> {
+              <%- definitions.each do |definition| -%>
+              public static readonly <%= definition["type"] %> <%= definition["name"] %> = <%= definition["value"] || "null" %>;<% if definition.key?("desc") %> // <%= definition["desc"] %><% end %>
+              <%- end -%>
+          }
+          <%- end -%>
       }
 
 #  - generate: before
