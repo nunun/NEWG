@@ -22,4 +22,9 @@ public class SmokeTest {
     public IEnumerator MindlinkConnectorTest() {
         yield return new MonoBehaviourTest<MindlinkConnectorTest>();
     }
+
+    [UnityTest]
+    public IEnumerator WebAPIClientTest() {
+        yield return new MonoBehaviourTest<WebAPIClientTest>();
+    }
 }

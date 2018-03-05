@@ -31,8 +31,7 @@ public partial class WebAPIClient : MonoBehaviour {
 
     // クリア
     protected virtual void Clear() {
-        // NOTE
-        // 今のところ処理なし
+        ClearRequestList();
     }
 
     //-------------------------------------------------------------------------- リクエスト関連
@@ -66,6 +65,7 @@ public partial class WebAPIClient : MonoBehaviour {
 
         // リクエストリストに追加
         var req = AddRequest<TRes>(unityWebRequest, callback);
+        unityWebRequest.Send();
 
         // リクエストキャンセラーを返却。
         // req.Abort() でリクエストをキャンセルできる。
@@ -89,20 +89,17 @@ public partial class WebAPIClient : MonoBehaviour {
 
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     void Awake() {
+        // 初期化
+        Init();
+
         // インスタンス設定
         if (clients.IndexOf(this) < 0) {
             clients.Add(this);
         }
         if (this.isDefaultClient || defaultClient == null) {
-            Debug.Assert(((defaultClient != null) && defaultClient.isDefaultClient), "デフォルトクライアントが 2 つある？");
+            Debug.Assert(((defaultClient == null) || (!defaultClient.isDefaultClient)), "デフォルトクライアントが 2 つある？");
             defaultClient = this;
         }
-
-        // 初期化
-        Init();
-
-        // リクエストリストのクリア
-        ClearRequestList();
     }
 
     void OnDestroy() {
@@ -111,9 +108,6 @@ public partial class WebAPIClient : MonoBehaviour {
         if (defaultClient == this) {
             defaultClient =null;
         }
-
-        // リクエストリストのクリア
-        ClearRequestList();
 
         // クリア
         Clear();
@@ -249,19 +243,22 @@ public partial class WebAPIClient {
             Debug.LogFormat("WebAPIClient.Request<{0}>.SetResponse: error[{1}] message[{2}]", typeof(TRes), error, message);
             var req = request as Request<TRes>;
             Debug.Assert(req != null);
-            Debug.Assert(req.callback != null);
             try {
                 if (!string.IsNullOrEmpty(error)) {
                     throw new Exception(error);
                 }
                 var data = JsonUtility.FromJson<TRes>(message);
-                var callback = req.callback;
-                req.callback = null;
-                callback(null, data);
+                if (req.callback != null) {
+                    var callback = req.callback;
+                    req.callback = null;
+                    callback(null, data);
+                }
             } catch (Exception e) {
-                var callback = req.callback;
-                req.callback = null;
-                callback(e.ToString(), default(TRes));
+                if (req.callback != null) {
+                    var callback = req.callback;
+                    req.callback = null;
+                    callback(e.ToString(), default(TRes));
+                }
             }
         }
 
@@ -269,7 +266,7 @@ public partial class WebAPIClient {
         protected static void ReturnToPool(Request request) {
             var req = request as Request<TRes>;
             Debug.Assert(req != null);
-            var unityWebRequest = req.unityWebRequest;
+            //var unityWebRequest = req.unityWebRequest;
             if (req.setResponse != null) {
                 req.setResponse(req, "cancelled.", null);
             }
@@ -277,9 +274,9 @@ public partial class WebAPIClient {
             req.setResponse     = null;
             req.returnToPool    = null;
             req.callback        = null;
-            if (unityWebRequest != null && !req.unityWebRequest.isDone) {
-                unityWebRequest.Abort(); // NOTE Unity 側も中断
-            }
+            //if (unityWebRequest != null && !req.unityWebRequest.isDone) {
+            //    unityWebRequest.Abort(); // NOTE Unity 側も中断
+            //}
             ObjectPool<Request<TRes>>.ReturnObject(req);
         }
     }

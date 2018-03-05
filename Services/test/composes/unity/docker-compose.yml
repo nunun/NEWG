@@ -37,6 +37,8 @@ services:
       - mindlink
       - couchdb
       - redis
+    ports:
+      - 7780:7780
 
   mindlink:
     image: newg-test-unity/mindlink
