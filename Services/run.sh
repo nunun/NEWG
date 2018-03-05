@@ -15,8 +15,9 @@ task_build() {
         docker-compose run --rm --no-deps api      npm install
 }
 task_clean() {
-        docker-compose run --rm --no-deps matching rm -rf node_modules package-lock.json
-        docker-compose run --rm --no-deps api      rm -rf node_modules package-lock.json
+        echo "clean build caches ..."
+        find ${PROJECT_TASK_DIR} -name "node_modules"      -exec rm -rf '{}' +
+        find ${PROJECT_TASK_DIR} -name "package-lock.json" -exec rm -rf '{}' +
 }
 task_publish() {
         echo "publish compose image to '${PUBLISH_TO?}' ..."
