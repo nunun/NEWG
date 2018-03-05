@@ -4,6 +4,8 @@
 # webapi client
 webapiClient:
   url: "http://api:7780"
+  headers:
+    content-type: "application/json"
 
 # log4js
 log4js:

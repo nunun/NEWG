@@ -126,9 +126,7 @@ templates:
                   return;
               }
               if (callback != null) {
-                  callback(<%- response.each_with_index do |param,i| -%><%-
-                  -%>responseData["<%= name -%>"]<%- if (i < response.size - 1) -%>, <%- end -%><%-
-                  -%><% end %>);
+                  callback(err, responseData);
               }
           }, queries, forms, headers);
       }

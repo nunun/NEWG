@@ -1,10 +1,10 @@
-var clients = require('./../library/webapi_client');
-var models  = require('./models');
+var webapiClient = require('./../library/webapi_client');
+var models       = require('./models');
 exports = {};
 // test
 // テストインターフェイス
 exports.test = function(reqValue, callback, queries = null, forms = null, headers = null) {
-    var client = clients.getClient();
+    var client = webapiClient.getClient();
     var data = {};
     data["reqValue"] = reqValue; // リクエストの値
     return client.post("/test", data, function(err, responseData) {
@@ -15,7 +15,7 @@ exports.test = function(reqValue, callback, queries = null, forms = null, header
             return;
         }
         if (callback != null) {
-            callback(responseData["test"]);
+            callback(err, responseData);
         }
     }, queries, forms, headers);
 }

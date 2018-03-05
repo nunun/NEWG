@@ -14,6 +14,10 @@ task_build() {
         docker-compose run --rm --no-deps matching npm install
         docker-compose run --rm --no-deps api      npm install
 }
+task_clean() {
+        docker-compose run --rm --no-deps matching rm -rf node_modules package-lock.json
+        docker-compose run --rm --no-deps api      rm -rf node_modules package-lock.json
+}
 task_publish() {
         echo "publish compose image to '${PUBLISH_TO?}' ..."
         task_build

@@ -6,4 +6,5 @@ done
 task_down() { for s in `ls ./composes/*/test.sh`; do sh ${s} down; done; }
 task_test() { task_down; for s in `ls ./composes/*/test.sh`; do sh ${s} test; sh ${s} down; done; }
 task_build() { task_down; for s in `ls ./composes/*/test.sh`; do sh ${s} build; done; }
+task_clean() { task_down; for s in `ls ./composes/*/test.sh`; do sh ${s} clean; done; }
 . "`dirname ${0}`/../.task.sh" test ${*}

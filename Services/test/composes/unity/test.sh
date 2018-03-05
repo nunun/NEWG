@@ -20,4 +20,10 @@ task_build() {
         docker-compose run --rm --no-deps api                  npm update
         docker-compose run --rm --no-deps mindlink             npm update
 }
+task_clean() {
+        docker-compose run --rm --no-deps test-services-server rm -rf node_modules package-lock.json
+        docker-compose run --rm --no-deps matching             rm -rf node_modules package-lock.json
+        docker-compose run --rm --no-deps api                  rm -rf node_modules package-lock.json
+        docker-compose run --rm --no-deps mindlink             rm -rf node_modules package-lock.json
+}
 . "`dirname ${0}`/../../../.task.sh" test ${*}

@@ -37,7 +37,7 @@ WebAPIClient.prototype.post = function(apiPath, data, callback, queries, forms, 
     this.startRequest('POST', apiPath, data, callback, queries, forms, headers);
 }
 
-// request
+// start request
 WebAPIClient.prototype.startRequest = function(method, apiPath, data, callback, queries, forms, headers) {
     var self = this;
 
@@ -66,9 +66,44 @@ WebAPIClient.prototype.startRequest = function(method, apiPath, data, callback, 
     //var contentType = (options.headers && options.headers['content-type'])? options.headers['content-type'] : null;
     options.body = JSON.stringify(data);
 
-    // request
-    var req = request(options, function(error, response, body) {
+    // create request
+    var req = {};
+    req.request       = null;
+    req.timeoutId     = null;
+    req.retryCount    = self.config.retryCount    || 10;
+    req.retryInterval = self.config.retryInterval || 3000;
+    req.abort = function() {
+        if (req.request) {
+            req.request.abort();
+            req.request = null;
+        }
+        if (req.timeoutId) {
+            clearTimeout(req.timeoutId);
+            req.timeoutId = null;
+        }
+    }
+
+    // startRequest
+    startRequest(self, req, options, method, apiPath, data, callback, queries, forms, headers);
+
+    // return request canceller.
+    // req.abort() to cancel request.
+    return req;
+}
+function startRequest(self, req, options, method, apiPath, data, callback, queries, forms, headers) {
+    // request and response
+    self.logger.debug("WebAPIClient: startRequest: outgoing: options[" + util.inspect(options, {depth:null, breakLength:Infinity}) + "]");
+    req.request = request(options, function(error, response, body) {
+        self.logger.debug("WebAPIClient: startRequest: incoming: error[" + error + "] response[" + util.inspect(options, {depth:null,breakLength:Infinity}) + "] body[" + util.inspect(body, {depth:null,breakLength:Infinity}) + "]");
         if (error) {
+            if (error.code == 'ECONNREFUSED' && req.retryCount > 0) {
+                self.logger.debug("WebAPIClient: startRequest: retry: " + req.retryCount + " times remaining.");
+                req.retryCount--;
+                req.timeoutId = setTimeout(function() {
+                    startRequest(self, req, options, method, apiPath, data, callback, queries, forms, headers);
+                }, req.retryInterval);
+                return;
+            }
             if (callback) {
                 callback(error, null);
             }
@@ -89,10 +124,6 @@ WebAPIClient.prototype.startRequest = function(method, apiPath, data, callback, 
             callback(null, data);
         }
     });
-
-    // return request canceller.
-    // call req.abort() to cancel request.
-    return req;
 }
 
 // get webapi client

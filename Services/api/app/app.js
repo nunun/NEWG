@@ -1,5 +1,6 @@
 var url            = require('url');
 var util           = require('util');
+var bodyParser     = require('body-parser');
 var config         = require('./services/library/config');
 var logger         = require('./services/library/logger');
 var mindlinkClient = require('./services/library/mindlink_client').activate(config.mindlinkClient, logger.mindlinkClient);
@@ -46,13 +47,21 @@ webapiServer.setStartEventListener(function() {
 });
 webapiServer.setSetupEventListener(function(express, app) {
     logger.webapiServer.info('webapi server setup.');
+
+    // setup router
     var router = express.Router();
     var binder = {};
     binder.Test = function(req, res) {
-        logger.webapiServer.debug(req.body);
-        res.send('this is a response.');
+        var resValue = {resValue:15};
+        logger.webapiServer.debug("Test: incoming: " + util.inspect(req.body, {depth:null,breakLength:Infinity}));
+        logger.webapiServer.debug("Test: outgoing: " + util.inspect(resValue, {depth:null,breakLength:Infinity}));
+        res.send(resValue);
     }
     routes.setup(router, binder, null, logger.webapiServer);
+
+    // setup app
+    app.use(bodyParser.json());
+    app.use(bodyParser.urlencoded({extended: true}));
     app.use(router);
 });
 
