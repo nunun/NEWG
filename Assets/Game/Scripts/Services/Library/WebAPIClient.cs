@@ -350,6 +350,15 @@ public partial class WebAPIClient {
         //------------------------------------------------------------------ 操作 (リクエスト作成)
         // UnityWebRequest を取得
         public UnityWebRequest CreateUnityWebRequest(WebAPIClient client, HttpMethod method, string url, string apiPath) {
+            // url
+            var sb = ObjectPool<StringBuilder>.RentObject();
+            sb.Length = 0;
+            sb.Append(url);
+            sb.Append(apiPath);
+            url = sb.ToString();
+            sb.Length = 0;
+            ObjectPool<StringBuilder>.ReturnObject(sb);
+
             // リクエスト作成
             var request = default(UnityWebRequest);
             switch (method) {
