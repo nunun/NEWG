@@ -17,25 +17,61 @@ specs:
               type: int
 
       models:
-        - name: MyModel
-          desc: テストモデル
-          properties:
-            - name:  intValue
-              desc:  整数型
-              type:  int
-              value: 0
-            - name:  stringValue
-              desc:  文字列型
-              type:  string
-              value: null
-
         - name: User
           desc: ユーザ情報
           properties:
             - name:  uuid
               desc:  ユーザのUUID型
               type:  string
-              value: null
+              value: (null)
+
+        - name: SampleModel
+          desc: テストモデル
+          properties:
+            - name:    intValue
+              desc:    整数型
+              type:    int
+              value:   100
+            - name:    stringValue1
+              desc:    文字列型
+              type:    string
+              value:   "test"
+            - name:    stringValue2
+              desc:    文字列型 (null)
+              type:    string
+              value:   (null)
+            - name:    stringValue3
+              desc:    文字列型 (空)
+              type:    string
+              value:   (empty)
+            - name:    objectValue1
+              desc:    型 (null)
+              type:    SampleModel
+              value:   (null)
+            - name:    objectValue2
+              desc:    型 (空)
+              type:    User
+              value:   (empty)
+            - name:    arrayValue1
+              desc:    配列型 (null)
+              type:    array
+              subtype: User
+              value:   (null)
+            - name:    arrayValue2
+              desc:    配列型 (空)
+              type:    array
+              subtype: User
+              value:   (empty)
+            - name:    listValue1
+              desc:    リスト型 (null)
+              type:    list
+              subtype: User
+              value:   (null)
+            - name:    listValue2
+              desc:    リスト型 (空)
+              type:    list
+              subtype: User
+              value:   (empty)
 
       consts:
         - name: MY_CONST
@@ -51,6 +87,112 @@ specs:
 ################################################################################
 # コード生成テンプレート
 templates:
+  - generate: before
+    eval: |
+      # nodejs default values
+      def nodejs_defval(p)
+        case p["type"]
+        when "int" || "float" || "double"
+          return "0" if not p.key?("value")
+          return p["value"]
+        when "string"
+          return "null" if not p.key?("value")
+          case p["value"]
+          when "(null)"
+            return "null"
+          when "(empty)"
+            return "\"\""
+          else
+            return "\"#{p["value"]}\""
+          end
+        when "array"
+          return "null" if not p.key?("value")
+          case p["value"]
+          when "(null)"
+            return "null"
+          when "(empty)"
+            return "[]"
+          end
+        when "list"
+          return "null" if not p.key?("value")
+          case p["value"]
+          when "(null)"
+            return "null"
+          when "(empty)"
+            return "[]"
+          end
+        else
+          return "null" if not p.key?("value")
+          case p["value"]
+          when "(null)"
+            return "null"
+          when "(empty)"
+            return "models.#{p["type"]}()"
+          end
+        end
+      end
+      # cs default values
+      def cs_defval(p)
+        case p["type"]
+        when "int"
+          return "0" if not p.key?("value")
+          return p["value"]
+        when "float"
+          return "0.0f" if not p.key?("value")
+          return p["value"]
+        when "double"
+          return "0.0" if not p.key?("value")
+          return p["value"]
+        when "string"
+          return "null" if not p.key?("value")
+          case p["value"]
+          when "(null)"
+            return "null"
+          when "(empty)"
+            return "\"\""
+          else
+            return "\"#{p["value"]}\""
+          end
+        when "array"
+          return "null" if not p.key?("value")
+          case p["value"]
+          when "(null)"
+            return "null"
+          when "(empty)"
+            return "new #{p["subtype"]}[0]"
+          end
+        when "list"
+          return "null" if not p.key?("value")
+          case p["value"]
+          when "(null)"
+            return "null"
+          when "(empty)"
+            return "new List<#{p["subtype"]}>()"
+          end
+        else
+          return "null" if not p.key?("value")
+          case p["value"]
+          when "(null)"
+            return "null"
+          when "(empty)"
+            return "new #{p["type"]}()"
+          end
+        end
+      end
+      # cs types
+      def cs_type(p)
+        case p["type"]
+        when "int" || "float" || "double" || "string"
+          return p["type"]
+        when "array"
+          return "#{p["subtype"]}[]"
+        when "list"
+          return "List<#{p["subtype"]}>"
+        else
+          return p["type"]
+        end
+      end
+
   # nodejs
   - generate: webapi
     in: /output/nodejs/services/protocols
@@ -109,14 +251,11 @@ templates:
       <%- client   = entry["client"]        -%>
       // <%= name %>
       // <%= desc %>
-      exports.<%= name %> = function(<%-
-      -%><%- request.each do |param| -%><%-
-      -%><%= param["name"] -%>, <%-
-      -%><% end %>callback, queries = null, forms = null, headers = null) {
+      exports.<%= name %> = function(<% request.each do |p| %><%= p["name"] %>, <% end %>callback, queries = null, forms = null, headers = null) {
           var client = webapiClient.getClient(<% if !client.nil? %>"<%= client %>"<% end %>);
           var data = {};
-          <%- request.each do |param| -%>
-          data["<%= param["name"] %>"] = <%= param["name"] %>;<% if param.key?("desc") %> // <%= param["desc"] %><% end %>
+          <%- request.each do |p| -%>
+          data["<%= p["name"] %>"] = <%= p["name"] %>;<% if p.key?("desc") %> // <%= p["desc"] %><% end %>
           <%- end -%>
           return client.post("<%= api_path %>", data, function(err, responseData) {
               if (err) {
@@ -139,6 +278,7 @@ templates:
     template: |
       var consts = require('./consts');
       exports = {};
+      var models = exports;
       <%- entries.each do |entry| -%>
       <%- name       = entry["name"].to_pascal -%>
       <%- desc       = entry["desc"]           -%>
@@ -147,8 +287,8 @@ templates:
       // <%= desc %>
       exports.<%= name %> = function() {
           var model = {};
-          <%- properties.each do |property| -%>
-          model.<%= property["name"] %> = <%= property["value"] || "null" %>;<% if property.key?("desc") %> // <%= property["desc"] %><% end %>
+          <%- properties.each do |p| -%>
+          model.<%= p["name"] %> = <%= nodejs_defval(p) %>;<% if p.key?("desc") %> // <%= p["desc"] %><% end %>
           <%- end -%>
           return model;
       }
@@ -167,8 +307,8 @@ templates:
       // <%= name %>
       // <%= desc %>
       exports.<%= name %> = {};
-      <%- definitions.each do |definition| -%>
-      exports.<%= name %>.<%= definition["name"] %> = <%= definition["value"] || "null" %>;<% if definition.key?("desc") %> // <%= definition["desc"] %><% end %>
+      <%- definitions.each do |d| -%>
+      exports.<%= name %>.<%= d["name"] %> = <%= nodejs_defval(d) %>;<% if d.key?("desc") %> // <%= d["desc"] %><% end %>
       <%- end -%>
       <%- end -%>
       module.exports = exports;
@@ -190,15 +330,15 @@ templates:
               <%- tres   = name + "_Response"      -%>
               [Serializable]
               public struct <%= treq %> {
-                  <%- entry["request"].each do |param| -%>
-                  public <%= param["type"]  %> <%= param["name"] %>;<% if param.key?("desc") %> // <%= param["desc"] %><% end %>
+                  <%- entry["request"].each do |p| -%>
+                  public <%= cs_type(p) %> <%= p["name"] %>;<% if p.key?("desc") %> // <%= p["desc"] %><% end %>
                   <%- end -%>
               }
 
               [Serializable]
               public struct <%= tres %> {
-                  <%- entry["response"].each do |param| -%>
-                  public <%= param["type"]  %> <%= param["name"] %>;<% if param.key?("desc") %> // <%= param["desc"] %><% end %>
+                  <%- entry["response"].each do |p| -%>
+                  public <%= cs_type(p) %> <%= p["name"] %>;<% if p.key?("desc") %> // <%= p["desc"] %><% end %>
                   <%- end -%>
               }
 
@@ -206,14 +346,14 @@ templates:
               // <%= desc %>
               public static WebAPIClient.Request <%= name %>(<%
               %><%
-                  %><% entry["request"].each do |param| %><%
-                  %><%= param["type"]  %> <%= param["name"] -%>, <%
+                  %><% entry["request"].each do |p| %><%
+                  %><%= p["type"]  %> <%= p["name"] -%>, <%
                   %><% end %><%
               %>Action<string,<%= tres %>> callback, string[] queries = null, string[] forms = null, string[] headers = null) {
                   var client = WebAPIClient.GetClient(<% if !client.nil? %>"<%= client %>"<% end %>);
                   var data = new <%= treq %>();
-                  <%- entry["request"].each do |param| -%>
-                  data.<%= param["name"] %> = <%= param["name"] %>;<% if param.key?("desc") %> // <%= param["desc"] %><% end %>
+                  <%- entry["request"].each do |p| -%>
+                  data.<%= p["name"] %> = <%= p["name"] %>;<% if p.key?("desc") %> // <%= p["desc"] %><% end %>
                   <%- end -%>
                   return client.Post<<%= treq %>,<%= tres %>>("<%= entry["api_path"] %>", data, callback, queries, forms, headers);
               }
@@ -236,8 +376,8 @@ templates:
           // <%= desc %>
           [Serializable]
           public class <%= name %> {
-              <%- properties.each do |property| -%>
-              public <%= property["type"] %> <%= property["name"] %> = <%= property["value"] || "null" %>;<% if property.key?("desc") %> // <%= property["desc"] %><% end %>
+              <%- properties.each do |p| -%>
+              public <%= cs_type(p) %> <%= p["name"] %> = <%= cs_defval(p) %>;<% if p.key?("desc") %> // <%= p["desc"] %><% end %>
               <%- end -%>
           }
           <%- end -%>
@@ -257,78 +397,9 @@ templates:
           // <%= desc %>
           [Serializable]
           public class <%= name %> {
-              <%- definitions.each do |definition| -%>
-              public static readonly <%= definition["type"] %> <%= definition["name"] %> = <%= definition["value"] || "null" %>;<% if definition.key?("desc") %> // <%= definition["desc"] %><% end %>
+              <%- definitions.each do |d| -%>
+              public static readonly <%= cs_type(d) %> <%= d["name"] %> = <%= cs_defval(d) %>;<% if d.key?("desc") %> // <%= d["desc"] %><% end %>
               <%- end -%>
           }
           <%- end -%>
       }
-
-#  - generate: before
-#    eval: |
-#      def test
-#        "test"
-#      end
-#  - generate: after
-#    in: /output/nodejs/*/protocols
-#    output: index.js
-#    template: |
-#      // index
-#      // <%= $hoge %>
-#     // auto generated by protocols.
-#     module.exports = {};
-#     <% models.each do |t| %>
-#     // <%= t["title"] %>
-#     module.exports.<%= t["name"] %> = function() {
-#       return {
-#       <%- t["properties"].each do |p| -%>
-#       <%- case p["type"]
-#            when "string" -%>
-#           <%= p["name"] %>: <%= (p.key?("def"))? "\"#{p["def"]}\"" : "null" %>,
-#       <%- when "integer" -%>
-#           <%= p["name"] %>: <%= (p.key?("def"))? "#{p["def"]}" : 0 %>,
-#       <%- when "boolean" -%>
-#           <%= p["name"] %>: <%= (p.key?("def"))? "#{p["def"]}" : false %>,
-#       <%- when "list" -%>
-#           <%= p["name"] %>: [],
-#       <%- end -%>
-#       <%- end -%>
-#       };
-#     }
-#     <% end %>
-#  # cmd.js
-#  - projects_path: /generate/nodejs
-#    generate_path: protocols/cmd.js
-#    template: |
-#      // auto generated by protocols.
-#      module.exports = {};
-#      module.exports.API = {};
-#      module.exports.API.MATCHING_REQUEST  = 1;
-#      module.exports.API.MATCHING_RESPONSE = 2;
-#
-#  # index.js
-#  - projects_path: /generate/nodejs
-#    generate_path: protocols/index.js
-#    template: |
-#      // auto generated by protocols.
-#      module.exports.Models = require('./models.js');
-#      module.exports.CMD    = require('./cmd.js');
-#
-#  # Models.cs
-#  - projects_path: /generate/cs
-#    generate_path: Protocols/Models.cs
-#    template: |
-#      // auto generated by protocols.
-#      namespace Protocols.Models {
-#          // TODO
-#      }
-#
-#  # CMD.cs
-#  - projects_path: /generate/cs
-#    generate_path: Protocols/CMD.cs
-#    template: |
-#      // auto generated by protocols.
-#      namespace Protocols.CMD {
-#          // TODO
-#      }
-#
