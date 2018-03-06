@@ -319,7 +319,11 @@ templates:
     output: WebAPI.cs
     template: |
       using System;
+      using System.Collections;
+      using System.Collections.Generic;
       using Services.Protocols.Models;
+      using Services.Protocols.Consts;
+      using UnityEngine;
       namespace Services.Protocols {
           public class WebAPI {
               <%- entries.each do |entry| -%>
@@ -366,7 +370,10 @@ templates:
     output: Models.cs
     template: |
       using System;
+      using System.Collections;
+      using System.Collections.Generic;
       using Services.Protocols.Consts;
+      using UnityEngine;
       namespace Services.Protocols.Models {
           <%- entries.each do |entry| -%>
           <%- name       = entry["name"].to_pascal -%>
@@ -393,6 +400,10 @@ templates:
           <%- name        = entry["name"]        -%>
           <%- desc        = entry["desc"]        -%>
           <%- definitions = entry["definitions"] -%>
+          using System;
+          using System.Collections;
+          using System.Collections.Generic;
+          using UnityEngine;
           // <%= name %>
           // <%= desc %>
           [Serializable]

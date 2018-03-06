@@ -1,5 +1,9 @@
 using System;
 namespace Services.Protocols.Consts {
+    using System;
+    using System.Collections;
+    using System.Collections.Generic;
+    using UnityEngine;
     // MY_CONST
     // テスト定数
     [Serializable]
