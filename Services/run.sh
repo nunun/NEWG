@@ -7,8 +7,11 @@ task_unity() {
         unity -batchmode -quit -executeMethod GameBuildMenuItems.BuildReleaseServerLinuxHeadless
 }
 task_build() {
+        echo "builing ..."
+        export BUILD_CONFIGURATION="${BUILD_CONFIGURATION:-"develop"}"
+        echo "BUILD_CONFIGURATION='${BUILD_CONFIGURATION}'"
         task_down
-        task_unity
+        #task_unity # TODO
         (cd ${PROJECT_TASK_DIR}; sh run.sh services build)
         docker-compose build --force-rm
         docker-compose run --rm --no-deps matching npm install
@@ -22,6 +25,7 @@ task_clean() {
 }
 task_publish() {
         echo "publish compose image to '${PUBLISH_TO?}' ..."
+        export BUILD_CONFIGURATION="${BUILD_CONFIGURATION:-"release"}"
         task_build
         curl -sSL https://raw.githubusercontent.com/nunun/swarm-builder/master/push.sh \
                 | sh -s docker-compose.* "${PUBLISH_TO?}"

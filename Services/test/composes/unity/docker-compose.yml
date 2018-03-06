@@ -2,7 +2,10 @@ version: '3.3'
 services:
   test-services-server:
     image: newg-test-unity/test-services-server
-    build: ./../../test-services-server
+    build:
+      context: ./../../test-services-server
+      args:
+        - BUILD_CONFIGURATION=develop
     environment:
       - LOG_LEVEL=debug
     volumes:
@@ -13,7 +16,10 @@ services:
 
   matching:
     image: newg-test-unity/matching
-    build: ./../../../matching
+    build:
+      context: ./../../../matching
+      args:
+        - BUILD_CONFIGURATION=develop
     environment:
       - LOG_LEVEL=debug
     volumes:
@@ -27,7 +33,10 @@ services:
 
   api:
     image: newg-test-unity/api
-    build: ./../../../api
+    build:
+      context: ./../../../api
+      args:
+        - BUILD_CONFIGURATION=develop
     environment:
       - LOG_LEVEL=debug
     volumes:
@@ -42,7 +51,10 @@ services:
 
   mindlink:
     image: newg-test-unity/mindlink
-    build: ./../../../mindlink
+    build:
+      context: ./../../../mindlink
+      args:
+        - BUILD_CONFIGURATION=develop
     environment:
       - LOG_LEVEL=debug
     volumes:

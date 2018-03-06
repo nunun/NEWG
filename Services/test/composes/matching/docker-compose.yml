@@ -2,7 +2,10 @@ version: '3.3'
 services:
   test-matching-client:
     image: newg-test-matching/test-matching-client
-    build: ./../../test-matching-client
+    build:
+      context: ./../../test-matching-client
+      args:
+        - BUILD_CONFIGURATION=tester
     environment:
       - LOG_LEVEL=debug
     volumes:
@@ -14,7 +17,10 @@ services:
 
   matching:
     image: newg-test-matching/matching
-    build: ./../../../matching
+    build:
+      context: ./../../../matching
+      args:
+        - BUILD_CONFIGURATION=develop
     environment:
       - LOG_LEVEL=debug
     volumes:
@@ -26,7 +32,10 @@ services:
 
   api:
     image: newg-test-matching/api
-    build: ./../../../api
+    build:
+      context: ./../../../api
+      args:
+        - BUILD_CONFIGURATION=develop
     environment:
       - LOG_LEVEL=debug
     volumes:
@@ -41,7 +50,10 @@ services:
 
   mindlink:
     image: newg-test-matching/mindlink
-    build: ./../../../mindlink
+    build:
+      context:  ./../../../mindlink
+      args:
+        - BUILD_CONFIGURATION=develop
     volumes:
       - ./../../../mindlink/app:/app
       - ./../../../services:/app/services

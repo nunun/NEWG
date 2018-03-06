@@ -2,7 +2,10 @@ version: '3.3'
 services:
   test-services-client:
     image: newg-test-services/test-services-client
-    build: ./../../test-services-client
+    build:
+      context: ./../../test-services-client
+      args:
+        - BUILD_CONFIGURATION=tester
     environment:
       - LOG_LEVEL=debug
     volumes:
@@ -17,7 +20,10 @@ services:
 
   test-services-server:
     image: newg-test-services/test-services-server
-    build: ./../../test-services-server
+    build:
+      context: ./../../test-services-server
+      args:
+        - BUILD_CONFIGURATION=develop
     environment:
       - LOG_LEVEL=debug
     volumes:
@@ -26,7 +32,10 @@ services:
 
   mindlink1:
     image: newg-test-services/mindlink
-    build: ./../../../mindlink
+    build:
+      context: ./../../../mindlink
+      args:
+        - BUILD_CONFIGURATION=develop
     environment:
       - DEBUG_HTTP_CHANNEL_ENABLE=1
       - LOG_LEVEL=debug

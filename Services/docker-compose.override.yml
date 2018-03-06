@@ -1,14 +1,20 @@
 version: '3.3'
 services:
   client:
-    build: ./client
+    build:
+      context: ./client
+      args:
+        - BUILD_CONFIGURATION=${BUILD_CONFIGURATION}
     environment:
       - LOG_LEVEL=debug
     volumes:
       - ./client/Builds/Client:/usr/share/nginx/html
 
   server:
-    build: ./server
+    build:
+      context: ./server
+      args:
+        - BUILD_CONFIGURATION=${BUILD_CONFIGURATION}
     environment:
       - LOG_LEVEL=debug
     volumes:
@@ -16,7 +22,10 @@ services:
     network_mode: host
 
   matching:
-    build: ./matching
+    build:
+      context: ./matching
+      args:
+        - BUILD_CONFIGURATION=${BUILD_CONFIGURATION}
     environment:
       - LOG_LEVEL=debug
     volumes:
@@ -24,7 +33,10 @@ services:
       - ./services:/app/services
 
   api:
-    build: ./api
+    build:
+      context: ./api
+      args:
+        - BUILD_CONFIGURATION=${BUILD_CONFIGURATION}
     environment:
       - LOG_LEVEL=debug
     volumes:
@@ -32,7 +44,10 @@ services:
       - ./services:/app/services
 
   mindlink:
-    build: ./mindlink
+    build:
+      context: ./mindlink
+      args:
+        - BUILD_CONFIGURATION=${BUILD_CONFIGURATION}
     environment:
       - DEBUG_HTTP_CHANNEL_ENABLE=1
       - LOG_LEVEL=debug
