@@ -26,8 +26,8 @@ public class WebAPIClientTest : WebAPIClient, IMonoBehaviourTest {
 
         // type "0" はリクエストをレスポンスで返してくる。
         WebAPI.Test(10, (err, data) => {
-            Debug.Log(err);
-            Debug.Log(data);
+            Assert.IsNull(err, "err が発生 (" + err + ")");
+            Assert.AreEqual(15, data.resValue, "レスポンスデータがおかしい");
             isDone = true;
         });
 
