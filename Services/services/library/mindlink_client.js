@@ -3,8 +3,8 @@ var util             = require('util');
 var uuid             = require('uuid');
 var trim             = require('string.prototype.trim');
 var WebSocketClient  = require('./websocket_client');
-var RequestToRemote  = require('./types/request_to_remote');
-var ResponseToRemote = require('./types/response_to_remote');
+var RequestToRemote  = require('./internal_types/request_to_remote');
+var ResponseToRemote = require('./internal_types/response_to_remote');
 
 // constructor
 function MindlinkClient(config, logger) {

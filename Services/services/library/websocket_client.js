@@ -3,9 +3,9 @@ var util           = require('util');
 var uuid           = require('uuid/v1');
 var trim           = require('string.prototype.trim');
 var WebSocket      = require('ws');
-var RequestContext = require('./types/request_context');
-var Request        = require('./types/request');
-var Response       = require('./types/response');
+var RequestContext = require('./internal_types/request_context');
+var Request        = require('./internal_types/request');
+var Response       = require('./internal_types/response');
 
 // constructor
 function WebSocketClient(config, logger) {
