@@ -1,7 +1,7 @@
-var util            = require('util');
-var assert          = require('assert');
-var request         = require('request');
-var clientContainer = require('./client_container').activate();
+var util              = require('util');
+var assert            = require('assert');
+var request           = require('request');
+var instanceContainer = require('./instance_container').activate();
 
 // constructor
 function WebAPIClient(config, logger) {
@@ -124,14 +124,14 @@ function startRequest(self, req, options, method, apiPath, data, callback, queri
 
 // get client
 WebAPIClient.getClient = function(clientName) {
-    return clientContainer.find(clientName);
+    return instanceContainer.find(clientName);
 }
 
 // activate
 WebAPIClient.activate = function(config, logger) {
     client = new WebAPIClient(config, logger);
     if (config) {
-        clientContainer.add(config.clientName, client);
+        instanceContainer.add(config.clientName, client);
     }
     return client;
 }

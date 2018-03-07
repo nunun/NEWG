@@ -1,7 +1,7 @@
-var NANO            = require('nano');
-var util            = require('util');
-var assert          = require('assert');
-var clientContainer = require('./client_container').activate();
+var NANO              = require('nano');
+var util              = require('util');
+var assert            = require('assert');
+var instanceContainer = require('./instance_container').activate();
 
 // constructor
 function CouchClient(config, logger) {
@@ -130,14 +130,14 @@ CouchClient.prototype.setDisconnectEventListener = function(eventListener) {
 
 // get client
 CouchClient.getClient = function(clientName) {
-    return clientContainer.find(clientName);
+    return instanceContainer.find(clientName);
 }
 
 // activator
 CouchClient.activate = function(config, logger) {
     client = new CouchClient(config, logger);
     if (config) {
-        clientContainer.add(config.clientName, client);
+        instanceContainer.add(config.clientName, client);
     }
     return client;
 }

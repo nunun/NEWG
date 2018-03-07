@@ -1,7 +1,7 @@
-var util            = require('util');
-var redis           = require('redis');
-var assert          = require('assert');
-var clientContainer = require('./client_container').activate();
+var util              = require('util');
+var redis             = require('redis');
+var assert            = require('assert');
+var instanceContainer = require('./instance_container').activate();
 
 // constructor
 function RedisClient(config, logger) {
@@ -118,14 +118,14 @@ RedisClient.prototype.setDisconnectEventListener = function(eventListener) {
 
 // get client
 RedisClient.getClient = function(clientName) {
-    return clientContainer.find(clientName);
+    return instanceContainer.find(clientName);
 }
 
 // activator
 RedisClient.activate = function(config, logger) {
     client = new RedisClient(config, logger);
     if (config) {
-        clientContainer.add(config.clientName, client);
+        instanceContainer.add(config.clientName, client);
     }
     return client;
 }

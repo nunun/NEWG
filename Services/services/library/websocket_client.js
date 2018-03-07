@@ -1,12 +1,12 @@
-var url             = require('url');
-var util            = require('util');
-var uuid            = require('uuid/v1');
-var trim            = require('string.prototype.trim');
-var WebSocket       = require('ws');
-var RequestContext  = require('./internal_types/request_context');
-var Request         = require('./internal_types/request');
-var Response        = require('./internal_types/response');
-var clientContainer = require('./client_container').activate();
+var url               = require('url');
+var util              = require('util');
+var uuid              = require('uuid/v1');
+var trim              = require('string.prototype.trim');
+var WebSocket         = require('ws');
+var RequestContext    = require('./internal_types/request_context');
+var Request           = require('./internal_types/request');
+var Response          = require('./internal_types/response');
+var instanceContainer = require('./instance_container').activate();
 
 // constructor
 function WebSocketClient(config, logger) {
@@ -226,14 +226,14 @@ WebSocketClient.prototype.setDataThruEventListener = function(type, eventListene
 
 // get client
 WebSocketClient.getClient = function(clientName) {
-    return clientContainer.find(clientName);
+    return instanceContainer.find(clientName);
 }
 
 // activate
 WebSocketClient.activate = function(config, logger) {
     var client = new WebSocketClient(config, logger);
     if (config) {
-        clientContainer.add(config.clientName, client);
+        instanceContainer.add(config.clientName, client);
     }
     return client;
 }

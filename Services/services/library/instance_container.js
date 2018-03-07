@@ -1,20 +1,20 @@
 var util = require('util');
 
-function ClientContainer() {
+function InstanceContainer() {
     this.init();
 }
-util.inherits(ClientContainer, function(){});
+util.inherits(InstanceContainer, function(){});
 
-ClientContainer.prototype.init = function() {
+InstanceContainer.prototype.init = function() {
     this.clear();
 }
 
-ClientContainer.prototype.clear = function() {
+InstanceContainer.prototype.clear = function() {
     this.clients       = {};
     this.defaultClient = null;
 }
 
-exports.find = function(clientName)
+InstanceContainer.prototype.find = function(clientName) {
     if (!clientName) {
         return this.defaultClient;
     }
@@ -24,7 +24,7 @@ exports.find = function(clientName)
     }
 };
 
-exports.add = function(clientNameConfig, client)
+InstanceContainer.prototype.add = function(clientNameConfig, client) {
     if (!clientNameConfig) {
         clientNameConfig = "";
     }
@@ -35,7 +35,7 @@ exports.add = function(clientNameConfig, client)
     for (var i in clientNames) {
         var clientName = clientNames[i];
         if (clientName == "") {
-            if (defaultClient) {
+            if (this.defaultClient) {
                 logger.info("default client already exists. please set 'clientName' property to config for this client.");
                 continue;
             }
@@ -51,8 +51,20 @@ exports.add = function(clientNameConfig, client)
     }
 };
 
-ClientContainer.activate = function() {
-    return new ClientContainer();
+InstanceContainer.prototype.remove = function(client) {
+    for (var i in this.clients) {
+        var client = this.clients[i];
+        if (client == client) {
+            delete this.clients[i];
+        }
+    }
+    if (defaultClient == client) {
+        defaultClient = null;
+    }
 }
 
-module.exporsts = exports;
+InstanceContainer.activate = function() {
+    return new InstanceContainer();
+}
+
+module.exports = InstanceContainer;
