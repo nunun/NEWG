@@ -50,28 +50,28 @@ WebSocketClient.prototype.clear = function() {
 }
 
 // connect
-WebSocketClient.prototype.start = function(options) {
+WebSocketClient.prototype.start = function(queryParams) {
     var self = this;
     self.logger.info('start');
-    var connectUrl     = self.config.url           || null;
-    var connectOptions = self.config.options       || null;
-    var retryCount     = self.config.retryCount    || 10;
-    var retryInterval  = self.config.retryInterval || 3000;
+    var connectUrl         = self.config.url                || null;
+    var connectQueryParams = self.config.connectQueryParams || null;
+    var retryCount         = self.config.retryCount         || 10;
+    var retryInterval      = self.config.retryInterval      || 3000;
 
     // setup
     self.clear();
 
     // add options and connect options
-    if (options || connectOptions) {
+    if (connectQueryParams || queryParams) {
         var parsedUrl = url.parse(connectUrl, true);
-        if (connectOptions) {
-            for (var i in connectOptions) {
-                parsedUrl.query[i] = connectOptions[i];
+        if (connectQueryParams) {
+            for (var i in connectQueryParams) {
+                parsedUrl.query[i] = connectQueryParams[i];
             }
         }
-        if (options) {
-            for (var i in options) {
-                parsedUrl.query[i] = options[i];
+        if (queryParams) {
+            for (var i in queryParams) {
+                parsedUrl.query[i] = queryParams[i];
             }
         }
         connectUrl = url.format(parsedUrl);

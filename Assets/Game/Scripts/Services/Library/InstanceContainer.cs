@@ -8,7 +8,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 
 // インスタンスコンテナ
-public class InstanceContainer<T> {
+public class InstanceContainer<T> where T : class {
     //-------------------------------------------------------------------------- 変数
     Dictionary<string,T> instances       = new Dictionary<string,T>();
     T                    defaultInstance = default(T);
@@ -28,7 +28,7 @@ public class InstanceContainer<T> {
     // クリア
     protected virtual void Clear() {
         instances.Clear();
-        defaultInstance = null;
+        defaultInstance = default(T);
     }
 
     //-------------------------------------------------------------------------- 操作
@@ -36,10 +36,10 @@ public class InstanceContainer<T> {
         if (string.IsNullOrEmpty(name)) {
             return defaultInstance;
         }
-        if (instances.HasKey(name)) {
+        if (instances.ContainsKey(name)) {
             return instances[name];
         }
-        return null;
+        return default(T);
     }
 
     public void Add(string[] nameConfig, T instance) {
@@ -47,17 +47,17 @@ public class InstanceContainer<T> {
             nameConfig = new string[] {""};
         }
         var names = nameConfig;
-        for (int i = 0; i < names.Length ; ++) {
+        for (int i = 0; i < names.Length ; i++) {
             var name = names[i];
             if (name == "") {
                 if (this.defaultInstance != null) {
-                    logger.info("default instance already exists. please set name to this insntance.");
+                    Debug.LogError("default instance already exists. please set name to this insntance.");
                     continue;
                 }
                 this.defaultInstance = instance;
             } else {
-                if (instances.HasKey(name)) {
-                    logger.info("instance named '" + clientName + "' already exists. please set other name to this instance.");
+                if (instances.ContainsKey(name)) {
+                    Debug.LogError("instance named '" + name + "' already exists. please set other name to this instance.");
                     continue;
                 }
                 this.instances[name] = instance;
@@ -66,11 +66,11 @@ public class InstanceContainer<T> {
     }
 
     public void Remove(T instance) {
-        var removeList = default(List<T>);
+        var removeList = default(List<string>);
         foreach (var pair in this.instances) {
-            if (pair.Value == instance) {
+            if (pair.Value.Equals(instance)) {
                 if (removeList == null) {
-                    removeList = new List<T>();
+                    removeList = new List<string>();
                 }
                 removeList.Add(pair.Key);
             }
@@ -81,6 +81,9 @@ public class InstanceContainer<T> {
                 this.instances.Remove(key);
             }
             removeList.Clear();
+        }
+        if (defaultInstance != null && defaultInstance.Equals(instance)) {
+            defaultInstance = default(T);
         }
     }
 }

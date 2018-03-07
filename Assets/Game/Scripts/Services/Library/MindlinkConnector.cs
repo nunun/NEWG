@@ -7,10 +7,6 @@ using UnityEngine;
 
 // マインドリンクコネクタ
 // Mindlink と実際に通信を行うコンポーネント。
-// NOTE
-// * SendQuery はレスポンス (QueryRecvData) にジェネリクスのリストが
-//   含まれるので実装できない。今の所使う予定は無いため後回しにし、
-//   解決策が出来次第実装する。
 public partial class MindlinkConnector : WebSocketConnector {
     //-------------------------------------------------------------------------- 定義
     // マインドリンクデータタイプ
@@ -34,8 +30,8 @@ public partial class MindlinkConnector : WebSocketConnector {
     // リモート受信データ
     [Serializable]
     public class RecvDataFromRemote<TRecv> {
-        public TRecv        data      = default(TRecv);
-        public RemoteHeader remote    = default(RemoteHeader);
+        public TRecv        data   = default(TRecv);
+        public RemoteHeader remote = default(RemoteHeader);
     }
 
     // リモートヘッダ
@@ -50,6 +46,9 @@ public partial class MindlinkConnector : WebSocketConnector {
 
     //-------------------------------------------------------------------------- 変数
     Dictionary<int,Action<string>> dataFromRemoteEventListener = new Dictionary<int,Action<string>>(); // リモートデータ受信時イベントリスナ (型別)
+
+    // インスタンスコンテナ
+    static InstanceContainer<MindlinkConnector> instanceContainer = new InstanceContainer<MindlinkConnector>();
 
     //-------------------------------------------------------------------------- 実装 (WebSocketConnector)
     // 初期化
@@ -149,6 +148,23 @@ public partial class MindlinkConnector : WebSocketConnector {
             return;
         }
         dataFromRemoteEventListener[type] = eventListener;
+    }
+
+    //-------------------------------------------------------------------------- インスタンス取得
+    // コネクタの取得
+    new public static MindlinkConnector GetConnector(string name = null) {
+        return instanceContainer.Find(name);
+    }
+
+    //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
+    void Awake() {
+        instanceContainer.Add(connectorName, this);
+        Init();
+    }
+
+    void OnDestroy() {
+        Clear();
+        instanceContainer.Remove(this);
     }
 }
 

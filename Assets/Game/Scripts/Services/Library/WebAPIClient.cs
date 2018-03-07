@@ -20,10 +20,10 @@ public partial class WebAPIClient : MonoBehaviour {
     public bool     isDefaultClient = false; // デフォルトクライアントかどうか
     public int      retryCount      = 10;    // リトライ回数
     public float    retryInterval   = 3.0f;  // リトライ感覚
+    public string[] clientName      = null;  // クライアント名
 
-    // クライアント一覧とデフォルトクライアント
-    static List<WebAPIClient> clients       = new List<WebAPIClient>();
-    static WebAPIClient       defaultClient = null;
+    // インスタンスコンテナ
+    static InstanceContainer<WebAPIClient> instanceContainer = new InstanceContainer<WebAPIClient>();
 
     //-------------------------------------------------------------------------- 実装ポイント
     // 初期化
@@ -68,42 +68,18 @@ public partial class WebAPIClient : MonoBehaviour {
     //-------------------------------------------------------------------------- インスタンス取得
     // クライアントの取得
     public static WebAPIClient GetClient(string name = null) {
-        if (name == null) {
-            return defaultClient;
-        }
-        for (int i = 0; i < clients.Count; i++) {
-            var client = clients[i];
-            if (client.name == name) {
-                return client;
-            }
-        }
-        return null;
+        return instanceContainer.Find(name);
     }
 
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     void Awake() {
-        // 初期化
+        instanceContainer.Add(clientName, this);
         Init();
-
-        // インスタンス設定
-        if (clients.IndexOf(this) < 0) {
-            clients.Add(this);
-        }
-        if (this.isDefaultClient || defaultClient == null) {
-            Debug.Assert(((defaultClient == null) || (!defaultClient.isDefaultClient)), "デフォルトクライアントが 2 つある？");
-            defaultClient = this;
-        }
     }
 
     void OnDestroy() {
-        // インスタンス解除
-        clients.Remove(this);
-        if (defaultClient == this) {
-            defaultClient =null;
-        }
-
-        // クリア
         Clear();
+        instanceContainer.Remove(this);
     }
 
     void Update() {
