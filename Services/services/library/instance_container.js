@@ -10,56 +10,56 @@ InstanceContainer.prototype.init = function() {
 }
 
 InstanceContainer.prototype.clear = function() {
-    this.clients       = {};
-    this.defaultClient = null;
+    this.instances       = {};
+    this.defaultInstance = null;
 }
 
-InstanceContainer.prototype.find = function(clientName) {
-    if (!clientName) {
-        return this.defaultClient;
+InstanceContainer.prototype.find = function(name) {
+    if (!name) {
+        return this.defaultInstance;
     }
-    var client = this.clients[clientName]
-    if (client) {
-        return client;
+    var instance = this.instances[name]
+    if (instance) {
+        return instance;
     }
 };
 
-InstanceContainer.prototype.add = function(clientNameConfig, client) {
-    if (!clientNameConfig) {
-        clientNameConfig = "";
+InstanceContainer.prototype.add = function(nameConfig, instance) {
+    if (!nameConfig) {
+        nameConfig = "";
     }
-    if (!Array.isArray(clientNameConfig)) {
-        clientNameConfig = [clientNameConfig];
+    if (!Array.isArray(nameConfig)) {
+        nameConfig = [nameConfig];
     }
-    var clientNames = clientNameConfig;
-    for (var i in clientNames) {
-        var clientName = clientNames[i];
-        if (clientName == "") {
-            if (this.defaultClient) {
-                logger.info("default client already exists. please set 'clientName' property to config for this client.");
+    var names = nameConfig;
+    for (var i in names) {
+        var name = names[i];
+        if (name == "") {
+            if (this.defaultInstance) {
+                logger.info("default instance already exists. please set name to this instance.");
                 continue;
             }
-            this.defaultClient = client;
+            this.defaultInstance = instance;
         } else {
-            var client = this.clients[clientName];
-            if (client) {
-                logger.info("client named '" + clientName + "' already exists. please set other name.");
+            var instance = this.instances[name];
+            if (instance) {
+                logger.info("instance named '" + name + "' already exists. please set other name to this instance.");
                 continue;
             }
-            this.clients[clientName] = client;
+            this.instances[name] = instance;
         }
     }
 };
 
-InstanceContainer.prototype.remove = function(client) {
-    for (var i in this.clients) {
-        var client = this.clients[i];
-        if (client == client) {
-            delete this.clients[i];
+InstanceContainer.prototype.remove = function(instance) {
+    for (var i in this.instances) {
+        var instance = this.instances[i];
+        if (instance == instance) {
+            delete this.instances[i];
         }
     }
-    if (defaultClient == client) {
-        defaultClient = null;
+    if (defaultInstance == instance) {
+        defaultInstance = null;
     }
 }
 
