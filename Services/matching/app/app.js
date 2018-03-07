@@ -19,7 +19,7 @@ mindlinkClient.setConnectEventListener(function() {
 });
 
 // matching server
-matchingServer.setAccepter(function(req) {
+matchingServer.setAcceptEventListener(function(req) {
     var location = url.parse(req.url, true);
     if (!location.query.user_id) {
         return null;
@@ -28,7 +28,7 @@ matchingServer.setAccepter(function(req) {
 });
 matchingServer.setConnectEventListener(function(matchingClient) {
     // 接続後、すぐにマッチング開始
-    var userId = matchingClient.accepted.userId;
+    var userId = matchingClient.acceptData.userId;
     matchingClient.requestId = mindlinkClient.sendToRemote('api', 1 /*protocols.CMD.API.MATCHING_REQUEST*/, {userId:userId}, function(err,responseData) {
         // マッチング結果をレスポンス
         // エラーまたはサーバへのアドレス。
