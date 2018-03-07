@@ -4,11 +4,12 @@ var logger          = require('./services/library/logger');
 var webSocketServer = require('./services/library/websocket_server').activate(config.webSocketServer, logger.webSocketServer);
 
 // websocket server
-//webSocketServer.setAccepter(function(req) {
-//});
 webSocketServer.setStartEventListener(function() {
     logger.webSocketServer.info("start");
 });
+//webSocketServer.setAcceptEventListener(function(req) {
+//    return {}; // NOTE return accept data
+//});
 webSocketServer.setConnectEventListener(function(webSocketClient) {
     logger.webSocketServer.info(util.inspect(webSocketClient));
 });

@@ -7,21 +7,21 @@ var RequestContext = require('./internal_types/request_context');
 var Response       = require('./internal_types/response');
 
 // constructor
-function WebSocketServer(config, logger, acceptor) {
-    this.init(config, logger, acceptor);
+function WebSocketServer(config, logger) {
+    this.init(config, logger);
 }
 util.inherits(WebSocketServer, function(){});
 
 // init
-WebSocketServer.prototype.init = function(config, logger, acceptor) {
-    this.config   = config;   // config
-    this.logger   = logger;   // logger
-    this.acceptor = acceptor; // connection acceptor
-    this.uuid     = uuid();   // server uuid
+WebSocketServer.prototype.init = function(config, logger) {
+    this.config = config;   // config
+    this.logger = logger;   // logger
+    this.uuid   = uuid();   // server uuid
 
     // event listeners
     this.startEventListener      = null;
     this.stopEventListener       = null;
+    this.acceptEventListener     = null;
     this.connectEventListener    = null;
     this.disconnectEventListener = null;
     this.dataEventListener       = {};
@@ -46,21 +46,6 @@ WebSocketServer.prototype.clear = function() {
     this.requestContext = new RequestContext(this.logger);
 };
 
-// set config
-WebSocketServer.prototype.setConfig = function(config) {
-    this.config = config;
-}
-
-// set logger
-WebSocketServer.prototype.setLogger = function(logger) {
-    this.logger = logger;
-}
-
-// set acceptor
-WebSocketServer.prototype.setAccepter = function(acceptor) {
-    this.acceptor = acceptor;
-}
-
 // start
 WebSocketServer.prototype.start = function() {
     var self = this;
@@ -78,12 +63,12 @@ WebSocketServer.prototype.start = function() {
         var clientName = req.connection.remoteAddress;
         self.logger.info('on connection: ' + clientName + ': websocket client connected.');
 
-        // acceptor
-        var accepted = null;
-        if (self.acceptor) {
-            accepted = self.acceptor(req);
-            if (!accepted) {
-                self.logger.info('on connection: ' + clientName + ': denied by acceptor!');
+        // accept
+        var acceptData = null;
+        if (self.acceptEventListener) {
+            acceptData = self.acceptEventListener(req);
+            if (!acceptData) {
+                self.logger.info('on connection: ' + clientName + ': denied by accepter!');
                 ws.terminate();
                 return;
             }
@@ -91,8 +76,8 @@ WebSocketServer.prototype.start = function() {
 
         // websocket client
         var webSocketClient = {};
-        webSocketClient.ws       = ws;
-        webSocketClient.accepted = accepted;
+        webSocketClient.ws         = ws;
+        webSocketClient.acceptData = acceptData;
 
         // send
         webSocketClient.send = function(type, data, callback, timeout) {
@@ -229,6 +214,16 @@ WebSocketServer.prototype.setStopEventListener = function(eventListener) {
     this.stopEventListener = eventListener;
 }
 
+// set accepter
+WebSocketServer.prototype.setAccepter = function(accepter) {
+    this.accepter = accepter;
+}
+
+// accept event listener
+WebSocketServer.prototype.setAcceptEventListener = function(eventListener) {
+    this.acceptEventListener = eventListener;
+}
+
 // connect event listener
 WebSocketServer.prototype.setConnectEventListener = function(eventListener) {
     this.connectEventListener = eventListener;
@@ -249,8 +244,8 @@ WebSocketServer.prototype.setDataEventListener = function(type, eventListener) {
 }
 
 // activator
-WebSocketServer.activate = function(config, logger, acceptor) {
-    return new WebSocketServer(config, logger, acceptor);
+WebSocketServer.activate = function(config, logger) {
+    return new WebSocketServer(config, logger);
 }
 
 // exports

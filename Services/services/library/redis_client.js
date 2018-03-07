@@ -1,6 +1,7 @@
-var util   = require('util');
-var redis  = require('redis');
-var assert = require('assert');
+var util            = require('util');
+var redis           = require('redis');
+var assert          = require('assert');
+var clientContainer = require('./client_container').activate();
 
 // constructor
 function RedisClient(config, logger) {
@@ -28,21 +29,6 @@ RedisClient.prototype.clear = function() {
     this.redis = null; // internal redis connection
 };
 
-// customize behaviour
-RedisClient.prototype.customizeBehaviour = function() {
-    // NOTE nothing to do for now
-}
-
-// set config
-RedisClient.prototype.setConfig = function(config) {
-    this.config = config;
-}
-
-// set logger
-RedisClient.prototype.setLogger = function(logger) {
-    this.logger = logger;
-}
-
 // start
 RedisClient.prototype.start = function() {
     var self = this;
@@ -55,7 +41,6 @@ RedisClient.prototype.start = function() {
 
     // setup
     self.clear();
-    self.customizeBehaviour();
 
     // create redis connection
     self.redis = redis.createClient(connectUrl, {
@@ -131,9 +116,18 @@ RedisClient.prototype.setDisconnectEventListener = function(eventListener) {
     this.disconnectEventListener = eventListener;
 }
 
+// get client
+RedisClient.getClient = function(clientName) {
+    return clientContainer.find(clientName);
+}
+
 // activator
 RedisClient.activate = function(config, logger) {
-    return new RedisClient(config, logger);
+    client = new RedisClient(config, logger);
+    if (config) {
+        clientContainer.add(config.clientName, client);
+    }
+    return client;
 }
 
 module.exports = RedisClient;

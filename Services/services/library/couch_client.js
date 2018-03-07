@@ -1,6 +1,7 @@
-var NANO   = require('nano');
-var util   = require('util');
-var assert = require('assert');
+var NANO            = require('nano');
+var util            = require('util');
+var assert          = require('assert');
+var clientContainer = require('./client_container').activate();
 
 // constructor
 function CouchClient(config, logger) {
@@ -28,21 +29,6 @@ CouchClient.prototype.clear = function() {
     this.nano = null; // internal nano connection
 };
 
-// customize behaviour
-CouchClient.prototype.customizeBehaviour = function() {
-    // NOTE nothing to do for now
-}
-
-// set config
-CouchClient.prototype.setConfig = function(config) {
-    this.config = config;
-}
-
-// set logger
-CouchClient.prototype.setLogger = function(logger) {
-    this.logger = logger;
-}
-
 // start
 CouchClient.prototype.start = function() {
     var self = this;
@@ -53,7 +39,6 @@ CouchClient.prototype.start = function() {
 
     // setup
     self.clear();
-    self.customizeBehaviour();
 
     // create couch connection
     self.nano = NANO({
@@ -143,9 +128,18 @@ CouchClient.prototype.setDisconnectEventListener = function(eventListener) {
     this.disconnectEventListener = eventListener;
 }
 
+// get client
+CouchClient.getClient = function(clientName) {
+    return clientContainer.find(clientName);
+}
+
 // activator
 CouchClient.activate = function(config, logger) {
-    return new CouchClient(config, logger);
+    client = new CouchClient(config, logger);
+    if (config) {
+        clientContainer.add(config.clientName, client);
+    }
+    return client;
 }
 
 module.exports = CouchClient;

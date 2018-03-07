@@ -3,14 +3,17 @@
 
 # mindlink client 1
 mindlinkClient1:
+  clientName: "mindlinkClient1"
   url: "ws://mindlink1:7766/"
 
 # mindlink client 2
 mindlinkClient2:
+  clientName: "mindlinkClient2"
   url: "ws://mindlink2:7766/"
 
 # mindlink client 3
 mindlinkClient3:
+  clientName: "mindlinkClient3"
   url: "ws://mindlink1:7766/"
 
 # websocket client

@@ -1,8 +1,8 @@
-var url            = require('url');
-var util           = require('util');
-var uuid           = require('uuid/v1');
-var trim           = require('string.prototype.trim');
-var express        = require('express');
+var url     = require('url');
+var util    = require('util');
+var uuid    = require('uuid/v1');
+var trim    = require('string.prototype.trim');
+var express = require('express');
 
 // constructor
 function WebAPIServer(config, logger) {
@@ -35,16 +35,6 @@ WebAPIServer.prototype.clear = function() {
     // webapi server
     this.app = null; // webapp
 };
-
-// set config
-WebAPIServer.prototype.setConfig = function(config) {
-    this.config = config;
-}
-
-// set logger
-WebAPIServer.prototype.setLogger = function(logger) {
-    this.logger = logger;
-}
 
 // start
 WebAPIServer.prototype.start = function() {

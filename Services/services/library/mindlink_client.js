@@ -5,6 +5,7 @@ var trim             = require('string.prototype.trim');
 var WebSocketClient  = require('./websocket_client');
 var RequestToRemote  = require('./internal_types/request_to_remote');
 var ResponseToRemote = require('./internal_types/response_to_remote');
+var clientContainer  = require('./client_container').activate();
 
 // constructor
 function MindlinkClient(config, logger) {
@@ -125,9 +126,18 @@ MindlinkClient.prototype.setDataFromRemoteThruEventListener = function(type, eve
     this.dataFromRemoteEventListener[type] = eventListener;
 }
 
+// get client
+MindlinkClient.getClient = function(clientName) {
+    return clientContainer.find(clientName);
+}
+
 // activate
 MindlinkClient.activate = function(config, logger) {
-    return new MindlinkClient(config, logger);
+    client = new MindlinkClient(config, logger);
+    if (config) {
+        clientContainer.add(config.clientName, client);
+    }
+    return client;
 }
 
 // exports

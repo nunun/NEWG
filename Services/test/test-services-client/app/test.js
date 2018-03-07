@@ -3,14 +3,10 @@ var config          = require('./services/library/config');
 var logger          = require('./services/library/logger');
 var mindlinkClient1 = require('./services/library/mindlink_client').activate(config.mindlinkClient1, logger.mindlinkClient);
 var mindlinkClient2 = require('./services/library/mindlink_client').activate(config.mindlinkClient2, logger.mindlinkClient);
-var mindlinkClient3 = require('./services/library/mindlink_client').activate();
+var mindlinkClient3 = require('./services/library/mindlink_client').activate(config.mindlinkClient3, logger.mindlinkClient);
 var webSocketClient = require('./services/library/websocket_client').activate(config.webSocketClient, logger.webSocketClient);
 var couchClient     = require('./services/library/couch_client').activate(config.couchClient, logger.couchClient);
 var redisClient     = require('./services/library/redis_client').activate(config.redisClient, logger.redisClient);
-
-// 'setXxx' pattern ...
-mindlinkClient3.setConfig(config.mindlinkClient3);
-mindlinkClient3.setLogger(logger.mindlinkClient);
 
 describe('mindlink', function () {
     describe('mindlink client', function () {

@@ -1,11 +1,12 @@
-var url            = require('url');
-var util           = require('util');
-var uuid           = require('uuid/v1');
-var trim           = require('string.prototype.trim');
-var WebSocket      = require('ws');
-var RequestContext = require('./internal_types/request_context');
-var Request        = require('./internal_types/request');
-var Response       = require('./internal_types/response');
+var url             = require('url');
+var util            = require('util');
+var uuid            = require('uuid/v1');
+var trim            = require('string.prototype.trim');
+var WebSocket       = require('ws');
+var RequestContext  = require('./internal_types/request_context');
+var Request         = require('./internal_types/request');
+var Response        = require('./internal_types/response');
+var clientContainer = require('./client_container').activate();
 
 // constructor
 function WebSocketClient(config, logger) {
@@ -46,16 +47,6 @@ WebSocketClient.prototype.clear = function() {
 
     // request context
     this.requestContext = new RequestContext(this.logger);
-}
-
-// set config
-WebSocketClient.prototype.setConfig = function(config) {
-    this.config = config;
-}
-
-// set logger
-WebSocketClient.prototype.setLogger = function(logger) {
-    this.logger = logger;
 }
 
 // connect
@@ -233,9 +224,18 @@ WebSocketClient.prototype.setDataThruEventListener = function(type, eventListene
     this.dataEventListener[type] = eventListener;
 }
 
+// get client
+WebSocketClient.getClient = function(clientName) {
+    return clientContainer.find(clientName);
+}
+
 // activate
 WebSocketClient.activate = function(config, logger) {
-    return new WebSocketClient(config, logger);
+    var client = new WebSocketClient(config, logger);
+    if (config) {
+        clientContainer.add(config.clientName, client);
+    }
+    return client;
 }
 
 // exports

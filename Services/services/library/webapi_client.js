@@ -1,10 +1,7 @@
-var util    = require('util');
-var assert  = require('assert');
-var request = require('request');
-
-// clients
-var clients       = null;
-var defaultClient = null;
+var util            = require('util');
+var assert          = require('assert');
+var request         = require('request');
+var clientContainer = require('./client_container').activate();
 
 // constructor
 function WebAPIClient(config, logger) {
@@ -16,7 +13,6 @@ util.inherits(WebAPIClient, function(){});
 WebAPIClient.prototype.init = function(config, logger) {
     this.config = config; // config
     this.logger = logger; // logger
-    //this.uuid = uuid(); // server  uuid
 
     // clear
     this.clear();
@@ -126,35 +122,18 @@ function startRequest(self, req, options, method, apiPath, data, callback, queri
     });
 }
 
-// get webapi client
-WebAPIClient.getClient = function(name) {
-    if (!name) {
-        return defaultClient;
-    }
-    if (clients && clients[name]) {
-        return clients[name];
-    }
-    return null;
+// get client
+WebAPIClient.getClient = function(clientName) {
+    return clientContainer.find(clientName);
 }
 
 // activate
 WebAPIClient.activate = function(config, logger) {
-    assert.ok(!clients);
-    assert.ok(!defaultClient);
-    clients       = {};
-    defaultClient = null;
-    if (!Array.isArray(config)) {
-        config = [config];
+    client = new WebAPIClient(config, logger);
+    if (config) {
+        clientContainer.add(config.clientName, client);
     }
-    for (var i in config) {
-        var configEntry = config[i];
-        var client = new WebAPIClient(configEntry, logger);
-        if (configEntry.name) {
-            clients[configEntry.name] = client;
-        } else {
-            defaultClient = client;
-        }
-    }
+    return client;
 }
 
 // exports
