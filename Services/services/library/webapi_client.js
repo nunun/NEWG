@@ -1,6 +1,7 @@
 var util              = require('util');
 var assert            = require('assert');
 var request           = require('request');
+var Encrypter         = require('./encrypter');
 var instanceContainer = require('./instance_container').activate();
 
 // constructor
@@ -13,6 +14,9 @@ util.inherits(WebAPIClient, function(){});
 WebAPIClient.prototype.init = function(config, logger) {
     this.config = config; // config
     this.logger = logger; // logger
+
+    // encrypter
+    this.encrypter = new Encrypter(config.encrypterSetting);
 
     // clear
     this.clear();
@@ -59,8 +63,7 @@ WebAPIClient.prototype.startRequest = function(method, apiPath, data, callback, 
     }
 
     // body
-    //var contentType = (options.headers && options.headers['content-type'])? options.headers['content-type'] : null;
-    options.body = JSON.stringify(data);
+    options.body = self.encrypter.encrypt(JSON.stringify(data));
 
     // create request
     var req = {};
@@ -109,7 +112,7 @@ function startRequest(self, req, options, method, apiPath, data, callback, queri
         // parse body
         var data = null;
         try {
-            data = JSON.parse(body);
+            data = JSON.parse(self.encrypter.decrypt(body));
         } catch (e) {
             callback(e, null);
             return;

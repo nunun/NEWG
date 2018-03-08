@@ -1,8 +1,9 @@
-var url     = require('url');
-var util    = require('util');
-var uuid    = require('uuid/v1');
-var trim    = require('string.prototype.trim');
-var express = require('express');
+var url       = require('url');
+var util      = require('util');
+var uuid      = require('uuid/v1');
+var trim      = require('string.prototype.trim');
+var express   = require('express');
+var Encrypter = require('./encrypter');
 
 // constructor
 function WebAPIServer(config, logger) {
@@ -21,6 +22,9 @@ WebAPIServer.prototype.init = function(config, logger) {
     this.startEventListener = null;
     this.stopEventListener  = null;
     this.setupEventListener = null;
+
+    // encrypter
+    this.encrypter = new Encrypter(config.encrypterSetting);
 
     // clear
     this.clear();
@@ -72,6 +76,15 @@ WebAPIServer.prototype.stop = function() {
     this.clear();
     if (stopEventListener) {
         stopEventListener();
+    }
+}
+
+// create express middleware 'bodyDecrypter'
+WebAPIServer.prototype.bodyDecrypter = function() {
+    var self = this;
+    return function(req, res, next) {
+        req.body = self.encrypter.decrypt(req.body);
+        next();
     }
 }
 

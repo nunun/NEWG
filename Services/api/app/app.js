@@ -60,6 +60,7 @@ webapiServer.setSetupEventListener(function(express, app) {
     routes.setup(router, binder, null, logger.webapiServer);
 
     // setup app
+    app.use(webapiServer.bodyDecrypter());
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({extended: true}));
     app.use(router);

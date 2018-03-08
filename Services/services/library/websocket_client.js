@@ -6,6 +6,7 @@ var WebSocket         = require('ws');
 var RequestContext    = require('./internal_types/request_context');
 var Request           = require('./internal_types/request');
 var Response          = require('./internal_types/response');
+var Encrypter         = require('./encrypter');
 var instanceContainer = require('./instance_container').activate();
 
 // constructor
@@ -25,6 +26,9 @@ WebSocketClient.prototype.init = function(config, logger) {
     this.connectEventListener    = null; // connect
     this.disconnectEventListener = null; // disconnect
     this.dataEventListener       = {};   // data
+
+    // encrypter
+    this.encrypter = new Encrypter(config.encrypterSetting);
 
     // clear
     this.clear();
@@ -93,7 +97,7 @@ WebSocketClient.prototype.start = function(queryParams) {
     // on message
     self.ws.on('message', function(message) {
         self.logger.debug('on message: message[' + message + ']');
-        var recvData = JSON.parse(message);
+        var recvData = JSON.parse(self.encrypter.decrypt(message));
         if (recvData.requestId && recvData.response) {
             self.requestContext.setResponse(recvData.requestId, recvData.error, recvData.data);
             return;
@@ -180,7 +184,7 @@ WebSocketClient.prototype.send = function(type, data, callback, timeout) {
 
 // send data
 WebSocketClient.prototype.sendData = function(sendData) {
-    var message = JSON.stringify(sendData);
+    var message = this.encrypter.encrypt(JSON.stringify(sendData));
     this.ws.send(message);
 }
 

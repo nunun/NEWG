@@ -5,6 +5,7 @@ var trim           = require('string.prototype.trim');
 var WebSocket      = require('ws');
 var RequestContext = require('./internal_types/request_context');
 var Response       = require('./internal_types/response');
+var Encrypter      = require('./encrypter');
 
 // constructor
 function WebSocketServer(config, logger) {
@@ -25,6 +26,9 @@ WebSocketServer.prototype.init = function(config, logger) {
     this.connectEventListener    = null;
     this.disconnectEventListener = null;
     this.dataEventListener       = {};
+
+    // encrypter
+    this.encrypter = new Encrypter(config.encrypterSetting);
 
     // clear
     this.clear();
@@ -107,7 +111,7 @@ WebSocketServer.prototype.start = function() {
 
         // sendData
         webSocketClient.sendData = function(sendData) {
-            var message = JSON.stringify(sendData);
+            var message = self.encrypter.encrypt(JSON.stringify(sendData));
             webSocketClient.ws.send(message);
         }
 
@@ -135,7 +139,7 @@ WebSocketServer.prototype.start = function() {
                 }
 
                 // parse json
-                recvData = JSON.parse(message);
+                recvData = JSON.parse(self.encrypter.decrypt(message));
                 if (!recvData) {
                     throw new Error('data is null.');
                 }
