@@ -29,13 +29,13 @@ public partial class WebSocketConnector : MonoBehaviour {
     }
 
     //-------------------------------------------------------------------------- 変数
-    protected State          state             = State.Init; // 状態
-    protected WebSocket      ws                = null;       // WebSocket
-    protected IEnumerator    connector         = null;       // 接続制御用列挙子
-    protected int            currentRetryCount = 0;          // 現在のリトライ回数
-    protected string         uuid              = null;       // UUID
-    protected string[]       queryParams       = null;       // 接続時オプション
-    protected RequestContext requestContext    = null;       // リクエストコンテキスト
+    protected State          state             = State.Init;      // 状態
+    protected WebSocket      ws                = null;            // WebSocket
+    protected IEnumerator    connector         = null;            // 接続制御用列挙子
+    protected int            currentRetryCount = 0;               // 現在のリトライ回数
+    protected string         uuid              = null;            // UUID
+    protected string[]       queryParams       = null;            // 接続時オプション
+    protected RequestContext requestContext    = null;            // リクエストコンテキスト
 
     // イベントリスナ
     Action                         connectEventListener    = null;                                 // 接続時イベントリスナ
@@ -48,12 +48,16 @@ public partial class WebSocketConnector : MonoBehaviour {
     public int      retryCount         = 10;                    // 接続リトライ回数
     public float    retryInterval      = 3.0f;                  // 接続リトライ間隔
     public string[] connectorName      = null;                  // コネクタ名
+    public string   encrypterSetting   = null;                  // 暗号化装置設定
 
     // 接続済かどうか
     public bool IsConnected { get { return (state == State.Connected); }}
 
     // UUID を取得する
     public string UUID { get { return uuid; }}
+
+    // 暗号化装置
+    protected Encrypter encrypter = null;
 
     // インスタンスコンテナ
     static InstanceContainer<WebSocketConnector> instanceContainer = new InstanceContainer<WebSocketConnector>();
@@ -83,6 +87,9 @@ public partial class WebSocketConnector : MonoBehaviour {
 
         // リクエストコンテキスト
         requestContext = new RequestContext();
+
+        // 暗号化装置
+        encrypter = new Encrypter(encrypterSetting);
 
         // NOTE
         // Upate 無効化
@@ -315,7 +322,7 @@ public partial class WebSocketConnector : MonoBehaviour {
                 Disconnect(ws.error);
                 return;
             }
-            var message = ws.RecvString();
+            var message = encrypter.Decrypt(ws.RecvString());
             if (message == null) {
                 return;
             }
@@ -655,7 +662,7 @@ public partial class WebSocketConnector {
             ObjectPool<SendData<TSend>>.ReturnObject(sendData);
 
             // 送信
-            ws.SendString(message);
+            ws.SendString(encrypter.Encrypt(message));
 
         } catch (Exception e) {
             return e.ToString();

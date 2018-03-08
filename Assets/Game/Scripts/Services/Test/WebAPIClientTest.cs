@@ -13,7 +13,6 @@ public class WebAPIClientTest : WebAPIClient, IMonoBehaviourTest {
     protected override void Init() {
         base.Init();
         this.url = "http://localhost:7780";
-        this.isDefaultClient = true;
 
         // NOTE
         // Start からテストを始める用

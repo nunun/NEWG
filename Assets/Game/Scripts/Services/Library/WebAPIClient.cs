@@ -13,14 +13,17 @@ public partial class WebAPIClient : MonoBehaviour {
     public enum HttpMethod { Get, Post };
 
     //-------------------------------------------------------------------------- 変数
-    public string   url             = null;  // URL
-    public string[] queries         = null;  // デフォルトのクエリ
-    public string[] forms           = null;  // デフォルトのフォーム
-    public string[] headers         = null;  // デフォルトのヘッダ
-    public bool     isDefaultClient = false; // デフォルトクライアントかどうか
-    public int      retryCount      = 10;    // リトライ回数
-    public float    retryInterval   = 3.0f;  // リトライ感覚
-    public string[] clientName      = null;  // クライアント名
+    public string   url              = null;  // URL
+    public string[] queries          = null;  // デフォルトのクエリ
+    public string[] forms            = null;  // デフォルトのフォーム
+    public string[] headers          = null;  // デフォルトのヘッダ
+    public int      retryCount       = 10;    // リトライ回数
+    public float    retryInterval    = 3.0f;  // リトライ感覚
+    public string[] clientName       = null;  // クライアント名
+    public string   encrypterSetting = null;  // 暗号化装置設定
+
+    // 暗号化装置
+    protected Encrypter encrypter = null;
 
     // インスタンスコンテナ
     static InstanceContainer<WebAPIClient> instanceContainer = new InstanceContainer<WebAPIClient>();
@@ -34,6 +37,9 @@ public partial class WebAPIClient : MonoBehaviour {
     // クリア
     protected virtual void Clear() {
         ClearRequestList();
+
+        // 暗号化装置
+        encrypter = new Encrypter(encrypterSetting);
     }
 
     //-------------------------------------------------------------------------- リクエスト関連
