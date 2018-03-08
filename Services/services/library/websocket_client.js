@@ -65,7 +65,7 @@ WebSocketClient.prototype.start = function(queryParams) {
     // setup
     self.clear();
 
-    // add options and connect options
+    // add connect query params and query params
     if (connectQueryParams || queryParams) {
         var parsedUrl = url.parse(connectUrl, true);
         if (connectQueryParams) {
@@ -118,7 +118,7 @@ WebSocketClient.prototype.start = function(queryParams) {
             if ((retryCount < 0) || (retryCount > 0 && self.retryCount < retryCount)) {
                 self.retryCount += 1;
                 setTimeout(function() {
-                    self.start(options);
+                    self.start(queryParams);
                 }, retryInterval);
                 return;
             }
