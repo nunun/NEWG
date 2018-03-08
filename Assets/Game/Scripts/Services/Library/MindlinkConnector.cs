@@ -340,7 +340,7 @@ public partial class MindlinkConnector {
             ObjectPool<SendDataToRemote<TSend>>.ReturnObject(sendData);
 
             // 送信
-            ws.SendString(encrypter.Encrypt(message));
+            ws.SendString(crypter.Encrypt(message));
 
         } catch (Exception e) {
             return e.ToString();

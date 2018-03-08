@@ -5,7 +5,7 @@ var trim              = require('string.prototype.trim');
 var WebSocketClient   = require('./websocket_client');
 var RequestToRemote   = require('./internal_types/request_to_remote');
 var ResponseToRemote  = require('./internal_types/response_to_remote');
-var Encrypter         = require('./encrypter');
+var Crypter           = require('./crypter');
 var instanceContainer = require('./instance_container').activate();
 
 // constructor
@@ -102,7 +102,7 @@ MindlinkClient.prototype.sendToRemote = function(to, type, data, callback, timeo
         var request = RequestToRemote.rentFromPool(requestId, callback, (timeout || this.config.requestTimeout || 10000));
         this.requestContext.setRequest(request);
     }
-    var message = this.encrypter.encrypt(JSON.stringify(sendData));
+    var message = this.crypter.encrypt(JSON.stringify(sendData));
     this.ws.send(message);
     return sendData.remote.requestId;
 }

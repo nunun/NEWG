@@ -1,13 +1,13 @@
 var util = require('util');
 
 // constructor
-function Encrypter(config, logger) {
+function Crypter(config, logger) {
     this.init(config, logger);
 }
-util.inherits(Encrypter, function(){});
+util.inherits(Crypter, function(){});
 
 // init
-Encrypter.prototype.init = function(config, logger) {
+Crypter.prototype.init = function(config, logger) {
     this.config = config;
     this.logger = logger;
 
@@ -16,20 +16,20 @@ Encrypter.prototype.init = function(config, logger) {
 };
 
 // clear
-Encrypter.prototype.clear = function() {
+Crypter.prototype.clear = function() {
     // NOTE
     // implement by inherit
 }
 
 // encrypt (outgoing)
-Encrypter.prototype.encrypt = function(message) {
+Crypter.prototype.encrypt = function(message) {
     return message;
 }
 
 // decrypt (incoming)
-Encrypter.prototype.decrypt = function(message) {
+Crypter.prototype.decrypt = function(message) {
     return message;
 }
 
 // exports
-module.exports = Encrypter;
+module.exports = Crypter;

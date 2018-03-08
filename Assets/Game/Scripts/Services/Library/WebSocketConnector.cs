@@ -34,7 +34,7 @@ public partial class WebSocketConnector : MonoBehaviour {
     protected IEnumerator    connector         = null;            // 接続制御用列挙子
     protected int            currentRetryCount = 0;               // 現在のリトライ回数
     protected string         uuid              = null;            // UUID
-    protected string[]       queryParams       = null;            // 接続時オプション
+    protected string[]       connectQueries    = null;            // 接続時のクエリパラメータ
     protected RequestContext requestContext    = null;            // リクエストコンテキスト
 
     // イベントリスナ
@@ -43,12 +43,12 @@ public partial class WebSocketConnector : MonoBehaviour {
     Dictionary<int,Action<string>> dataEventListener       = new Dictionary<int,Action<string>>(); // データ受信時イベントリスナ (型別)
 
     // 設定値
-    public string   url                = "ws://localhost:7766"; // 接続先URL
-    public string[] connectQueryParams = null;                  // クエリパラメータ一覧
-    public int      retryCount         = 10;                    // 接続リトライ回数
-    public float    retryInterval      = 3.0f;                  // 接続リトライ間隔
-    public string[] connectorName      = null;                  // コネクタ名
-    public string   encrypterSetting   = null;                  // 暗号化装置設定
+    public string   url           = "ws://localhost:7766"; // 接続先URL
+    public string[] queries       = null;                  // 標準クエリパラメータ
+    public int      retryCount    = 10;                    // 接続リトライ回数
+    public float    retryInterval = 3.0f;                  // 接続リトライ間隔
+    public string[] connectorName = null;                  // コネクタ名
+    public string   cryptSetting  = null;                  // 暗号化装置設定
 
     // 接続済かどうか
     public bool IsConnected { get { return (state == State.Connected); }}
@@ -57,7 +57,7 @@ public partial class WebSocketConnector : MonoBehaviour {
     public string UUID { get { return uuid; }}
 
     // 暗号化装置
-    protected Encrypter encrypter = null;
+    protected Crypter crypter = null;
 
     // インスタンスコンテナ
     static InstanceContainer<WebSocketConnector> instanceContainer = new InstanceContainer<WebSocketConnector>();
@@ -66,7 +66,7 @@ public partial class WebSocketConnector : MonoBehaviour {
     // 初期化
     protected virtual void Init() {
         this.uuid        = Guid.NewGuid().ToString(); // UUID
-        this.queryParams = null;
+        this.connectQueries = null;
         Clear();
     }
 
@@ -89,7 +89,7 @@ public partial class WebSocketConnector : MonoBehaviour {
         requestContext = new RequestContext();
 
         // 暗号化装置
-        encrypter = new Encrypter(encrypterSetting);
+        crypter = new Crypter(cryptSetting);
 
         // NOTE
         // Upate 無効化
@@ -98,8 +98,8 @@ public partial class WebSocketConnector : MonoBehaviour {
 
     //-------------------------------------------------------------------------- 接続と切断
     // 接続
-    public void Connect(params string[] queryParams) {
-        this.queryParams           = queryParams;
+    public void Connect(params string[] connectQueries) {
+        this.connectQueries           = connectQueries;
         this.currentRetryCount = 0;
         Reconnect();
     }
@@ -135,21 +135,21 @@ public partial class WebSocketConnector : MonoBehaviour {
         Clear();
 
         // URL 作成
-        if (   (connectQueryParams != null && connectQueryParams.Length > 0)
-            || (queryParams != null        && queryParams.Length        > 0)) {
+        if (   (queries != null        && queries.Length        > 0)
+            || (connectQueries != null && connectQueries.Length > 0)) {
             var sb = ObjectPool<StringBuilder>.RentObject();
             sb.Length = 0;
             sb.Append(url);
-            if (connectQueryParams != null && connectQueryParams.Length > 0) {
-                for (int i = 0; i < (connectQueryParams.Length - 2); i += 2) {
+            if (queries != null && queries.Length > 0) {
+                for (int i = 0; i < (queries.Length - 2); i += 2) {
                     sb.Append((i == 0)? "?" : "&");
-                    sb.Append(connectQueryParams[i + 0]); sb.Append("="); sb.Append(connectQueryParams[i + 1]);
+                    sb.Append(queries[i + 0]); sb.Append("="); sb.Append(queries[i + 1]);
                 }
             }
-            if (queryParams != null && queryParams.Length > 0) {
-                for (int i = 0; i < (queryParams.Length - 2); i += 2) {
+            if (connectQueries != null && connectQueries.Length > 0) {
+                for (int i = 0; i < (connectQueries.Length - 2); i += 2) {
                     sb.Append((i == 0)? "?" : "&");
-                    sb.Append(queryParams[i + 0]); sb.Append("="); sb.Append(queryParams[i + 1]);
+                    sb.Append(connectQueries[i + 0]); sb.Append("="); sb.Append(connectQueries[i + 1]);
                 }
             }
             url = sb.ToString();
@@ -322,7 +322,7 @@ public partial class WebSocketConnector : MonoBehaviour {
                 Disconnect(ws.error);
                 return;
             }
-            var message = encrypter.Decrypt(ws.RecvString());
+            var message = crypter.Decrypt(ws.RecvString());
             if (message == null) {
                 return;
             }
@@ -662,7 +662,7 @@ public partial class WebSocketConnector {
             ObjectPool<SendData<TSend>>.ReturnObject(sendData);
 
             // 送信
-            ws.SendString(encrypter.Encrypt(message));
+            ws.SendString(crypter.Encrypt(message));
 
         } catch (Exception e) {
             return e.ToString();

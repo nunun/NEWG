@@ -6,7 +6,7 @@ var WebSocket         = require('ws');
 var RequestContext    = require('./internal_types/request_context');
 var Request           = require('./internal_types/request');
 var Response          = require('./internal_types/response');
-var Encrypter         = require('./encrypter');
+var crypter           = require('./crypter');
 var instanceContainer = require('./instance_container').activate();
 
 // constructor
@@ -27,8 +27,8 @@ WebSocketClient.prototype.init = function(config, logger) {
     this.disconnectEventListener = null; // disconnect
     this.dataEventListener       = {};   // data
 
-    // encrypter
-    this.encrypter = new Encrypter(config.encrypterSetting);
+    // crypter
+    this.crypter = new crypter(config.cryptSetting);
 
     // clear
     this.clear();
@@ -54,28 +54,28 @@ WebSocketClient.prototype.clear = function() {
 }
 
 // connect
-WebSocketClient.prototype.start = function(queryParams) {
+WebSocketClient.prototype.start = function(connectQueries) {
     var self = this;
     self.logger.info('start');
-    var connectUrl         = self.config.url                || null;
-    var connectQueryParams = self.config.connectQueryParams || null;
-    var retryCount         = self.config.retryCount         || 10;
-    var retryInterval      = self.config.retryInterval      || 3000;
+    var connectUrl    = self.config.url           || null;
+    var queries       = self.config.queries       || null;
+    var retryCount    = self.config.retryCount    || 10;
+    var retryInterval = self.config.retryInterval || 3000;
 
     // setup
     self.clear();
 
     // add connect query params and query params
-    if (connectQueryParams || queryParams) {
+    if (queries || connectQueries) {
         var parsedUrl = url.parse(connectUrl, true);
-        if (connectQueryParams) {
-            for (var i in connectQueryParams) {
-                parsedUrl.query[i] = connectQueryParams[i];
+        if (queries) {
+            for (var i in queries) {
+                parsedUrl.query[i] = queries[i];
             }
         }
-        if (queryParams) {
-            for (var i in queryParams) {
-                parsedUrl.query[i] = queryParams[i];
+        if (connectQueries) {
+            for (var i in connectQueries) {
+                parsedUrl.query[i] = connectQueries[i];
             }
         }
         connectUrl = url.format(parsedUrl);
@@ -97,7 +97,7 @@ WebSocketClient.prototype.start = function(queryParams) {
     // on message
     self.ws.on('message', function(message) {
         self.logger.debug('on message: message[' + message + ']');
-        var recvData = JSON.parse(self.encrypter.decrypt(message));
+        var recvData = JSON.parse(self.crypter.decrypt(message));
         if (recvData.requestId && recvData.response) {
             self.requestContext.setResponse(recvData.requestId, recvData.error, recvData.data);
             return;
@@ -118,7 +118,7 @@ WebSocketClient.prototype.start = function(queryParams) {
             if ((retryCount < 0) || (retryCount > 0 && self.retryCount < retryCount)) {
                 self.retryCount += 1;
                 setTimeout(function() {
-                    self.start(queryParams);
+                    self.start(connectQueries);
                 }, retryInterval);
                 return;
             }
@@ -184,7 +184,7 @@ WebSocketClient.prototype.send = function(type, data, callback, timeout) {
 
 // send data
 WebSocketClient.prototype.sendData = function(sendData) {
-    var message = this.encrypter.encrypt(JSON.stringify(sendData));
+    var message = this.crypter.encrypt(JSON.stringify(sendData));
     this.ws.send(message);
 }
 

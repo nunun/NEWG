@@ -13,17 +13,17 @@ public partial class WebAPIClient : MonoBehaviour {
     public enum HttpMethod { Get, Post };
 
     //-------------------------------------------------------------------------- 変数
-    public string   url              = null;  // URL
-    public string[] queries          = null;  // デフォルトのクエリ
-    public string[] forms            = null;  // デフォルトのフォーム
-    public string[] headers          = null;  // デフォルトのヘッダ
-    public int      retryCount       = 10;    // リトライ回数
-    public float    retryInterval    = 3.0f;  // リトライ感覚
-    public string[] clientName       = null;  // クライアント名
-    public string   encrypterSetting = null;  // 暗号化装置設定
+    public string   url           = null; // URL
+    public string[] queries       = null; // デフォルトのクエリ
+    public string[] forms         = null; // デフォルトのフォーム
+    public string[] headers       = null; // デフォルトのヘッダ
+    public int      retryCount    = 10;   // リトライ回数
+    public float    retryInterval = 3.0f; // リトライ感覚
+    public string[] clientName    = null; // クライアント名
+    public string   cryptSetting  = null; // 暗号化装置設定
 
     // 暗号化装置
-    protected Encrypter encrypter = null;
+    protected Crypter crypter = null;
 
     // インスタンスコンテナ
     static InstanceContainer<WebAPIClient> instanceContainer = new InstanceContainer<WebAPIClient>();
@@ -39,7 +39,7 @@ public partial class WebAPIClient : MonoBehaviour {
         ClearRequestList();
 
         // 暗号化装置
-        encrypter = new Encrypter(encrypterSetting);
+        crypter = new Crypter(cryptSetting);
     }
 
     //-------------------------------------------------------------------------- リクエスト関連
@@ -63,7 +63,7 @@ public partial class WebAPIClient : MonoBehaviour {
 
         // データを追加 (POST 時)
         if (method == HttpMethod.Post) {
-            parameters.SetJsonTextContent(JsonUtility.ToJson(data));
+            parameters.SetJsonTextContent(crypter.Encrypt(JsonUtility.ToJson(data)));
         }
 
         // リクエストキャンセラーを返却。
@@ -144,7 +144,7 @@ public partial class WebAPIClient {
                 request.SetResponse(error, null);
                 request.ReturnToPool();
             } else if (unityWebRequest.isDone) {
-                var message = unityWebRequest.downloadHandler.text;
+                var message = crypter.Decrypt(unityWebRequest.downloadHandler.text);
                 requestList.RemoveAt(i);
                 request.SetResponse(null, message);
                 request.ReturnToPool();
@@ -394,7 +394,7 @@ public partial class WebAPIClient {
                         request = new UnityWebRequest(url);
                         request.uploadHandler   = new UploadHandlerRaw(bytes);
                         request.downloadHandler = new DownloadHandlerBuffer();
-                        request.method = UnityWebRequest.kHttpVerbPOST;
+                        request.method          = UnityWebRequest.kHttpVerbPOST;
                     } else {
                         request = UnityWebRequest.Post(url, GetText());
                     }
