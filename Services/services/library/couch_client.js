@@ -113,6 +113,18 @@ CouchClient.prototype.getConnection = function() {
     return this.nano;
 }
 
+// get database
+CouchClient.prototype.getDatabase = function() {
+    var nano = this.getConnection();
+    return nano.db;
+}
+
+// get scope
+CouchClient.prototype.getScope = function(name) {
+    var db = this.getDatabase();
+    return db.use(name);
+}
+
 // set start event listener
 CouchClient.prototype.setStartEventListener = function(eventListener) {
     this.startEventListener = eventListener;

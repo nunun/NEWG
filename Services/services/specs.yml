@@ -290,6 +290,7 @@ templates:
           this.init();
       }
       util.inherits(<%= name %>, GameData);
+      GameData.setupType('<%= name %>', <%= name %>);
       <%= name %>.prototype.init = function() {
           <%= name %>.super_.prototype.init.call(this);
       };

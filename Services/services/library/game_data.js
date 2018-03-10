@@ -19,37 +19,85 @@ GameData.prototype.clear = function() {
     // implement by inherit
 }
 
-// name
-GameData.prototype.getName = function() {
-    // NOTE
-    // implement by inherti
-    return 'GameData';
+// save
+GameData.prototype.save = function(key, callback) {
+    if (callback == undefined) {
+        callback = key;
+        key = null;
+    }
+    this.getScope().insert(this, key, function(err, body) {
+        if (err) {
+            if (callback) {
+                callback(err, null);
+            }
+        }
+        if (callback) {
+            callback(null, body._id);
+        }
+    });
 }
 
-// find
-GameData.find = function() {
-    // TODO
+// destory
+GameData.prototype.destroy = function(callback) {
+    if (!this._id || !this._rev) {
+        callback(new Error('_id or _rev of this object is empty.'));
+        return;
+    }
+    this.getScope().destroy(this._id, this._rev, function(err, body) {
+        if (callback) {
+            callback(err);
+        }
+    });
 }
 
-// load
-GameData.load = function() {
-    // TODO
-}
+// setupType
+GameData.setupType = function(typeName, type) {
+    // internal get scope
+    var getScope = function() {
+        return CouchClient.getClient().getScope(typeName);
+    }
 
-// save (callback)
-GameData.prototype.save = function(callback) {
-    this.save(null, callback);
-}
+    // get scope
+    type.prototype.getScope = function() {
+        return getScope();
+    }
 
-// save (id, callback)
-GameData.prototype.save = function(id, callback) {
-    db = CouchClient.getClient().getConnection();
-    db.insert(this, getName(), callback)
-}
+    // get
+    type.get = function(key, callback) {
+        getScope().get(key, function(err, body) {
+            if (err) {
+                if (callback) {
+                    callback(err, null);
+                }
+                return;
+            }
+            if (callback) {
+                body.prototype = type.prototype;
+                callback(err, body);
+            }
+        });
+    }
 
-// remove (logical delete)
-GameData.prototype.remove = function() {
-    // TODO
+    // list
+    // https://wiki.apache.org/couchdb/HTTP_view_API#Querying_Options
+    type.list = function(params, callback) {
+        getScope().list(params, function(err, body) {
+            if (err) {
+                if (callback) {
+                    callback(err);
+                }
+                return;
+            }
+            if (callback) {
+                var rows = body.rows;
+                for (var i in rows) {
+                    var row = rows[i];
+                    row.prototype = type.prototype;
+                }
+                callback(null, rows);
+            }
+        });
+    }
 }
 
 // exports
