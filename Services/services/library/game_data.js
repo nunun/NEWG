@@ -1,5 +1,6 @@
 var util        = require('util');
 var CouchClient = require('./couch_client');
+var RedisClient = require('./redis_client');
 
 // constructor
 function GameData() {
@@ -52,9 +53,11 @@ GameData.prototype.destroy = function(callback) {
 
 // setupType
 GameData.setupType = function(typeName, type) {
-    // internal get scope
     var getScope = function() {
         return CouchClient.getClient().getScope(typeName);
+    }
+    var getCacheKey = function(key) {
+        return typeName + ":" + key;
     }
 
     // get scope
@@ -79,6 +82,7 @@ GameData.setupType = function(typeName, type) {
     }
 
     // list
+    // params is CouchDB query options. see follow.
     // https://wiki.apache.org/couchdb/HTTP_view_API#Querying_Options
     type.list = function(params, callback) {
         getScope().list(params, function(err, body) {
@@ -98,6 +102,96 @@ GameData.setupType = function(typeName, type) {
             }
         });
     }
+
+    // getCache
+    type.getCache = function(key, callback) {
+        var redis    = RedisClient.getClient();
+        var cacheKey = getCacheKey(key);
+        redis.get(cacheKey, function(err, reply) {
+            if (err) {
+                if (callback) {
+                    callback(err, null);
+                }
+                return;
+            }
+            if (callback) {
+                try {
+                    var data = JSON.parse(reply);
+                    data.prototype = type.prototype;
+                } catch (e) {
+                    callback(new Error(e.toString()), null);
+                    return;
+                }
+                callback(null, data);
+            }
+        });
+    });
+
+    // setCache
+    type.prototype.setCache = function(key, callback, ttl) {
+        var redis     = RedisClient.getClient();
+        var cacheKey  = getCacheKey(key);
+        var cacheData = JSON.stringify(this);
+        if (ttl != undefined) {
+            redis.set(cacheKey, cacheData, 'NX', 'EX', ttl, function(err, reply) {
+                if (err) {
+                    if (callback) {
+                        callback(err);
+                    }
+                    return;
+                }
+                if (callback) {
+                    callback((reply == "OK")? null : new Error('invalid reply'));
+                }
+            });
+        } else {
+            redis.set(cacheKey, cacheData, 'NX', function(err, reply) {
+                if (err) {
+                    if (callback) {
+                        callback(err);
+                    }
+                    return;
+                }
+                if (callback) {
+                    callback((reply == "OK")? null : new Error('invalid reply'));
+                }
+            });
+        }
+    });
+
+    // persistCache
+    type.persistCache = function(key, callback) {
+        var redis    = RedisClient.getClient();
+        var cacheKey = getCacheKey(key);
+        redis.persist(cacheKey, function(err, reply) {
+            if (err) {
+                if (callback) {
+                    callback(err);
+                }
+                return;
+            }
+            if (callback) {
+                callback(null);
+            }
+        });
+    });
+
+    // destroyCache
+    type.destroyCache = function(key, callback) {
+        var redis    = RedisClient.getClient();
+        var cacheKey = getCacheKey(key);
+        redis.del(cacheKey, function(err, reply) {
+            if (err) {
+                if (callback) {
+                    callback(err);
+                }
+                return;
+            }
+            if (callback) {
+                callback(null); //((reply == '1')? null : new Error('invalid reply'));
+            }
+        });
+    });
 }
 
 // exports
