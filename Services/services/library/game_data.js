@@ -22,15 +22,39 @@ GameData.prototype.clear = function() {
 
 // save
 GameData.prototype.save = function(key, callback) {
+    var self = this;
     if (callback == undefined) {
         callback = key;
         key = null;
     }
-    this.getScope().insert(this, key, function(err, body) {
+    var trycnt   = 0;
+    var retrycnt = 0;
+    var keylen   = 0;
+    if (key != null && typeof(key) == "integer") {
+        retrycnt = 3;
+        keylen   = key;
+    }
+    save(self, key, callback, trycnt, retrycnt, keylen);
+}
+function save(self, key, callback, trycnt, retrycnt, keylen) {
+    ++trycnt;
+    if (keylen > 0) {
+        var sym = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
+        key = '';
+        for(var i = 0; i < keylen; i++) {
+            key += sym[parseInt(Math.random() * sym.length)];
+        }
+    }
+    self.getScope().insert(self, key, function(err, body) {
         if (err) {
+            if (trycnt <= retrycnt) {
+                save(self, key, callback, trycnt, retrycnt, keylen);
+                return;
+            }
             if (callback) {
                 callback(err, null);
             }
+            return;
         }
         if (callback) {
             callback(null, body._id);
