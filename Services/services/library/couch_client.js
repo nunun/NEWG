@@ -116,13 +116,13 @@ CouchClient.prototype.getConnection = function() {
 // get database
 CouchClient.prototype.getDatabase = function() {
     var nano = this.getConnection();
-    return nano.db;
+    return nano.server.db;
 }
 
 // get scope
 CouchClient.prototype.getScope = function(name) {
     var db = this.getDatabase();
-    return db.use(name);
+    return db.use('testdb'); // TODO db.use(name);
 }
 
 // set start event listener

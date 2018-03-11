@@ -7,22 +7,37 @@ namespace Services.Protocols.Models {
     // User
     // ユーザ情報
     [Serializable]
-    public class User {
-        public string uuid = null; // ユーザのUUID型
+    public class User : GameData {
+        public string uuid; // ユーザのUUID型
+        protected override void Clear() {
+            uuid = null; // ユーザのUUID型
+        }
     }
     // SampleModel
-    // テストモデル
+    // サンプルモデル
     [Serializable]
-    public class SampleModel {
-        public int intValue = 100; // 整数型
-        public string stringValue1 = "test"; // 文字列型
-        public string stringValue2 = null; // 文字列型 (null)
-        public string stringValue3 = ""; // 文字列型 (空)
-        public SampleModel objectValue1 = null; // 型 (null)
-        public User objectValue2 = new User(); // 型 (空)
-        public User[] arrayValue1 = null; // 配列型 (null)
-        public User[] arrayValue2 = new User[0]; // 配列型 (空)
-        public List<User> listValue1 = null; // リスト型 (null)
-        public List<User> listValue2 = new List<User>(); // リスト型 (空)
+    public class SampleModel : GameData {
+        public int intValue; // 整数型
+        public string stringValue1; // 文字列型
+        public string stringValue2; // 文字列型 (null)
+        public string stringValue3; // 文字列型 (空)
+        public SampleModel objectValue1; // 型 (null)
+        public User objectValue2; // 型 (空)
+        public User[] arrayValue1; // 配列型 (null)
+        public User[] arrayValue2; // 配列型 (空)
+        public List<User> listValue1; // リスト型 (null)
+        public List<User> listValue2; // リスト型 (空)
+        protected override void Clear() {
+            intValue = 100; // 整数型
+            stringValue1 = "test"; // 文字列型
+            stringValue2 = null; // 文字列型 (null)
+            stringValue3 = ""; // 文字列型 (空)
+            objectValue1 = null; // 型 (null)
+            objectValue2 = new User(); // 型 (空)
+            arrayValue1 = null; // 配列型 (null)
+            arrayValue2 = new User[0]; // 配列型 (空)
+            listValue1 = null; // リスト型 (null)
+            listValue2 = new List<User>(); // リスト型 (空)
+        }
     }
 }

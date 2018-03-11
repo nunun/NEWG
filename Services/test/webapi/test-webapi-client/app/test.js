@@ -1,9 +1,11 @@
+var util         = require('util');
 var assert       = require('assert');
 var config       = require('./services/library/config');
 var logger       = require('./services/library/logger');
 var webapiClient = require('./services/library/webapi_client').activate(config.webapiClient, logger.webapiClient);
 var couchClient  = require('./services/library/couch_client').activate(config.couchClient, logger.couchClient);
 var redisClient  = require('./services/library/redis_client').activate(config.redisClient, logger.redisClient);
+var GameData     = require('./services/library/game_data');
 var webapi       = require('./services/protocols/webapi');
 
 describe('smoke test', function () {
@@ -25,20 +27,70 @@ describe('smoke test', function () {
 
             redisClient.test([
                 {connect: function() {
-                    start();
+                    testWebAPI();
                 }},
             ]);
 
-            function start() {
+            function testWebAPI() {
                 webapi.test(10, function(err, data) {
                     assert.ok(!err, 'invalid response err (' + err + ')');
                     logger.testClient.debug(err)
                     logger.testClient.debug(data)
-                    done();
+                    testSaveModel();
                 });
+            }
 
-                // TODO
-                // test models
+            var testId  = null;
+            var testRev = null;
+            function testSaveModel() {
+                var testData = new TestData();
+                testData.num = 100;
+                testData.save('test', function(err, id, rev) {
+                    assert.ok(!err,         'invalid response err (' + err + ')');
+                    assert.ok(id == 'test', 'invalid response id ('  + id  + ')');
+                    assert.ok(rev,          'invalid response rev (' + rev + ')');
+                    testId  = id;
+                    testRev = rev;
+                    testGetModel();
+                });
+            }
+
+            function testGetModel() {
+                TestData.get(testId, function(err, testData) {
+                    assert.ok(!err,                     'invalid response err ('           + err           + ')');
+                    assert.ok(testData._id  == testId,  'invalid response testData._id ('  + testData._id  + ')');
+                    assert.ok(testData._rev == testRev, 'invalid response testData._rev (' + testData._rev + ')');
+                    assert.ok(testData.num  == 100,     'invalid response testData.num ('  + testData.num  + ')');
+                    testListModel();
+                });
+            }
+
+            function testListModel() {
+                TestData.list({num: 100}, function(err, list) {
+                    assert.ok(!err,                    'invalid response err (' + err + ')');
+                    assert.ok(list.length  == 1,       'invalid response list.length ('  + list.length  + ')');
+                    assert.ok(list[0]._id  == testId,  'invalid response list[0]._id ('  + list[0]._id  + ')');
+                    assert.ok(list[0]._rev == testRev, 'invalid response list[0]._rev (' + list[0]._rev + ')');
+                    assert.ok(list[0].num  == 100,     'invalid response list[0].num ('  + list[0].num  + ')');
+
+                    var testData = list[0].activate();
+                    assert.ok(testData._id  == testId,  'invalid response testData[0]._id ('  + testData._id  + ')');
+                    assert.ok(testData._rev == testRev, 'invalid response testData[0]._rev (' + testData._rev + ')');
+                    assert.ok(testData.num  == 100,     'invalid response testData[0].num ('  + testData.num  + ')');
+
+                    testDestroyModel();
+                });
+            }
+
+            function testDestroyModel() {
+                TestData.destroy(testId, testRev, function(err) {
+                    assert.ok(!err, 'invalid response err (' + err + ')');
+                    TestData.list({num: 100}, function(err, list) {
+                        assert.ok(!err,              'invalid response err ('          + err          + ')');
+                        assert.ok(list.length  == 0, 'invalid response list.length ('  + list.length  + ')');
+                        done();
+                    });
+                });
             }
 
             couchClient.start();
@@ -71,6 +123,19 @@ var profiles = [{
         redisClient.stop();
     }
 }];
+
+// TestData
+function TestData() {
+    this.init();
+}
+util.inherits(TestData, GameData);
+GameData.setupType('TestData', TestData);
+TestData.prototype.init = function() {
+    TestData.super_.prototype.init.call(this);
+};
+TestData.prototype.clear = function() {
+    this.value = 0;
+}
 
 before(function (done) {
     logger.testClient.debug('[describe] before test')

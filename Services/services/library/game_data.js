@@ -30,7 +30,7 @@ GameData.prototype.save = function(key, callback) {
     var trycnt   = 0;
     var retrycnt = 0;
     var keylen   = 0;
-    if (key != null && typeof(key) == "integer") {
+    if (key != null && typeof(key) == "number") {
         retrycnt = 3;
         keylen   = key;
     }
@@ -57,20 +57,7 @@ function save(self, key, callback, trycnt, retrycnt, keylen) {
             return;
         }
         if (callback) {
-            callback(null, body._id);
-        }
-    });
-}
-
-// destory
-GameData.prototype.destroy = function(callback) {
-    if (!this._id || !this._rev) {
-        callback(new Error('_id or _rev of this object is empty.'));
-        return;
-    }
-    this.getScope().destroy(this._id, this._rev, function(err, body) {
-        if (callback) {
-            callback(err);
+            callback(null, body.id, body.rev);
         }
     });
 }
@@ -99,8 +86,9 @@ GameData.setupType = function(typeName, type) {
                 return;
             }
             if (callback) {
-                body.prototype = type.prototype;
-                callback(err, body);
+                var data = new type();
+                Object.assign(data, body);
+                callback(err, data);
             }
         });
     }
@@ -108,7 +96,11 @@ GameData.setupType = function(typeName, type) {
     // list
     // params is CouchDB query options. see follow.
     // https://wiki.apache.org/couchdb/HTTP_view_API#Querying_Options
+    // {startkey:'cat', limit:3}
     type.list = function(params, callback) {
+        if (!params.include_docs) {
+            params.include_docs = true;
+        }
         getScope().list(params, function(err, body) {
             if (err) {
                 if (callback) {
@@ -117,12 +109,28 @@ GameData.setupType = function(typeName, type) {
                 return;
             }
             if (callback) {
+                var proto = {activate: function() {
+                    var data = new type();
+                    Object.assign(data, this);
+                    return data;
+                }};
                 var rows = body.rows;
+                var list = [];
                 for (var i in rows) {
-                    var row = rows[i];
-                    row.prototype = type.prototype;
+                    var doc = rows[i].doc;
+                    doc.__proto__ = proto;
+                    list.push(doc);
                 }
-                callback(null, rows);
+                callback(null, list);
+            }
+        });
+    }
+
+    // destory
+    type.destroy = function(id, rev, callback) {
+        getScope().destroy(id, rev, function(err, body) {
+            if (callback) {
+                callback(err);
             }
         });
     }
@@ -149,7 +157,7 @@ GameData.setupType = function(typeName, type) {
                 callback(null, data);
             }
         });
-    });
+    }
 
     // setCache
     type.prototype.setCache = function(key, callback, ttl) {
@@ -181,7 +189,7 @@ GameData.setupType = function(typeName, type) {
                 }
             });
         }
-    });
+    }
 
     // persistCache
     type.persistCache = function(key, callback) {
@@ -198,7 +206,7 @@ GameData.setupType = function(typeName, type) {
                 callback(null);
             }
         });
-    });
+    }
 
     // destroyCache
     type.destroyCache = function(key, callback) {
@@ -215,7 +223,7 @@ GameData.setupType = function(typeName, type) {
                 callback(null); //((reply == '1')? null : new Error('invalid reply'));
             }
         });
-    });
+    }
 }
 
 // exports

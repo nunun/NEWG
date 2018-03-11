@@ -1,27 +1,42 @@
-var consts = require('./consts');
+var util     = require('util');
+var GameData = require('./../library/game_data');
+var consts   = require('./consts');
 exports = {};
-var models = exports;
 // User
 // ユーザ情報
-exports.User = function() {
-    var model = {};
-    model.uuid = null; // ユーザのUUID型
-    return model;
+function User() {
+    this.init();
 }
+util.inherits(User, GameData);
+GameData.setupType('User', User);
+User.prototype.init = function() {
+    User.super_.prototype.init.call(this);
+};
+User.prototype.clear = function() {
+    this.uuid = null; // ユーザのUUID型
+}
+exports.User = User;
 // SampleModel
-// テストモデル
-exports.SampleModel = function() {
-    var model = {};
-    model.intValue = 100; // 整数型
-    model.stringValue1 = "test"; // 文字列型
-    model.stringValue2 = null; // 文字列型 (null)
-    model.stringValue3 = ""; // 文字列型 (空)
-    model.objectValue1 = null; // 型 (null)
-    model.objectValue2 = models.User(); // 型 (空)
-    model.arrayValue1 = null; // 配列型 (null)
-    model.arrayValue2 = []; // 配列型 (空)
-    model.listValue1 = null; // リスト型 (null)
-    model.listValue2 = []; // リスト型 (空)
-    return model;
+// サンプルモデル
+function SampleModel() {
+    this.init();
 }
+util.inherits(SampleModel, GameData);
+GameData.setupType('SampleModel', SampleModel);
+SampleModel.prototype.init = function() {
+    SampleModel.super_.prototype.init.call(this);
+};
+SampleModel.prototype.clear = function() {
+    this.intValue = 100; // 整数型
+    this.stringValue1 = "test"; // 文字列型
+    this.stringValue2 = null; // 文字列型 (null)
+    this.stringValue3 = ""; // 文字列型 (空)
+    this.objectValue1 = null; // 型 (null)
+    this.objectValue2 = new User(); // 型 (空)
+    this.arrayValue1 = null; // 配列型 (null)
+    this.arrayValue2 = []; // 配列型 (空)
+    this.listValue1 = null; // リスト型 (null)
+    this.listValue2 = []; // リスト型 (空)
+}
+exports.SampleModel = SampleModel;
 module.exports = exports;
