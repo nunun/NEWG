@@ -1,7 +1,7 @@
 version: '3.3'
 services:
   test-matching-client:
-    image: newg-test-matching/test-matching-client
+    image: test-matching/test-matching-client
     build:
       context: ./test-matching-client
       args:
@@ -16,7 +16,7 @@ services:
       - mindlink
 
   matching:
-    image: newg-test-matching/matching
+    image: test-matching/matching
     build:
       context: ./../../matching
       args:
@@ -31,7 +31,7 @@ services:
       - api
 
   api:
-    image: newg-test-matching/api
+    image: test-matching/api
     build:
       context: ./../../api
       args:
@@ -51,7 +51,7 @@ services:
       - redis
 
   mindlink:
-    image: newg-test-matching/mindlink
+    image: test-matching/mindlink
     build:
       context:  ./../../mindlink
       args:

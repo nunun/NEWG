@@ -1,4 +1,4 @@
-FROM newg/node:latest
+FROM services/node:latest
 ARG BUILD_CONFIGURATION
 WORKDIR /app
 ADD app /app

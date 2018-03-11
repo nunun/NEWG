@@ -4,6 +4,6 @@ task_protocols() {
         [ ! "${GO}" = "-c" ] && echo "add 'go' to really write."
 }
 task_build() {
-        docker build --no-cache -t newg/node:latest .
+        docker build --no-cache -t services/node:latest .
 }
 . "`dirname ${0}`/../.task.sh" build ${*}

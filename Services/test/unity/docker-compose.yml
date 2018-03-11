@@ -1,7 +1,7 @@
 version: '3.3'
 services:
   test-services-server:
-    image: newg-test-unity/test-services-server
+    image: test-unity/test-services-server
     build:
       context: ./../services/test-services-server
       args:
@@ -15,7 +15,7 @@ services:
       - 7799:7799
 
   matching:
-    image: newg-test-unity/matching
+    image: test-unity/matching
     build:
       context: ./../../matching
       args:
@@ -32,7 +32,7 @@ services:
       - api
 
   api:
-    image: newg-test-unity/api
+    image: test-unity/api
     build:
       context: ./../../api
       args:
@@ -50,7 +50,7 @@ services:
       - 7780:7780
 
   mindlink:
-    image: newg-test-unity/mindlink
+    image: test-unity/mindlink
     build:
       context: ./../../mindlink
       args:
