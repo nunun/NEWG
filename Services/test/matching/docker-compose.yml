@@ -3,14 +3,14 @@ services:
   test-matching-client:
     image: newg-test-matching/test-matching-client
     build:
-      context: ./../../test-matching-client
+      context: ./test-matching-client
       args:
         - BUILD_CONFIGURATION=tester
     environment:
       - LOG_LEVEL=debug
     volumes:
-      - ./../../test-matching-client/app:/app
-      - ./../../../services:/app/services
+      - ./test-matching-client/app:/app
+      - ./../../services:/app/services
     depends_on:
       - matching
       - mindlink
@@ -18,14 +18,14 @@ services:
   matching:
     image: newg-test-matching/matching
     build:
-      context: ./../../../matching
+      context: ./../../matching
       args:
         - BUILD_CONFIGURATION=develop
     environment:
       - LOG_LEVEL=debug
     volumes:
-      - ./../../../matching/app:/app
-      - ./../../../services:/app/services
+      - ./../../matching/app:/app
+      - ./../../services:/app/services
     depends_on:
       - mindlink
       - api
@@ -33,7 +33,7 @@ services:
   api:
     image: newg-test-matching/api
     build:
-      context: ./../../../api
+      context: ./../../api
       args:
         - BUILD_CONFIGURATION=develop
     environment:
@@ -41,8 +41,8 @@ services:
       - REDIS_URL=redis://redis:6379/?db=99
       - LOG_LEVEL=debug
     volumes:
-      - ./../../../api/app:/app
-      - ./../../../services:/app/services
+      - ./../../api/app:/app
+      - ./../../services:/app/services
     ports:
       - 7780:7780
     depends_on:
@@ -53,12 +53,12 @@ services:
   mindlink:
     image: newg-test-matching/mindlink
     build:
-      context:  ./../../../mindlink
+      context:  ./../../mindlink
       args:
         - BUILD_CONFIGURATION=develop
     volumes:
-      - ./../../../mindlink/app:/app
-      - ./../../../services:/app/services
+      - ./../../mindlink/app:/app
+      - ./../../services:/app/services
     depends_on:
       - rabbitmq
 

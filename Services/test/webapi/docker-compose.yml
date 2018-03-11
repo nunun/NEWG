@@ -3,7 +3,7 @@ services:
   test-webapi-client:
     image: newg-test-webapi/test-webapi-client
     build:
-      context: ./../../test-webapi-client
+      context: ./test-webapi-client
       args:
         - BUILD_CONFIGURATION=tester
     environment:
@@ -11,8 +11,8 @@ services:
       - REDIS_URL=redis://redis:6379/?db=99
       - LOG_LEVEL=debug
     volumes:
-      - ./../../test-webapi-client/app:/app
-      - ./../../../services:/app/services
+      - ./test-webapi-client/app:/app
+      - ./../../services:/app/services
     depends_on:
       - api
       - mindlink
@@ -20,7 +20,7 @@ services:
   api:
     image: newg-test-webapi/api
     build:
-      context: ./../../../api
+      context: ./../../api
       args:
         - BUILD_CONFIGURATION=develop
     environment:
@@ -28,8 +28,8 @@ services:
       - REDIS_URL=redis://redis:6379/?db=99
       - LOG_LEVEL=debug
     volumes:
-      - ./../../../api/app:/app
-      - ./../../../services:/app/services
+      - ./../../api/app:/app
+      - ./../../services:/app/services
     ports:
       - 7780:7780
     depends_on:
@@ -40,12 +40,12 @@ services:
   mindlink:
     image: newg-test-webapi/mindlink
     build:
-      context: ./../../../mindlink
+      context: ./../../mindlink
       args:
         - BUILD_CONFIGURATION=develop
     volumes:
-      - ./../../../mindlink/app:/app
-      - ./../../../services:/app/services
+      - ./../../mindlink/app:/app
+      - ./../../services:/app/services
     depends_on:
       - rabbitmq
 

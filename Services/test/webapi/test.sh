@@ -14,4 +14,4 @@ task_build() {
         docker-compose run --rm --no-deps api                npm install
         docker-compose run --rm --no-deps mindlink           npm install
 }
-. "`dirname ${0}`/../../../.task.sh" test ${*}
+. "`dirname ${0}`/../../.task.sh" test ${*}

@@ -3,7 +3,7 @@ services:
   test-services-client:
     image: newg-test-services/test-services-client
     build:
-      context: ./../../test-services-client
+      context: ./test-services-client
       args:
         - BUILD_CONFIGURATION=tester
     environment:
@@ -11,8 +11,8 @@ services:
       - REDIS_URL=redis://redis:6379/?db=99
       - LOG_LEVEL=debug
     volumes:
-      - ./../../test-services-client/app:/app
-      - ./../../../services:/app/services
+      - ./test-services-client/app:/app
+      - ./../../services:/app/services
     depends_on:
       - mindlink1
       - mindlink2
@@ -23,27 +23,27 @@ services:
   test-services-server:
     image: newg-test-services/test-services-server
     build:
-      context: ./../../test-services-server
+      context: ./test-services-server
       args:
         - BUILD_CONFIGURATION=develop
     environment:
       - LOG_LEVEL=debug
     volumes:
-      - ./../../test-services-server/app:/app
-      - ./../../../services:/app/services
+      - ./test-services-server/app:/app
+      - ./../../services:/app/services
 
   mindlink1:
     image: newg-test-services/mindlink
     build:
-      context: ./../../../mindlink
+      context: ./../../mindlink
       args:
         - BUILD_CONFIGURATION=develop
     environment:
       - DEBUG_HTTP_CHANNEL_ENABLE=1
       - LOG_LEVEL=debug
     volumes:
-      - ./../../../mindlink/app:/app
-      - ./../../../services:/app/services
+      - ./../../mindlink/app:/app
+      - ./../../services:/app/services
     ports:
       - 17766:17766
     depends_on:
@@ -55,8 +55,8 @@ services:
       - DEBUG_HTTP_CHANNEL_ENABLE=1
       - LOG_LEVEL=debug
     volumes:
-      - ./../../../mindlink/app:/app
-      - ./../../../services:/app/services
+      - ./../../mindlink/app:/app
+      - ./../../services:/app/services
     ports:
       - 17767:17766
     depends_on:

@@ -3,28 +3,28 @@ services:
   test-services-server:
     image: newg-test-unity/test-services-server
     build:
-      context: ./../../test-services-server
+      context: ./../services/test-services-server
       args:
         - BUILD_CONFIGURATION=develop
     environment:
       - LOG_LEVEL=debug
     volumes:
-      - ./../../test-services-server/app:/app
-      - ./../../../services:/app/services
+      - ./../services/test-services-server/app:/app
+      - ./../../services:/app/services
     ports:
       - 7799:7799
 
   matching:
     image: newg-test-unity/matching
     build:
-      context: ./../../../matching
+      context: ./../../matching
       args:
         - BUILD_CONFIGURATION=develop
     environment:
       - LOG_LEVEL=debug
     volumes:
-      - ./../../../matching/app:/app
-      - ./../../../services:/app/services
+      - ./../../matching/app:/app
+      - ./../../services:/app/services
     ports:
       - 7755:7755
     depends_on:
@@ -34,14 +34,14 @@ services:
   api:
     image: newg-test-unity/api
     build:
-      context: ./../../../api
+      context: ./../../api
       args:
         - BUILD_CONFIGURATION=develop
     environment:
       - LOG_LEVEL=debug
     volumes:
-      - ./../../../api/app:/app
-      - ./../../../services:/app/services
+      - ./../../api/app:/app
+      - ./../../services:/app/services
     depends_on:
       - mindlink
       - couchdb
@@ -52,14 +52,14 @@ services:
   mindlink:
     image: newg-test-unity/mindlink
     build:
-      context: ./../../../mindlink
+      context: ./../../mindlink
       args:
         - BUILD_CONFIGURATION=develop
     environment:
       - LOG_LEVEL=debug
     volumes:
-      - ./../../../mindlink/app:/app
-      - ./../../../services:/app/services
+      - ./../../mindlink/app:/app
+      - ./../../services:/app/services
     ports:
       - 7766:7766
       - 17766:17766
