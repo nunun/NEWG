@@ -1,28 +1,42 @@
-var util     = require('util');
-var GameData = require('./../library/game_data');
-var consts   = require('./consts');
-exports = {};
+var util        = require('util');
+var CouchClient = require('./../library/couch_client');
+var GameData    = require('./../library/game_data');
+var consts      = require('./consts');
+function Models() {}
+util.inherits(Models, function(){});
+Models.prototype.migrate = function(callback, recreate) {
+    names = [];
+    var models = Object.values(this);
+    for (var i in models) {
+        var name = models[i].getDatabaseScopeName();
+        if (name) {
+            names.push(name);
+        }
+    }
+    CouchClient.getClient().createDatabases(names, callback, recreate);
+}
+models = new Models();
 // User
 // ユーザ情報
 function User() {
     this.init();
 }
 util.inherits(User, GameData);
-GameData.setupType('User', User);
+GameData.setupType(User, 'User', 'users');
 User.prototype.init = function() {
     User.super_.prototype.init.call(this);
 };
 User.prototype.clear = function() {
     this.uuid = null; // ユーザのUUID型
 }
-exports.User = User;
+models.User = User;
 // SampleModel
 // サンプルモデル
 function SampleModel() {
     this.init();
 }
 util.inherits(SampleModel, GameData);
-GameData.setupType('SampleModel', SampleModel);
+GameData.setupType(SampleModel, 'SampleModel', null);
 SampleModel.prototype.init = function() {
     SampleModel.super_.prototype.init.call(this);
 };
@@ -38,5 +52,5 @@ SampleModel.prototype.clear = function() {
     this.listValue1 = null; // リスト型 (null)
     this.listValue2 = []; // リスト型 (空)
 }
-exports.SampleModel = SampleModel;
-module.exports = exports;
+models.SampleModel = SampleModel;
+module.exports = models;

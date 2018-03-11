@@ -63,22 +63,33 @@ function save(self, key, callback, trycnt, retrycnt, keylen) {
 }
 
 // setupType
-GameData.setupType = function(typeName, type) {
-    var getScope = function() {
-        return CouchClient.getClient().getScope(typeName);
+GameData.setupType = function(type, typeName, databaseScopeName) {
+    type.databaseScopeName = databaseScopeName;
+    type.cacheKey          = typeName;
+
+    // get database scope name (class method)
+    type.getDatabaseScopeName = function() {
+        return type.databaseScopeName;
     }
-    var getCacheKey = function(key) {
-        return typeName + ":" + key;
+
+    // get cache key (class method)
+    type.getCacheKey = function(key) {
+        return type.cacheKey + ":" + key;
+    }
+
+    // get scope (class method)
+    type.getScope = function() {
+        return CouchClient.getClient().getScope(type.getDatabaseScopeName());
     }
 
     // get scope
     type.prototype.getScope = function() {
-        return getScope();
+        return type.getScope();
     }
 
     // get
     type.get = function(key, callback) {
-        getScope().get(key, function(err, body) {
+        type.getScope().get(key, function(err, body) {
             if (err) {
                 if (callback) {
                     callback(err, null);
@@ -101,7 +112,7 @@ GameData.setupType = function(typeName, type) {
         if (!params.include_docs) {
             params.include_docs = true;
         }
-        getScope().list(params, function(err, body) {
+        type.getScope().list(params, function(err, body) {
             if (err) {
                 if (callback) {
                     callback(err);
@@ -128,7 +139,7 @@ GameData.setupType = function(typeName, type) {
 
     // destory
     type.destroy = function(id, rev, callback) {
-        getScope().destroy(id, rev, function(err, body) {
+        type.getScope().destroy(id, rev, function(err, body) {
             if (callback) {
                 callback(err);
             }
@@ -138,7 +149,7 @@ GameData.setupType = function(typeName, type) {
     // getCache
     type.getCache = function(key, callback) {
         var redis    = RedisClient.getClient().getConnection();
-        var cacheKey = getCacheKey(key);
+        var cacheKey = type.getCacheKey(key);
         redis.get(cacheKey, function(err, reply) {
             if (err) {
                 if (callback) {
@@ -164,7 +175,7 @@ GameData.setupType = function(typeName, type) {
     // setCache
     type.prototype.setCache = function(key, callback, ttl) {
         var redis     = RedisClient.getClient().getConnection();
-        var cacheKey  = getCacheKey(key);
+        var cacheKey  = type.getCacheKey(key);
         var cacheData = JSON.stringify(this);
         if (ttl != undefined) {
             redis.set(cacheKey, cacheData, 'NX', 'EX', ttl, function(err, reply) {
@@ -196,7 +207,7 @@ GameData.setupType = function(typeName, type) {
     // persistCache
     type.persistCache = function(key, callback) {
         var redis    = RedisClient.getClient().getConnection();
-        var cacheKey = getCacheKey(key);
+        var cacheKey = type.getCacheKey(key);
         redis.persist(cacheKey, function(err, reply) {
             if (err) {
                 if (callback) {
@@ -213,7 +224,7 @@ GameData.setupType = function(typeName, type) {
     // destroyCache
     type.destroyCache = function(key, callback) {
         var redis    = RedisClient.getClient().getConnection();
-        var cacheKey = getCacheKey(key);
+        var cacheKey = type.getCacheKey(key);
         redis.del(cacheKey, function(err, reply) {
             if (err) {
                 if (callback) {

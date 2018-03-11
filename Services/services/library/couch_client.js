@@ -122,7 +122,73 @@ CouchClient.prototype.getDatabase = function() {
 // get scope
 CouchClient.prototype.getScope = function(name) {
     var db = this.getDatabase();
-    return db.use('testdb'); // TODO db.use(name);
+    return db.use(name);
+}
+
+// create databases
+CouchClient.prototype.createDatabases = function(names, callback, recreate) {
+    var db = this.getDatabase();
+    if (recreate) {
+        this.destroyAllDatabases(function(err) {
+            if (err) {
+                if (callback) {
+                    callback(err);
+                }
+                return;
+            }
+            createDatabases(db, names, callback, 0);
+        });
+        return;
+    }
+    createDatabases(db, names, callback, 0);
+}
+function createDatabases(db, names, callback, n) {
+    if (n >= names.length) {
+        if (callback) {
+            callback(null);
+        }
+        return;
+    }
+    db.create(names[n], function(err, body) {
+        if (err) {
+            if (callback) {
+                callback(err);
+            }
+            return;
+        }
+        createDatabases(db, names, callback, n + 1);
+    });
+}
+
+// destroy all databases
+CouchClient.prototype.destroyAllDatabases = function(callback) {
+    var db = this.getDatabase();
+    db.list(function(err, body) {
+        if (err) {
+            if (callback) {
+                callback(err);
+            }
+            return;
+        }
+        destroyAllDatabases(db, body, callback, 0);
+    });
+}
+function destroyAllDatabases(db, names, callback, n) {
+    if (n >= names.length) {
+        if (callback) {
+            callback(null);
+        }
+        return;
+    }
+    db.destroy(names[n], function(err, body) {
+        if (err) {
+            if (callback) {
+                callback(err);
+            }
+            return;
+        }
+        destroyAllDatabases(db, names, callback, n + 1);
+    });
 }
 
 // set start event listener

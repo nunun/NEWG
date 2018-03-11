@@ -6,6 +6,7 @@ var webapiClient = require('./services/library/webapi_client').activate(config.w
 var couchClient  = require('./services/library/couch_client').activate(config.couchClient, logger.couchClient);
 var redisClient  = require('./services/library/redis_client').activate(config.redisClient, logger.redisClient);
 var GameData     = require('./services/library/game_data');
+var models       = require('./services/protocols/models');
 var webapi       = require('./services/protocols/webapi');
 
 describe('smoke test', function () {
@@ -14,14 +15,10 @@ describe('smoke test', function () {
         it('smoke test', function (done) {
             couchClient.test([
                 {connect: function() {
-                    var conn = couchClient.getConnection();
-                    conn.server.db.destroy(conn.config.db, function(err, body) {
-                        assert.ok(!err, 'db destroy error.');
-                        conn.server.db.create(conn.config.db, function(err, body) {
-                            assert.ok(!err, 'db create error.');
-                            redisClient.start();
-                        });
-                    });
+                    models.migrate(function(err) {
+                        assert.ok(!err, 'invalid response err (' + err + ')');
+                        redisClient.start();
+                    }, true);
                 }},
             ]);
 
@@ -159,13 +156,14 @@ function TestData() {
     this.init();
 }
 util.inherits(TestData, GameData);
-GameData.setupType('TestData', TestData);
+GameData.setupType(TestData, 'TestData', 'test_data');
 TestData.prototype.init = function() {
     TestData.super_.prototype.init.call(this);
 };
 TestData.prototype.clear = function() {
     this.value = 0;
 }
+models.TestData = TestData;
 
 before(function (done) {
     logger.testClient.debug('[describe] before test')
@@ -222,3 +220,12 @@ afterEach(function (done) {
     logger.testClient.debug('[it] after every test')
     done();
 });
+
+//var conn = couchClient.getConnection();
+//conn.server.db.destroy(conn.config.db, function(err, body) {
+//    assert.ok(!err, 'db destroy error.');
+//    conn.server.db.create(conn.config.db, function(err, body) {
+//        assert.ok(!err, 'db create error.');
+//        redisClient.start();
+//    });
+//});
