@@ -1,6 +1,8 @@
 var assert       = require('assert');
 var config       = require('./services/library/config');
 var logger       = require('./services/library/logger');
+var couchClient  = require('./services/library/couch_client').activate(config.couchClient, logger.couchClient);
+var redisClient  = require('./services/library/redis_client').activate(config.redisClient, logger.redisClient);
 var webapiClient = require('./services/library/webapi_client').activate(config.webapiClient, logger.webapiClient);
 var webapi       = require('./services/protocols/webapi');
 

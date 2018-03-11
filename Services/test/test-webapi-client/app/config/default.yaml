@@ -7,6 +7,14 @@ webapiClient:
   headers:
     content-type: "application/json"
 
+# couch client
+couchClient:
+  url: ["http://couchdb:5984/testdb", "${COUCH_URL}"]
+
+# redis client
+redisClient:
+  url: ["redis://redis:6379/?db=99", "${REDIS_URL}"]
+
 # log4js
 log4js:
   appenders:
@@ -22,3 +30,10 @@ log4js:
     webapiClient:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
+    couchClient:
+      appenders: [console]
+      level: [info, "${LOG_LEVEL}"]
+    redisClient:
+      appenders: [console]
+      level: [info, "${LOG_LEVEL}"]
+

@@ -22,11 +22,11 @@ webSocketClient:
 
 # couch client
 couchClient:
-  url: "http://couchdb:5984/test"
+  url: ["http://couchdb:5984/testdb", "${COUCH_URL}"]
 
 # redis client
 redisClient:
-  url: "redis://redis:6379"
+  url: ["redis://redis:6379/?db=99", "${REDIS_URL}"]
 
 # log4js
 log4js:

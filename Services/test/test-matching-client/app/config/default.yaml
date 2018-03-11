@@ -27,4 +27,3 @@ log4js:
     matchingClient:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
-
