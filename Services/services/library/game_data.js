@@ -137,7 +137,7 @@ GameData.setupType = function(typeName, type) {
 
     // getCache
     type.getCache = function(key, callback) {
-        var redis    = RedisClient.getClient();
+        var redis    = RedisClient.getClient().getConnection();
         var cacheKey = getCacheKey(key);
         redis.get(cacheKey, function(err, reply) {
             if (err) {
@@ -147,9 +147,11 @@ GameData.setupType = function(typeName, type) {
                 return;
             }
             if (callback) {
+                var data = null;
                 try {
-                    var data = JSON.parse(reply);
-                    data.prototype = type.prototype;
+                    var replyData = JSON.parse(reply);
+                    var data = new type();
+                    Object.assign(data, replyData);
                 } catch (e) {
                     callback(new Error(e.toString()), null);
                     return;
@@ -161,7 +163,7 @@ GameData.setupType = function(typeName, type) {
 
     // setCache
     type.prototype.setCache = function(key, callback, ttl) {
-        var redis     = RedisClient.getClient();
+        var redis     = RedisClient.getClient().getConnection();
         var cacheKey  = getCacheKey(key);
         var cacheData = JSON.stringify(this);
         if (ttl != undefined) {
@@ -193,7 +195,7 @@ GameData.setupType = function(typeName, type) {
 
     // persistCache
     type.persistCache = function(key, callback) {
-        var redis    = RedisClient.getClient();
+        var redis    = RedisClient.getClient().getConnection();
         var cacheKey = getCacheKey(key);
         redis.persist(cacheKey, function(err, reply) {
             if (err) {
@@ -210,7 +212,7 @@ GameData.setupType = function(typeName, type) {
 
     // destroyCache
     type.destroyCache = function(key, callback) {
-        var redis    = RedisClient.getClient();
+        var redis    = RedisClient.getClient().getConnection();
         var cacheKey = getCacheKey(key);
         redis.del(cacheKey, function(err, reply) {
             if (err) {

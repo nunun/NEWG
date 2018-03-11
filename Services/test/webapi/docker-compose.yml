@@ -8,7 +8,7 @@ services:
         - BUILD_CONFIGURATION=tester
     environment:
       - COUCH_URL=http://couchdb:5984/testdb
-      - REDIS_URL=redis://redis:6379/?db=99
+      - REDIS_URL=redis://redis:6379/?db=15
       - LOG_LEVEL=debug
     volumes:
       - ./test-webapi-client/app:/app
@@ -25,7 +25,7 @@ services:
         - BUILD_CONFIGURATION=develop
     environment:
       - COUCH_URL=http://couchdb:5984/testdb
-      - REDIS_URL=redis://redis:6379/?db=99
+      - REDIS_URL=redis://redis:6379/?db=15
       - LOG_LEVEL=debug
     volumes:
       - ./../../api/app:/app

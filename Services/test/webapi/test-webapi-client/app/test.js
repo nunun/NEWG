@@ -27,7 +27,12 @@ describe('smoke test', function () {
 
             redisClient.test([
                 {connect: function() {
-                    testWebAPI();
+                    var conn = redisClient.getConnection();
+                    conn.flushdb(function(err, reply) {
+                        assert.ok(!err,          'invalid response err ('    + err   + ')');
+                        assert.ok(reply == "OK", 'invalid response reploy (' + reply + ')');
+                        testWebAPI();
+                    });
                 }},
             ]);
 
@@ -44,7 +49,7 @@ describe('smoke test', function () {
             var testRev = null;
             function testSaveModel() {
                 var testData = new TestData();
-                testData.num = 100;
+                testData.value = 100;
                 testData.save('test', function(err, id, rev) {
                     assert.ok(!err,         'invalid response err (' + err + ')');
                     assert.ok(id == 'test', 'invalid response id ('  + id  + ')');
@@ -57,26 +62,26 @@ describe('smoke test', function () {
 
             function testGetModel() {
                 TestData.get(testId, function(err, testData) {
-                    assert.ok(!err,                     'invalid response err ('           + err           + ')');
-                    assert.ok(testData._id  == testId,  'invalid response testData._id ('  + testData._id  + ')');
-                    assert.ok(testData._rev == testRev, 'invalid response testData._rev (' + testData._rev + ')');
-                    assert.ok(testData.num  == 100,     'invalid response testData.num ('  + testData.num  + ')');
+                    assert.ok(!err,                      'invalid response err ('             + err             + ')');
+                    assert.ok(testData._id   == testId,  'invalid response testData._id ('    + testData._id    + ')');
+                    assert.ok(testData._rev  == testRev, 'invalid response testData._rev ('   + testData._rev   + ')');
+                    assert.ok(testData.value == 100,     'invalid response testData.value ('  + testData.value  + ')');
                     testListModel();
                 });
             }
 
             function testListModel() {
-                TestData.list({num: 100}, function(err, list) {
-                    assert.ok(!err,                    'invalid response err (' + err + ')');
-                    assert.ok(list.length  == 1,       'invalid response list.length ('  + list.length  + ')');
-                    assert.ok(list[0]._id  == testId,  'invalid response list[0]._id ('  + list[0]._id  + ')');
-                    assert.ok(list[0]._rev == testRev, 'invalid response list[0]._rev (' + list[0]._rev + ')');
-                    assert.ok(list[0].num  == 100,     'invalid response list[0].num ('  + list[0].num  + ')');
+                TestData.list({value: 100}, function(err, list) {
+                    assert.ok(!err,                     'invalid response err ('            + err            + ')');
+                    assert.ok(list.length   == 1,       'invalid response list.length ('    + list.length    + ')');
+                    assert.ok(list[0]._id   == testId,  'invalid response list[0]._id ('    + list[0]._id    + ')');
+                    assert.ok(list[0]._rev  == testRev, 'invalid response list[0]._rev ('   + list[0]._rev   + ')');
+                    assert.ok(list[0].value == 100,     'invalid response list[0].value ('  + list[0].value  + ')');
 
                     var testData = list[0].activate();
-                    assert.ok(testData._id  == testId,  'invalid response testData[0]._id ('  + testData._id  + ')');
-                    assert.ok(testData._rev == testRev, 'invalid response testData[0]._rev (' + testData._rev + ')');
-                    assert.ok(testData.num  == 100,     'invalid response testData[0].num ('  + testData.num  + ')');
+                    assert.ok(testData._id    == testId,  'invalid response testData[0]._id ('    + testData._id   + ')');
+                    assert.ok(testData._rev   == testRev, 'invalid response testData[0]._rev ('   + testData._rev  + ')');
+                    assert.ok(testData.value  == 100,     'invalid response testData[0].value ('  + testData.value + ')');
 
                     testDestroyModel();
                 });
@@ -85,9 +90,34 @@ describe('smoke test', function () {
             function testDestroyModel() {
                 TestData.destroy(testId, testRev, function(err) {
                     assert.ok(!err, 'invalid response err (' + err + ')');
-                    TestData.list({num: 100}, function(err, list) {
+                    TestData.list({value: 100}, function(err, list) {
                         assert.ok(!err,              'invalid response err ('          + err          + ')');
                         assert.ok(list.length  == 0, 'invalid response list.length ('  + list.length  + ')');
+                        testSetCache();
+                    });
+                });
+            }
+
+            function testSetCache() {
+                var testData = new TestData();
+                testData.value = 122;
+                testData.setCache('mycache1', function(err) {
+                    assert.ok(!err, 'invalid response err (' + err + ')');
+                    testData.value = 124;
+                    testData.setCache('mycache2', function(err) {
+                        assert.ok(!err, 'invalid response err (' + err + ')');
+                        testGetCache();
+                    }, 3000);
+                });
+            }
+
+            function testGetCache() {
+                TestData.getCache('mycache1', function(err, testData1) {
+                    assert.ok(!err,                   'invalid response err ('             + err             + ')');
+                    assert.ok(testData1.value == 122, 'invalid response testData1.value (' + testData1.value + ')');
+                    TestData.getCache('mycache2', function(err, testData2) {
+                        assert.ok(!err,                   'invalid response err ('             + err             + ')');
+                        assert.ok(testData2.value == 124, 'invalid response testData2.value (' + testData2.value + ')');
                         done();
                     });
                 });
