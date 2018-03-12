@@ -101,6 +101,22 @@ RedisClient.prototype.getConnection = function() {
     return this.redis;
 }
 
+// flushdb
+RedisClient.prototype.flushdb = function(callback) {
+    var conn = this.getConnection();
+    conn.flushdb(function(err, reply) {
+        if (err) {
+            if (callback) {
+                callback(err);
+            }
+            return;
+        }
+        if (callback) {
+            callback((reply == "OK")? null : new Error('flushdb failed'));
+        }
+    });
+}
+
 // set start event listener
 RedisClient.prototype.setStartEventListener = function(eventListener) {
     this.startEventListener = eventListener;

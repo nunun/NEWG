@@ -45,31 +45,39 @@ function save(self, key, callback, trycnt, retrycnt, keylen) {
             key += sym[parseInt(Math.random() * sym.length)];
         }
     }
-    self.getScope().insert(self, key, function(err, body) {
+    self.getScope(function(err, scope) {
         if (err) {
-            if (trycnt <= retrycnt) {
-                save(self, key, callback, trycnt, retrycnt, keylen);
-                return;
-            }
             if (callback) {
-                callback(err, null);
+                callback(err, null, null);
             }
             return;
         }
-        if (callback) {
-            callback(null, body.id, body.rev);
-        }
+        scope.insert(self, key, function(err, body) {
+            if (err) {
+                if (trycnt <= retrycnt) {
+                    save(self, key, callback, trycnt, retrycnt, keylen);
+                    return;
+                }
+                if (callback) {
+                    callback(err, null);
+                }
+                return;
+            }
+            if (callback) {
+                callback(null, body.id, body.rev);
+            }
+        });
     });
 }
 
 // setupType
-GameData.setupType = function(type, typeName, databaseScopeName) {
-    type.databaseScopeName = databaseScopeName;
-    type.cacheKey          = typeName;
+GameData.setupType = function(type, typeName, databaseName) {
+    type.databaseName = databaseName;
+    type.cacheKey     = typeName;
 
-    // get database scope name (class method)
-    type.getDatabaseScopeName = function() {
-        return type.databaseScopeName;
+    // get database name (class method)
+    type.getDatabaseName = function() {
+        return type.databaseName;
     }
 
     // get cache key (class method)
@@ -78,29 +86,37 @@ GameData.setupType = function(type, typeName, databaseScopeName) {
     }
 
     // get scope (class method)
-    type.getScope = function() {
-        return CouchClient.getClient().getScope(type.getDatabaseScopeName());
+    type.getScope = function(callback) {
+        return CouchClient.getClient().getScope(type.getDatabaseName(), callback);
     }
 
     // get scope
-    type.prototype.getScope = function() {
-        return type.getScope();
+    type.prototype.getScope = function(callback) {
+        return type.getScope(callback);
     }
 
     // get
     type.get = function(key, callback) {
-        type.getScope().get(key, function(err, body) {
+        type.getScope(function(err, scope) {
             if (err) {
                 if (callback) {
                     callback(err, null);
                 }
                 return;
             }
-            if (callback) {
-                var data = new type();
-                Object.assign(data, body);
-                callback(err, data);
-            }
+            scope.get(key, function(err, body) {
+                if (err) {
+                    if (callback) {
+                        callback(err, null);
+                    }
+                    return;
+                }
+                if (callback) {
+                    var data = new type();
+                    Object.assign(data, body);
+                    callback(err, data);
+                }
+            });
         });
     }
 
@@ -112,37 +128,53 @@ GameData.setupType = function(type, typeName, databaseScopeName) {
         if (!params.include_docs) {
             params.include_docs = true;
         }
-        type.getScope().list(params, function(err, body) {
+        type.getScope(function(err, scope) {
             if (err) {
                 if (callback) {
-                    callback(err);
+                    callback(err, null);
                 }
                 return;
             }
-            if (callback) {
-                var proto = {activate: function() {
-                    var data = new type();
-                    Object.assign(data, this);
-                    return data;
-                }};
-                var rows = body.rows;
-                var list = [];
-                for (var i in rows) {
-                    var doc = rows[i].doc;
-                    doc.__proto__ = proto;
-                    list.push(doc);
+            scope.list(params, function(err, body) {
+                if (err) {
+                    if (callback) {
+                        callback(err);
+                    }
+                    return;
                 }
-                callback(null, list);
-            }
+                if (callback) {
+                    var proto = {activate: function() {
+                        var data = new type();
+                        Object.assign(data, this);
+                        return data;
+                    }};
+                    var rows = body.rows;
+                    var list = [];
+                    for (var i in rows) {
+                        var doc = rows[i].doc;
+                        doc.__proto__ = proto;
+                        list.push(doc);
+                    }
+                    callback(null, list);
+                }
+            });
         });
     }
 
     // destory
     type.destroy = function(id, rev, callback) {
-        type.getScope().destroy(id, rev, function(err, body) {
-            if (callback) {
-                callback(err);
+        type.getScope(function(err, scope) {
+            if (err) {
+                if (callback) {
+                    callback(err, null);
+                }
+                return;
             }
+            scope.destroy(id, rev, function(err, body) {
+                if (callback) {
+                    callback(err);
+                }
+            });
         });
     }
 

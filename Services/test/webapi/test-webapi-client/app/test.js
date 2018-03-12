@@ -15,7 +15,7 @@ describe('smoke test', function () {
         it('smoke test', function (done) {
             couchClient.test([
                 {connect: function() {
-                    models.migrate(function(err) {
+                    couchClient.flushdb(function(err) {
                         assert.ok(!err, 'invalid response err (' + err + ')');
                         redisClient.start();
                     }, true);
@@ -24,10 +24,8 @@ describe('smoke test', function () {
 
             redisClient.test([
                 {connect: function() {
-                    var conn = redisClient.getConnection();
-                    conn.flushdb(function(err, reply) {
-                        assert.ok(!err,          'invalid response err ('    + err   + ')');
-                        assert.ok(reply == "OK", 'invalid response reploy (' + reply + ')');
+                    redisClient.flushdb(function(err) {
+                        assert.ok(!err, 'invalid response err (' + err + ')');
                         testWebAPI();
                     });
                 }},

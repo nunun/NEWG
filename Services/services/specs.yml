@@ -19,8 +19,6 @@ specs:
       models:
         - name: User
           desc: ユーザ情報
-          database:
-            scope: users
           properties:
             - name:  uuid
               desc:  ユーザのUUID型
@@ -278,28 +276,12 @@ templates:
     in: /output/nodejs/services/protocols
     output: models.js
     template: |
-      var util        = require('util');
-      var CouchClient = require('./../library/couch_client');
-      var GameData    = require('./../library/game_data');
-      var consts      = require('./consts');
-      function Models() {}
-      util.inherits(Models, function(){});
-      Models.prototype.migrate = function(callback, recreate) {
-          names = [];
-          var models = Object.values(this);
-          for (var i in models) {
-              var name = models[i].getDatabaseScopeName();
-              if (name) {
-                  names.push(name);
-              }
-          }
-          CouchClient.getClient().createDatabases(names, callback, recreate);
-      }
-      models = new Models();
+      var util     = require('util');
+      var GameData = require('./../library/game_data');
+      var consts   = require('./consts');
+      var models   = {};
       <%- entries.each do |entry| -%>
       <%- name       = entry["name"].to_pascal -%>
-      <%- database   = entry["database"]       -%>
-      <%- table      = entry["table"]          -%>
       <%- desc       = entry["desc"]           -%>
       <%- properties = entry["properties"]     -%>
       // <%= name %>
@@ -308,7 +290,7 @@ templates:
           this.init();
       }
       util.inherits(<%= name %>, GameData);
-      GameData.setupType(<%= name %>, '<%= name %>', <% if database.nil? || database["scope"].nil? %>null<% else %>'<%= database["scope"] %>'<% end %>);
+      GameData.setupType(<%= name %>, '<%= name %>', 'db_<%= name.to_snake %>');
       <%= name %>.prototype.init = function() {
           <%= name %>.super_.prototype.init.call(this);
       };

@@ -25,8 +25,8 @@ CouchClient.prototype.init = function(config, logger) {
 
 // clear
 CouchClient.prototype.clear = function() {
-    // couch client
-    this.nano = null; // internal nano connection
+    this.nano   = null; // internal nano connection
+    this.dblist = null; // cached couchdb database list
 };
 
 // start
@@ -120,48 +120,52 @@ CouchClient.prototype.getDatabase = function() {
 }
 
 // get scope
-CouchClient.prototype.getScope = function(name) {
-    var db = this.getDatabase();
-    return db.use(name);
-}
-
-// create databases
-CouchClient.prototype.createDatabases = function(names, callback, recreate) {
-    var db = this.getDatabase();
-    if (recreate) {
-        this.destroyAllDatabases(function(err) {
-            if (err) {
-                if (callback) {
-                    callback(err);
-                }
-                return;
-            }
-            createDatabases(db, names, callback, 0);
-        });
-        return;
+CouchClient.prototype.getScope = function(name, callback) {
+    var self = this;
+    var db   = this.getDatabase();
+    if (!callback) {
+        return db.use(name);
     }
-    createDatabases(db, names, callback, 0);
-}
-function createDatabases(db, names, callback, n) {
-    if (n >= names.length) {
+    if (self.dblist && self.dblist.includes(name)) {
+        var scope = self.getDatabase().use(name);
         if (callback) {
-            callback(null);
+            callback(null, scope);
         }
-        return;
+        return scope;
     }
-    db.create(names[n], function(err, body) {
+    db.list(function(err, body) {
         if (err) {
             if (callback) {
-                callback(err);
+                callback(err, null);
             }
-            return;
+            return null;
         }
-        createDatabases(db, names, callback, n + 1);
+        self.dblist = body;
+        if (self.dblist && self.dblist.includes(name)) {
+            var scope = db.use(name);
+            if (callback) {
+                callback(null, scope);
+            }
+            return scope;
+        }
+        db.create(name, function(err, body) {
+            if (err) {
+                if (callback) {
+                    callback(err, null);
+                }
+                return null;
+            }
+            var scope = db.use(name);
+            if (callback) {
+                callback(null, scope);
+            }
+            return scope;
+        });
     });
 }
 
-// destroy all databases
-CouchClient.prototype.destroyAllDatabases = function(callback) {
+// flushdb
+CouchClient.prototype.flushdb = function(callback) {
     var db = this.getDatabase();
     db.list(function(err, body) {
         if (err) {
@@ -170,13 +174,13 @@ CouchClient.prototype.destroyAllDatabases = function(callback) {
             }
             return;
         }
-        destroyAllDatabases(db, body, callback, 0);
+        flushdb(db, body, callback, 0);
     });
 }
-function destroyAllDatabases(db, names, callback, n) {
+function flushdb(db, names, callback, n) {
     if (n >= names.length) {
         if (callback) {
-            callback(null);
+            callback(null);//success
         }
         return;
     }
@@ -187,7 +191,7 @@ function destroyAllDatabases(db, names, callback, n) {
             }
             return;
         }
-        destroyAllDatabases(db, names, callback, n + 1);
+        flushdb(db, names, callback, n + 1);
     });
 }
 
