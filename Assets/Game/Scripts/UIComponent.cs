@@ -14,6 +14,9 @@ using UnityEngine;
 //        SetUIDone();
 //        GameObjectPool<SampleUI>.ReturnObject(this);
 //    }
+//    void Awake() {
+//        SetUIRecycle(ReturnToPool);
+//    }
 //    void OnDestroy() {
 //        SetUIDone();
 //    }
@@ -22,7 +25,8 @@ using UnityEngine;
 // UIComponent
 public class UIComponent : MonoBehaviour {
     //------------------------------------------------------------------------- 変数
-    IUIResult result = null; // UI の結果
+    IUIResult result   = null; // UI の結果
+    Action    recycler = null; // 再利用関数の設定
 
     //------------------------------------------------------------------------- UI 結果関連
     // 結果コールバックの設定
@@ -42,14 +46,20 @@ public class UIComponent : MonoBehaviour {
     // 結果の送信
     protected void SetUIDone() {
         var result = this.result;
-        this.result = null;
+        this.result   = null;
+        this.recycler = null;
         if (result != null) {
             result.Callback();
             result.ReturnToPool();
         }
     }
 
-    //------------------------------------------------------------------------- 開くと閉じる
+    // 再利用の設定
+    protected void SetUIRecycle(Action recycler) {
+        this.recycler = recycler;
+    }
+
+    //------------------------------------------------------------------------- 開く、閉じる
     // 開く
     public void Open() {
         // TODO
@@ -60,7 +70,15 @@ public class UIComponent : MonoBehaviour {
     public void Close() {
         // TODO
         // Disappear
-        GameObject.Destroy(this.gameObject);
+    }
+
+    // 閉じられた
+    public void Closed() {
+        if (recycler != null) {
+            recycler();
+            return;
+        }
+        GameObject.Destroy(this.gameObject);// NOTE リサイクルしないなら削除
     }
 }
 
