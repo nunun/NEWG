@@ -3,13 +3,29 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+// [UI の実装例]
+//public class SampleUI : UIComponent {
+//    public static SampleUI RentFromPool(Action<string> callback) {
+//        var component = GameObjectPool<SampleUI>.RentGameObject();
+//        component.SetUICallback(callback);
+//        component.Open();
+//    }
+//    public void ReturnToPool() {
+//        SetUIDone();
+//        GameObjectPool<SampleUI>.ReturnObject(this);
+//    }
+//    void OnDestroy() {
+//        SetUIDone();
+//    }
+//}
+
 // UIComponent
 public class UIComponent : MonoBehaviour {
     //------------------------------------------------------------------------- 変数
     IUIResult result = null; // UI の結果
 
     //------------------------------------------------------------------------- UI 結果関連
-    // コールバックの設定
+    // 結果コールバックの設定
     protected void SetUICallback(Action<string> callback) {
         Debug.Assert(this.result == null);
         this.result = UIResult.RentFromPool(callback);
@@ -23,10 +39,8 @@ public class UIComponent : MonoBehaviour {
         result.SetUIResult(error);
     }
 
-    //------------------------------------------------------------------------- UI 操作関連
-    // UI の完了
-    // 設定した結果を元にコールバックが呼び出されます。
-    public void Done() {
+    // 結果の送信
+    protected void SetUIDone() {
         var result = this.result;
         this.result = null;
         if (result != null) {
@@ -35,25 +49,18 @@ public class UIComponent : MonoBehaviour {
         }
     }
 
-    // UI の中断
-    // 中断エラーを元にコールバックが呼び出されます。
-    public void Abort(string error = null) {
-        var result = this.result;
-        this.result = null;
-        if (result != null) {
-            result.Abort(error);
-            result.ReturnToPool();
-        }
+    //------------------------------------------------------------------------- 開くと閉じる
+    // 開く
+    public void Open() {
+        // TODO
+        // Appear
     }
 
-    //------------------------------------------------------------------------- 実装 (MonoBehaviour)
-    protected void OnDestroy() {
-        var result = this.result;
-        this.result = null;
-        if (result != null) {
-            result.Abort("destroyed.");
-            result.ReturnToPool();
-        }
+    // 閉じる
+    public void Close() {
+        // TODO
+        // Disappear
+        GameObject.Destroy(this.gameObject);
     }
 }
 
@@ -67,7 +74,7 @@ public class UIComponent<T1> : UIComponent {
         Debug.Assert(this.result == null);
         this.result = UIResult<T1>.RentFromPool(callback);
     }
-    new public void Done(string error, T1 v1) {
+    new protected void SetUIResult(string error, T1 v1) {
         Debug.Assert(this.result != null);
         var result = this.result as UIResult;
         Debug.Assert(result != null);
@@ -81,7 +88,7 @@ public class UIComponent<T1,T2> : UIComponent {
         Debug.Assert(this.result == null);
         this.result = UIResult<T1,T2>.RentFromPool(callback);
     }
-    new public void Done(string error, T1 v1, T2 v2) {
+    new protected void SetUIResult(string error, T1 v1, T2 v2) {
         Debug.Assert(this.result != null);
         var result = this.result as UIResult;
         Debug.Assert(result != null);
@@ -95,7 +102,7 @@ public class UIComponent<T1,T2,T3> : UIComponent {
         Debug.Assert(this.result == null);
         this.result = UIResult<T1,T2,T3>.RentFromPool(callback);
     }
-    new public void Done(string error, T1 v1, T2 v2, T3 v3) {
+    new protected void SetUIResult(string error, T1 v1, T2 v2, T3 v3) {
         Debug.Assert(this.result != null);
         var result = this.result as UIResult;
         Debug.Assert(result != null);
