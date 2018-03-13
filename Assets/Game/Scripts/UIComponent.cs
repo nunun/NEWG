@@ -3,8 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// [UI の実装例]
-//public class SampleUI : UIComponent {
+// [UI コンポーネントの実装例]
+//public class SampleUI : UIComponent<string> {
 //    public static SampleUI RentFromPool(Action<string> callback) {
 //        var component = GameObjectPool<SampleUI>.RentGameObject();
 //        component.SetUICallback(callback);
@@ -21,110 +21,100 @@ using UnityEngine;
 //        SetUIDone();
 //    }
 //}
+//var ui = SampleUI.RentFromPool(callback);
+//ui.Close();
+//GameObject.Destroy(ui.gameObject);
 
-// UIComponent
-public class UIComponent : MonoBehaviour {
-    //------------------------------------------------------------------------- 変数
-    IUIResult result   = null; // UI の結果
-    Action    recycler = null; // 再利用関数の設定
 
-    //------------------------------------------------------------------------- UI 結果関連
-    // 結果コールバックの設定
+// UI コンポーネント
+public class UIComponent : UIBehaviour {
+    UIResult result = null;
     protected void SetUICallback(Action<string> callback) {
         Debug.Assert(this.result == null);
         this.result = UIResult.RentFromPool(callback);
     }
-
-    // 結果の設定
     protected void SetUIResult(string error) {
         Debug.Assert(this.result != null);
         var result = this.result as UIResult;
         Debug.Assert(result != null);
         result.SetUIResult(error);
     }
-
-    // 結果の送信
     protected void SetUIDone() {
         var result = this.result;
-        this.result   = null;
-        this.recycler = null;
+        this.result = null;
         if (result != null) {
             result.Callback();
             result.ReturnToPool();
         }
     }
-
-    // 再利用の設定
-    protected void SetUIRecycle(Action recycler) {
-        this.recycler = recycler;
-    }
-
-    //------------------------------------------------------------------------- 開く、閉じる
-    // 開く
-    public void Open() {
-        // TODO
-        // Appear
-    }
-
-    // 閉じる
-    public void Close() {
-        // TODO
-        // Disappear
-    }
-
-    // 閉じられた
-    public void Closed() {
-        if (recycler != null) {
-            recycler();
-            return;
-        }
-        GameObject.Destroy(this.gameObject);// NOTE リサイクルしないなら削除
-    }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
-// UIComponent<T1>
-public class UIComponent<T1> : UIComponent {
-    new protected void SetUICallback(Action<string,T1> callback) {
+// UI コンポーネント <T1>
+public class UIComponent<T1> : UIBehaviour {
+    UIResult<T1> result = null;
+    protected void SetUICallback(Action<string,T1> callback) {
         Debug.Assert(this.result == null);
         this.result = UIResult<T1>.RentFromPool(callback);
     }
-    new protected void SetUIResult(string error, T1 v1) {
+    protected void SetUIResult(string error, T1 v1) {
         Debug.Assert(this.result != null);
-        var result = this.result as UIResult;
+        var result = this.result as UIResult<T1>;
         Debug.Assert(result != null);
         result.SetUIResult(error, v1);
     }
+    protected void SetUIDone() {
+        var result = this.result;
+        this.result = null;
+        if (result != null) {
+            result.Callback();
+            result.ReturnToPool();
+        }
+    }
 }
 
-// UIComponent<T1,T2>
-public class UIComponent<T1,T2> : UIComponent {
-    new protected void SetUICallback(Action<string,T1,T2> callback) {
+// UI コンポーネント <T1,T2>
+public class UIComponent<T1,T2> : UIBehaviour {
+    UIResult<T1,T2> result = null;
+    protected void SetUICallback(Action<string,T1,T2> callback) {
         Debug.Assert(this.result == null);
         this.result = UIResult<T1,T2>.RentFromPool(callback);
     }
-    new protected void SetUIResult(string error, T1 v1, T2 v2) {
+    protected void SetUIResult(string error, T1 v1, T2 v2) {
         Debug.Assert(this.result != null);
-        var result = this.result as UIResult;
+        var result = this.result as UIResult<T1,T2>;
         Debug.Assert(result != null);
         result.SetUIResult(error, v1, v2);
     }
+    protected void SetUIDone() {
+        var result = this.result;
+        this.result = null;
+        if (result != null) {
+            result.Callback();
+            result.ReturnToPool();
+        }
+    }
 }
 
-// UIComponent<T1,T2,T3>
-public class UIComponent<T1,T2,T3> : UIComponent {
-    new protected void SetUICallback(Action<string,T1,T2,T3> callback) {
+// UI コンポーネント <T1,T2,T3>
+public class UIComponent<T1,T2,T3> : UIBehaviour {
+    UIResult<T1,T2,T3> result = null;
+    protected void SetUICallback(Action<string,T1,T2,T3> callback) {
         Debug.Assert(this.result == null);
         this.result = UIResult<T1,T2,T3>.RentFromPool(callback);
     }
-    new protected void SetUIResult(string error, T1 v1, T2 v2, T3 v3) {
+    protected void SetUIResult(string error, T1 v1, T2 v2, T3 v3) {
         Debug.Assert(this.result != null);
-        var result = this.result as UIResult;
+        var result = this.result as UIResult<T1,T2,T3>;
         Debug.Assert(result != null);
         result.SetUIResult(error, v1, v2, v3);
+    }
+    protected void SetUIDone() {
+        var result = this.result;
+        this.result = null;
+        if (result != null) {
+            result.Callback();
+            result.ReturnToPool();
+        }
     }
 }
 
@@ -132,15 +122,8 @@ public class UIComponent<T1,T2,T3> : UIComponent {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-// IUIResult
-public interface IUIResult {
-    public void Callback();
-    public void Abort(string error);
-    public void ReturnToPool();
-}
-
-// UIResult
-public class UIResult : IUIResult {
+// UI 結果
+public class UIResult {
     string         error    = default(string);
     Action<string> callback = default(Action<string>);
     public static UIResult RentFromPool(Action<string> callback) {
@@ -170,8 +153,8 @@ public class UIResult : IUIResult {
     }
 }
 
-// UIResult<T1>
-public class UIResult<T1> : IUIResult {
+// UI 結果 <T1>
+public class UIResult<T1> {
     string            error    = default(string);
     T1                v1       = default(T1);
     Action<string,T1> callback = default(Action<string,T1>);
@@ -206,8 +189,8 @@ public class UIResult<T1> : IUIResult {
     }
 }
 
-// UIResult<T1,T2>
-public class UIResult<T1,T2> : IUIResult {
+// UI 結果 <T1,T2>
+public class UIResult<T1,T2> {
     string               error    = default(string);
     T1                   v1       = default(T1);
     T2                   v2       = default(T2);
@@ -245,15 +228,15 @@ public class UIResult<T1,T2> : IUIResult {
     }
 }
 
-// UIResult<T1,T2,T3>
-public class UIResult<T1,T2,T3> : IUIResult {
+// UI 結果 <T1,T2,T3>
+public class UIResult<T1,T2,T3> {
     string                  error    = default(string);
     T1                      v1       = default(T1);
     T2                      v2       = default(T2);
     T3                      v3       = default(T3);
     Action<string,T1,T2,T3> callback = default(Action<string,T1,T2,T3>);
     public static UIResult<T1,T2,T3> RentFromPool(Action<string,T1,T2,T3> callback) {
-        var result = ObjectPool<UIResult<T1,T2>>.RentObject();
+        var result = ObjectPool<UIResult<T1,T2,T3>>.RentObject();
         result.error    = default(string);
         result.v1       = default(T1);
         result.v2       = default(T2);
