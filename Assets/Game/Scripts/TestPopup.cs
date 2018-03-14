@@ -5,7 +5,7 @@ using UnityEngine;
 public class TestPopup : UIComponent {
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     void Awake() {
-        disappearEffect.Stop(1.0f);
+        Hide();
     }
 
     void Start() {

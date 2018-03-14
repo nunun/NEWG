@@ -13,33 +13,42 @@ public class CanvasGroupAlphaEffect : UIEffect {
     //-------------------------------------------------------------------------- 変数
     public CanvasGroup canvasGroup = null;
     public float       effectTime  = 0.0f;
-    public bool        reverse     = false;
 
     float currentTime = 0.0f;
+    bool  reverse     = false;
 
     //-------------------------------------------------------------------------- 実装 (UIEffect)
     // エフェクト再生状態の変更時
-    protected override void OnEffectPlay(bool play) {
+    protected override void OnEffect(bool play, float normalizedTime) {
         enabled = play;
+        currentTime = normalizedTime * effectTime;
+        reverse = false;
+        UpdateAlpha();
     }
 
     // エフェクト再生時間の変更時
-    protected override void OnEffectPlayTime(float normalizedTime) {
+    protected override void OnUneffect(bool play, float normalizedTime) {
+        enabled = play;
         currentTime = normalizedTime * effectTime;
+        reverse = true;
         UpdateAlpha();
     }
 
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     void Awake() {
         effectTime = (effectTime > 0.0f)? effectTime : DEFAULT_EFFECT_TIME;
-        Stop();
+        SetUneffected();
     }
 
     void Update() {
         currentTime += Time.deltaTime;
         UpdateAlpha();
         if (currentTime >= effectTime ) {
-            Done();
+            if (reverse) {
+                Uneffected();
+            } else {
+                Effected();
+            }
         }
     }
 

@@ -8,21 +8,29 @@ using UnityEngine.Events;
 //public class SampleUIEffect : UIEffect {
 //    float currentTime = 0.0f;
 //    float effectTime  = 3.0f;
-//
-//    public override void OnEffectPlay(bool play) {
+//    bool  effect      = false;
+//    public override void OnEffect(bool play, float normalizedTime) {
 //        enabled = play;
-//    }
-//
-//    public override float OnEffectPlayTime(float normalizedTime) {
 //        currentTime = normalizedTime * effectTime;
 //        color.alpha = normalizedTime;
+//        effect = true;
 //    }
-//
+//    public override void OnUneffect(bool play, float normalizedTime) {
+//        enabled = play;
+//        currentTime = normalizedTime * effectTime;
+//        color.alpha = 1.0f - normalizedTime;
+//        effect = false;
+//    }
 //    void Update() {
 //        currentTime += Time.deltaTime;
-//        color.a = Mathf.Min(currentTime / effectTime, 1.0f);
+//        var normalizedTime = Mathf.Min(currentTime / effectTime, 1.0f);
+//        color.a = (effect)? normalizedTime : 1.0f - normalizedTime;
 //        if (currentTime > 1.0f) {
-//            Done();
+//            if (effect) {
+//                Effected();
+//            } else {
+//                Uneffected();
+//            }
 //        }
 //    }
 //}
@@ -31,47 +39,53 @@ using UnityEngine.Events;
 // 全ての UI エフェクトの基礎クラス
 public class UIEffect : MonoBehaviour {
     //-------------------------------------------------------------------------- 変数
-    public UnityEvent onDone = new UnityEvent();
+    public UnityEvent onEffected   = new UnityEvent();
+    public UnityEvent onUneffected = new UnityEvent();
 
     //-------------------------------------------------------------------------- 実装ポイント
-    // エフェクト再生状態の変更時
-    protected virtual void OnEffectPlay(bool play) {
-        // NOTE
-        // 継承して実装
-    }
-
     // エフェクト再生時間の変更時
-    protected virtual void OnEffectPlayTime(float normalizedTime) {
+    protected virtual void OnEffect(bool play, float normalizedTime) {
         // NOTE
         // 継承して実装
     }
 
-    //-------------------------------------------------------------------------- 操作
-    // 再生
-    public void Play() {
-        OnEffectPlay(true);
+    // アンエフェクト再生状態の変更時
+    protected virtual void OnUneffect(bool play, float normalizedTime) {
+        // NOTE
+        // 継承して実装
     }
 
-    // 時刻を指定して再生
-    public void Play(float normalizedTime) {
-        OnEffectPlayTime(normalizedTime);
-        OnEffectPlay(true);
+    //-------------------------------------------------------------------------- エフェクト
+    // エフェクト
+    public void Effect(float normalizedTime = 0.0f) {
+        OnEffect(true, normalizedTime);
     }
 
-    // 停止
-    public void Stop() {
-        OnEffectPlay(false);
+    // エフェクト完了に設定
+    public void SetEffected() {
+        OnEffect(false, 1.0f);
     }
 
-    // 時刻を指定して停止
-    public void Stop(float normalizedTime) {
-        OnEffectPlayTime(normalizedTime);
-        OnEffectPlay(false);
+    // エフェクト完了
+    public void Effected() {
+        OnEffect(false, 1.0f);
+        onEffected.Invoke();
     }
 
-    // 完了
-    public void Done() {
-        Stop(1.0f);
-        onDone.Invoke();
+    //-------------------------------------------------------------------------- エフェクト
+    // アンエフェクト
+    public void Uneffect(float normalizedTime = 0.0f) {
+        OnUneffect(true, normalizedTime);
+    }
+
+    // アンエフェクト完了に設定
+    public void SetUneffected() {
+        OnUneffect(false, 1.0f);
+    }
+
+    // アンエフェクト完了
+    public void Uneffected() {
+        OnUneffect(false, 1.0f);
+        onUneffected.Invoke();
     }
 }
