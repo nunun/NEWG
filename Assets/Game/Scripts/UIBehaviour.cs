@@ -26,6 +26,9 @@ using UnityEngine;
 // 全ての UI の基礎クラス
 public class UIBehaviour : MonoBehaviour {
     //------------------------------------------------------------------------- 変数
+    public UIEffect appearEffect    = null; // 出現エフェクト
+    public UIEffect disappearEffect = null; // 消失エフェクト
+
     Action recycler = null; // 再利用関数の設定
 
     //------------------------------------------------------------------------- UI 結果関連
@@ -34,21 +37,25 @@ public class UIBehaviour : MonoBehaviour {
         this.recycler = recycler;
     }
 
-    //------------------------------------------------------------------------- 開く、閉じる
+    //------------------------------------------------------------------------- 開く、閉じる、完了
     // 開く
     public void Open() {
-        // TODO
-        // Appear
+        if (appearEffect != null) {
+            appearEffect.Play(0.0f);
+        }
     }
 
     // 閉じる
     public void Close() {
-        // TODO
-        // Disappear
+        if (disappearEffect != null) {
+            disappearEffect.Play(0.0f);
+        } else {
+            Done();
+        }
     }
 
-    // 閉じられた
-    public void Closed() {
+    // 完了
+    public void Done() {
         if (recycler != null) {
             recycler();
             return;

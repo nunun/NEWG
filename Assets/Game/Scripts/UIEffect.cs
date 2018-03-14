@@ -2,20 +2,26 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Evnets;
+using UnityEngine.Events;
 
 // [UI エフェクトの実装例]
 //public class SampleUIEffect : UIEffect {
-//    float effectTime = 3.0f;
+//    float currentTime = 0.0f;
+//    float effectTime  = 3.0f;
+//
 //    public override void OnEffectPlay(bool play) {
 //        enabled = play;
 //    }
+//
 //    public override float OnEffectPlayTime(float normalizedTime) {
-//        return normalizedTime * effectTime;
+//        currentTime = normalizedTime * effectTime;
+//        color.alpha = normalizedTime;
 //    }
-//    public override void OnEffectUpdate(float time) {
-//        color.a = Mathf.Min(time / effectTime, 1.0f);
-//        if (time >= effectTime) {
+//
+//    void Update() {
+//        currentTime += Time.deltaTime;
+//        color.a = Mathf.Min(currentTime / effectTime, 1.0f);
+//        if (currentTime > 1.0f) {
 //            Done();
 //        }
 //    }
@@ -25,10 +31,7 @@ using UnityEngine.Evnets;
 // 全ての UI エフェクトの基礎クラス
 public class UIEffect : MonoBehaviour {
     //-------------------------------------------------------------------------- 変数
-    public UnityEvnet onDone      = new UnityEvent();
-    public bool       autoCloseUI = false;
-
-    float time = 0.0f; // 現在の再生時間
+    public UnityEvent onDone = new UnityEvent();
 
     //-------------------------------------------------------------------------- 実装ポイント
     // エフェクト再生状態の変更時
@@ -38,14 +41,7 @@ public class UIEffect : MonoBehaviour {
     }
 
     // エフェクト再生時間の変更時
-    protected virtual float OnEffectPlayTime(float normalizedTime) {
-        // NOTE
-        // 継承して実装
-        return -1.0f;
-    }
-
-    // エフェクトの更新
-    protected virtual float OnEffectUpdate(float time) {
+    protected virtual void OnEffectPlayTime(float normalizedTime) {
         // NOTE
         // 継承して実装
     }
@@ -54,57 +50,28 @@ public class UIEffect : MonoBehaviour {
     // 再生
     public void Play() {
         OnEffectPlay(true);
-        enabled = true;
     }
 
     // 時刻を指定して再生
     public void Play(float normalizedTime) {
-        var time = OnEffectPlayTime(normalizedTime);
-        if (time >= 0.0f) {
-            this.time = time;
-        }
-        OnEffectUpdate(this.time);
+        OnEffectPlayTime(normalizedTime);
         OnEffectPlay(true);
-        enabled = true;
     }
 
     // 停止
     public void Stop() {
         OnEffectPlay(false);
-        enabled = false;
     }
 
     // 時刻を指定して停止
     public void Stop(float normalizedTime) {
-        var time = OnEffectPlayTime(normalizedTime);
-        if (time >= 0.0f) {
-            this.time = time;
-        }
-        OnEffectUpdate(this.time);
+        OnEffectPlayTime(normalizedTime);
         OnEffectPlay(false);
-        enabled = false;
     }
 
     // 完了
     public void Done() {
-        // 1.0f で停止
         Stop(1.0f);
-
-        // UnityEvent 呼び出し
         onDone.Invoke();
-
-        // UI を自動的に閉じる
-        if (autoCloseUI) {
-            var uiComponent = gameObject.GetComponent<UIComponent>();
-            if (uiComponent != null) {
-                uiComponent.Closed();
-            }
-        }
-    }
-
-    //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
-    public void Update() {
-        time += Time.deltaTime;
-        OnEffectUpdate(time);
     }
 }
