@@ -5,6 +5,10 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Networking;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 // ゲームのメイン処理
 // ここからゲームが始まる
 public class GameMain : MonoBehaviour {
