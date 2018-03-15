@@ -8,6 +8,7 @@ public class DontDestroyOnLoad : MonoBehaviour {
         while (transform.childCount > 0) {
             var child = transform.GetChild(0);
             child.SetParent(null);
+            child.gameObject.SetActive(true);
             DontDestroyOnLoad(child.gameObject);
         }
         GameObject.Destroy(this.gameObject);

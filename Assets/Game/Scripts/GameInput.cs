@@ -5,7 +5,8 @@ using UnityEngine;
 using UnityEngine.Networking;
 
 // ゲーム入力の実装
-public partial class GameInput : MonoBehaviour {
+[DefaultExecutionOrder(int.MinValue)]
+public class GameInput : MonoBehaviour {
     //-------------------------------------------------------------------------- 定数
     public const string SENSITIVITY_KEY    = "Sensitivity";
     public const int    MAX_SENSITIVIY     = 100;
@@ -36,7 +37,7 @@ public partial class GameInput : MonoBehaviour {
     void Start() {
         // マウス感度復活
         sensitivity = PlayerPrefs.GetInt(SENSITIVITY_KEY, DEFAULT_SENSITIVIY);
-        GameMain.Instance.battleUI.SetSensitivity(sensitivity);
+        //GameMain.Instance.battleUI.SetSensitivity(sensitivity); // TODO
     }
 
     void Update() {
@@ -53,12 +54,12 @@ public partial class GameInput : MonoBehaviour {
             // マウス感度の設定
             if (Input.GetKeyDown(KeyCode.LeftBracket)) {
                 sensitivity = Mathf.Min(sensitivity + 1, 100);
-                GameMain.Instance.battleUI.SetSensitivity(sensitivity);
+                //GameMain.Instance.battleUI.SetSensitivity(sensitivity); // TODO
                 PlayerPrefs.SetInt(SENSITIVITY_KEY, sensitivity);
             }
             if (Input.GetKeyDown(KeyCode.RightBracket)) {
                 sensitivity = Mathf.Max(sensitivity - 1, 0);
-                GameMain.Instance.battleUI.SetSensitivity(sensitivity);
+                //GameMain.Instance.battleUI.SetSensitivity(sensitivity); // TODO
                 PlayerPrefs.SetInt(SENSITIVITY_KEY, sensitivity);
             }
         } else {

@@ -383,7 +383,7 @@ public partial class Player {
     void OnSyncHitPoint(int value) {
         hitPoint = value;
         if (networkPlayer.isLocalPlayer) {
-            GameMain.Instance.battleUI.SetHitPoint(hitPoint);
+            //GameMain.Instance.battleUI.SetHitPoint(hitPoint); // TODO
         }
     }
 
@@ -460,7 +460,7 @@ public partial class Player {
             player.enabled = true;
             if (this.isLocalPlayer) {
                 GameCamera.Instance.SetBattleMode(player);
-                GameMain.Instance.battleUI.SetKillPoint(player.killPoint);
+                //GameMain.Instance.battleUI.SetKillPoint(player.killPoint); // TODO
             }
         }
     }
@@ -483,18 +483,19 @@ public partial class Player {
 
                 // キルポイント表示変更
                 if (shooterNetworkPlayer.isLocalPlayer) {
-                    GameMain.Instance.battleUI.SetKillPoint(player.killPoint);
+                    //GameMain.Instance.battleUI.SetKillPoint(player.killPoint); // TODO
                 }
             }
         }
 
         // 自分がやられたら結果表示
         if (networkPlayer.isLocalPlayer) {
-            var killPoint = 0;
-            if (networkPlayer.player != null) {
-                killPoint = networkPlayer.player.killPoint;
-            }
-            GameMain.Instance.StartResult(killPoint);
+            // TODO
+            //var killPoint = 0;
+            //if (networkPlayer.player != null) {
+            //    killPoint = networkPlayer.player.killPoint;
+            //}
+            //GameMain.Instance.StartResult(killPoint); // TODO
         }
     }
 

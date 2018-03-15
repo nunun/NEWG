@@ -5,7 +5,11 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 // ゲームシーンマネージャ
+[DefaultExecutionOrder(int.MinValue)]
 public class GameSceneManager : MonoBehaviour {
+    //-------------------------------------------------------------------------- 定義
+    public static readonly string DEFAULT_UI_EFFECT_NAME = "ScreenFadeEffect";
+
     //-------------------------------------------------------------------------- 変数
     // 現在走っているコルーチン
     static Coroutine currentCoroutine = null;
@@ -21,13 +25,15 @@ public class GameSceneManager : MonoBehaviour {
 
     //-------------------------------------------------------------------------- 切り替え
     // シーン変更
-    public static ChangeSchene(string sceneName, string uiEffectName = null) {
+    public static void ChangeScene(string sceneName, string uiEffectName = null) {
         Debug.Assert(currentCoroutine == null);
-        currentCoroutine = instance.StartCoroutine(DoChangeScene(sceneName, uiEffectName));
+        currentCoroutine = instance.StartCoroutine(instance.DoChangeScene(sceneName, uiEffectName));
     }
 
     // シーン変更の実行
     IEnumerator DoChangeScene(string sceneName, string uiEffectName = null) {
+        uiEffectName = uiEffectName ?? DEFAULT_UI_EFFECT_NAME;
+
         // エフェクト特定 (ゲームオブジェクトタグから)
         var uiEffect = GameObjectTag<UIEffect>.Find(uiEffectName);
         if (uiEffect == null) {
@@ -43,23 +49,29 @@ public class GameSceneManager : MonoBehaviour {
         }
 
         // シーンをロード
-        try {
-            if (uiEffect != null) {
-                var asyncop = SceneManager.LoadSceneAsync(sceneName);
-                while (!asyncop.isDone) {
-                    yield return null;
-                }
-            } else {
-                SceneManager.LoadScene(sceneName);
+        if (uiEffect != null) {
+            var asyncop = default(AsyncOperation);
+            try {
+                asyncop = SceneManager.LoadSceneAsync(sceneName);
+            } catch (Exception e) {
+                GameApplication.Abort(e.ToString());
+                yield break;
             }
-        } catch (Exception e) {
-            GameApplication.Abort(e.ToString());
-            yield break;
+            while (!asyncop.isDone) {
+                yield return null;
+            }
+        } else {
+            try {
+                SceneManager.LoadScene(sceneName);
+            } catch (Exception e) {
+                GameApplication.Abort(e.ToString());
+                yield break;
+            }
         }
 
         // カレントシーン取得
-        currentScene = Object.FindObjectOfType(typeof(GameScene));
-        Debug.Assert(currentScene == null, "シーンに GameScene コンポーネントがいない");
+        currentScene = UnityEngine.Object.FindObjectOfType(typeof(GameScene)) as GameScene;
+        Debug.Assert(currentScene != null, "シーンに GameScene コンポーネントがいない");
 
         // エフェクト解除
         if (uiEffect != null) {
@@ -78,7 +90,7 @@ public class GameSceneManager : MonoBehaviour {
     // エラーなどで利用
     public static bool ChangeSceneImmediately(string sceneName) {
         try {
-            SceneManagement.LoadScene(sceneName);
+            SceneManager.LoadScene(sceneName);
         } catch (Exception e) {
             Debug.LogError(e.ToString());
             return false;

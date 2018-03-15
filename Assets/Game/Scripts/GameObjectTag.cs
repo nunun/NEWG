@@ -14,7 +14,6 @@ public class GameObjectTag : MonoBehaviour {
 
     //------------------------------------------------------------------------- 操作
     protected static GameObjectTag FindGameObjectTag(string tagName, GameObject parent, bool rent) {
-        tagName = tagName ?? typeof(T).Name;
         for (int i = gameObjectTags.Count - 1; i >= 0; i--) {
             var gameObjectTag = gameObjectTags[i];
             if (gameObjectTag.tagName == tagName) {
@@ -33,20 +32,18 @@ public class GameObjectTag : MonoBehaviour {
                 if (rent) {
                     gameObjectTags.Remove(gameObjectTag);
                 }
-                return gameObjectTag.obj as T;
+                return gameObjectTag;
             }
         }
-        return default(T);
+        return null;
     }
 
-    protected static ReturnGameObjectTag(GameObjectTag gameObjectTag) {
+    protected static void ReturnGameObjectTag(GameObjectTag gameObjectTag) {
         gameObjectTags.Add(gameObjectTag);
     }
 
     //------------------------------------------------------------------------- 実装 (MonoBehaviour)
     void Awake() {
-        obj = obj ?? this.GetComponent<UIComponent>();
-        Debug.Assert(obj != null, "タグのオブジェクトなし");
         // NOTE
         // ひとまず、ゲームオブジェクトタグを貼り付けた
         // オブジェクト名で検索できるようにしておく。
@@ -69,11 +66,11 @@ public class GameObjectTag<T> : GameObjectTag where T : Component {
     public static T RentObject(string tagName = null, GameObject parent = null) {
         tagName = tagName ?? typeof(T).Name;
         var gameObjectTag = FindGameObjectTag(tagName, parent, true);
+        if (gameObjectTag == null) {
+            return default(T);
+        }
         if (typeof(T) == typeof(GameObjectTag)) {
             return gameObjectTag as T;
-        }
-        if (gameObjectTag.obj != null) {
-            return gameObjectTag.obj as T;
         }
         return gameObjectTag.gameObject.GetComponent<T>();
     }
@@ -92,11 +89,11 @@ public class GameObjectTag<T> : GameObjectTag where T : Component {
     public static T Find(string tagName = null, GameObject parent = null) {
         tagName = tagName ?? typeof(T).Name;
         var gameObjectTag = FindGameObjectTag(tagName, parent, false);
+        if (gameObjectTag == null) {
+            return default(T);
+        }
         if (typeof(T) == typeof(GameObjectTag)) {
             return gameObjectTag as T;
-        }
-        if (gameObjectTag.obj != null) {
-            return gameObjectTag.obj as T;
         }
         return gameObjectTag.gameObject.GetComponent<T>();
     }
