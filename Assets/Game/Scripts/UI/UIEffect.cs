@@ -70,7 +70,7 @@ public class UIEffect : MonoBehaviour {
     //-------------------------------------------------------------------------- エフェクト
     // エフェクト
     public void Effect(float normalizedTime = 0.0f) {
-        Debug.Assert(currentState == State.Uneffected);
+        Debug.Assert(currentState == State.Uneffected, "アンエフェクト済ではない");
         currentState = State.Effecting;
         OnEffect(true, normalizedTime);
     }
@@ -84,7 +84,7 @@ public class UIEffect : MonoBehaviour {
 
     // エフェクト完了にする
     public void Effected() {
-        Debug.Assert(currentState == State.Effecting);
+        Debug.Assert(currentState == State.Effecting, "エフェクト中ではない");
         currentState = State.Effected;
         OnEffect(false, 1.0f);
         onEffected.Invoke();
@@ -93,7 +93,7 @@ public class UIEffect : MonoBehaviour {
     //-------------------------------------------------------------------------- エフェクト
     // アンエフェクト
     public void Uneffect(float normalizedTime = 0.0f) {
-        Debug.Assert(currentState == State.Effected);
+        Debug.Assert(currentState == State.Effected, "エフェクト済ではない");
         currentState = State.Uneffecting;
         OnUneffect(true, normalizedTime);
     }
@@ -107,7 +107,7 @@ public class UIEffect : MonoBehaviour {
 
     // アンエフェクト完了にする
     public void Uneffected() {
-        Debug.Assert(currentState == State.Uneffecting);
+        Debug.Assert(currentState == State.Uneffecting, "アンエフェクト中ではない");
         currentState = State.Uneffected;
         OnUneffect(false, 1.0f);
         onUneffected.Invoke();

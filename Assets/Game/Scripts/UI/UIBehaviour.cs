@@ -24,7 +24,7 @@ using UnityEngine;
 
 // UI 挙動
 // 全ての UI の基礎クラス
-public class UIBehaviour : MonoBehaviour {
+public partial class UIBehaviour : MonoBehaviour {
     //------------------------------------------------------------------------- 変数
     public UIEffect uiEffect = null; // 出現と消失エフェクト
 
@@ -67,5 +67,38 @@ public class UIBehaviour : MonoBehaviour {
             return;
         }
         GameObject.Destroy(this.gameObject);// NOTE リサイクルしないなら削除
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+// 完了 (Done()) で閉じないようにするユーティリティ
+// 主に動作チェック (UIComponentTester) 等で使用。
+public partial class UIBehaviour : MonoBehaviour {
+    //------------------------------------------------------------------------- 変数
+    Action recyclerBackup = null;
+
+    //------------------------------------------------------------------------- ユーティリティ
+    public void DontDestroyOnDone() {
+        if (recycler == NothingToDo) {
+            return;
+        }
+        recyclerBackup = recycler;
+        recycler = NothingToDo;
+    }
+
+    public void DestroyOnDone() {
+        if (recycler != NothingToDo) {
+            return;
+        }
+        recycler = recyclerBackup;
+    }
+
+    //------------------------------------------------------------------------- 内部静的メソッド
+    static void NothingToDo() {
+        // NOTE
+        // 何もしない
     }
 }
