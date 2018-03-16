@@ -4,35 +4,53 @@ using UnityEngine;
 
 public class UIComponentTester : MonoBehaviour {
     //-------------------------------------------------------------------------- 変数
-    public UIComponent uiComponent = null;
+    public UIComponent uiComponent   = null;
 
-    bool destroyOnDone = true;
+    bool destroyOnDone = false;
 
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
-    void OnGUI() {
-        GUILayout.BeginHorizontal("box");
-        if (GUILayout.Button("Hide")) {
-            uiComponent.Hide();
-        }
-        if (GUILayout.Button("Open")) {
-            uiComponent.Open();
-        }
-        if (GUILayout.Button("Close")) {
-            uiComponent.Close();
-        }
-        if (GUILayout.Button("Done")) {
-            uiComponent.Done();
-        }
+    void Awake() {
         if (destroyOnDone) {
-            if (GUILayout.Button("DontDestroyOnDone")) {
-                uiComponent.DontDestroyOnDone();
-                destroyOnDone = false;
-            }
+            uiComponent.DestroyOnDone();
         } else {
-            if (GUILayout.Button("DestroyOnDone")) {
-                uiComponent.DestroyOnDone();
-                destroyOnDone = true;
+            uiComponent.DontDestroyOnDone();
+        }
+    }
+
+    void OnGUI() {
+        GUILayout.BeginHorizontal();
+        {
+            GUILayout.BeginHorizontal("box");
+            {
+                if (GUILayout.Button("Hide")) {
+                    uiComponent.Hide();
+                }
+                if (GUILayout.Button("Open")) {
+                    uiComponent.Open();
+                }
+                if (GUILayout.Button("Close")) {
+                    uiComponent.Close();
+                }
+                if (GUILayout.Button("Done")) {
+                    uiComponent.Done();
+                }
             }
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal("box");
+            {
+                if (destroyOnDone) {
+                    if (GUILayout.Button("DontDestroyOnDone")) {
+                        uiComponent.DontDestroyOnDone();
+                        destroyOnDone = false;
+                    }
+                } else {
+                    if (GUILayout.Button("DestroyOnDone")) {
+                        uiComponent.DestroyOnDone();
+                        destroyOnDone = true;
+                    }
+                }
+            }
+            GUILayout.EndHorizontal();
         }
         GUILayout.EndHorizontal();
     }
