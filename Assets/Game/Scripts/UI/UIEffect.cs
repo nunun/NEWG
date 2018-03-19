@@ -73,6 +73,7 @@ public class UIEffect : MonoBehaviour {
         Debug.Assert(currentState == State.Uneffected, "アンエフェクト済ではない");
         currentState = State.Effecting;
         OnEffect(true, normalizedTime);
+        //gameObject.SetActive(true); // TODO
     }
 
     // エフェクト完了に設定
@@ -80,6 +81,7 @@ public class UIEffect : MonoBehaviour {
         Debug.Assert(currentState == State.Effected || currentState == State.Uneffected);
         currentState = State.Effected;
         OnEffect(false, 1.0f);
+        //gameObject.SetActive(true); // TODO
     }
 
     // エフェクト完了にする
@@ -88,6 +90,7 @@ public class UIEffect : MonoBehaviour {
         currentState = State.Effected;
         OnEffect(false, 1.0f);
         onEffected.Invoke();
+        //gameObject.SetActive(true); // TODO
     }
 
     //-------------------------------------------------------------------------- エフェクト
@@ -96,6 +99,7 @@ public class UIEffect : MonoBehaviour {
         Debug.Assert(currentState == State.Effected, "エフェクト済ではない");
         currentState = State.Uneffecting;
         OnUneffect(true, normalizedTime);
+        //gameObject.SetActive(true); // TODO
     }
 
     // アンエフェクト完了に設定
@@ -103,6 +107,7 @@ public class UIEffect : MonoBehaviour {
         Debug.Assert(currentState == State.Effected || currentState == State.Uneffected);
         currentState = State.Uneffected;
         OnUneffect(false, 1.0f);
+        //gameObject.SetActive(falsec); // TODO
     }
 
     // アンエフェクト完了にする
@@ -111,5 +116,6 @@ public class UIEffect : MonoBehaviour {
         currentState = State.Uneffected;
         OnUneffect(false, 1.0f);
         onUneffected.Invoke();
+        //gameObject.SetActive(falsec); // TODO
     }
 }

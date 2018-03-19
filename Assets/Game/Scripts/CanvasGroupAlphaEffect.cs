@@ -35,7 +35,7 @@ public class CanvasGroupAlphaEffect : UIEffect {
     }
 
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
-    void Awake() {
+    void Start() {
         effectTime = (effectTime > 0.0f)? effectTime : DEFAULT_EFFECT_TIME;
         SetUneffected();
     }

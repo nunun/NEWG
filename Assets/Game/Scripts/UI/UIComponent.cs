@@ -5,12 +5,13 @@ using UnityEngine;
 
 // [UI コンポーネントの実装例]
 //public class SampleUI : UIComponent<string> {
-//    public static SampleUI RentFromPool(Action<string> callback) {
+//    public static SampleUI Open(Action<string> callback = null) {
 //        var component = GameObjectPool<SampleUI>.RentGameObject();
 //        component.SetUICallback(callback);
 //        component.Open();
+//        return component;
 //    }
-//    public void ReturnToPool() {
+//    void ReturnToPool() {
 //        SetUIDone();
 //        GameObjectPool<SampleUI>.ReturnObject(this);
 //    }

@@ -4,15 +4,20 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-// メッセージのみでボタンがないポップアップ
-public class MessagePopup : UIComponent {
+// "OK" ボタンがあるポップアップの実装
+public class OkPopup : UIComponent {
     //-------------------------------------------------------------------------- インスタンスの確保と解放
-    [SerializeField] Text messageText = null;
+    [SerializeField] Text   messageText  = null;
+    [SerializeField] Button okButton     = null;
+    [SerializeField] Text   okButtonText = null;
 
     //-------------------------------------------------------------------------- インスタンスの確保と解放
-    public static MessagePopup Open(string message, Action<string> callback = null) {
-        var component = GameObjectTag<MessagePopup>.RentObject();
+    public static OkPopup Open(string message, Action<string> callback = null, string ok = null) {
+        var component = GameObjectTag<OkPopup>.RentObject();
         component.messageText.text = message;
+        if (ok != null) {
+            component.okButtonText.text = ok;
+        }
         component.SetUICallback(callback);
         component.Open();
         return component;
@@ -20,12 +25,18 @@ public class MessagePopup : UIComponent {
 
     void ReturnToPool() {
         SetUIDone();
-        GameObjectTag<MessagePopup>.ReturnObject(this);
+        GameObjectTag<OkPopup>.ReturnObject(this);
+    }
+
+    //-------------------------------------------------------------------------- イベント
+    protected void OnClickOk() {
+        Close();
     }
 
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     void Awake() {
         SetUIRecycle(ReturnToPool);
+        okButton.onClick.AddListener(OnClickOk);
         Hide();
     }
 
