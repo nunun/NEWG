@@ -1,0 +1,58 @@
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+// "Yes", "No" ボタンがあるポップアップの実装
+public class YesNoPopup : UIComponent {
+    //-------------------------------------------------------------------------- インスタンスの確保と解放
+    [SerializeField] Text   messageText   = null;
+    [SerializeField] Button yesButton     = null;
+    [SerializeField] Text   yesButtonText = null;
+    [SerializeField] Button noButton      = null;
+    [SerializeField] Text   noButtonText  = null;
+
+    //-------------------------------------------------------------------------- インスタンスの確保と解放
+    public static YesNoPopup Open(string message, Action<string,bool> callback = null, string yes = null, no = null) {
+        var component = GameObjectTag<YesNoPopup>.RentObject();
+        component.messageText.text = message;
+        if (yes != null) {
+            component.okButtonText.text = yes;
+        }
+        if (no != null) {
+            component.okButtonText.text = no;
+        }
+        component.SetUICallback(callback);
+        component.Open();
+        return component;
+    }
+
+    void ReturnToPool() {
+        SetUIDone();
+        GameObjectTag<YesNoPopup>.ReturnObject(this);
+    }
+
+    //-------------------------------------------------------------------------- イベント
+    protected void OnClickYes() {
+        SetUIResult(null, true);
+        Close();
+    }
+
+    protected void OnClickNo() {
+        SetUIResult(null, false);
+        Close();
+    }
+
+   //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
+    void Awake() {
+        SetUIRecycle(ReturnToPool);
+        yesButton.onClick.AddListener(OnClickYes);
+        noButton.onClick.AddListener(OnClickNo);
+        Hide();
+    }
+
+    void OnDestroy() {
+        SetUIDone();
+    }
+}
