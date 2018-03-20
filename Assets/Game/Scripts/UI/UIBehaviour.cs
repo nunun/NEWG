@@ -26,9 +26,11 @@ using UnityEngine;
 // 全ての UI の基礎クラス
 public partial class UIBehaviour : MonoBehaviour {
     //------------------------------------------------------------------------- 変数
-    public UIEffect uiEffect = null; // 出現と消失エフェクト
+    // 出現と消失エフェクト
+    public UIEffect uiEffect = null;
 
-    Action recycler = null; // 再利用関数の設定
+    // 再利用関数の設定
+    Action recycler = null;
 
     //------------------------------------------------------------------------- UI 結果関連
     // 再利用関数の設定
@@ -39,6 +41,7 @@ public partial class UIBehaviour : MonoBehaviour {
     //------------------------------------------------------------------------- 開く、閉じる、完了
     // 開く
     public void Open() {
+        gameObject.SetActive(true);
         if (uiEffect != null) {
             uiEffect.Effect();
         }
@@ -58,10 +61,12 @@ public partial class UIBehaviour : MonoBehaviour {
         if (uiEffect != null) {
             uiEffect.SetUneffected();
         }
+        gameObject.SetActive(false);
     }
 
     // 完了
     public void Done() {
+        gameObject.SetActive(false);
         if (recycler != null) {
             recycler();
             return;

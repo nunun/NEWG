@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // ゲームオブジェクトタグ
+[DefaultExecutionOrder(int.MinValue)]
 public class GameObjectTag : MonoBehaviour {
     //------------------------------------------------------------------------- 変数
     // 検索用タグ名 (Awake 時に確定)
