@@ -27,10 +27,17 @@ using UnityEngine;
 public partial class UIBehaviour : MonoBehaviour {
     //------------------------------------------------------------------------- 変数
     // 出現と消失エフェクト
-    public UIEffect uiEffect = null;
+    [SerializeField] protected UIEffect uiEffect = null;
 
     // 再利用関数の設定
     Action recycler = null;
+
+    // 現在状態の取得
+    public bool IsOpen    { get { return gameObject.activeSelf;                                          }}
+    public bool IsOpening { get { return IsOpen && ((uiEffect == null)? false : uiEffect.IsEffecting);   }}
+    public bool IsOpened  { get { return IsOpen && ((uiEffect == null)? true  : uiEffect.IsEffected);    }}
+    public bool IsClosing { get { return IsOpen && ((uiEffect == null)? false : uiEffect.IsUneffecting); }}
+    public bool IsClosed  { get { return !IsOpen;                                                        }}
 
     //------------------------------------------------------------------------- UI 結果関連
     // 再利用関数の設定
@@ -41,6 +48,9 @@ public partial class UIBehaviour : MonoBehaviour {
     //------------------------------------------------------------------------- 開く、閉じる、完了
     // 開く
     public void Open() {
+        if (IsOpen) {
+            return; // 既に開いている
+        }
         gameObject.SetActive(true);
         if (uiEffect != null) {
             uiEffect.Effect();
@@ -49,6 +59,9 @@ public partial class UIBehaviour : MonoBehaviour {
 
     // 閉じる
     public void Close() {
+        if (IsClosing) {
+            return; // 既に閉じている
+        }
         if (uiEffect != null) {
             uiEffect.Uneffect();
         } else {

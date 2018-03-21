@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 // "Yes", "No" ボタンがあるポップアップの実装
-public class YesNoPopup : UIComponent {
+public class YesNoPopup : UIComponent<bool> {
     //-------------------------------------------------------------------------- インスタンスの確保と解放
     [SerializeField] Text   messageText   = null;
     [SerializeField] Button yesButton     = null;
@@ -14,14 +14,14 @@ public class YesNoPopup : UIComponent {
     [SerializeField] Text   noButtonText  = null;
 
     //-------------------------------------------------------------------------- インスタンスの確保と解放
-    public static YesNoPopup Open(string message, Action<string,bool> callback = null, string yes = null, no = null) {
+    public static YesNoPopup Open(string message, Action<string,bool> callback = null, string yes = null, string no = null) {
         var component = GameObjectTag<YesNoPopup>.RentObject();
         component.messageText.text = message;
         if (yes != null) {
-            component.okButtonText.text = yes;
+            component.yesButtonText.text = yes;
         }
         if (no != null) {
-            component.okButtonText.text = no;
+            component.noButtonText.text = no;
         }
         component.SetUICallback(callback);
         component.Open();
