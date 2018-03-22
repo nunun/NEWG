@@ -17,10 +17,10 @@ public class BGMPlayer : MonoBehaviour {
         if (isPlaying) {
             return;//既に再生中ならやらない
         }
-        this.isPlaying   = true;
-        this.currentTime = 0.0f;
-        this.fadeTime    = fadeTime;
-        this.enabled     = true;
+        this.isPlaying          = true;
+        this.currentTime        = 0.0f;
+        this.fadeTime           = fadeTime;
+        this.enabled            = true;
         this.audioSource.volume = 0.0f;
         this.audioSource.Play();
     }
@@ -29,10 +29,10 @@ public class BGMPlayer : MonoBehaviour {
         if (!isPlaying) {
             return;//既に停止中ならやらない
         }
-        this.isPlaying   = false;
-        this.currentTime = 0.0f;
-        this.fadeTime    = fadeTime;
-        this.enabled     = true;
+        this.isPlaying          = false;
+        this.currentTime        = 0.0f;
+        this.fadeTime           = fadeTime;
+        this.enabled            = true;
         this.audioSource.volume = 1.0f;
     }
 
@@ -40,10 +40,10 @@ public class BGMPlayer : MonoBehaviour {
     void Awake() {
         audioSource = GetComponent<AudioSource>();
         Debug.Assert(audioSource != null, "オーディオソースなし");
-        isPlaying   = false;
-        currentTime = 0.0f;
-        fadeTime    = 0.0f;
-        enabled     = false;
+        isPlaying          = false;
+        currentTime        = 0.0f;
+        fadeTime           = 0.0f;
+        enabled            = false;
         audioSource.volume = 0.0f;
         audioSource.Stop();
     }
@@ -62,6 +62,7 @@ public class BGMPlayer : MonoBehaviour {
                 audioSource.volume = 1.0f - (currentTime / fadeTime);
             } else {
                 audioSource.volume = 0.0f;
+                audioSource.Stop();
                 enabled = false;
             }
         }

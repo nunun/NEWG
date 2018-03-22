@@ -5,8 +5,26 @@ using UnityEngine;
 using UnityEngine.Networking;
 
 // 音声マネージャ
-public class AudioManager : MonoBehaviour {
-    // TODO
+public partial class AudioManager : MonoBehaviour {
+    //-------------------------------------------------------------------------- 変数
+    // インスタンス
+    static AudioManager instance = null;
+
+    //-------------------------------------------------------------------------- 実装 (MonoBehaviour);
+    void Awake() {
+        if (instance != null) {
+            GameObject.Destroy(this.gameObject);
+            return;
+        }
+        instance = this;
+    }
+
+    void OnDestroy() {
+        if (instance != this) {
+            return;
+        }
+        instance = null;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -14,32 +32,51 @@ public class AudioManager : MonoBehaviour {
 ////////////////////////////////////////////////////////////////////////////////
 
 // BGM の対応
-public class AudioManager {
+public partial class AudioManager {
     //-------------------------------------------------------------------------- 変数
     List<BGMPlayer> bgmPlayerList = new List<BGMPlayer>();
 
     //-------------------------------------------------------------------------- BGM
     public static void PlayBGM(string bgmName, float fadeTime = 0.5f) {
-        StopBGM(fadeTime);
-        var bgmPlayer = GameObjectTag<BGMPlayer>(bgmName);
-        bgmPlayer.Play(fadeTime);
-        if (bgmPlayerList.IndexOf(bgmPlayer) <= 0) {
+        var bgmPlayerList = instance.bgmPlayerList;
+        var bgmPlayer     = GameObjectTag<BGMPlayer>.Find(bgmName);
+        if (bgmPlayerList.Count >= 1) {
+            for (int i = bgmPlayerList.Count - 1; i >= 0; i--) {
+                var playingBGMPlayer = bgmPlayerList[i];
+                if (playingBGMPlayer != bgmPlayer) {
+                    bgmPlayerList.RemoveAt(i);
+                    if (playingBGMPlayer != null) {
+                        playingBGMPlayer.Stop(fadeTime);
+                    }
+                }
+            }
+        }
+        if (bgmPlayerList.IndexOf(bgmPlayer) < 0) {
             bgmPlayerList.Add(bgmPlayer);
+            if (bgmPlayer != null) {
+                bgmPlayer.Play(fadeTime);
+            }
         }
     }
 
-    public static void MixBGM(string bgmName, string masterBgmName, float fadeTime = 0.5f) {
-        var masterSource = GameObjectTag<AudioSource>(masterBgmName);
-        var bgmSource    = GameObjectTag<AudioSource>(bgmName);
-        var bgmPlayer    = GameObjectTag<BGMPlayer>(bgmName);
+    public static void MixBGM(string bgmName, float fadeTime = 0.5f) {
+        var bgmPlayerList = instance.bgmPlayerList;
+        Debug.Assert(bgmPlayerList.Count > 0, "BGM が再生されていない");
+        var bgmPlayer     = GameObjectTag<BGMPlayer>.Find(bgmName);
+        var bgmSource     = GameObjectTag<AudioSource>.Find(bgmName);
+        var masterPlayer  = bgmPlayerList[0];
+        var masterSource  = masterPlayer.gameObject.GetComponent<AudioSource>();
         bgmSource.time = masterSource.time;
-        bgmPlayer.Play(fadeTime);
-        if (bgmPlayerList.IndexOf(bgmPlayer) <= 0) {
+        if (bgmPlayerList.IndexOf(bgmPlayer) < 0) {
             bgmPlayerList.Add(bgmPlayer);
+            if (bgmPlayer != null) {
+                bgmPlayer.Play(fadeTime);
+            }
         }
     }
 
     public static void StopBGM(float fadeTime = 0.5f) {
+        var bgmPlayerList = instance.bgmPlayerList;
         for (int i = bgmPlayerList.Count - 1; i >= 0; i--) {
             var bgmPlayer = bgmPlayerList[i];
             bgmPlayerList.RemoveAt(i);
@@ -51,8 +88,11 @@ public class AudioManager {
     }
 
     public static void StopBGM(string bgmName, float fadeTime = 0.5f) {
-        var bgmPlayer = GameObjectTag<BGMPlayer>(bgmName);
-        bgmPlayer.Stop(fadeTime);
+        var bgmPlayerList = instance.bgmPlayerList;
+        var bgmPlayer     = GameObjectTag<BGMPlayer>.Find(bgmName);
         bgmPlayerList.Remove(bgmPlayer);
+        if (bgmPlayer != null) {
+            bgmPlayer.Stop(fadeTime);
+        }
     }
 }
