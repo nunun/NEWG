@@ -58,8 +58,10 @@ public class UIEffect : MonoBehaviour {
     [SerializeField] UIEffectEvents events;
 
     // 現在状態の取得
-    public bool IsEffected   { get { return currentState == State.Effected;   }}
-    public bool IsUneffected { get { return currentState == State.Uneffected; }}
+    public bool IsEffecting   { get { return currentState == State.Effecting;   }}
+    public bool IsEffected    { get { return currentState == State.Effected;    }}
+    public bool IsUneffecting { get { return currentState == State.Uneffecting; }}
+    public bool IsUneffected  { get { return currentState == State.Uneffected;  }}
 
     // イベント
     public UnityEvent onEffect        { get { return events.onEffect;        }}

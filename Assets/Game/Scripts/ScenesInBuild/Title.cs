@@ -6,6 +6,13 @@ using UnityEngine;
 public class Title : GameScene {
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     IEnumerator Start() {
+        using (var subject = StatusLine.Observe()) {
+            subject.message = "ログイン中 ...";
+            yield return new WaitForSeconds(1.0f);
+            subject.message = "ロード中 ...";
+            yield return new WaitForSeconds(1.0f);
+        }
+
         using (var wait = UIWait.RentFromPool()) {
             var popup = MessagePopup.Open("これはメッセージポップアップです。", wait.Callback);
             yield return new WaitForSeconds(2.0f);
@@ -18,6 +25,13 @@ public class Title : GameScene {
             OkPopup.Open("これは OK ポップアップです。", wait.Callback, "がんばるぞい");
             yield return wait;
             Debug.Log(wait.error);
+        }
+
+        using (var wait = UIWait<bool>.RentFromPool()) {
+            YesNoPopup.Open("これは OK ポップアップです。", wait.Callback, "やる", "やめた");
+            yield return wait;
+            Debug.Log(wait.error);
+            Debug.Log(wait.Value1);
         }
     }
 }

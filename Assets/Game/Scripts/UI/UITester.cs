@@ -2,18 +2,25 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class UIComponentTester : MonoBehaviour {
+public class UITester : MonoBehaviour {
     //-------------------------------------------------------------------------- 変数
-    public UIComponent uiComponent   = null;
-
-    bool destroyOnDone = false;
+    UIBehaviour uiBehaviour   = null;
+    bool        destroyOnDone = false;
 
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
-    void Awake() {
+    void Start() {
+        foreach (var t in this.gameObject.scene.GetRootGameObjects()) {
+            var component = t.gameObject.GetComponent<UIBehaviour>();
+            if (component != null) {
+                uiBehaviour = component;
+                break;
+            }
+        }
+        Debug.Assert(uiBehaviour != null, "テスト対象の UI 無し");
         if (destroyOnDone) {
-            uiComponent.DestroyOnDone();
+            uiBehaviour.DestroyOnDone();
         } else {
-            uiComponent.DontDestroyOnDone();
+            uiBehaviour.DontDestroyOnDone();
         }
     }
 
@@ -23,16 +30,16 @@ public class UIComponentTester : MonoBehaviour {
             GUILayout.BeginHorizontal("box");
             {
                 if (GUILayout.Button("Hide")) {
-                    uiComponent.Hide();
+                    uiBehaviour.Hide();
                 }
                 if (GUILayout.Button("Open")) {
-                    uiComponent.Open();
+                    uiBehaviour.Open();
                 }
                 if (GUILayout.Button("Close")) {
-                    uiComponent.Close();
+                    uiBehaviour.Close();
                 }
                 if (GUILayout.Button("Done")) {
-                    uiComponent.Done();
+                    uiBehaviour.Done();
                 }
             }
             GUILayout.EndHorizontal();
@@ -40,12 +47,12 @@ public class UIComponentTester : MonoBehaviour {
             {
                 if (destroyOnDone) {
                     if (GUILayout.Button("DontDestroyOnDone")) {
-                        uiComponent.DontDestroyOnDone();
+                        uiBehaviour.DontDestroyOnDone();
                         destroyOnDone = false;
                     }
                 } else {
                     if (GUILayout.Button("DestroyOnDone")) {
-                        uiComponent.DestroyOnDone();
+                        uiBehaviour.DestroyOnDone();
                         destroyOnDone = true;
                     }
                 }
