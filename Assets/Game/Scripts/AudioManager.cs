@@ -62,10 +62,10 @@ public partial class AudioManager {
     public static void MixBGM(string bgmName, float fadeTime = 0.5f) {
         var bgmPlayerList = instance.bgmPlayerList;
         Debug.Assert(bgmPlayerList.Count > 0, "BGM が再生されていない");
-        var bgmPlayer     = GameObjectTag<BGMPlayer>.Find(bgmName);
-        var bgmSource     = GameObjectTag<AudioSource>.Find(bgmName);
-        var masterPlayer  = bgmPlayerList[0];
-        var masterSource  = masterPlayer.gameObject.GetComponent<AudioSource>();
+        var bgmPlayer    = GameObjectTag<BGMPlayer>.Find(bgmName);
+        var bgmSource    = GameObjectTag<AudioSource>.Find(bgmName);
+        var masterPlayer = bgmPlayerList[0];
+        var masterSource = masterPlayer.gameObject.GetComponent<AudioSource>();
         bgmSource.time = masterSource.time;
         if (bgmPlayerList.IndexOf(bgmPlayer) < 0) {
             bgmPlayerList.Add(bgmPlayer);
@@ -73,6 +73,7 @@ public partial class AudioManager {
                 bgmPlayer.Play(fadeTime);
             }
         }
+        UpdatePlayingBGMVolumes(fadeTime);
     }
 
     public static void StopBGM(float fadeTime = 0.5f) {
@@ -93,6 +94,20 @@ public partial class AudioManager {
         bgmPlayerList.Remove(bgmPlayer);
         if (bgmPlayer != null) {
             bgmPlayer.Stop(fadeTime);
+        }
+        UpdatePlayingBGMVolumes(fadeTime);
+    }
+
+    //-------------------------------------------------------------------------- 共通ロジック
+    static void UpdatePlayingBGMVolumes(float fadeTime = 0.5f) {
+        var bgmPlayerList = instance.bgmPlayerList;
+        var count         = bgmPlayerList.Count;
+        var volume        = Mathf.Clamp(1.0f - (0.15f * (count - 1)), 0.70f, 1.0f);
+        for (int i = bgmPlayerList.Count - 1; i >= 0; i--) {
+            var playingBgmPlayer = bgmPlayerList[i];
+            if (playingBgmPlayer != null) {
+                playingBgmPlayer.SetVolume(volume, fadeTime);
+            }
         }
     }
 }

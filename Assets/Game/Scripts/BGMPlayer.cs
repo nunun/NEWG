@@ -9,6 +9,9 @@ public class BGMPlayer : MonoBehaviour {
     //---------------------------------------------------------------------- 変数
     AudioSource audioSource = null;
     bool        isPlaying   = false;
+    float       volume      = 0.0f;
+    float       volumeFrom  = 0.0f;
+    float       volumeTo    = 0.0f;
     float       currentTime = 0.0f;
     float       fadeTime    = 0.0f;
 
@@ -17,10 +20,13 @@ public class BGMPlayer : MonoBehaviour {
         if (isPlaying) {
             return;//既に再生中ならやらない
         }
+        this.enabled            = true;
         this.isPlaying          = true;
+        //this.volume           = 0.0f;
+        this.volumeFrom         = this.volume;
+        this.volumeTo           = 1.0f;
         this.currentTime        = 0.0f;
         this.fadeTime           = fadeTime;
-        this.enabled            = true;
         this.audioSource.volume = 0.0f;
         this.audioSource.Play();
     }
@@ -29,11 +35,23 @@ public class BGMPlayer : MonoBehaviour {
         if (!isPlaying) {
             return;//既に停止中ならやらない
         }
+        this.enabled            = true;
         this.isPlaying          = false;
+        //this.volume           = 0.0f;
+        this.volumeFrom         = this.volume;
+        this.volumeTo           = 0.0f;
         this.currentTime        = 0.0f;
         this.fadeTime           = fadeTime;
-        this.enabled            = true;
         this.audioSource.volume = 1.0f;
+    }
+
+    public void SetVolume(float volume, float fadeTime = 0.5f) {
+        this.enabled     = true;
+        //this.volume    = 0.0f;
+        this.volumeFrom  = this.volume;
+        this.volumeTo    = volume;
+        this.currentTime = 0.0f;
+        this.fadeTime    = fadeTime;
     }
 
     //---------------------------------------------------------------------- 実装 (MonoBehaviour)
@@ -41,6 +59,10 @@ public class BGMPlayer : MonoBehaviour {
         audioSource = GetComponent<AudioSource>();
         Debug.Assert(audioSource != null, "オーディオソースなし");
         isPlaying          = false;
+        volume             = 0.0f;
+        volumeFrom         = 0.0f;
+        volumeTo           = 0.0f;
+        fadeTime           = 0.0f;
         currentTime        = 0.0f;
         fadeTime           = 0.0f;
         enabled            = false;
@@ -50,21 +72,13 @@ public class BGMPlayer : MonoBehaviour {
 
     void Update() {
         currentTime += Time.deltaTime;
-        if (isPlaying) {
-            if (currentTime < fadeTime) {
-                audioSource.volume = currentTime / fadeTime;
-            } else {
-                audioSource.volume = 1.0f;
-                enabled = false;
-            }
+        if (currentTime < fadeTime) {
+            this.volume = this.volumeFrom + ((this.volumeTo - this.volumeFrom) * (this.currentTime / this.fadeTime));
+            audioSource.volume = this.volume;
         } else {
-            if (currentTime < fadeTime) {
-                audioSource.volume = 1.0f - (currentTime / fadeTime);
-            } else {
-                audioSource.volume = 0.0f;
-                audioSource.Stop();
-                enabled = false;
-            }
+            this.volume = this.volumeTo;
+            audioSource.volume = this.volume;
+            enabled = false;
         }
     }
 }
