@@ -7,21 +7,30 @@ public class AudioTester : MonoBehaviour {
     static readonly int NITEM = 5;
 
     //-------------------------------------------------------------------------- 変数
+    List<SEPlayer>  sePlayerList  = new List<SEPlayer>();
+    int             sePage        = 0;
+    int             sePageMax     = 0;
+    string          seName        = null;
+
     List<BGMPlayer> bgmPlayerList = new List<BGMPlayer>();
-    int             page          = 0;
-    int             pageMax       = 0;
+    int             bgmPage       = 0;
+    int             bgmPageMax    = 0;
     string          bgmName       = null;
 
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     void Start() {
         foreach (var t in this.gameObject.scene.GetRootGameObjects()) {
-            var component = t.gameObject.GetComponent<BGMPlayer>();
-            if (component != null) {
-                bgmPlayerList.Add(component);
+            var sePlayer = t.gameObject.GetComponent<SEPlayer>();
+            if (sePlayer != null) {
+                sePlayerList.Add(sePlayer);
+            }
+            var bgmPlayer = t.gameObject.GetComponent<BGMPlayer>();
+            if (bgmPlayer != null) {
+                bgmPlayerList.Add(bgmPlayer);
             }
         }
-        page    = 0;
-        pageMax = bgmPlayerList.Count / NITEM;
+        bgmPage    = 0;
+        bgmPageMax = bgmPlayerList.Count / NITEM;
     }
 
     void OnGUI() {
@@ -29,47 +38,90 @@ public class AudioTester : MonoBehaviour {
         {
             GUILayout.BeginHorizontal("box");
             {
-                GUILayout.Label(string.Format("{0}/{1}", page + 1, pageMax + 1));
-                GUI.enabled = (page > 0);
-                if (GUILayout.Button("<")) {
-                    page = Mathf.Clamp(page - 1, 0, pageMax);
-                }
-                GUI.enabled = (page < pageMax);
-                if (GUILayout.Button(">")) {
-                    page = Mathf.Clamp(page + 1, 0, pageMax);
-                }
-                GUI.enabled = true;
-                for (int i = (page * NITEM); i < ((page * NITEM) + NITEM); i++) {
-                    if (i >= bgmPlayerList.Count) {
-                        continue;
+                GUILayout.BeginHorizontal("box");
+                {
+                    if (GUILayout.Button("Play")) {
+                        GameAudio.Play(this.seName);
                     }
-                    var bgmPlayer = bgmPlayerList[i];
-                    var bgmName   = bgmPlayer.name;
-                    GUI.enabled = (this.bgmName != bgmName);
-                    if (GUILayout.Button(bgmName)) {
-                        this.bgmName = bgmName;
+                    if (GUILayout.Button("Stop")) {
+                        GameAudio.Stop(this.seName);
+                    }
+                }
+                GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal("box");
+                {
+                    GUILayout.Label(string.Format("{0}/{1}", sePage + 1, sePageMax + 1));
+                    GUI.enabled = (sePage > 0);
+                    if (GUILayout.Button("<")) {
+                        sePage = Mathf.Clamp(sePage - 1, 0, sePageMax);
+                    }
+                    GUI.enabled = (sePage < sePageMax);
+                    if (GUILayout.Button(">")) {
+                        sePage = Mathf.Clamp(sePage + 1, 0, sePageMax);
                     }
                     GUI.enabled = true;
+                    for (int i = (sePage * NITEM); i < ((sePage * NITEM) + NITEM); i++) {
+                        if (i >= sePlayerList.Count) {
+                            continue;
+                        }
+                        var sePlayer = sePlayerList[i];
+                        var seName   = sePlayer.name;
+                        GUI.enabled = (this.seName != seName);
+                        if (GUILayout.Button(seName)) {
+                            this.seName = seName;
+                        }
+                        GUI.enabled = true;
+                    }
                 }
+                GUILayout.EndHorizontal();
             }
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal("box");
             {
-                if (GUILayout.Button("PlayBGM")) {
-                    AudioManager.PlayBGM(this.bgmName);
+                GUILayout.BeginHorizontal("box");
+                {
+                    if (GUILayout.Button("PlayBGM")) {
+                        GameAudio.PlayBGM(this.bgmName);
+                    }
+                    if (GUILayout.Button("MixBGM")) {
+                        GameAudio.MixBGM(this.bgmName);
+                    }
+                    if (GUILayout.Button("StopBGM")) {
+                        GameAudio.StopBGM(this.bgmName);
+                    }
+                    if (GUILayout.Button("StopBGM (All)")) {
+                        GameAudio.StopBGM();
+                    }
                 }
-                if (GUILayout.Button("MixBGM")) {
-                    AudioManager.MixBGM(this.bgmName);
+                GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal("box");
+                {
+                    GUILayout.Label(string.Format("{0}/{1}", bgmPage + 1, bgmPageMax + 1));
+                    GUI.enabled = (bgmPage > 0);
+                    if (GUILayout.Button("<")) {
+                        bgmPage = Mathf.Clamp(bgmPage - 1, 0, bgmPageMax);
+                    }
+                    GUI.enabled = (bgmPage < bgmPageMax);
+                    if (GUILayout.Button(">")) {
+                        bgmPage = Mathf.Clamp(bgmPage + 1, 0, bgmPageMax);
+                    }
+                    GUI.enabled = true;
+                    for (int i = (bgmPage * NITEM); i < ((bgmPage * NITEM) + NITEM); i++) {
+                        if (i >= bgmPlayerList.Count) {
+                            continue;
+                        }
+                        var bgmPlayer = bgmPlayerList[i];
+                        var bgmName   = bgmPlayer.name;
+                        GUI.enabled = (this.bgmName != bgmName);
+                        if (GUILayout.Button(bgmName)) {
+                            this.bgmName = bgmName;
+                        }
+                        GUI.enabled = true;
+                    }
                 }
-                if (GUILayout.Button("StopBGM")) {
-                    AudioManager.StopBGM(this.bgmName);
-                }
-                if (GUILayout.Button("StopBGM (All)")) {
-                    AudioManager.StopBGM();
-                }
+                GUILayout.EndHorizontal();
             }
             GUILayout.EndHorizontal();
         }
-        GUILayout.EndHorizontal();
     }
 }

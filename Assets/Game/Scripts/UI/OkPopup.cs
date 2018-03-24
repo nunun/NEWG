@@ -30,6 +30,7 @@ public class OkPopup : UIComponent {
 
     //-------------------------------------------------------------------------- イベント
     protected void OnClickOk() {
+        GameAudio.Play("OK");
         Close();
     }
 

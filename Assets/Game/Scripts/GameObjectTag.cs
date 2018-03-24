@@ -14,7 +14,8 @@ public class GameObjectTag : MonoBehaviour {
     static List<GameObjectTag> gameObjectTags = new List<GameObjectTag>();
 
     //------------------------------------------------------------------------- 操作
-    protected static GameObjectTag FindGameObjectTag(string tagName, GameObject parent, bool rent) {
+    protected static GameObjectTag FindGameObjectTag(string tagName, GameObject parent, bool forceParent, bool rent) {
+        var found = default(GameObjectTag);
         for (int i = gameObjectTags.Count - 1; i >= 0; i--) {
             var gameObjectTag = gameObjectTags[i];
             if (gameObjectTag.tagName == tagName) {
@@ -26,17 +27,27 @@ public class GameObjectTag : MonoBehaviour {
                         }
                         p = p.transform.parent.gameObject;
                     }
-                    if (p == null) {
-                        continue;
+                    if (p != null) {
+                        found = gameObjectTag;//指定した親を持つタグが見つかった
+                        break;
                     }
                 }
-                if (rent) {
-                    gameObjectTags.Remove(gameObjectTag);
+                // 指定した親に限定する場合、親が見つからない場合は次
+                if (forceParent) {
+                    continue;
                 }
-                return gameObjectTag;
+                // 親を指定しない場合は、一つ見つかったら終わり。
+                // 親を指定した場合は、親を持つタグが見つかるまで全て探す。
+                found = gameObjectTag;
+                if (parent == null) {
+                    break;
+                }
             }
         }
-        return null;
+        if (rent && found != null) {
+            gameObjectTags.Remove(found);
+        }
+        return found;
     }
 
     protected static void ReturnGameObjectTag(GameObjectTag gameObjectTag) {
@@ -64,9 +75,9 @@ public class GameObjectTag : MonoBehaviour {
 // ゲームオブジェクトタグ (検索用インターフェイス)
 public class GameObjectTag<T> : GameObjectTag where T : Component {
     //------------------------------------------------------------------------- 貸し出しと返却
-    public static T RentObject(string tagName = null, GameObject parent = null) {
+    public static T RentObject(string tagName = null, GameObject parent = null, bool forceParent = false) {
         tagName = tagName ?? typeof(T).Name;
-        var gameObjectTag = FindGameObjectTag(tagName, parent, true);
+        var gameObjectTag = FindGameObjectTag(tagName, parent, forceParent, true);
         if (gameObjectTag == null) {
             return default(T);
         }
@@ -87,9 +98,9 @@ public class GameObjectTag<T> : GameObjectTag where T : Component {
     }
 
     //------------------------------------------------------------------------- 検索
-    public static T Find(string tagName = null, GameObject parent = null) {
+    public static T Find(string tagName = null, GameObject parent = null, bool forceParent = false) {
         tagName = tagName ?? typeof(T).Name;
-        var gameObjectTag = FindGameObjectTag(tagName, parent, false);
+        var gameObjectTag = FindGameObjectTag(tagName, parent, forceParent, false);
         if (gameObjectTag == null) {
             return default(T);
         }

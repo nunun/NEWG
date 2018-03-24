@@ -7,6 +7,9 @@ using System.Text;
 // BGM プレイヤー
 public class BGMPlayer : MonoBehaviour {
     //---------------------------------------------------------------------- 変数
+    [SerializeField, Range(0.0f, 1.0f)]
+    public float volumeBase = 1.0f;
+
     AudioSource audioSource = null;
     bool        isPlaying   = false;
     float       volume      = 0.0f;
@@ -74,10 +77,10 @@ public class BGMPlayer : MonoBehaviour {
         currentTime += Time.deltaTime;
         if (currentTime < fadeTime) {
             this.volume = this.volumeFrom + ((this.volumeTo - this.volumeFrom) * (this.currentTime / this.fadeTime));
-            audioSource.volume = this.volume;
+            audioSource.volume = this.volume * volumeBase;
         } else {
             this.volume = this.volumeTo;
-            audioSource.volume = this.volume;
+            audioSource.volume = this.volume * volumeBase;
             enabled = false;
         }
     }

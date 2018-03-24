@@ -6,6 +6,9 @@ using UnityEngine;
 public class Title : GameScene {
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     IEnumerator Start() {
+        GameAudio.PlayBGM("Revenge1");
+        GameAudio.SetBGMVolume("Revenge1", 1.0f);
+
         using (var subject = StatusLine.Observe()) {
             subject.message = "ログイン中 ...";
             yield return new WaitForSeconds(1.0f);
@@ -33,5 +36,7 @@ public class Title : GameScene {
             Debug.Log(wait.error);
             Debug.Log(wait.Value1);
         }
+
+        //GameAudio.MixBGM("Revenge2");
     }
 }

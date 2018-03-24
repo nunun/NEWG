@@ -35,16 +35,18 @@ public class YesNoPopup : UIComponent<bool> {
 
     //-------------------------------------------------------------------------- イベント
     protected void OnClickYes() {
+        GameAudio.Play("OK");
         SetUIResult(null, true);
         Close();
     }
 
     protected void OnClickNo() {
+        GameAudio.Play("Cancel");
         SetUIResult(null, false);
         Close();
     }
 
-   //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
+    //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     void Awake() {
         SetUIRecycle(ReturnToPool);
         yesButton.onClick.AddListener(OnClickYes);
