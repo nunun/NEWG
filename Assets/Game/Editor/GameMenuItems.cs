@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
@@ -9,7 +10,7 @@ using UnityEditor.SceneManagement;
 using UnityEditorInternal;
 
 // ゲームメニューアイテム
-public class GameMenuItems {
+public partial class GameMenuItems {
     //-------------------------------------------------------------------------- ビルド (デバッグ)
     [MenuItem("Game/ゲーム開始", false, 0)]
     public static void PlayGame() {
@@ -92,12 +93,20 @@ public class GameMenuItems {
 
     [MenuItem("Game/サービス構成/プロトコル定義書を編集", false, 200)]
     public static void EditProtocols() {
-        InternalEditorUtility.OpenFileAtLineExternal("Services/services/specs.yml", 1);
+        AssetsUtility.EditFile("Services/services/specs.yml");
     }
 
-    [MenuItem("Game/サービス構成/プロトコルコード生成", false, 201)]
-    public static void GenerateProtocols() {
+    [MenuItem("Game/サービス構成/プロトコルコード生成/C# のみ", false, 201)]
+    public static void GenerateProtocolsCs() {
+        var commandProcess = new CommandProcess();
+        commandProcess.Start("docker-compose", "run --rm generator ruby /generate.rb -c /output/cs", "Services/services");
+        AssetsUtility.PingDirectory("Assets/Game/Scripts/Services/Protocols");
+    }
+
+    [MenuItem("Game/サービス構成/プロトコルコード生成/すべて", false, 202)]
+    public static void GenerateProtocolsAll() {
         var commandProcess = new CommandProcess();
         commandProcess.Start("docker-compose", "run --rm generator ruby /generate.rb -c", "Services/services");
+        AssetsUtility.PingDirectory("Assets/Game/Scripts/Services/Protocols");
     }
 }
