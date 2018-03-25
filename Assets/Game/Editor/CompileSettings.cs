@@ -112,30 +112,40 @@ public partial class CompileSettings {
         Debug.Assert(CompileSettings.Schemes.ContainsKey(schemeName), "スキームなし");
         var compileSettings = CompileSettings.Schemes[schemeName];
         compileSettings.Apply();
+
+        // スキーム適用メッセージ
+        Debug.Log("CompileSettings: スキームが適用されました: " + schemeName);
     }
 
-    // シンボル設定を元に戻す
+    // シンボル設定をバックアップ
+    public static void Backup() {
+        scriptingDefineSymbolsBackup = new Dictionary<BuildTargetGroup,string>();
+        foreach (var buildTargetGroup in BuildTargetGroups) {
+            scriptingDefineSymbolsBackup[buildTargetGroup] = PlayerSettings.GetScriptingDefineSymbolsForGroup(buildTargetGroup);
+        }
+    }
+
+    // シンボル設定を復元
     public static void Restore() {
         Debug.Assert(scriptingDefineSymbolsBackup != null, "バックアップなし");
         foreach (var pair in scriptingDefineSymbolsBackup) {
             PlayerSettings.SetScriptingDefineSymbolsForGroup(pair.Key, pair.Value);
         }
+        scriptingDefineSymbolsBackup = null;
 
-        // 復元メッセージ
-        Debug.Log("CompileSettings: ビルド設定のシンボル設定を復元しました。");
+        // シンボル定義復元メッセージ
+        Debug.Log("CompileSettings: シンボル定義を復元しました");
     }
 
     // 現在のシーンに適用
     public void Apply() {
         var scriptingDefineSymbols = HashSetToString(symbols);
-        scriptingDefineSymbolsBackup = new Dictionary<BuildTargetGroup,string>();
         foreach (var buildTargetGroup in BuildTargetGroups) {
-            scriptingDefineSymbolsBackup[buildTargetGroup] = PlayerSettings.GetScriptingDefineSymbolsForGroup(buildTargetGroup);
             PlayerSettings.SetScriptingDefineSymbolsForGroup(buildTargetGroup, scriptingDefineSymbols);
         }
 
-        // 適用メッセージ
-        Debug.Log("CompileSettings: ビルド設定にシンボル設定を適用しました: " + scriptingDefineSymbols);
+        // シンボル定義適用メッセージ
+        Debug.Log("CompileSettings: シンボル定義を適用しました: " + scriptingDefineSymbols);
     }
 
     // 設定のコピー

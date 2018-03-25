@@ -71,6 +71,9 @@ public partial class GameBuilder {
         PlayerSettings.runInBackground         = true;
         PlayerSettings.SplashScreen.show       = false;
 
+        // コンパイル設定のバックアップ
+        CompileSettings.Backup();
+
         // コンパイル設定の適用
         CompileSettings.Apply(gameBuildSettings.compileSettings);
 
