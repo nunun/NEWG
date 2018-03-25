@@ -5,12 +5,47 @@ using Services.Protocols.Consts;
 using UnityEngine;
 namespace Services.Protocols.Models {
     // User
-    // ユーザ情報
+    // ユーザ情報。サーバ上のユーザの情報。
     [Serializable]
     public class User : GameData {
         public string uuid; // ユーザのUUID型
+        public string pid; // プレイヤー番号
+        public string session_token; // セッショントークン
+        public string login_token; // ログイントークン
         protected override void Clear() {
             uuid = null; // ユーザのUUID型
+            pid = null; // プレイヤー番号
+            session_token = null; // セッショントークン
+            login_token = null; // ログイントークン
+        }
+    }
+    // Player
+    // プレイヤ情報。全ユーザに公開されるプレイヤーの情報。
+    [Serializable]
+    public class Player : GameData {
+        public string pid; // プレイヤー番号
+        public string name; // プレイヤー名
+        protected override void Clear() {
+            pid = null; // プレイヤー番号
+            name = null; // プレイヤー名
+        }
+    }
+    // SessionData
+    // セッションデータ
+    [Serializable]
+    public class SessionData : GameData {
+        public string session_token; // セッショントークン
+        protected override void Clear() {
+            session_token = null; // セッショントークン
+        }
+    }
+    // LoginData
+    // ログインデータ
+    [Serializable]
+    public class LoginData : GameData {
+        public string login_token; // ログイントークン
+        protected override void Clear() {
+            login_token = null; // ログイントークン
         }
     }
     // SampleModel

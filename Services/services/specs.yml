@@ -4,6 +4,39 @@ specs:
   services:
     protocols:
       webapi:
+        - name: Signup
+          desc: サインアップAPI
+          api_path: /login
+          request:
+            - name: name
+              desc: プレイヤー名
+              type: string
+          response:
+            - name: player
+              desc: プレイヤー情報
+              type: Player
+            - name: session_data
+              desc: セッションデータ
+              type: SessionData
+            - name: login_data
+              desc: ログインデータ
+              type: LoginData
+
+        - name: Signin
+          desc: ログインAPI
+          api_path: /login
+          request:
+            - name: login_token
+              desc: ログイントークン
+              type: string
+          response:
+            - name: player
+              desc: プレイヤー情報
+              type: Player
+            - name: session_data
+              desc: セッションデータ
+              type: SessionData
+
         - name: Test
           desc: テストインターフェイス
           api_path: /test
@@ -18,10 +51,50 @@ specs:
 
       models:
         - name: User
-          desc: ユーザ情報
+          desc: ユーザ情報。サーバ上のユーザの情報。
           properties:
             - name:  uuid
               desc:  ユーザのUUID型
+              type:  string
+              value: (null)
+            - name:  pid
+              desc:  プレイヤー番号
+              type:  string
+              value: (null)
+            - name:  session_token
+              desc:  セッショントークン
+              type:  string
+              value: (null)
+            - name:  login_token
+              desc:  ログイントークン
+              type:  string
+              value: (null)
+
+        - name: Player
+          desc: プレイヤ情報。全ユーザに公開されるプレイヤーの情報。
+          properties:
+            - name:  pid
+              desc:  プレイヤー番号
+              type:  string
+              value: (null)
+            - name:  name
+              desc:  プレイヤー名
+              type:  string
+              value: (null)
+
+        - name: SessionData
+          desc: セッションデータ
+          properties:
+            - name:  session_token
+              desc:  セッショントークン
+              type:  string
+              value: (null)
+
+        - name: LoginData
+          desc: ログインデータ
+          properties:
+            - name:  login_token
+              desc:  ログイントークン
               type:  string
               value: (null)
 
