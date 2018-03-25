@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using UnityEditorInternal;
 
 // ゲームメニューアイテム
 public class GameMenuItems {
@@ -76,5 +77,27 @@ public class GameMenuItems {
     public static void BuildReleaseAll() {
         BuildReleaseClientWebGL();
         BuildReleaseServerLinuxHeadless();
+    }
+
+    //-------------------------------------------------------------------------- サービス構成
+    [MenuItem("Game/サービス構成/ローカルサービスを起動", false, 101)]
+    public static void ServicesUp() {
+        // TODO
+    }
+
+    [MenuItem("Game/サービス構成/ローカルサービスを停止", false, 102)]
+    public static void ServicesDown() {
+        // TODO
+    }
+
+    [MenuItem("Game/サービス構成/プロトコル定義書を編集", false, 200)]
+    public static void EditProtocols() {
+        InternalEditorUtility.OpenFileAtLineExternal("Services/services/specs.yml", 1);
+    }
+
+    [MenuItem("Game/サービス構成/プロトコルコード生成", false, 201)]
+    public static void GenerateProtocols() {
+        var commandProcess = new CommandProcess();
+        commandProcess.Start("docker-compose", "run --rm generator ruby /generate.rb -c", "Services/services");
     }
 }

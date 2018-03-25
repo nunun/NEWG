@@ -1,28 +1,14 @@
-var util        = require('util');
-var CouchClient = require('./../library/couch_client');
-var GameData    = require('./../library/game_data');
-var consts      = require('./consts');
-function Models() {}
-util.inherits(Models, function(){});
-Models.prototype.migrate = function(callback, recreate) {
-    names = [];
-    var models = Object.values(this);
-    for (var i in models) {
-        var name = models[i].getDatabaseScopeName();
-        if (name) {
-            names.push(name);
-        }
-    }
-    CouchClient.getClient().createDatabases(names, callback, recreate);
-}
-models = new Models();
+var util     = require('util');
+var GameData = require('./../library/game_data');
+var consts   = require('./consts');
+var models   = {};
 // User
 // ユーザ情報
 function User() {
     this.init();
 }
 util.inherits(User, GameData);
-GameData.setupType(User, 'User', 'users');
+GameData.setupType(User, 'User', 'db_user');
 User.prototype.init = function() {
     User.super_.prototype.init.call(this);
 };
@@ -36,7 +22,7 @@ function SampleModel() {
     this.init();
 }
 util.inherits(SampleModel, GameData);
-GameData.setupType(SampleModel, 'SampleModel', null);
+GameData.setupType(SampleModel, 'SampleModel', 'db_sample_model');
 SampleModel.prototype.init = function() {
     SampleModel.super_.prototype.init.call(this);
 };
