@@ -16,6 +16,7 @@ public partial class GameBuilder {
         public bool        headless;
         public bool        autoRun;
         public bool        openFolder;
+        public string      compileSettings;
     }
 
     //-------------------------------------------------------------------------- ビルド処理
@@ -70,18 +71,26 @@ public partial class GameBuilder {
         PlayerSettings.runInBackground         = true;
         PlayerSettings.SplashScreen.show       = false;
 
+        // コンパイル設定の適用
+        CompileSettings.Apply(gameBuildSettings.compileSettings);
+
         // ビルド
         var result = BuildPipeline.BuildPlayer(levels, outputPath, gameBuildSettings.buildTarget, options);
-        if (!string.IsNullOrEmpty(result)) {
-            Debug.LogError(result);
-        }
 
-        // シーン設定を復元して終了
+        // コンパイル設定の復元
+        CompileSettings.Restore();
+
+        // シーン設定を復元
         if (sceneSetup.Length > 0) {
             EditorSceneManager.RestoreSceneManagerSetup(sceneSetup);
         }
 
-        // フォルダを開く
+        // 結果処理
+        if (!string.IsNullOrEmpty(result)) {
+            Debug.LogError(result);
+        }
+
+        // 成功ならフォルダを開く
         if (gameBuildSettings.openFolder) {
             OpenFolder(gameBuildSettings.outputPath);
         }
