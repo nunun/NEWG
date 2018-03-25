@@ -73,6 +73,13 @@ public class GameSceneManager : MonoBehaviour {
         currentScene = UnityEngine.Object.FindObjectOfType(typeof(GameScene)) as GameScene;
         Debug.Assert(currentScene != null, "シーンに GameScene コンポーネントがいない");
 
+        // TODO
+        #if UNITY_EDITOR && (UNITY_5_0 || UNITY_5_1 || UNITY_5_2_0)
+        if (UnityEditor.Lightmapping.giWorkflowMode == UnityEditor.Lightmapping.GIWorkflowMode.Iterative) {
+            DynamicGI.UpdateEnvironment();
+        }
+        #endif
+
         // エフェクト解除
         if (uiEffect != null) {
             uiEffect.Uneffect();

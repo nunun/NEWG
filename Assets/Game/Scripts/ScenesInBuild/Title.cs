@@ -10,7 +10,7 @@ public class Title : GameScene {
         GameAudio.SetBGMVolume("Revenge1", 1.0f);
 
         using (var subject = StatusLine.Observe()) {
-            subject.message = "ログイン中 ...";
+            subject.message = "初期化中 ...";
             yield return new WaitForSeconds(1.0f);
             subject.message = "ロード中 ...";
             yield return new WaitForSeconds(1.0f);

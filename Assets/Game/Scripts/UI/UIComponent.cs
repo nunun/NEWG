@@ -28,7 +28,7 @@ using UnityEngine;
 
 
 // UI コンポーネント
-public class UIComponent : UIBehaviour {
+public class UIComponent : UIObject {
     UIResult result = null;
     protected void SetUICallback(Action<string> callback) {
         Debug.Assert(this.result == null);
@@ -51,7 +51,7 @@ public class UIComponent : UIBehaviour {
 }
 
 // UI コンポーネント <T1>
-public class UIComponent<T1> : UIBehaviour {
+public class UIComponent<T1> : UIObject {
     UIResult<T1> result = null;
     protected void SetUICallback(Action<string,T1> callback) {
         Debug.Assert(this.result == null);
@@ -74,7 +74,7 @@ public class UIComponent<T1> : UIBehaviour {
 }
 
 // UI コンポーネント <T1,T2>
-public class UIComponent<T1,T2> : UIBehaviour {
+public class UIComponent<T1,T2> : UIObject {
     UIResult<T1,T2> result = null;
     protected void SetUICallback(Action<string,T1,T2> callback) {
         Debug.Assert(this.result == null);
@@ -97,7 +97,7 @@ public class UIComponent<T1,T2> : UIBehaviour {
 }
 
 // UI コンポーネント <T1,T2,T3>
-public class UIComponent<T1,T2,T3> : UIBehaviour {
+public class UIComponent<T1,T2,T3> : UIObject {
     UIResult<T1,T2,T3> result = null;
     protected void SetUICallback(Action<string,T1,T2,T3> callback) {
         Debug.Assert(this.result == null);
