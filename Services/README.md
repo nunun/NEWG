@@ -1,5 +1,6 @@
-cygwin   + docker for windows
-Terminal + docker for mac
+
+* Windows: cygwin + docker for windows
+* Mac: Terminal + docker for mac
 
 ````
 sh run.sh help
