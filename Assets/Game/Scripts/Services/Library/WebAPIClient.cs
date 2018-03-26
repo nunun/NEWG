@@ -1,3 +1,4 @@
+//#define WEBAPI_CLIENT_STANDALONE_DEBUG
 using System;
 using System.IO;
 using System.Linq;
@@ -107,7 +108,6 @@ public partial class WebAPIClient {
     Request AddRequest<TRes>(HttpMethod method, string url, string apiPath, Parameters parameters, Action<string,TRes> callback) {
         var request = Request<TRes>.RentFromPool(this, method, url, apiPath, parameters, callback);
         requestList.Add(request);
-        request.Send(); // 送信！
         enabled = true;
         return request;
     }
@@ -126,6 +126,18 @@ public partial class WebAPIClient {
                     request.Send(); // 再送！
                 }
                 continue;
+            }
+
+            #if WEBAPI_CLIENT_STANDALONE_DEBUG
+            // WebAPI スタンドアローンデバッグ対応
+            if (StandaloneDebug(request, detalTime)) {
+                continue; // スタンドアローンデバッグにより処理された
+            }
+            #endif
+
+            // 送信していなければ送信!
+            if (request.IsSent) {
+                request.Send();
             }
 
             // レスポンスチェック
@@ -188,6 +200,9 @@ public partial class WebAPIClient {
         // サブクラスが設定
         protected Action<Request,string,string> setResponse  = null;
         protected Action<Request>               returnToPool = null;
+
+        // 送信したかどうか
+        public bool IsSent { get { return (unityWebRequest != null); }}
 
         // UnityWebRequest の取得
         public UnityWebRequest UnityWebRequest { get { return unityWebRequest; }}
@@ -549,3 +564,18 @@ public partial class WebAPIClient {
         }
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+#if WEBAPI_CLIENT_STANDALONE_DEBUG
+// WebAPI スタンドアローンデバッグ対応
+// NOTE ゲーム用のコードになるが置き場所も定まらないので一旦ここに書く
+public partial class WebAPIClient {
+    //--------------------------------------------------------------------------------
+    public bool StandaloneDebug(Request request, float deltaTime) {
+        // TODO
+        return false;
+    }
+}
+#endif

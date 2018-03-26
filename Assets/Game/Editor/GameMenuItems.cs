@@ -32,7 +32,7 @@ public partial class GameMenuItems {
             headless        = false,
             autoRun         = false,
             openFolder      = true,
-            compileSettings = "DEVELOP",
+            compileSettings = "DEBUG_CLIENT",
         });
     }
 
@@ -44,7 +44,7 @@ public partial class GameMenuItems {
             headless        = false,
             autoRun         = true,
             openFolder      = false,
-            compileSettings = "DEVELOP",
+            compileSettings = "DEBUG_CLIENT",
         });
     }
 
@@ -56,7 +56,7 @@ public partial class GameMenuItems {
             headless        = false,
             autoRun         = true,
             openFolder      = false,
-            compileSettings = "DEVELOP",
+            compileSettings = "DEBUG_SERVER",
         });
     }
 
@@ -69,7 +69,7 @@ public partial class GameMenuItems {
             headless        = false,
             autoRun         = false,
             openFolder      = false,
-            compileSettings = "RELEASE",
+            compileSettings = "RELEASE_CLIENT",
         });
     }
 
@@ -81,7 +81,7 @@ public partial class GameMenuItems {
             headless        = true,
             autoRun         = false,
             openFolder      = false,
-            compileSettings = "RELEASE",
+            compileSettings = "RELEASE_SERVER",
         });
     }
 

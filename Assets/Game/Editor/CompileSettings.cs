@@ -11,14 +11,17 @@ public partial class CompileSettings : ISerializationCallbackReceiver {
     // シンボル一覧の定義
     // 必要なシンボルはここに定義してください。
     public static readonly Dictionary<string,string[]> ScriptDefineSymbols = new Dictionary<string,string[]>() {
-        { "DEBUG",  null },
-        { "WEBAPI", new string[] {"SERVER", "STANDALONE"}},
+        { "DEBUG",       null }, // デバッグコードをバイナリに含めるかどうか
+        { "SERVER_CODE", null }, // サーバコードをバイナリに含めるかどうか
+        //{ "ACCESS_SERVER", new string[] {"DEVELOP", "STAGING", "RELEASE"}},
     };
 
     // スキーマ定義
     public static readonly Dictionary<string,CompileSettings> Schemes = new Dictionary<string,CompileSettings>() {
-        { "DEVELOP", new CompileSettings("DEBUG;WEBAPI_SERVER") },
-        { "RELEASE", new CompileSettings("WEBAPI_SERVER")       },
+        { "DEBUG_CLIENT",   new CompileSettings("DEBUG")                },
+        { "DEBUG_SERVER",   new CompileSettings("DEBUG", "SERVER_CODE") },
+        { "RELEASE_CLIENT", new CompileSettings()                       },
+        { "RELEASE_SERVER", new CompileSettings("SERVER_CODE")          },
     };
 
     //-------------------------------------------------------------------------- 変数
