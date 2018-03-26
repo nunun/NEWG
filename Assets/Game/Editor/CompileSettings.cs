@@ -107,7 +107,7 @@ public partial class CompileSettings {
     static Dictionary<BuildTargetGroup,string> scriptingDefineSymbolsBackup = null;
 
     //-------------------------------------------------------------------------- 操作
-    // スキーム名を適用
+    // スキームを適用
     public static void Apply(string schemeName) {
         Debug.Assert(CompileSettings.Schemes.ContainsKey(schemeName), "スキームなし");
         var compileSettings = CompileSettings.Schemes[schemeName];
@@ -117,15 +117,19 @@ public partial class CompileSettings {
         Debug.Log("CompileSettings: スキームが適用されました: " + schemeName);
     }
 
-    // シンボル設定をバックアップ
+    // シンボル定義をバックアップ
     public static void Backup() {
         scriptingDefineSymbolsBackup = new Dictionary<BuildTargetGroup,string>();
         foreach (var buildTargetGroup in BuildTargetGroups) {
             scriptingDefineSymbolsBackup[buildTargetGroup] = PlayerSettings.GetScriptingDefineSymbolsForGroup(buildTargetGroup);
         }
+
+        // シンボル定義バックアップメッセージ
+        // NOTE うるさくなるので出さない
+        //Debug.Log("CompileSettings: シンボル定義をバックアップしました");
     }
 
-    // シンボル設定を復元
+    // シンボル定義を復元
     public static void Restore() {
         Debug.Assert(scriptingDefineSymbolsBackup != null, "バックアップなし");
         foreach (var pair in scriptingDefineSymbolsBackup) {
@@ -137,7 +141,7 @@ public partial class CompileSettings {
         Debug.Log("CompileSettings: シンボル定義を復元しました");
     }
 
-    // 現在のシーンに適用
+    // シンボル定義を適用
     public void Apply() {
         var scriptingDefineSymbols = HashSetToString(symbols);
         foreach (var buildTargetGroup in BuildTargetGroups) {
@@ -156,6 +160,7 @@ public partial class CompileSettings {
         }
     }
 
+    //-------------------------------------------------------------------------- ユーティリティ
     // シンボル一覧をシンボル文字列に変換
     string HashSetToString(HashSet<string> symbols) {
         return string.Join(";", symbols.ToArray());
@@ -188,6 +193,12 @@ public partial class CompileSettings {
     }
 }
 
+//// スキーム適用メッセージ
+//Debug.Log("CompileSettings: スキームが適用されました: " + schemeName);
+//// シンボル定義復元メッセージ
+//Debug.Log("CompileSettings: シンボル定義を復元しました");
+//// シンボル定義適用メッセージ
+//Debug.Log("CompileSettings: シンボル定義を適用しました: " + scriptingDefineSymbols);
 /// <summary>
 /// ■ 注意
 /// ビルド設定の保存と復元
