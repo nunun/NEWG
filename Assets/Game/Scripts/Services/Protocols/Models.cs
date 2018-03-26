@@ -4,10 +4,10 @@ using System.Collections.Generic;
 using Services.Protocols.Consts;
 using UnityEngine;
 namespace Services.Protocols.Models {
-    // User
-    // ユーザ情報。サーバ上のユーザの情報。
+    // UserData
+    // ユーザデータ。サーバ上のみで扱われる公開されないユーザのデータ。
     [Serializable]
-    public class User : GameData {
+    public class UserData : GameData {
         public string uuid; // ユーザのUUID型
         public string pid; // プレイヤー番号
         public string session_token; // セッショントークン
@@ -19,10 +19,10 @@ namespace Services.Protocols.Models {
             login_token = null; // ログイントークン
         }
     }
-    // Player
-    // プレイヤ情報。全ユーザに公開されるプレイヤーの情報。
+    // PlayerData
+    // プレイヤデータ。全ユーザに公開されるプレイヤーのデータ。
     [Serializable]
-    public class Player : GameData {
+    public class PlayerData : GameData {
         public string pid; // プレイヤー番号
         public string name; // プレイヤー名
         protected override void Clear() {
@@ -57,22 +57,22 @@ namespace Services.Protocols.Models {
         public string stringValue2; // 文字列型 (null)
         public string stringValue3; // 文字列型 (空)
         public SampleModel objectValue1; // 型 (null)
-        public User objectValue2; // 型 (空)
-        public User[] arrayValue1; // 配列型 (null)
-        public User[] arrayValue2; // 配列型 (空)
-        public List<User> listValue1; // リスト型 (null)
-        public List<User> listValue2; // リスト型 (空)
+        public UserData objectValue2; // 型 (空)
+        public UserData[] arrayValue1; // 配列型 (null)
+        public UserData[] arrayValue2; // 配列型 (空)
+        public List<UserData> listValue1; // リスト型 (null)
+        public List<UserData> listValue2; // リスト型 (空)
         protected override void Clear() {
             intValue = 100; // 整数型
             stringValue1 = "test"; // 文字列型
             stringValue2 = null; // 文字列型 (null)
             stringValue3 = ""; // 文字列型 (空)
             objectValue1 = null; // 型 (null)
-            objectValue2 = new User(); // 型 (空)
+            objectValue2 = new UserData(); // 型 (空)
             arrayValue1 = null; // 配列型 (null)
-            arrayValue2 = new User[0]; // 配列型 (空)
+            arrayValue2 = new UserData[0]; // 配列型 (空)
             listValue1 = null; // リスト型 (null)
-            listValue2 = new List<User>(); // リスト型 (空)
+            listValue2 = new List<UserData>(); // リスト型 (空)
         }
     }
 }

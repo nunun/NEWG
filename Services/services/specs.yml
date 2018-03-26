@@ -6,15 +6,15 @@ specs:
       webapi:
         - name: Signup
           desc: サインアップAPI
-          api_path: /login
+          api_path: /signup
           request:
             - name: name
               desc: プレイヤー名
               type: string
           response:
-            - name: player
-              desc: プレイヤー情報
-              type: Player
+            - name: player_data
+              desc: プレイヤーデータ
+              type: PlayerData
             - name: session_data
               desc: セッションデータ
               type: SessionData
@@ -24,15 +24,15 @@ specs:
 
         - name: Signin
           desc: ログインAPI
-          api_path: /login
+          api_path: /signin
           request:
             - name: login_token
               desc: ログイントークン
               type: string
           response:
-            - name: player
-              desc: プレイヤー情報
-              type: Player
+            - name: player_data
+              desc: プレイヤーで０タ
+              type: PlayerData
             - name: session_data
               desc: セッションデータ
               type: SessionData
@@ -50,8 +50,8 @@ specs:
               type: int
 
       models:
-        - name: User
-          desc: ユーザ情報。サーバ上のユーザの情報。
+        - name: UserData
+          desc: ユーザデータ。サーバ上のみで扱われる公開されないユーザのデータ。
           properties:
             - name:  uuid
               desc:  ユーザのUUID型
@@ -70,8 +70,8 @@ specs:
               type:  string
               value: (null)
 
-        - name: Player
-          desc: プレイヤ情報。全ユーザに公開されるプレイヤーの情報。
+        - name: PlayerData
+          desc: プレイヤデータ。全ユーザに公開されるプレイヤーのデータ。
           properties:
             - name:  pid
               desc:  プレイヤー番号
@@ -123,27 +123,27 @@ specs:
               value:   (null)
             - name:    objectValue2
               desc:    型 (空)
-              type:    User
+              type:    UserData
               value:   (empty)
             - name:    arrayValue1
               desc:    配列型 (null)
               type:    array
-              subtype: User
+              subtype: UserData
               value:   (null)
             - name:    arrayValue2
               desc:    配列型 (空)
               type:    array
-              subtype: User
+              subtype: UserData
               value:   (empty)
             - name:    listValue1
               desc:    リスト型 (null)
               type:    list
-              subtype: User
+              subtype: UserData
               value:   (null)
             - name:    listValue2
               desc:    リスト型 (空)
               type:    list
-              subtype: User
+              subtype: UserData
               value:   (empty)
 
       consts:
@@ -232,7 +232,7 @@ templates:
           when "(null)"
             return "null"
           when "(empty)"
-            return "new #{p["subtype"]}[0]"
+            return "new #{cs_type_name(p["subtype"])}[0]"
           end
         when "list"
           return "null" if not p.key?("value")
@@ -240,7 +240,7 @@ templates:
           when "(null)"
             return "null"
           when "(empty)"
-            return "new List<#{p["subtype"]}>()"
+            return "new List<#{cs_type_name(p["subtype"])}>()"
           end
         else
           return "null" if not p.key?("value")
@@ -248,22 +248,30 @@ templates:
           when "(null)"
             return "null"
           when "(empty)"
-            return "new #{p["type"]}()"
+            return "new #{cs_type_name(p["type"])}()"
           end
         end
       end
-      # cs types
+      # cs type
       def cs_type(p)
         case p["type"]
-        when "int" || "float" || "double" || "string"
-          return p["type"]
         when "array"
-          return "#{p["subtype"]}[]"
+          return "#{cs_type_name(p["subtype"])}[]"
         when "list"
-          return "List<#{p["subtype"]}>"
+          return "List<#{cs_type_name(p["subtype"])}>"
         else
-          return p["type"]
+          return cs_type_name(p["type"])
         end
+      end
+      # cs type name
+      def cs_type_name(type)
+        #case type
+        #when "int", "float", "double", "string"
+        #  return type
+        #else
+        #  return "Services.Protocols.Models." + type
+        #end
+        return type
       end
 
   # nodejs
@@ -411,8 +419,8 @@ templates:
               <%- name   = entry["name"].to_pascal -%>
               <%- desc   = entry["desc"]           -%>
               <%- client = entry["client"]         -%>
-              <%- treq   = name + "_Request"       -%>
-              <%- tres   = name + "_Response"      -%>
+              <%- treq   = name + "Request"        -%>
+              <%- tres   = name + "Response"       -%>
               [Serializable]
               public struct <%= treq %> {
                   <%- entry["request"].each do |p| -%>

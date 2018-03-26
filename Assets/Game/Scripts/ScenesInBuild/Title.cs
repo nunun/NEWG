@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Services.Protocols;
 
 // タイトル
 public class Title : GameScene {
@@ -14,6 +15,12 @@ public class Title : GameScene {
             yield return new WaitForSeconds(1.0f);
             subject.message = "ロード中 ...";
             yield return new WaitForSeconds(1.0f);
+        }
+
+        using (var wait = UIWait<WebAPI.SignupResponse>.RentFromPool()) {
+            WebAPI.Signup("tester", wait.Callback);
+            yield return wait;
+            Debug.Log(wait.error);
         }
 
         using (var wait = UIWait.RentFromPool()) {

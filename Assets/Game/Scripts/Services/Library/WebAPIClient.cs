@@ -1,4 +1,4 @@
-//#define WEBAPI_CLIENT_STANDALONE_DEBUG
+#define WEBAPI_CLIENT_STANDALONE_DEBUG
 using System;
 using System.IO;
 using System.Linq;
@@ -7,6 +7,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
+
+#if WEBAPI_CLIENT_STANDALONE_DEBUG
+using Services.Protocols;
+using Services.Protocols.Consts;
+using Services.Protocols.Models;
+#endif
 
 // WebAPI クライアント
 public partial class WebAPIClient : MonoBehaviour {
@@ -130,14 +136,14 @@ public partial class WebAPIClient {
                 request.retryTime = 0.0f;
                 request.Send(); // 再送！
             }
-            continue;
+            return;
         }
 
         #if WEBAPI_CLIENT_STANDALONE_DEBUG
         // WebAPI クライアントのスタンドアローンデバッグ対応
         // サーバなしでデバッグする処理の実装。
-        if (StandaloneDebug(request, detalTime)) {
-            continue; // スタンドアローンデバッグにより処理された
+        if (StandaloneDebug(request, deltaTime)) {
+            return;//スタンドアローンデバッグにより処理された
         }
         #endif
 
@@ -155,15 +161,15 @@ public partial class WebAPIClient {
                     Debug.LogWarningFormat("WebAPIClient: CheckRequestList: network error ({0}, {1})",     unityWebRequest.url, error);
                     Debug.LogWarningFormat("WebAPIClient: CheckRequestList: retry: {0} times remaining.", request.retryCount);
                     request.retryTime = request.retryInterval;
-                    continue;
+                    return;
                 }
             }
-            requestList.RemoveAt(i);
+            requestList.RemoveAt(0);
             request.SetResponse(error, null);
             request.ReturnToPool();
         } else if (unityWebRequest.isDone) {
             var message = crypter.Decrypt(unityWebRequest.downloadHandler.text);
-            requestList.RemoveAt(i);
+            requestList.RemoveAt(0);
             request.SetResponse(null, message);
             request.ReturnToPool();
         }
@@ -206,6 +212,12 @@ public partial class WebAPIClient {
         protected Action<Request,string,string> setResponse  = null;
         protected Action<Request>               returnToPool = null;
 
+
+        // 各種情報の取得
+        public string     Url        { get { return url;        }}
+        public string     APIPath    { get { return apiPath;    }}
+        public Parameters Parameters { get { return parameters; }}
+
         // 送信したかどうか
         public bool IsSent { get { return (unityWebRequest != null); }}
 
@@ -240,6 +252,11 @@ public partial class WebAPIClient {
             // WebAPIClient の Update ポーリングで
             // リクエストの終了チェックが行われる。
             unityWebRequest.Abort();
+        }
+
+        //---------------------------------------------------------------------- 実装 (ToString)
+        public override string ToString() {
+            return string.Format("WebAPIClient.Request.Send: method[{0}] url[{1}] apiPath[{2}] parameters[{3}]", method, url, apiPath, parameters);
         }
     }
 }
@@ -327,20 +344,20 @@ public partial class WebAPIClient {
     }
 }
 
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 // パラメータクラス
 public partial class WebAPIClient {
     public class Parameters {
-        //------------------------------------------------------------------ 変数
+        //---------------------------------------------------------------------- 変数
         Dictionary<string,string> queries  = new Dictionary<string,string>();
         Dictionary<string,string> forms    = new Dictionary<string,string>();
         Dictionary<string,string> headers  = new Dictionary<string,string>();
         string                    text     = null;
 
-        //------------------------------------------------------------------ 生成と破棄
+        //---------------------------------------------------------------------- 生成と破棄
         // プールから借りる
         public static Parameters RentFromPool() {
             var parameters = ObjectPool<Parameters>.RentObject();
@@ -360,7 +377,7 @@ public partial class WebAPIClient {
             ObjectPool<Parameters>.ReturnObject(this);
         }
 
-        //------------------------------------------------------------------ 操作 (パラメータの設定)
+        //---------------------------------------------------------------------- 操作 (パラメータの設定)
         // クエリを追加
         public void AddQuery(string key, string val) {
             queries.Add(key, val);
@@ -392,7 +409,70 @@ public partial class WebAPIClient {
             SetTextContent(JsonUtility.ToJson(obj), contentType);
         }
 
-        //------------------------------------------------------------------ 操作 (リクエスト作成)
+        //---------------------------------------------------------------------- 取得
+        // クエリを取得
+        public string GetQuery(string key, string defaultValue = null) {
+            if (queries.ContainsKey(key)) {
+                return queries[key];
+            }
+            return defaultValue;
+        }
+
+        // POST フォームを取得
+        public string GetForm(string key, string defaultValue = null) {
+            if (forms.ContainsKey(key)) {
+                return forms[key];
+            }
+            return defaultValue;
+        }
+
+        // ヘッダを取得
+        public string GetHeader(string key, string defaultValue = null) {
+            if (headers.ContainsKey(key)) {
+                return headers[key];
+            }
+            return defaultValue;
+        }
+
+        // テキストデータを持っているか
+        public bool HasText() {
+            return (text != null);
+        }
+
+        // テキストを取得
+        public string GetText() {
+            return text;
+        }
+
+        // テキストを取得
+        public byte[] GetTextData() {
+            return Encoding.UTF8.GetBytes(text);
+        }
+
+        // WWWForm を持っているか
+        public bool HasWWWForm() {
+            return (forms.Count > 0);
+        }
+
+        // WWWForm を作成して取得
+        public WWWForm GetWWWForm() {
+            var wwwform = new WWWForm();
+            if (headers.Count > 0) {
+                var enumerator = headers.GetEnumerator();
+                while (enumerator.MoveNext()) {
+                    var element = enumerator.Current;
+                    wwwform.AddField(element.Key, element.Value);
+                }
+            }
+            return wwwform;
+        }
+
+        // WWWForm の作成してバイト配列を取得
+        public byte[] GetWWWFormData() {
+            return GetWWWForm().data;
+        }
+
+        //---------------------------------------------------------------------- 操作 (リクエスト作成)
         // UnityWebRequest を取得
         public UnityWebRequest CreateUnityWebRequest(WebAPIClient client, HttpMethod method, string url, string apiPath) {
             // url
@@ -438,7 +518,7 @@ public partial class WebAPIClient {
             return request;
         }
 
-        //------------------------------------------------------------------ 操作 (パラメータの一括取り込み)
+        //---------------------------------------------------------------------- 操作 (パラメータの一括取り込み)
         // インポート (string[])
         public void Import(string[] queries, string[] forms, string[] headers) {
             if (queries != null) {
@@ -483,7 +563,7 @@ public partial class WebAPIClient {
             other.text = text;
         }
 
-        //------------------------------------------------------------------ 各種情報の作成、取得、設定
+        //---------------------------------------------------------------------- 内部処理
         // クエリ URL を作成
         string CreateRequestUrl(string url, string apiPath) {
             var sb = ObjectPool<StringBuilder>.RentObject();
@@ -509,44 +589,6 @@ public partial class WebAPIClient {
             return message;
         }
 
-        // テキストデータを持っているか
-        bool HasText() {
-            return (text != null);
-        }
-
-        // テキストを取得
-        string GetText() {
-            return text;
-        }
-
-        // テキストを取得
-        byte[] GetTextData() {
-            return Encoding.UTF8.GetBytes(text);
-        }
-
-        // WWWForm を持っているか
-        bool HasWWWForm() {
-            return (forms.Count > 0);
-        }
-
-        // WWWForm を作成して取得
-        WWWForm GetWWWForm() {
-            var wwwform = new WWWForm();
-            if (headers.Count > 0) {
-                var enumerator = headers.GetEnumerator();
-                while (enumerator.MoveNext()) {
-                    var element = enumerator.Current;
-                    wwwform.AddField(element.Key, element.Value);
-                }
-            }
-            return wwwform;
-        }
-
-        // WWWForm の作成してバイト配列を取得
-        byte[] GetWWWFormData() {
-            return GetWWWForm().data;
-        }
-
         // 現在のヘッダ情報を UnityWebRequest にセット
         void SetHeadersToRequest(UnityWebRequest request) {
             if (headers.Count > 0) {
@@ -558,7 +600,7 @@ public partial class WebAPIClient {
             }
         }
 
-        //------------------------------------------------------------------ 実装 (ToString)
+        //---------------------------------------------------------------------- 実装 (ToString)
         public override string ToString() {
             var debugQueries = string.Join(", ", this.queries.Select((v) => v.Key + ":" + v.Value).ToArray());
             var debugForms   = string.Join(", ", this.forms.Select((v)   => v.Key + ":" + v.Value).ToArray());
@@ -574,6 +616,7 @@ public partial class WebAPIClient {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 #if WEBAPI_CLIENT_STANDALONE_DEBUG
+
 // WebAPI スタンドアローンデバッグ対応
 // NOTE ゲーム用のコードになるが置き場所も定まらないので一旦ここに書く
 public partial class WebAPIClient {
@@ -590,14 +633,14 @@ public partial class WebAPIClient {
     // スタンドアローンデバッグ
     bool StandaloneDebug(Request request, float deltaTime) {
         if (debugRequest != request) {//新しいリクエスト
-            Debug.LogFormat("WebAPIClient: リクエストをスタンドアロンデバッグで処理します ({0})", request.apiPath);
-            debugRequest   = request
+            Debug.LogFormat("WebAPIClient: リクエストをスタンドアロンデバッグで処理します ({0})", request.ToString());
+            debugRequest   = request;
             debugDelay     = DEBUG_DELAY;
             debugProcessed = false;
             return true;
         }
         if (debugProcessed) {//処理済
-            return false;
+            return true;
         }
         if (debugDelay > 0.0f) {//WebAPIっぽい待ちディレイをつけておく
             debugDelay -= deltaTime;
@@ -605,19 +648,30 @@ public partial class WebAPIClient {
         }
         StandaloneDebugProcessRequest(request);
         debugProcessed = true;
-        return false;
+        return true;
     }
 
     // スタンドアローンデバッグのリクエスト処理
     void StandaloneDebugProcessRequest(Request request) {
-        // TODO
-        // ここでAPI パスに従って処理
-        //switch (request.apiPath) {
-        //case "/test":
-        //    break;
-        //default:
-        //    break;
-        //}
+        switch (request.APIPath) {
+        case "/signup"://サインアップ
+            {
+                var req = JsonUtility.FromJson<WebAPI.SignupRequest>(request.Parameters.GetText());
+                var res = new WebAPI.SignupResponse();
+                res.player_data                = new PlayerData();
+                res.player_data.pid            = "(dummy pid)";
+                res.player_data.name           = req.name;
+                res.session_data               = new SessionData();
+                res.session_data.session_token = "(dummy session_token)";
+                res.login_data                 = new LoginData();
+                res.login_data.login_token     = "(dummy login_token)";
+                request.SetResponse(null, JsonUtility.ToJson(res));
+            }
+            break;
+        default:
+            Debug.LogErrorFormat("スタンドアローンデバッグで処理できない API パス ({0})", request.APIPath);
+            break;
+        }
     }
 }
 #endif
