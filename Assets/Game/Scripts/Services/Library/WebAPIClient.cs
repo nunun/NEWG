@@ -114,53 +114,58 @@ public partial class WebAPIClient {
 
     // リクエストのチェック
     void CheckRequestList() {
+        if (requestList.Count <= 0) {
+            enabled = false;
+            return;
+        }
+
+        // 常に最初の一つだけ処理
+        var request   = requestList[0];
         var deltaTime = Time.deltaTime;
-        for (int i = requestList.Count - 1; i >= 0; i--) {
-            var request = requestList[i];
 
-            // リトライタイマをチェック
-            if (request.retryTime > 0.0f) {
-                request.retryTime -= deltaTime;
-                if (request.retryTime <= 0.0f) {
-                    request.retryTime = 0.0f;
-                    request.Send(); // 再送！
+        // リトライタイマをチェック
+        if (request.retryTime > 0.0f) {
+            request.retryTime -= deltaTime;
+            if (request.retryTime <= 0.0f) {
+                request.retryTime = 0.0f;
+                request.Send(); // 再送！
+            }
+            continue;
+        }
+
+        #if WEBAPI_CLIENT_STANDALONE_DEBUG
+        // WebAPI クライアントのスタンドアローンデバッグ対応
+        // サーバなしでデバッグする処理の実装。
+        if (StandaloneDebug(request, detalTime)) {
+            continue; // スタンドアローンデバッグにより処理された
+        }
+        #endif
+
+        // 送信していなければ送信!
+        if (request.IsSent) {
+            request.Send();
+        }
+
+        // レスポンスチェック
+        var unityWebRequest = request.UnityWebRequest;
+        if (unityWebRequest.isError) {
+            var error = unityWebRequest.error;
+            if (error.IndexOf("Cannot connect to destination host") >= 0) {
+                if (--request.retryCount >= 0) {
+                    Debug.LogWarningFormat("WebAPIClient: CheckRequestList: network error ({0}, {1})",     unityWebRequest.url, error);
+                    Debug.LogWarningFormat("WebAPIClient: CheckRequestList: retry: {0} times remaining.", request.retryCount);
+                    request.retryTime = request.retryInterval;
+                    continue;
                 }
-                continue;
             }
-
-            #if WEBAPI_CLIENT_STANDALONE_DEBUG
-            // WebAPI スタンドアローンデバッグ対応
-            if (StandaloneDebug(request, detalTime)) {
-                continue; // スタンドアローンデバッグにより処理された
-            }
-            #endif
-
-            // 送信していなければ送信!
-            if (request.IsSent) {
-                request.Send();
-            }
-
-            // レスポンスチェック
-            var unityWebRequest = request.UnityWebRequest;
-            if (unityWebRequest.isError) {
-                var error = unityWebRequest.error;
-                if (error.IndexOf("Cannot connect to destination host") >= 0) {
-                    if (--request.retryCount >= 0) {
-                        Debug.LogWarningFormat("WebAPIClient: CheckRequestList: network error ({0}, {1})",     unityWebRequest.url, error);
-                        Debug.LogWarningFormat("WebAPIClient: CheckRequestList: retry: {0} times remaining.", request.retryCount);
-                        request.retryTime = request.retryInterval;
-                        continue;
-                    }
-                }
-                requestList.RemoveAt(i);
-                request.SetResponse(error, null);
-                request.ReturnToPool();
-            } else if (unityWebRequest.isDone) {
-                var message = crypter.Decrypt(unityWebRequest.downloadHandler.text);
-                requestList.RemoveAt(i);
-                request.SetResponse(null, message);
-                request.ReturnToPool();
-            }
+            requestList.RemoveAt(i);
+            request.SetResponse(error, null);
+            request.ReturnToPool();
+        } else if (unityWebRequest.isDone) {
+            var message = crypter.Decrypt(unityWebRequest.downloadHandler.text);
+            requestList.RemoveAt(i);
+            request.SetResponse(null, message);
+            request.ReturnToPool();
         }
     }
 
@@ -572,10 +577,47 @@ public partial class WebAPIClient {
 // WebAPI スタンドアローンデバッグ対応
 // NOTE ゲーム用のコードになるが置き場所も定まらないので一旦ここに書く
 public partial class WebAPIClient {
-    //--------------------------------------------------------------------------------
-    public bool StandaloneDebug(Request request, float deltaTime) {
-        // TODO
+    //-------------------------------------------------------------------------- 変数
+    // デバッグディレイ
+    static readonly float DEBUG_DELAY = 0.5f;
+
+    //-------------------------------------------------------------------------- 変数
+    Request debugRequest   = null;  // デバッグ中のリクエスト
+    float   debugDelay     = 0.0f;  // デバッグディレイ
+    bool    debugProcessed = false; // デバッグ処理済かどうか
+
+    //-------------------------------------------------------------------------- デバッグ
+    // スタンドアローンデバッグ
+    bool StandaloneDebug(Request request, float deltaTime) {
+        if (debugRequest != request) {//新しいリクエスト
+            Debug.LogFormat("WebAPIClient: リクエストをスタンドアロンデバッグで処理します ({0})", request.apiPath);
+            debugRequest   = request
+            debugDelay     = DEBUG_DELAY;
+            debugProcessed = false;
+            return true;
+        }
+        if (debugProcessed) {//処理済
+            return false;
+        }
+        if (debugDelay > 0.0f) {//WebAPIっぽい待ちディレイをつけておく
+            debugDelay -= deltaTime;
+            return true;
+        }
+        StandaloneDebugProcessRequest(request);
+        debugProcessed = true;
         return false;
+    }
+
+    // スタンドアローンデバッグのリクエスト処理
+    void StandaloneDebugProcessRequest(Request request) {
+        // TODO
+        // ここでAPI パスに従って処理
+        //switch (request.apiPath) {
+        //case "/test":
+        //    break;
+        //default:
+        //    break;
+        //}
     }
 }
 #endif
