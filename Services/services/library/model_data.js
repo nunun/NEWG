@@ -3,25 +3,25 @@ var CouchClient = require('./couch_client');
 var RedisClient = require('./redis_client');
 
 // constructor
-function GameData() {
+function ModelData() {
     this.init();
 }
-util.inherits(GameData, function(){});
+util.inherits(ModelData, function(){});
 
 // init
-GameData.prototype.init = function() {
+ModelData.prototype.init = function() {
     // clear
     this.clear();
 };
 
 // clear
-GameData.prototype.clear = function() {
+ModelData.prototype.clear = function() {
     // NOTE
     // implement by inherit
 }
 
 // save
-GameData.prototype.save = function(key, callback) {
+ModelData.prototype.save = function(key, callback) {
     var self = this;
     if (callback == undefined) {
         callback = key;
@@ -71,7 +71,7 @@ function save(self, key, callback, trycnt, retrycnt, keylen) {
 }
 
 // setupType
-GameData.setupType = function(type, typeName, databaseName) {
+ModelData.setupType = function(type, typeName, databaseName) {
     type.databaseName = databaseName;
     type.cacheKey     = typeName;
 
@@ -272,4 +272,4 @@ GameData.setupType = function(type, typeName, databaseName) {
 }
 
 // exports
-module.exports = GameData;
+module.exports = ModelData;

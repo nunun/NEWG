@@ -302,12 +302,18 @@ public partial class WebAPIClient {
                 if (!string.IsNullOrEmpty(error)) {
                     throw new Exception(error);
                 }
-                var data = JsonUtility.FromJson<TRes>(message);
                 if (req.callback != null) {
+                    var data = JsonUtility.FromJson<TRes>(message);
                     var callback = req.callback;
                     req.callback = null;
                     callback(null, data);
                 }
+                // NOTE
+                // データマネージャ側更新。
+                // 後々適切な位置に移動したいが、
+                // この処理は message が JSON であることを期待しているので
+                // 一旦ここにおいておく。
+                GameDataManager.FromJsonOverwrite(message);
             } catch (Exception e) {
                 if (req.callback != null) {
                     var callback = req.callback;
@@ -658,13 +664,13 @@ public partial class WebAPIClient {
             {
                 var req = JsonUtility.FromJson<WebAPI.SignupRequest>(request.Parameters.GetText());
                 var res = new WebAPI.SignupResponse();
-                res.player_data                = new PlayerData();
-                res.player_data.pid            = "(dummy pid)";
-                res.player_data.name           = req.name;
-                res.session_data               = new SessionData();
-                res.session_data.session_token = "(dummy session_token)";
-                res.login_data                 = new LoginData();
-                res.login_data.login_token     = "(dummy login_token)";
+                res.player_data                  = new PlayerData();
+                res.player_data.player_id        = "(dummy pid)";
+                res.player_data.player_name      = req.player_name;
+                res.session_data                 = new SessionData();
+                res.session_data.session_token   = "(dummy session_token)";
+                res.credential_data              = new CredentialData();
+                res.credential_data.signin_token = "(dummy signin_token)";
                 request.SetResponse(null, JsonUtility.ToJson(res));
             }
             break;
@@ -675,3 +681,4 @@ public partial class WebAPIClient {
     }
 }
 #endif
+//request.SetResponse(null, "{\"server_data\":{\"player_data\":{\"player_name\":\"hoge\"}}}");

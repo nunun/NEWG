@@ -5,7 +5,7 @@ var logger       = require('./services/library/logger');
 var webapiClient = require('./services/library/webapi_client').activate(config.webapiClient, logger.webapiClient);
 var couchClient  = require('./services/library/couch_client').activate(config.couchClient, logger.couchClient);
 var redisClient  = require('./services/library/redis_client').activate(config.redisClient, logger.redisClient);
-var GameData     = require('./services/library/game_data');
+var ModelData    = require('./services/library/model_data');
 var models       = require('./services/protocols/models');
 var webapi       = require('./services/protocols/webapi');
 
@@ -153,8 +153,8 @@ var profiles = [{
 function TestData() {
     this.init();
 }
-util.inherits(TestData, GameData);
-GameData.setupType(TestData, 'TestData', 'test_data');
+util.inherits(TestData, ModelData);
+ModelData.setupType(TestData, 'TestData', 'test_data');
 TestData.prototype.init = function() {
     TestData.super_.prototype.init.call(this);
 };

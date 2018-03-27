@@ -7,51 +7,51 @@ namespace Services.Protocols.Models {
     // UserData
     // ユーザデータ。サーバ上のみで扱われる公開されないユーザのデータ。
     [Serializable]
-    public class UserData : GameData {
-        public string uuid; // ユーザのUUID型
-        public string pid; // プレイヤー番号
+    public class UserData : ModelData {
+        public string user_id; // 固有のユーザID
+        public string player_id; // 固有のプレイヤID
         public string session_token; // セッショントークン
-        public string login_token; // ログイントークン
+        public string signin_token; // ログイントークン
         protected override void Clear() {
-            uuid = null; // ユーザのUUID型
-            pid = null; // プレイヤー番号
+            user_id = null; // 固有のユーザID
+            player_id = null; // 固有のプレイヤID
             session_token = null; // セッショントークン
-            login_token = null; // ログイントークン
+            signin_token = null; // ログイントークン
         }
     }
     // PlayerData
-    // プレイヤデータ。全ユーザに公開されるプレイヤーのデータ。
+    // プレイヤデータ。全ユーザに公開されるプレイヤのデータ。
     [Serializable]
-    public class PlayerData : GameData {
-        public string pid; // プレイヤー番号
-        public string name; // プレイヤー名
+    public class PlayerData : ModelData {
+        public string player_id; // プレイヤー番号
+        public string player_name; // プレイヤー名
         protected override void Clear() {
-            pid = null; // プレイヤー番号
-            name = null; // プレイヤー名
+            player_id = null; // プレイヤー番号
+            player_name = null; // プレイヤー名
         }
     }
     // SessionData
-    // セッションデータ
+    // セッションデータ。本人にのみ知らされるセッション維持に使用するデータ。
     [Serializable]
-    public class SessionData : GameData {
+    public class SessionData : ModelData {
         public string session_token; // セッショントークン
         protected override void Clear() {
             session_token = null; // セッショントークン
         }
     }
-    // LoginData
-    // ログインデータ
+    // CredentialData
+    // 認証データ。本人にのみ知らされるサインイン用データ。セッションが切れた時に使用。
     [Serializable]
-    public class LoginData : GameData {
-        public string login_token; // ログイントークン
+    public class CredentialData : ModelData {
+        public string signin_token; // サインイントークン
         protected override void Clear() {
-            login_token = null; // ログイントークン
+            signin_token = null; // サインイントークン
         }
     }
     // SampleModel
     // サンプルモデル
     [Serializable]
-    public class SampleModel : GameData {
+    public class SampleModel : ModelData {
         public int intValue; // 整数型
         public string stringValue1; // 文字列型
         public string stringValue2; // 文字列型 (null)

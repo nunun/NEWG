@@ -22,6 +22,7 @@ public class Title : GameScene {
             yield return wait;
             Debug.Log(wait.error);
         }
+        Debug.Log(GameDataManager.PlayerData.player_name);
 
         using (var wait = UIWait.RentFromPool()) {
             var popup = MessagePopup.Open("これはメッセージポップアップです。", wait.Callback);

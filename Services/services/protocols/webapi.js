@@ -3,10 +3,10 @@ var models       = require('./models');
 exports = {};
 // signup
 // サインアップAPI
-exports.signup = function(name, callback, queries = null, forms = null, headers = null) {
+exports.signup = function(player_name, callback, queries = null, forms = null, headers = null) {
     var client = webapiClient.getClient();
     var data = {};
-    data["name"] = name; // プレイヤー名
+    data["player_name"] = player_name; // プレイヤー名
     return client.post("/signup", data, function(err, responseData) {
         if (err) {
             if (callback != null) {
@@ -20,11 +20,11 @@ exports.signup = function(name, callback, queries = null, forms = null, headers 
     }, queries, forms, headers);
 }
 // signin
-// ログインAPI
-exports.signin = function(login_token, callback, queries = null, forms = null, headers = null) {
+// サインインAPI
+exports.signin = function(signin_token, callback, queries = null, forms = null, headers = null) {
     var client = webapiClient.getClient();
     var data = {};
-    data["login_token"] = login_token; // ログイントークン
+    data["signin_token"] = signin_token; // サインイントークン
     return client.post("/signin", data, function(err, responseData) {
         if (err) {
             if (callback != null) {

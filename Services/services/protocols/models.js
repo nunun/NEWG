@@ -1,46 +1,46 @@
-var util     = require('util');
-var GameData = require('./../library/game_data');
-var consts   = require('./consts');
-var models   = {};
+var util      = require('util');
+var ModelData = require('./../library/model_data');
+var consts    = require('./consts');
+var models    = {};
 // UserData
 // ユーザデータ。サーバ上のみで扱われる公開されないユーザのデータ。
 function UserData() {
     this.init();
 }
-util.inherits(UserData, GameData);
-GameData.setupType(UserData, 'UserData', 'db_user_data');
+util.inherits(UserData, ModelData);
+ModelData.setupType(UserData, 'UserData', 'db_user_data');
 UserData.prototype.init = function() {
     UserData.super_.prototype.init.call(this);
 };
 UserData.prototype.clear = function() {
-    this.uuid = null; // ユーザのUUID型
-    this.pid = null; // プレイヤー番号
+    this.user_id = null; // 固有のユーザID
+    this.player_id = null; // 固有のプレイヤID
     this.session_token = null; // セッショントークン
-    this.login_token = null; // ログイントークン
+    this.signin_token = null; // ログイントークン
 }
 models.UserData = UserData;
 // PlayerData
-// プレイヤデータ。全ユーザに公開されるプレイヤーのデータ。
+// プレイヤデータ。全ユーザに公開されるプレイヤのデータ。
 function PlayerData() {
     this.init();
 }
-util.inherits(PlayerData, GameData);
-GameData.setupType(PlayerData, 'PlayerData', 'db_player_data');
+util.inherits(PlayerData, ModelData);
+ModelData.setupType(PlayerData, 'PlayerData', 'db_player_data');
 PlayerData.prototype.init = function() {
     PlayerData.super_.prototype.init.call(this);
 };
 PlayerData.prototype.clear = function() {
-    this.pid = null; // プレイヤー番号
-    this.name = null; // プレイヤー名
+    this.player_id = null; // プレイヤー番号
+    this.player_name = null; // プレイヤー名
 }
 models.PlayerData = PlayerData;
 // SessionData
-// セッションデータ
+// セッションデータ。本人にのみ知らされるセッション維持に使用するデータ。
 function SessionData() {
     this.init();
 }
-util.inherits(SessionData, GameData);
-GameData.setupType(SessionData, 'SessionData', 'db_session_data');
+util.inherits(SessionData, ModelData);
+ModelData.setupType(SessionData, 'SessionData', 'db_session_data');
 SessionData.prototype.init = function() {
     SessionData.super_.prototype.init.call(this);
 };
@@ -48,27 +48,27 @@ SessionData.prototype.clear = function() {
     this.session_token = null; // セッショントークン
 }
 models.SessionData = SessionData;
-// LoginData
-// ログインデータ
-function LoginData() {
+// CredentialData
+// 認証データ。本人にのみ知らされるサインイン用データ。セッションが切れた時に使用。
+function CredentialData() {
     this.init();
 }
-util.inherits(LoginData, GameData);
-GameData.setupType(LoginData, 'LoginData', 'db_login_data');
-LoginData.prototype.init = function() {
-    LoginData.super_.prototype.init.call(this);
+util.inherits(CredentialData, ModelData);
+ModelData.setupType(CredentialData, 'CredentialData', 'db_credential_data');
+CredentialData.prototype.init = function() {
+    CredentialData.super_.prototype.init.call(this);
 };
-LoginData.prototype.clear = function() {
-    this.login_token = null; // ログイントークン
+CredentialData.prototype.clear = function() {
+    this.signin_token = null; // サインイントークン
 }
-models.LoginData = LoginData;
+models.CredentialData = CredentialData;
 // SampleModel
 // サンプルモデル
 function SampleModel() {
     this.init();
 }
-util.inherits(SampleModel, GameData);
-GameData.setupType(SampleModel, 'SampleModel', 'db_sample_model');
+util.inherits(SampleModel, ModelData);
+ModelData.setupType(SampleModel, 'SampleModel', 'db_sample_model');
 SampleModel.prototype.init = function() {
     SampleModel.super_.prototype.init.call(this);
 };

@@ -7,19 +7,19 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
-// ゲームデータ
+// モデルデータ
 [Serializable]
-public class GameData {
+public partial class ModelData {
     //-------------------------------------------------------------------------- 変数
     [NonSerialized]
     protected string currentPrefsKey = null;
 
     // クリプタ
-    protected static Crypter crypter = new Crypter("GameData");
+    protected static Crypter crypter = new Crypter("ModelData");
 
     //-------------------------------------------------------------------------- 初期化
     // コンストラクタ
-    public GameData() {
+    public ModelData() {
         Init();
     }
 
@@ -35,7 +35,7 @@ public class GameData {
         // 継承して実装
     }
 
-    //-------------------------------------------------------------------------- 実装ポイント
+    //-------------------------------------------------------------------------- セーブとロード
     // ロード
     public bool Load(string prefsKey = null) {
         prefsKey = prefsKey ?? this.GetType().Name;
@@ -68,5 +68,21 @@ public class GameData {
         PlayerPrefs.SetString(prefsKey, crypter.Encrypt(jsonText));
         PlayerPrefs.Save();
         return true;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+// 変更チェック対応
+public partial class ModelData : ISerializationCallbackReceiver {
+    //-------------------------------------------------------------------------- 実装 (ISerializationCallbackReceiver)
+    public void OnBeforeSerialize() {
+        Debug.Log("OnBeforeSerialize");
+    }
+
+    public void OnAfterDeserialize() {
+        Debug.Log("OnAfterDeserialize");
     }
 }

@@ -16,7 +16,7 @@ exports.setup = function(router, binder, client, logger) {
     if (!client) {
         logger.debug('routes.setup: binding "Signin" for route "/signin".');
         // Signin
-        // ログインAPI
+        // サインインAPI
         var Signin_impl = binder.Signin;
         if (!Signin_impl) {
             logger.error('routes.setup: binder has no implement "Signin" for route "/signin".');

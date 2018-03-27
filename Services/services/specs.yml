@@ -8,7 +8,7 @@ specs:
           desc: サインアップAPI
           api_path: /signup
           request:
-            - name: name
+            - name: player_name
               desc: プレイヤー名
               type: string
           response:
@@ -18,20 +18,20 @@ specs:
             - name: session_data
               desc: セッションデータ
               type: SessionData
-            - name: login_data
-              desc: ログインデータ
-              type: LoginData
+            - name: credential_data
+              desc: 認証データ
+              type: CredentialData
 
         - name: Signin
-          desc: ログインAPI
+          desc: サインインAPI
           api_path: /signin
           request:
-            - name: login_token
-              desc: ログイントークン
+            - name: signin_token
+              desc: サインイントークン
               type: string
           response:
             - name: player_data
-              desc: プレイヤーで０タ
+              desc: プレイヤーデータ
               type: PlayerData
             - name: session_data
               desc: セッションデータ
@@ -53,48 +53,48 @@ specs:
         - name: UserData
           desc: ユーザデータ。サーバ上のみで扱われる公開されないユーザのデータ。
           properties:
-            - name:  uuid
-              desc:  ユーザのUUID型
+            - name:  user_id
+              desc:  固有のユーザID
               type:  string
               value: (null)
-            - name:  pid
-              desc:  プレイヤー番号
+            - name:  player_id
+              desc:  固有のプレイヤID
               type:  string
               value: (null)
             - name:  session_token
               desc:  セッショントークン
               type:  string
               value: (null)
-            - name:  login_token
+            - name:  signin_token
               desc:  ログイントークン
               type:  string
               value: (null)
 
         - name: PlayerData
-          desc: プレイヤデータ。全ユーザに公開されるプレイヤーのデータ。
+          desc: プレイヤデータ。全ユーザに公開されるプレイヤのデータ。
           properties:
-            - name:  pid
+            - name:  player_id
               desc:  プレイヤー番号
               type:  string
               value: (null)
-            - name:  name
+            - name:  player_name
               desc:  プレイヤー名
               type:  string
               value: (null)
 
         - name: SessionData
-          desc: セッションデータ
+          desc: セッションデータ。本人にのみ知らされるセッション維持に使用するデータ。
           properties:
             - name:  session_token
               desc:  セッショントークン
               type:  string
               value: (null)
 
-        - name: LoginData
-          desc: ログインデータ
+        - name: CredentialData
+          desc: 認証データ。本人にのみ知らされるサインイン用データ。セッションが切れた時に使用。
           properties:
-            - name:  login_token
-              desc:  ログイントークン
+            - name:  signin_token
+              desc:  サインイントークン
               type:  string
               value: (null)
 
@@ -357,10 +357,10 @@ templates:
     in: /output/nodejs/services/protocols
     output: models.js
     template: |
-      var util     = require('util');
-      var GameData = require('./../library/game_data');
-      var consts   = require('./consts');
-      var models   = {};
+      var util      = require('util');
+      var ModelData = require('./../library/model_data');
+      var consts    = require('./consts');
+      var models    = {};
       <%- entries.each do |entry| -%>
       <%- name       = entry["name"].to_pascal -%>
       <%- desc       = entry["desc"]           -%>
@@ -370,8 +370,8 @@ templates:
       function <%= name %>() {
           this.init();
       }
-      util.inherits(<%= name %>, GameData);
-      GameData.setupType(<%= name %>, '<%= name %>', 'db_<%= name.to_snake %>');
+      util.inherits(<%= name %>, ModelData);
+      ModelData.setupType(<%= name %>, '<%= name %>', 'db_<%= name.to_snake %>');
       <%= name %>.prototype.init = function() {
           <%= name %>.super_.prototype.init.call(this);
       };
@@ -471,7 +471,7 @@ templates:
           // <%= name %>
           // <%= desc %>
           [Serializable]
-          public class <%= name %> : GameData {
+          public class <%= name %> : ModelData {
               <%- properties.each do |p| -%>
               public <%= cs_type(p) %> <%= p["name"] %>;<% if p.key?("desc") %> // <%= p["desc"] %><% end %>
               <%- end -%>

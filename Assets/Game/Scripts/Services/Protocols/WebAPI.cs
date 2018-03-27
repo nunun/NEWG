@@ -8,41 +8,41 @@ namespace Services.Protocols {
     public class WebAPI {
         [Serializable]
         public struct SignupRequest {
-            public string name; // プレイヤー名
+            public string player_name; // プレイヤー名
         }
 
         [Serializable]
         public struct SignupResponse {
             public PlayerData player_data; // プレイヤーデータ
             public SessionData session_data; // セッションデータ
-            public LoginData login_data; // ログインデータ
+            public CredentialData credential_data; // 認証データ
         }
 
         // Signup
         // サインアップAPI
-        public static WebAPIClient.Request Signup(string name, Action<string,SignupResponse> callback, string[] queries = null, string[] forms = null, string[] headers = null) {
+        public static WebAPIClient.Request Signup(string player_name, Action<string,SignupResponse> callback, string[] queries = null, string[] forms = null, string[] headers = null) {
             var client = WebAPIClient.GetClient();
             var data = new SignupRequest();
-            data.name = name; // プレイヤー名
+            data.player_name = player_name; // プレイヤー名
             return client.Post<SignupRequest,SignupResponse>("/signup", data, callback, queries, forms, headers);
         }
         [Serializable]
         public struct SigninRequest {
-            public string login_token; // ログイントークン
+            public string signin_token; // サインイントークン
         }
 
         [Serializable]
         public struct SigninResponse {
-            public PlayerData player_data; // プレイヤーで０タ
+            public PlayerData player_data; // プレイヤーデータ
             public SessionData session_data; // セッションデータ
         }
 
         // Signin
-        // ログインAPI
-        public static WebAPIClient.Request Signin(string login_token, Action<string,SigninResponse> callback, string[] queries = null, string[] forms = null, string[] headers = null) {
+        // サインインAPI
+        public static WebAPIClient.Request Signin(string signin_token, Action<string,SigninResponse> callback, string[] queries = null, string[] forms = null, string[] headers = null) {
             var client = WebAPIClient.GetClient();
             var data = new SigninRequest();
-            data.login_token = login_token; // ログイントークン
+            data.signin_token = signin_token; // サインイントークン
             return client.Post<SigninRequest,SigninResponse>("/signin", data, callback, queries, forms, headers);
         }
         [Serializable]
