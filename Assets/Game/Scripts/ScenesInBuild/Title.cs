@@ -19,7 +19,7 @@ public class Title : GameScene {
         }
 
         using (var wait = UIWait<WebAPI.SignupResponse>.RentFromPool()) {
-            WebAPI.Signup("tester", wait.Callback);
+            WebAPI.Signup("i_am_tester", wait.Callback);
             yield return wait;
             Debug.Log(wait.error);
         }

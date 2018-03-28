@@ -663,15 +663,39 @@ public partial class WebAPIClient {
         case "/signup"://サインアップ
             {
                 var req = JsonUtility.FromJson<WebAPI.SignupRequest>(request.Parameters.GetText());
-                var res = new WebAPI.SignupResponse();
-                res.player_data                  = new PlayerData();
-                res.player_data.player_id        = "(dummy pid)";
-                res.player_data.player_name      = req.player_name;
-                res.session_data                 = new SessionData();
-                res.session_data.session_token   = "(dummy session_token)";
-                res.credential_data              = new CredentialData();
-                res.credential_data.signin_token = "(dummy signin_token)";
-                request.SetResponse(null, JsonUtility.ToJson(res));
+
+                var player_data = new PlayerData();
+                player_data.player_id   = "(dummy pid)";
+                player_data.player_name = req.player_name;
+
+                var session_data = new SessionData();
+                session_data.session_token = "(dummy session_token)";
+
+                var credential_data = new CredentialData();
+                credential_data.signin_token = "(dummy signin_token)";
+
+                var player_data_json     = string.Format("\"player_data\":{{\"active\":true,\"data\":{0}}}",     JsonUtility.ToJson(player_data));
+                var session_data_json    = string.Format("\"session_data\":{{\"active\":true,\"data\":{0}}}",    JsonUtility.ToJson(session_data));
+                var credential_data_json = string.Format("\"credential_data\":{{\"active\":true,\"data\":{0}}}", JsonUtility.ToJson(credential_data));
+                var response = string.Format("{{\"ok\":true,\"active_data\":{{{0},{1},{2}}}}}", player_data_json, session_data_json, credential_data_json);
+                request.SetResponse(null, response);
+            }
+            break;
+        case "/signin"://サインイン
+            {
+                //var req = JsonUtility.FromJson<WebAPI.SignupRequest>(request.Parameters.GetText());
+
+                var player_data = new PlayerData();
+                player_data.player_id   = "(dummy pid)";
+                player_data.player_name = "signin user";
+
+                var session_data = new SessionData();
+                session_data.session_token = "(dummy session_token)";
+
+                var player_data_json  = string.Format("\"player_data\":{{\"active\":true,\"data\":{0}}}",  JsonUtility.ToJson(player_data));
+                var session_data_json = string.Format("\"session_data\":{{\"active\":true,\"data\":{0}}}", JsonUtility.ToJson(session_data));
+                var response = string.Format("{{\"ok\":true,\"active_data\":{{{0},{1}}}}}", player_data_json, session_data_json);
+                request.SetResponse(null, response);
             }
             break;
         default:

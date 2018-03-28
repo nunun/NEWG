@@ -13,9 +13,7 @@ namespace Services.Protocols {
 
         [Serializable]
         public struct SignupResponse {
-            public PlayerData player_data; // プレイヤーデータ
-            public SessionData session_data; // セッションデータ
-            public CredentialData credential_data; // 認証データ
+            public bool ok; // 成功したかどうか
         }
 
         // Signup
@@ -33,8 +31,7 @@ namespace Services.Protocols {
 
         [Serializable]
         public struct SigninResponse {
-            public PlayerData player_data; // プレイヤーデータ
-            public SessionData session_data; // セッションデータ
+            public bool ok; // 成功したかどうか
         }
 
         // Signin

@@ -12,15 +12,9 @@ specs:
               desc: プレイヤー名
               type: string
           response:
-            - name: player_data
-              desc: プレイヤーデータ
-              type: PlayerData
-            - name: session_data
-              desc: セッションデータ
-              type: SessionData
-            - name: credential_data
-              desc: 認証データ
-              type: CredentialData
+            - name: ok
+              desc: 成功したかどうか
+              type: bool
 
         - name: Signin
           desc: サインインAPI
@@ -30,12 +24,9 @@ specs:
               desc: サインイントークン
               type: string
           response:
-            - name: player_data
-              desc: プレイヤーデータ
-              type: PlayerData
-            - name: session_data
-              desc: セッションデータ
-              type: SessionData
+            - name: ok
+              desc: 成功したかどうか
+              type: bool
 
         - name: Test
           desc: テストインターフェイス
