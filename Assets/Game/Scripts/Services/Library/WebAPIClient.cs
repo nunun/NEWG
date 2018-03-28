@@ -313,7 +313,7 @@ public partial class WebAPIClient {
                 // 後々適切な位置に移動したいが、
                 // この処理は message が JSON であることを期待しているので
                 // 一旦ここにおいておく。
-                GameDataManager.FromJsonOverwrite(message);
+                GameDataManager.Import(message);
             } catch (Exception e) {
                 if (req.callback != null) {
                     var callback = req.callback;
@@ -681,4 +681,5 @@ public partial class WebAPIClient {
     }
 }
 #endif
+//request.SetResponse(null, "{\"active_data\":{\"player_data\":{\"active\":true,\"content\":{\"player_name\":\"hoge\"}}}}");
 //request.SetResponse(null, "{\"server_data\":{\"player_data\":{\"player_name\":\"hoge\"}}}");

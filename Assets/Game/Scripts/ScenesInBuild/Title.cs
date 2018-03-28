@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Services.Protocols;
@@ -48,3 +49,40 @@ public class Title : GameScene {
         //GameAudio.MixBGM("Revenge2");
     }
 }
+
+//[SerializeData]
+//public class MyData {
+//    public int val = 0;
+//}
+//
+//[SerializeData]
+//public class MyDataImporter {
+//    MyData my_data = new MyData();
+//}
+//[Serializable]
+//public class TestC {
+//    public bool dirty;
+//}
+//
+//[Serializable]
+//public class TestB<T> {
+//    public T t;
+//}
+//
+////[Serializable]
+//public class TestA {
+//    [Serializable] public class TestD : TestB<TestC> {}
+//    public TestD foo = new TestD();
+//    [Serializable] public class TestE : TestB<TestC> {}
+//    public TestE bar = new TestE();
+//}
+//static void Import<T>(string message, T data) {
+//    JsonUtility.FromJsonOverwrite(message, data);
+//}
+//var result = new TestA();
+//JsonUtility.FromJsonOverwrite("{}", result);
+//Debug.Log(result.foo.t.dirty);
+//JsonUtility.FromJsonOverwrite("{\"foo\":{\"t\":{\"dirty\":true}}}", result);
+//Debug.Log(result.bar.t.dirty);
+//Debug.Log(result.qux.t.dirty);
+//yield break;

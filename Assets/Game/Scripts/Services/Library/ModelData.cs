@@ -70,19 +70,3 @@ public partial class ModelData {
         return true;
     }
 }
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
-// 変更チェック対応
-public partial class ModelData : ISerializationCallbackReceiver {
-    //-------------------------------------------------------------------------- 実装 (ISerializationCallbackReceiver)
-    public void OnBeforeSerialize() {
-        Debug.Log("OnBeforeSerialize");
-    }
-
-    public void OnAfterDeserialize() {
-        Debug.Log("OnAfterDeserialize");
-    }
-}
