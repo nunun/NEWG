@@ -13,10 +13,10 @@ UserData.prototype.init = function() {
     UserData.super_.prototype.init.call(this);
 };
 UserData.prototype.clear = function() {
-    this.user_id = null; // 固有のユーザID
-    this.player_id = null; // 固有のプレイヤID
-    this.session_token = null; // セッショントークン
-    this.signin_token = null; // ログイントークン
+    this.userId = null; // 固有のユーザID
+    this.playerId = null; // 固有のプレイヤID
+    this.sessionToken = null; // セッショントークン
+    this.signinToken = null; // ログイントークン
 }
 models.UserData = UserData;
 // PlayerData
@@ -30,8 +30,8 @@ PlayerData.prototype.init = function() {
     PlayerData.super_.prototype.init.call(this);
 };
 PlayerData.prototype.clear = function() {
-    this.player_id = null; // プレイヤー番号
-    this.player_name = null; // プレイヤー名
+    this.playerId = null; // プレイヤー番号
+    this.playerName = null; // プレイヤー名
 }
 models.PlayerData = PlayerData;
 // SessionData
@@ -45,7 +45,7 @@ SessionData.prototype.init = function() {
     SessionData.super_.prototype.init.call(this);
 };
 SessionData.prototype.clear = function() {
-    this.session_token = null; // セッショントークン
+    this.sessionToken = null; // セッショントークン
 }
 models.SessionData = SessionData;
 // CredentialData
@@ -59,30 +59,7 @@ CredentialData.prototype.init = function() {
     CredentialData.super_.prototype.init.call(this);
 };
 CredentialData.prototype.clear = function() {
-    this.signin_token = null; // サインイントークン
+    this.signinToken = null; // サインイントークン
 }
 models.CredentialData = CredentialData;
-// SampleModel
-// サンプルモデル
-function SampleModel() {
-    this.init();
-}
-util.inherits(SampleModel, ModelData);
-ModelData.setupType(SampleModel, 'SampleModel', 'db_sample_model');
-SampleModel.prototype.init = function() {
-    SampleModel.super_.prototype.init.call(this);
-};
-SampleModel.prototype.clear = function() {
-    this.intValue = 100; // 整数型
-    this.stringValue1 = "test"; // 文字列型
-    this.stringValue2 = null; // 文字列型 (null)
-    this.stringValue3 = ""; // 文字列型 (空)
-    this.objectValue1 = null; // 型 (null)
-    this.objectValue2 = new UserData(); // 型 (空)
-    this.arrayValue1 = null; // 配列型 (null)
-    this.arrayValue2 = []; // 配列型 (空)
-    this.listValue1 = null; // リスト型 (null)
-    this.listValue2 = []; // リスト型 (空)
-}
-models.SampleModel = SampleModel;
 module.exports = models;

@@ -8,7 +8,7 @@ namespace Services.Protocols {
     public class WebAPI {
         [Serializable]
         public struct SignupRequest {
-            public string player_name; // プレイヤー名
+            public string playerName; // プレイヤー名
         }
 
         [Serializable]
@@ -18,15 +18,15 @@ namespace Services.Protocols {
 
         // Signup
         // サインアップAPI
-        public static WebAPIClient.Request Signup(string player_name, Action<string,SignupResponse> callback, string[] queries = null, string[] forms = null, string[] headers = null) {
+        public static WebAPIClient.Request Signup(string playerName, Action<string,SignupResponse> callback, string[] queries = null, string[] forms = null, string[] headers = null) {
             var client = WebAPIClient.GetClient();
             var data = new SignupRequest();
-            data.player_name = player_name; // プレイヤー名
+            data.playerName = playerName; // プレイヤー名
             return client.Post<SignupRequest,SignupResponse>("/signup", data, callback, queries, forms, headers);
         }
         [Serializable]
         public struct SigninRequest {
-            public string signin_token; // サインイントークン
+            public string signinToken; // サインイントークン
         }
 
         [Serializable]
@@ -36,10 +36,10 @@ namespace Services.Protocols {
 
         // Signin
         // サインインAPI
-        public static WebAPIClient.Request Signin(string signin_token, Action<string,SigninResponse> callback, string[] queries = null, string[] forms = null, string[] headers = null) {
+        public static WebAPIClient.Request Signin(string signinToken, Action<string,SigninResponse> callback, string[] queries = null, string[] forms = null, string[] headers = null) {
             var client = WebAPIClient.GetClient();
             var data = new SigninRequest();
-            data.signin_token = signin_token; // サインイントークン
+            data.signinToken = signinToken; // サインイントークン
             return client.Post<SigninRequest,SigninResponse>("/signin", data, callback, queries, forms, headers);
         }
         [Serializable]
@@ -53,7 +53,7 @@ namespace Services.Protocols {
         }
 
         // Test
-        // テストインターフェイス
+        // ユニットテスト用インターフェイス
         public static WebAPIClient.Request Test(int reqValue, Action<string,TestResponse> callback, string[] queries = null, string[] forms = null, string[] headers = null) {
             var client = WebAPIClient.GetClient();
             var data = new TestRequest();

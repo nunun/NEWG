@@ -664,20 +664,20 @@ public partial class WebAPIClient {
             {
                 var req = JsonUtility.FromJson<WebAPI.SignupRequest>(request.Parameters.GetText());
 
-                var player_data = new PlayerData();
-                player_data.player_id   = "(dummy pid)";
-                player_data.player_name = req.player_name;
+                var playerData = new PlayerData();
+                playerData.playerId   = "(dummy playerId)";
+                playerData.playerName = req.playerName;
 
-                var session_data = new SessionData();
-                session_data.session_token = "(dummy session_token)";
+                var sessionData = new SessionData();
+                sessionData.sessionToken = "(dummy sessionToken)";
 
-                var credential_data = new CredentialData();
-                credential_data.signin_token = "(dummy signin_token)";
+                var credentialData = new CredentialData();
+                credentialData.signinToken = "(dummy signinToken)";
 
-                var player_data_json     = string.Format("\"player_data\":{{\"active\":true,\"data\":{0}}}",     JsonUtility.ToJson(player_data));
-                var session_data_json    = string.Format("\"session_data\":{{\"active\":true,\"data\":{0}}}",    JsonUtility.ToJson(session_data));
-                var credential_data_json = string.Format("\"credential_data\":{{\"active\":true,\"data\":{0}}}", JsonUtility.ToJson(credential_data));
-                var response = string.Format("{{\"ok\":true,\"active_data\":{{{0},{1},{2}}}}}", player_data_json, session_data_json, credential_data_json);
+                var playerDataJson     = string.Format("\"playerData\":{{\"active\":true,\"data\":{0}}}",     JsonUtility.ToJson(playerData));
+                var sessionDataJson    = string.Format("\"sessionData\":{{\"active\":true,\"data\":{0}}}",    JsonUtility.ToJson(sessionData));
+                var credentialDataJson = string.Format("\"credentialData\":{{\"active\":true,\"data\":{0}}}", JsonUtility.ToJson(credentialData));
+                var response = string.Format("{{\"ok\":true,\"activeData\":{{{0},{1},{2}}}}}", playerDataJson, sessionDataJson, credentialDataJson);
                 request.SetResponse(null, response);
             }
             break;
@@ -685,16 +685,16 @@ public partial class WebAPIClient {
             {
                 //var req = JsonUtility.FromJson<WebAPI.SignupRequest>(request.Parameters.GetText());
 
-                var player_data = new PlayerData();
-                player_data.player_id   = "(dummy pid)";
-                player_data.player_name = "signin user";
+                var playerData = new PlayerData();
+                playerData.playerId   = "(dummy playerId)";
+                playerData.playerName = "SigninUser";
 
-                var session_data = new SessionData();
-                session_data.session_token = "(dummy session_token)";
+                var sessionData = new SessionData();
+                sessionData.sessionToken = "(dummy sessionToken)";
 
-                var player_data_json  = string.Format("\"player_data\":{{\"active\":true,\"data\":{0}}}",  JsonUtility.ToJson(player_data));
-                var session_data_json = string.Format("\"session_data\":{{\"active\":true,\"data\":{0}}}", JsonUtility.ToJson(session_data));
-                var response = string.Format("{{\"ok\":true,\"active_data\":{{{0},{1}}}}}", player_data_json, session_data_json);
+                var playerDataJson  = string.Format("\"playerData\":{{\"active\":true,\"data\":{0}}}",  JsonUtility.ToJson(playerData));
+                var sessionDataJson = string.Format("\"sessionData\":{{\"active\":true,\"data\":{0}}}", JsonUtility.ToJson(sessionData));
+                var response = string.Format("{{\"ok\":true,\"active_data\":{{{0},{1}}}}}", playerDataJson, sessionDataJson);
                 request.SetResponse(null, response);
             }
             break;
@@ -705,5 +705,5 @@ public partial class WebAPIClient {
     }
 }
 #endif
-//request.SetResponse(null, "{\"active_data\":{\"player_data\":{\"active\":true,\"content\":{\"player_name\":\"hoge\"}}}}");
-//request.SetResponse(null, "{\"server_data\":{\"player_data\":{\"player_name\":\"hoge\"}}}");
+//request.SetResponse(null, "{\"active_data\":{\"playerData\":{\"active\":true,\"content\":{\"player_name\":\"hoge\"}}}}");
+//request.SetResponse(null, "{\"server_data\":{\"playerData\":{\"player_name\":\"hoge\"}}}");

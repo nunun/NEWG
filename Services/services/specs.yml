@@ -8,7 +8,7 @@ specs:
           desc: サインアップAPI
           api_path: /signup
           request:
-            - name: player_name
+            - name: playerName
               desc: プレイヤー名
               type: string
           response:
@@ -20,7 +20,7 @@ specs:
           desc: サインインAPI
           api_path: /signin
           request:
-            - name: signin_token
+            - name: signinToken
               desc: サインイントークン
               type: string
           response:
@@ -29,7 +29,7 @@ specs:
               type: bool
 
         - name: Test
-          desc: テストインターフェイス
+          desc: ユニットテスト用
           api_path: /test
           request:
             - name: reqValue
@@ -44,19 +44,19 @@ specs:
         - name: UserData
           desc: ユーザデータ。サーバ上のみで扱われる公開されないユーザのデータ。
           properties:
-            - name:  user_id
+            - name:  userId
               desc:  固有のユーザID
               type:  string
               value: (null)
-            - name:  player_id
+            - name:  playerId
               desc:  固有のプレイヤID
               type:  string
               value: (null)
-            - name:  session_token
+            - name:  sessionToken
               desc:  セッショントークン
               type:  string
               value: (null)
-            - name:  signin_token
+            - name:  signinToken
               desc:  ログイントークン
               type:  string
               value: (null)
@@ -64,11 +64,11 @@ specs:
         - name: PlayerData
           desc: プレイヤデータ。全ユーザに公開されるプレイヤのデータ。
           properties:
-            - name:  player_id
+            - name:  playerId
               desc:  プレイヤー番号
               type:  string
               value: (null)
-            - name:  player_name
+            - name:  playerName
               desc:  プレイヤー名
               type:  string
               value: (null)
@@ -76,7 +76,7 @@ specs:
         - name: SessionData
           desc: セッションデータ。本人にのみ知らされるセッション維持に使用するデータ。
           properties:
-            - name:  session_token
+            - name:  sessionToken
               desc:  セッショントークン
               type:  string
               value: (null)
@@ -84,58 +84,10 @@ specs:
         - name: CredentialData
           desc: 認証データ。本人にのみ知らされるサインイン用データ。セッションが切れた時に使用。
           properties:
-            - name:  signin_token
+            - name:  signinToken
               desc:  サインイントークン
               type:  string
               value: (null)
-
-        - name: SampleModel
-          desc: サンプルモデル
-          properties:
-            - name:    intValue
-              desc:    整数型
-              type:    int
-              value:   100
-            - name:    stringValue1
-              desc:    文字列型
-              type:    string
-              value:   "test"
-            - name:    stringValue2
-              desc:    文字列型 (null)
-              type:    string
-              value:   (null)
-            - name:    stringValue3
-              desc:    文字列型 (空)
-              type:    string
-              value:   (empty)
-            - name:    objectValue1
-              desc:    型 (null)
-              type:    SampleModel
-              value:   (null)
-            - name:    objectValue2
-              desc:    型 (空)
-              type:    UserData
-              value:   (empty)
-            - name:    arrayValue1
-              desc:    配列型 (null)
-              type:    array
-              subtype: UserData
-              value:   (null)
-            - name:    arrayValue2
-              desc:    配列型 (空)
-              type:    array
-              subtype: UserData
-              value:   (empty)
-            - name:    listValue1
-              desc:    リスト型 (null)
-              type:    list
-              subtype: UserData
-              value:   (null)
-            - name:    listValue2
-              desc:    リスト型 (空)
-              type:    list
-              subtype: UserData
-              value:   (empty)
 
       consts:
         - name: MY_CONST
@@ -499,3 +451,4 @@ templates:
           }
           <%- end -%>
       }
+
