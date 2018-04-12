@@ -20,14 +20,20 @@ public partial class WebAPIClient : MonoBehaviour {
     public enum HttpMethod { Get, Post };
 
     //-------------------------------------------------------------------------- 変数
-    public string   url           = null; // URL
-    public string[] queries       = null; // デフォルトのクエリ
-    public string[] forms         = null; // デフォルトのフォーム
-    public string[] headers       = null; // デフォルトのヘッダ
-    public int      retryCount    = 10;   // リトライ回数
-    public float    retryInterval = 3.0f; // リトライ感覚
-    public string[] clientName    = null; // クライアント名
-    public string   cryptSetting  = null; // 暗号化装置設定
+    public string   url            = null; // URL
+    public string[] defaultQueries = null; // クエリ (インスペクタ入力用)
+    public string[] defaultForms   = null; // フォーム (インスペクタ入力用)
+    public string[] defaultHeaders = null; // ヘッダ (インスペクタ入力用)
+    public int      retryCount     = 10;   // リトライ回数
+    public float    retryInterval  = 3.0f; // リトライ感覚
+    public string[] clientName     = null; // クライアント名
+    public string   cryptSetting   = null; // 暗号化装置設定
+
+    // デフォルトパラメータ (スクリプト入力用)
+    protected Parameters defaultParameters = new Parameters();
+
+    // デフォルトパラメータ (スクリプト入力用) の取得
+    public Parameters DefaultParameters { get { return defaultParameters; }}
 
     // 暗号化装置
     protected Crypter crypter = null;
@@ -65,7 +71,8 @@ public partial class WebAPIClient : MonoBehaviour {
         var parameters = Parameters.RentFromPool();
 
         // パラメータを全部追加
-        parameters.Import(this);
+        parameters.Import(this.defaultQueries, this.defaultForms, this.defaultHeaders);
+        parameters.Import(this.defaultParameters);
         parameters.Import(queries, forms, headers);
 
         // データを追加 (POST 時)
@@ -211,7 +218,6 @@ public partial class WebAPIClient {
         // サブクラスが設定
         protected Action<Request,string,string> setResponse  = null;
         protected Action<Request>               returnToPool = null;
-
 
         // 各種情報の取得
         public string     Url        { get { return url;        }}
@@ -386,17 +392,29 @@ public partial class WebAPIClient {
         //---------------------------------------------------------------------- 操作 (パラメータの設定)
         // クエリを追加
         public void AddQuery(string key, string val) {
-            queries.Add(key, val);
+            if (val == null) {
+                queries.Remove(key);
+            } else {
+                queries.Add(key, val);
+            }
         }
 
         // POST フォームを追加
         public void AddForm(string key, string val) {
-            forms.Add(key, val);
+            if (val == null) {
+                forms.Remove(key);
+            } else {
+                forms.Add(key, val);
+            }
         }
 
         // ヘッダを追加
         public void AddHeader(string key, string val) {
-            headers.Add(key, val);
+            if (val == null) {
+                headers.Remove(key);
+            } else {
+                headers.Add(key, val);
+            }
         }
 
         // リクエストコンテントにテキストを設定
@@ -542,11 +560,6 @@ public partial class WebAPIClient {
                     AddHeader(headers[i], headers[i + 1]);
                 }
             }
-        }
-
-        // インポート (WebAPIClient)
-        public void Import(WebAPIClient client) {
-            Import(client.queries, client.forms, client.headers);
         }
 
         // インポート (Parameters)
