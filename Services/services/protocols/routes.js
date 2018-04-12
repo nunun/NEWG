@@ -29,7 +29,7 @@ exports.setup = function(router, binder, client, logger) {
     if (!client) {
         logger.debug('routes.setup: binding "Test" for route "/test".');
         // Test
-        // テストインターフェイス
+        // ユニットテスト用インターフェイス
         var Test_impl = binder.Test;
         if (!Test_impl) {
             logger.error('routes.setup: binder has no implement "Test" for route "/test".');

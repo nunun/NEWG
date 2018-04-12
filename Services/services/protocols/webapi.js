@@ -3,10 +3,10 @@ var models       = require('./models');
 exports = {};
 // signup
 // サインアップAPI
-exports.signup = function(player_name, callback, queries = null, forms = null, headers = null) {
+exports.signup = function(playerName, callback, queries = null, forms = null, headers = null) {
     var client = webapiClient.getClient();
     var data = {};
-    data["player_name"] = player_name; // プレイヤー名
+    data["playerName"] = playerName; // プレイヤー名
     return client.post("/signup", data, function(err, responseData) {
         if (err) {
             if (callback != null) {
@@ -21,10 +21,10 @@ exports.signup = function(player_name, callback, queries = null, forms = null, h
 }
 // signin
 // サインインAPI
-exports.signin = function(signin_token, callback, queries = null, forms = null, headers = null) {
+exports.signin = function(signinToken, callback, queries = null, forms = null, headers = null) {
     var client = webapiClient.getClient();
     var data = {};
-    data["signin_token"] = signin_token; // サインイントークン
+    data["signinToken"] = signinToken; // サインイントークン
     return client.post("/signin", data, function(err, responseData) {
         if (err) {
             if (callback != null) {
@@ -38,7 +38,7 @@ exports.signin = function(signin_token, callback, queries = null, forms = null, 
     }, queries, forms, headers);
 }
 // test
-// テストインターフェイス
+// ユニットテスト用インターフェイス
 exports.test = function(reqValue, callback, queries = null, forms = null, headers = null) {
     var client = webapiClient.getClient();
     var data = {};

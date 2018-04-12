@@ -5,20 +5,18 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Services.Protocols.Models;
 
-// TODO
-// GameDataManager.active_data を作った方がいいかもしれない。
-// model は全て active_data に入れて置き、
-// import_data.active_data にリンクする
-
-
 // ゲームデータマネージャ
 // ゲームで使用するデータを保持します。
 [DefaultExecutionOrder(int.MinValue)]
 public partial class GameDataManager : MonoBehaviour {
     //-------------------------------------------------------------------------- 変数
-    public static PlayerData     PlayerData     = new PlayerData();     // プレイヤー情報
-    public static SessionData    SessionData    = new SessionData();    // セッション情報
-    public static CredentialData CredentialData = new CredentialData(); // 認証情報
+    static PlayerData     playerData     = new PlayerData();
+    static SessionData    sessionData    = new SessionData();
+    static CredentialData credentialData = new CredentialData();
+
+    public static PlayerData     PlayerData     { get { return playerData;     }}
+    public static SessionData    SessionData    { get { return sessionData;    }}
+    public static CredentialData CredentialData { get { return credentialData; }}
 
     //-------------------------------------------------------------------------- 操作
     // データ初期化
@@ -28,22 +26,22 @@ public partial class GameDataManager : MonoBehaviour {
         GameDataManager.CredentialData.Load();
 
         #if DEBUG
-        Debug.LogFormat("session_token: {0}", GameDataManager.SessionData.session_token);
-        Debug.LogFormat("signin_token: {0}",  GameDataManager.CredentialData.signin_token);
+        Debug.LogFormat("sessionToken: {0}", GameDataManager.SessionData.sessionToken);
+        Debug.LogFormat("signinToken: {0}",  GameDataManager.CredentialData.signinToken);
         #endif
 
         // 自動インポートイベントリスナをセットアップ
-        import_data.active_data.session_data.AddImportEventListener(() => {
+        GameDataManager.SessionDataImporter.AddImportEventListener(() => {
             #if DEBUG
-            Debug.LogFormat("[import] session_token: {0}", GameDataManager.SessionData.session_token);
+            Debug.LogFormat("[import] sessionToken: {0}", GameDataManager.SessionData.sessionToken);
             #endif
             // TODO
             // WebAPIClient 側のセッション情報を更新
             GameDataManager.SessionData.Save();
         });
-        import_data.active_data.credential_data.AddImportEventListener(() => {
+        GameDataManager.CredentialDataImporter.AddImportEventListener(() => {
             #if DEBUG
-            Debug.LogFormat("[import] signin_token: {0}", GameDataManager.CredentialData.signin_token);
+            Debug.LogFormat("[import] signinToken: {0}", GameDataManager.CredentialData.signinToken);
             #endif
             GameDataManager.CredentialData.Save();
         });
@@ -58,32 +56,35 @@ public partial class GameDataManager : MonoBehaviour {
 public partial class GameDataManager {
     //-------------------------------------------------------------------------- 定義
     // インポート用データクラス
-    // 自動インポートするデータを増やす場合は ActiveData クラスに追記。
+    // NOTE 自動インポートするデータを増やす場合はここに追記。
     [Serializable]
     public class ImportData {
         [Serializable]
         public class ActiveData {
             [Serializable]
             public class PlayerDataImporter : ActiveDataImporter<PlayerData> {};
-            public PlayerDataImporter player_data = new PlayerDataImporter() { data = GameDataManager.PlayerData };
+            public PlayerDataImporter playerData = new PlayerDataImporter() { data = GameDataManager.PlayerData };
 
             [Serializable]
             public class SessionDataImporter : ActiveDataImporter<SessionData> {};
-            public SessionDataImporter session_data = new SessionDataImporter() { data = GameDataManager.SessionData };
+            public SessionDataImporter sessionData = new SessionDataImporter() { data = GameDataManager.SessionData };
 
             [Serializable]
             public class CredentialDataImporter : ActiveDataImporter<CredentialData> {};
-            public CredentialDataImporter credential_data = new CredentialDataImporter() { data = GameDataManager.CredentialData };
+            public CredentialDataImporter credentialData = new CredentialDataImporter() { data = GameDataManager.CredentialData };
         }
-        public ActiveData active_data = new ActiveData();
+        public ActiveData activeData = new ActiveData();
     }
 
     //-------------------------------------------------------------------------- 変数
     // インポート用データ
     ImportData importData = new ImportData();
 
-    // インポート用データの取得 (インポートイベントリスナ設定用)
-    public static ImportData import_data { get { return instance.importData; }}
+    // 各種データインポータの取得
+    // NOTE 自動インポートするデータを増やす場合はここに追記。
+    public static ImportData.ActiveData.PlayerDataImporter     PlayerDataImporter     { get { return instance.importData.activeData.playerData; }}
+    public static ImportData.ActiveData.SessionDataImporter    SessionDataImporter    { get { return instance.importData.activeData.sessionData; }}
+    public static ImportData.ActiveData.CredentialDataImporter CredentialDataImporter { get { return instance.importData.activeData.credentialData; }}
 
     //-------------------------------------------------------------------------- インポート
     public static void Import(string message) {
