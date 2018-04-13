@@ -35,14 +35,20 @@ public partial class GameDataManager : MonoBehaviour {
             #if DEBUG
             Debug.LogFormat("[import] sessionToken: {0}", GameDataManager.SessionData.sessionToken);
             #endif
-            // TODO
-            // WebAPIClient 側のセッション情報を更新
+
+            // WebAPI アクセスのセッショントークン更新
+            var client = WebAPIClient.GetClient();
+            client.SessionParameters.AddHeader("SessionToken", GameDataManager.SessionData.sessionToken);
+
+            // セーブ
             GameDataManager.SessionData.Save();
         });
         GameDataManager.CredentialDataImporter.AddImportEventListener(() => {
             #if DEBUG
             Debug.LogFormat("[import] signinToken: {0}", GameDataManager.CredentialData.signinToken);
             #endif
+
+            // セーブ
             GameDataManager.CredentialData.Save();
         });
     }

@@ -20,20 +20,20 @@ public partial class WebAPIClient : MonoBehaviour {
     public enum HttpMethod { Get, Post };
 
     //-------------------------------------------------------------------------- 変数
-    public string   url            = null; // URL
-    public string[] defaultQueries = null; // クエリ (インスペクタ入力用)
-    public string[] defaultForms   = null; // フォーム (インスペクタ入力用)
-    public string[] defaultHeaders = null; // ヘッダ (インスペクタ入力用)
-    public int      retryCount     = 10;   // リトライ回数
-    public float    retryInterval  = 3.0f; // リトライ感覚
-    public string[] clientName     = null; // クライアント名
-    public string   cryptSetting   = null; // 暗号化装置設定
+    public string   url           = null; // URL
+    public string[] queries       = null; // クエリ (インスペクタ入力用)
+    public string[] forms         = null; // フォーム (インスペクタ入力用)
+    public string[] headers       = null; // ヘッダ (インスペクタ入力用)
+    public int      retryCount    = 10;   // リトライ回数
+    public float    retryInterval = 3.0f; // リトライ感覚
+    public string[] clientName    = null; // クライアント名
+    public string   cryptSetting  = null; // 暗号化装置設定
 
-    // デフォルトパラメータ (スクリプト入力用)
-    protected Parameters defaultParameters = new Parameters();
+    // 追加パラメータ (スクリプト入力用)
+    protected Parameters sessionParameters = new Parameters();
 
-    // デフォルトパラメータ (スクリプト入力用) の取得
-    public Parameters DefaultParameters { get { return defaultParameters; }}
+    // 追加パラメータ (スクリプト入力用) の取得
+    public Parameters SessionParameters { get { return sessionParameters; }}
 
     // 暗号化装置
     protected Crypter crypter = null;
@@ -71,8 +71,8 @@ public partial class WebAPIClient : MonoBehaviour {
         var parameters = Parameters.RentFromPool();
 
         // パラメータを全部追加
-        parameters.Import(this.defaultQueries, this.defaultForms, this.defaultHeaders);
-        parameters.Import(this.defaultParameters);
+        parameters.Import(this.queries, this.forms, this.headers);
+        parameters.Import(this.sessionParameters);
         parameters.Import(queries, forms, headers);
 
         // データを追加 (POST 時)
