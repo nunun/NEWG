@@ -102,22 +102,30 @@ public partial class GameMenuItems {
         // TODO
     }
 
-    [MenuItem("Game/サービス構成/プロトコル定義書を編集", false, 200)]
-    public static void EditProtocols() {
-        AssetsUtility.EditFile("Services/services/specs.yml");
-    }
-
-    [MenuItem("Game/サービス構成/プロトコルコード生成/C# のみ", false, 201)]
+    [MenuItem("Game/サービス構成/プロトコルコード生成/C# のみ", false, 200)]
     public static void GenerateProtocolsCs() {
         var commandProcess = new CommandProcess();
         commandProcess.Start("docker-compose", "run --rm generator ruby /generate.rb -c /output/cs", "Services/services");
         AssetsUtility.PingDirectory("Assets/Game/Scripts/Services/Protocols");
     }
 
-    [MenuItem("Game/サービス構成/プロトコルコード生成/すべて", false, 202)]
+    [MenuItem("Game/サービス構成/プロトコルコード生成/すべて", false, 201)]
     public static void GenerateProtocolsAll() {
         var commandProcess = new CommandProcess();
         commandProcess.Start("docker-compose", "run --rm generator ruby /generate.rb -c", "Services/services");
         AssetsUtility.PingDirectory("Assets/Game/Scripts/Services/Protocols");
+    }
+
+    [MenuItem("Game/サービス構成/プロトコル定義書を編集", false, 202)]
+    public static void EditProtocols() {
+        AssetsUtility.EditFile("Services/services/specs.yml");
+    }
+
+    //-------------------------------------------------------------------------- セーブデータ
+    [MenuItem("Game/セーブデータ/セーブデータをクリア", false, 103)]
+    public static void ClearSaveData() {
+        PlayerPrefs.DeleteAll();
+        PlayerPrefs.Save();
+        Debug.Log("セーブデータをクリアしました。");
     }
 }

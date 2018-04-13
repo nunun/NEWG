@@ -7,14 +7,8 @@ specs:
         - name: Signup
           desc: サインアップAPI
           api_path: /signup
-          request:
-            - name: playerName
-              desc: プレイヤー名
-              type: string
-          response:
-            - name: ok
-              desc: 成功したかどうか
-              type: bool
+          request: []
+          response: []
 
         - name: Signin
           desc: サインインAPI
@@ -23,10 +17,7 @@ specs:
             - name: signinToken
               desc: サインイントークン
               type: string
-          response:
-            - name: ok
-              desc: 成功したかどうか
-              type: bool
+          response: []
 
         - name: Test
           desc: ユニットテスト用

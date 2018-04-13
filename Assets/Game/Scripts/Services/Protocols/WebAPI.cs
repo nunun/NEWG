@@ -8,7 +8,6 @@ namespace Services.Protocols {
     public class WebAPI {
         [Serializable]
         public struct SignupRequest {
-            public string playerName; // プレイヤー名
         }
 
         [Serializable]
@@ -18,10 +17,9 @@ namespace Services.Protocols {
 
         // Signup
         // サインアップAPI
-        public static WebAPIClient.Request Signup(string playerName, Action<string,SignupResponse> callback, string[] queries = null, string[] forms = null, string[] headers = null) {
+        public static WebAPIClient.Request Signup(Action<string,SignupResponse> callback, string[] queries = null, string[] forms = null, string[] headers = null) {
             var client = WebAPIClient.GetClient();
             var data = new SignupRequest();
-            data.playerName = playerName; // プレイヤー名
             return client.Post<SignupRequest,SignupResponse>("/signup", data, callback, queries, forms, headers);
         }
         [Serializable]
@@ -53,7 +51,7 @@ namespace Services.Protocols {
         }
 
         // Test
-        // ユニットテスト用インターフェイス
+        // ユニットテスト用
         public static WebAPIClient.Request Test(int reqValue, Action<string,TestResponse> callback, string[] queries = null, string[] forms = null, string[] headers = null) {
             var client = WebAPIClient.GetClient();
             var data = new TestRequest();

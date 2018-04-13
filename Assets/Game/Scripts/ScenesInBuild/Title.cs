@@ -28,7 +28,7 @@ public class Title : GameScene {
                 var error = default(string);
                 if (string.IsNullOrEmpty(signinToken)) {
                     using (var wait = UIWait<WebAPI.SignupResponse>.RentFromPool()) {
-                        WebAPI.Signup("Unnamed Player", wait.Callback);
+                        WebAPI.Signup(wait.Callback);
                         yield return wait;
                         error = wait.error;
                     }
@@ -42,6 +42,8 @@ public class Title : GameScene {
                 if (error == default(string)) {
                     break;//成功!
                 }
+
+                // エラー
                 Debug.LogError(error);
 
                 // エラーの場合はリトライ
@@ -58,7 +60,7 @@ public class Title : GameScene {
 
         // TODO
         // サインイン結果
-        Debug.Log(GameDataManager.PlayerData.playerName);
+        Debug.Log("Player Name = " + GameDataManager.PlayerData.playerName);
 
         // セットアップ完了！
         //GameAudio.MixBGM("Revenge2");

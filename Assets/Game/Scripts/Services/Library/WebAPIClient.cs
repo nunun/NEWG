@@ -675,11 +675,11 @@ public partial class WebAPIClient {
         switch (request.APIPath) {
         case "/signup"://サインアップ
             {
-                var req = JsonUtility.FromJson<WebAPI.SignupRequest>(request.Parameters.GetText());
+                //var req = JsonUtility.FromJson<WebAPI.SignupRequest>(request.Parameters.GetText());
 
                 var playerData = new PlayerData();
                 playerData.playerId   = "(dummy playerId)";
-                playerData.playerName = req.playerName;
+                playerData.playerName = "SignupUser";
 
                 var sessionData = new SessionData();
                 sessionData.sessionToken = "(dummy sessionToken)";
@@ -690,7 +690,7 @@ public partial class WebAPIClient {
                 var playerDataJson     = string.Format("\"playerData\":{{\"active\":true,\"data\":{0}}}",     JsonUtility.ToJson(playerData));
                 var sessionDataJson    = string.Format("\"sessionData\":{{\"active\":true,\"data\":{0}}}",    JsonUtility.ToJson(sessionData));
                 var credentialDataJson = string.Format("\"credentialData\":{{\"active\":true,\"data\":{0}}}", JsonUtility.ToJson(credentialData));
-                var response = string.Format("{{\"ok\":true,\"activeData\":{{{0},{1},{2}}}}}", playerDataJson, sessionDataJson, credentialDataJson);
+                var response = string.Format("{{\"activeData\":{{{0},{1},{2}}}}}", playerDataJson, sessionDataJson, credentialDataJson);
                 request.SetResponse(null, response);
             }
             break;
@@ -707,7 +707,7 @@ public partial class WebAPIClient {
 
                 var playerDataJson  = string.Format("\"playerData\":{{\"active\":true,\"data\":{0}}}",  JsonUtility.ToJson(playerData));
                 var sessionDataJson = string.Format("\"sessionData\":{{\"active\":true,\"data\":{0}}}", JsonUtility.ToJson(sessionData));
-                var response = string.Format("{{\"ok\":true,\"active_data\":{{{0},{1}}}}}", playerDataJson, sessionDataJson);
+                var response = string.Format("{{\"activeData\":{{{0},{1}}}}}", playerDataJson, sessionDataJson);
                 request.SetResponse(null, response);
             }
             break;
