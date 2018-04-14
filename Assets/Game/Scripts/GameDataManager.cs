@@ -90,7 +90,7 @@ public partial class GameDataManager {
 
             // WebAPI アクセスのセッショントークン更新
             var client = WebAPIClient.GetClient();
-            client.SessionParameters.AddHeader("SessionToken", GameDataManager.SessionData.sessionToken);
+            client.SessionParameters.SetHeader("SessionToken", GameDataManager.SessionData.sessionToken);
 
             // セーブ
             GameDataManager.SessionData.Save();

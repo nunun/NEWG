@@ -132,9 +132,22 @@ public partial class WebAPIClient {
             return;
         }
 
+        // NOTE
         // 常に最初の一つだけ処理
         var request   = requestList[0];
         var deltaTime = Time.deltaTime;
+
+        #if WEBAPI_CLIENT_STANDALONE_DEBUG
+        // WebAPI クライアントのスタンドアローンデバッグ対応
+        // サーバなしでデバッグする処理の実装。
+        if (request != null) {
+            if (!StandaloneDebug(request, deltaTime)) {
+                requestList.RemoveAt(0);
+                request.ReturnToPool();
+            }
+            return;
+        }
+        #endif
 
         // リトライタイマをチェック
         if (request.retryTime > 0.0f) {
@@ -145,14 +158,6 @@ public partial class WebAPIClient {
             }
             return;
         }
-
-        #if WEBAPI_CLIENT_STANDALONE_DEBUG
-        // WebAPI クライアントのスタンドアローンデバッグ対応
-        // サーバなしでデバッグする処理の実装。
-        if (StandaloneDebug(request, deltaTime)) {
-            return;//スタンドアローンデバッグにより処理された
-        }
-        #endif
 
         // 送信していなければ送信!
         if (request.IsSent) {
@@ -390,30 +395,30 @@ public partial class WebAPIClient {
         }
 
         //---------------------------------------------------------------------- 操作 (パラメータの設定)
-        // クエリを追加
-        public void AddQuery(string key, string val) {
-            if (val == null) {
+        // クエリを設定
+        public void SetQuery(string key, string val) {
+            if (val != null) {
+                queries[key] = val;
+            } else {
                 queries.Remove(key);
-            } else {
-                queries.Add(key, val);
             }
         }
 
-        // POST フォームを追加
-        public void AddForm(string key, string val) {
-            if (val == null) {
+        // POST フォームを設定
+        public void SetForm(string key, string val) {
+            if (val != null) {
+                forms[key] = val;
+            } else {
                 forms.Remove(key);
-            } else {
-                forms.Add(key, val);
             }
         }
 
-        // ヘッダを追加
-        public void AddHeader(string key, string val) {
-            if (val == null) {
-                headers.Remove(key);
+        // ヘッダを設定
+        public void SetHeader(string key, string val) {
+            if (val != null) {
+                headers[key] = val;
             } else {
-                headers.Add(key, val);
+                headers.Remove(key);
             }
         }
 
@@ -547,17 +552,17 @@ public partial class WebAPIClient {
         public void Import(string[] queries, string[] forms, string[] headers) {
             if (queries != null) {
                 for (int i = 0; (i + 1) < queries.Length; i += 2) {
-                    AddQuery(queries[i], queries[i + 1]);
+                    SetQuery(queries[i], queries[i + 1]);
                 }
             }
             if (forms != null) {
                 for (int i = 0; (i + 1) < forms.Length; i += 2) {
-                    AddForm(forms[i], forms[i + 1]);
+                    SetForm(forms[i], forms[i + 1]);
                 }
             }
             if (headers != null) {
                 for (int i = 0; (i + 1) < headers.Length; i += 2) {
-                    AddHeader(headers[i], headers[i + 1]);
+                    SetHeader(headers[i], headers[i + 1]);
                 }
             }
         }
@@ -644,30 +649,24 @@ public partial class WebAPIClient {
     static readonly float DEBUG_DELAY = 0.5f;
 
     //-------------------------------------------------------------------------- 変数
-    Request debugRequest   = null;  // デバッグ中のリクエスト
-    float   debugDelay     = 0.0f;  // デバッグディレイ
-    bool    debugProcessed = false; // デバッグ処理済かどうか
+    Request debugRequest = null; // デバッグ中のリクエスト
+    float   debugDelay   = 0.0f; // デバッグディレイ
 
     //-------------------------------------------------------------------------- デバッグ
     // スタンドアローンデバッグ
     bool StandaloneDebug(Request request, float deltaTime) {
-        if (debugRequest != request) {//新しいリクエスト
+        if (debugRequest == null) {
             Debug.LogFormat("WebAPIClient: リクエストをスタンドアロンデバッグで処理します ({0})", request.ToString());
-            debugRequest   = request;
-            debugDelay     = DEBUG_DELAY;
-            debugProcessed = false;
-            return true;
-        }
-        if (debugProcessed) {//処理済
-            return true;
+            debugRequest = request;
+            debugDelay   = DEBUG_DELAY;
         }
         if (debugDelay > 0.0f) {//WebAPIっぽい待ちディレイをつけておく
             debugDelay -= deltaTime;
             return true;
         }
         StandaloneDebugProcessRequest(request);
-        debugProcessed = true;
-        return true;
+        debugRequest = null;
+        return false;
     }
 
     // スタンドアローンデバッグのリクエスト処理
