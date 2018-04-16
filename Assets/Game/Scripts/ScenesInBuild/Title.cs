@@ -2,26 +2,38 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using Services.Protocols;
 
 // タイトル
 public class Title : GameScene {
+    //-------------------------------------------------------------------------- インスタンスの確保と解放
+    public CanvasGroupAlphaEffect uiAlphaEffect   = null;
+    public Button                 gameStartButton = null;
+
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
+    void Awake() {
+        Debug.Assert(uiAlphaEffect   != null, "uiAlphaEffect がない");
+        Debug.Assert(gameStartButton != null, "gameStartButton がない");
+
+        uiAlphaEffect.SetUneffected();
+    }
+
     IEnumerator Start() {
-        GameAudio.PlayBGM("Revenge1");
-        GameAudio.SetBGMVolume("Revenge1", 1.0f);
+        GameAudio.PlayBGM("Abandoned");
+        GameAudio.SetBGMVolume("Abandoned", 1.0f);
 
         // セットアップ
         var subject = StatusLine.Observe();
         try {
-            // 初期化
-            subject.message = "初期化中 ...";
+            // ロード中
+            subject.message = "ロード中 ...";
             yield return new WaitForSeconds(1.0f);
 
             // サインイン
             var signinToken = GameDataManager.CredentialData.signinToken;
             do {
-                subject.message = "サインインしています ...";
+                subject.message = "サーバに接続しています ...";
 
                 // サインアップしていないならサインイン
                 // そうでないならサインアップ
@@ -40,7 +52,10 @@ public class Title : GameScene {
                     }
                 }
                 if (error == default(string)) {
-                    break;//成功!
+                    subject.message = "接続完了！";
+                    GameAudio.Play("BootUp");
+                    yield return new WaitForSeconds(1.75f);
+                    break;//サインイン成功!
                 }
 
                 // エラー
@@ -61,6 +76,9 @@ public class Title : GameScene {
         // TODO
         // サインイン結果
         Debug.Log("Player Name = " + GameDataManager.PlayerData.playerName);
+
+        // UI の表示を開始
+        uiAlphaEffect.Effect();
 
         // セットアップ完了！
         //GameAudio.MixBGM("Revenge2");
