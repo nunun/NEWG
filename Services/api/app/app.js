@@ -1,11 +1,12 @@
-var url            = require('url');
-var util           = require('util');
-var bodyParser     = require('body-parser');
-var config         = require('./services/library/config');
-var logger         = require('./services/library/logger');
-var mindlinkClient = require('./services/library/mindlink_client').activate(config.mindlinkClient, logger.mindlinkClient);
-var apiServer      = require('./services/library/webapi_server').activate(config.apiServer, logger.apiServer);
-var routes         = require('./services/protocols/routes');
+var url                 = require('url');
+var util                = require('util');
+var bodyParser          = require('body-parser');
+var config              = require('./services/library/config');
+var logger              = require('./services/library/logger');
+var mindlinkClient      = require('./services/library/mindlink_client').activate(config.mindlinkClient, logger.mindlinkClient);
+var webapiServer        = require('./services/library/webapi_server').activate(config.webapiServer, logger.webapiServer);
+var routes              = require('./services/protocols/routes');
+var WebAPIRoutesHandler = require('./webapi_routes_handler.js');
 
 // mindlink client
 mindlinkClient.setConnectEventListener(function() {
@@ -17,7 +18,7 @@ mindlinkClient.setConnectEventListener(function() {
         }
         logger.mindlinkClient.info('mindlink client initialized.');
         logger.mindlinkClient.info('listening requests through mindlink ...');
-        apiServer.start();
+        webapiServer.start();
     });
 });
 mindlinkClient.setDataFromRemoteEventListener(1 /*protocols.CMD.API.MATCHING_REQUEST*/, function(data, res) {
@@ -41,26 +42,19 @@ mindlinkClient.setDataFromRemoteEventListener(1 /*protocols.CMD.API.MATCHING_REQ
     });
 });
 
-// api server
-apiServer.setStartEventListener(function() {
-    logger.apiServer.info('api server started.');
+// webapi server
+webapiServer.setStartEventListener(function() {
+    logger.webapiServer.info('webapi server started.');
 });
-apiServer.setSetupEventListener(function(express, app) {
-    logger.apiServer.info('api server setup.');
+webapiServer.setSetupEventListener(function(express, app) {
+    logger.webapiServer.info('api server setup.');
 
     // setup router
     var router = express.Router();
-    var binder = {};
-    binder.Test = function(req, res) {
-        var resValue = {resValue:15};
-        logger.apiServer.debug("Test: incoming: " + util.inspect(req.body, {depth:null,breakLength:Infinity}));
-        logger.apiServer.debug("Test: outgoing: " + util.inspect(resValue, {depth:null,breakLength:Infinity}));
-        res.send(resValue);
-    }
-    routes.setup(router, binder, null, logger.apiServer);
+    routes.setup(router, WebAPIRoutesHandler, null, logger.webapiServer);
 
     // setup app
-    app.use(apiServer.bodyDecrypter());
+    app.use(webapiServer.bodyDecrypter());
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({extended: true}));
     app.use(router);

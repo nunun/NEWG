@@ -4,8 +4,8 @@ mindlinkClient:
   retryCount:    [20,                    "${MINDLINK_RETRY_COUNT}"]
   retryInterval: [1000,                  "${MINDLINK_RETRY_INTERVAL}"]
 
-# api server
-apiServer:
+# webapi server
+webapiServer:
   port: [7780, "${PORT}"]
 
 # couch client
@@ -28,7 +28,7 @@ log4js:
     mindlinkClient:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
-    apiServer:
+    webapiServer:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
     couchClient:
