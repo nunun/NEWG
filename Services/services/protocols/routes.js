@@ -1,43 +1,43 @@
 exports = {}
-exports.setup = function(router, binder, client, logger) {
+exports.setup = function(router, routesController, client, logger) {
     if (!client) {
         logger.debug('routes.setup: binding "Signup" for route "/signup".');
         // Signup
         // サインアップAPI
-        var Signup_impl = binder.Signup;
-        if (!Signup_impl) {
-            logger.error('routes.setup: binder has no implement "Signup" for route "/signup".');
-            return;
+        var Signup_impl = routesController.Signup;
+        if (Signup_impl) {
+            router.post("/signup", function(req, res) {
+                Signup_impl(req, res);
+            });
+        } else {
+            logger.error('routes.setup: routes controller has no implement "Signup" for route "/signup".');
         }
-        router.post("/signup", function(req, res) {
-            Signup_impl(req, res);
-        });
     }
     if (!client) {
         logger.debug('routes.setup: binding "Signin" for route "/signin".');
         // Signin
         // サインインAPI
-        var Signin_impl = binder.Signin;
-        if (!Signin_impl) {
-            logger.error('routes.setup: binder has no implement "Signin" for route "/signin".');
-            return;
+        var Signin_impl = routesController.Signin;
+        if (Signin_impl) {
+            router.post("/signin", function(req, res) {
+                Signin_impl(req, res);
+            });
+        } else {
+            logger.error('routes.setup: routes controller has no implement "Signin" for route "/signin".');
         }
-        router.post("/signin", function(req, res) {
-            Signin_impl(req, res);
-        });
     }
     if (!client) {
         logger.debug('routes.setup: binding "Test" for route "/test".');
         // Test
-        // ユニットテスト用インターフェイス
-        var Test_impl = binder.Test;
-        if (!Test_impl) {
-            logger.error('routes.setup: binder has no implement "Test" for route "/test".');
-            return;
+        // ユニットテスト用
+        var Test_impl = routesController.Test;
+        if (Test_impl) {
+            router.post("/test", function(req, res) {
+                Test_impl(req, res);
+            });
+        } else {
+            logger.error('routes.setup: routes controller has no implement "Test" for route "/test".');
         }
-        router.post("/test", function(req, res) {
-            Test_impl(req, res);
-        });
     }
 }
 module.exports = exports;
