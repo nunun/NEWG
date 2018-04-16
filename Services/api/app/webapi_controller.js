@@ -2,14 +2,13 @@ var util   = require('util');
 var config = require('./services/library/config');
 var logger = require('./services/library/logger');
 
-// WebAPI 経路コントローラ
-// spec.yml の WebAPI 定義から生成した services/protocols/routes.js の実装。
-class WebAPIRoutesController {
+// WebAPI コントローラ
+// spec.yml の WebAPI 定義に対応する経路の実装。
+class WebAPIController {
     //-------------------------------------------------------------------------- 生成と破棄
     // コンストラクタ
     constructor() {
-        // NOTE
-        // 今のところ処理なし
+        this.middlewares = {};
     }
 
     //-------------------------------------------------------------------------- ルート処理

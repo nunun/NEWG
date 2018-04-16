@@ -214,14 +214,14 @@ templates:
     output: routes.js
     template: |
       exports = {}
-      exports.setup = function(router, routesController, client, logger) {
+      exports.setup = function(router, controller, middlewares, client, logger) {
           <%- entries.each do |entry| -%>
-          <%- name     = entry["name"]       -%>
-          <%- impl     = name + "_impl"      -%>
-          <%- desc     = entry["desc"]       -%>
-          <%- api_path = entry["api_path"]   -%>
-          <%- auth     = entry["auth"] || [] -%>
-          <%- client   = entry["client"]     -%>
+          <%- name     = entry["name"]      -%>
+          <%- impl     = name + "_impl"     -%>
+          <%- desc     = entry["desc"]      -%>
+          <%- api_path = entry["api_path"]  -%>
+          <%- use      = entry["use"] || [] -%>
+          <%- client   = entry["client"]    -%>
           <%- if client.nil? -%>
           if (!client) {
           <%- else -%>
@@ -230,18 +230,21 @@ templates:
               logger.debug('routes.setup: binding "<%= name %>" for route "<%= api_path %>".');
               // <%= name %>
               // <%= desc %>
-              var <%= impl %> = routesController.<%= name %>;
+              var <%= impl %> = controller.<%= name %>;
               if (<%= impl %>) {
-                  <%- auth.each do |a| -%>
-                  if (routesController["<%= a %>"]) {
-                      router.use("<%= api_path %>", routesController["<%= a.to_camel %>"]);
-                  } else {
-                      logger.error('routes.setup: routes controller has no auth middleware "<%= a %>" for route "<%= api_path %>".');
-                  }
-                  <%- end -%>
-                  router.post("<%= api_path %>", function(req, res) {
-                      <%= impl %>(req, res);
-                  });
+                  do {
+                      <%- use.each do |u| -%>
+                      if (middlewares && middlewares["<%= u %>"]) {
+                          router.use("<%= api_path %>", middlewares["<%= u.to_camel %>"]);
+                      } else {
+                          logger.error('routes.setup: no middleware "<%= u %>" for route "<%= api_path %>".');
+                          break;
+                      }
+                      <%- end -%>
+                      router.post("<%= api_path %>", function(req, res) {
+                          <%= impl %>(req, res);
+                      });
+                  } while(false);
               } else {
                   logger.error('routes.setup: routes controller has no implement "<%= name %>" for route "<%= api_path %>".');
               }

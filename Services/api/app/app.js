@@ -1,12 +1,12 @@
-var url                    = require('url');
-var util                   = require('util');
-var bodyParser             = require('body-parser');
-var config                 = require('./services/library/config');
-var logger                 = require('./services/library/logger');
-var mindlinkClient         = require('./services/library/mindlink_client').activate(config.mindlinkClient, logger.mindlinkClient);
-var webapiServer           = require('./services/library/webapi_server').activate(config.webapiServer, logger.webapiServer);
-var routes                 = require('./services/protocols/routes');
-var WebAPIRoutesController = require('./webapi_routes_controller');
+var url              = require('url');
+var util             = require('util');
+var bodyParser       = require('body-parser');
+var config           = require('./services/library/config');
+var logger           = require('./services/library/logger');
+var mindlinkClient   = require('./services/library/mindlink_client').activate(config.mindlinkClient, logger.mindlinkClient);
+var webapiServer     = require('./services/library/webapi_server').activate(config.webapiServer, logger.webapiServer);
+var routes           = require('./services/protocols/routes');
+var WebAPIController = require('./webapi_controller');
 
 // mindlink client
 mindlinkClient.setConnectEventListener(function() {
@@ -50,9 +50,10 @@ webapiServer.setSetupEventListener(function(express, app) {
     logger.webapiServer.info('webapi server setup.');
 
     // setup router
-    var router              = express.Router();
-    var apiRoutesController = new WebAPIRoutesController();
-    routes.setup(router, apiRoutesController, null, logger.webapiServer);
+    var router      = express.Router();
+    var controller  = new WebAPIController();
+    var middlewares = controller.middlewares;
+    routes.setup(router, controller, middlewares, null, logger.webapiServer);
 
     // setup app
     app.use(webapiServer.bodyDecrypter());
