@@ -1,12 +1,12 @@
-var url                 = require('url');
-var util                = require('util');
-var bodyParser          = require('body-parser');
-var config              = require('./services/library/config');
-var logger              = require('./services/library/logger');
-var mindlinkClient      = require('./services/library/mindlink_client').activate(config.mindlinkClient, logger.mindlinkClient);
-var webapiServer        = require('./services/library/webapi_server').activate(config.webapiServer, logger.webapiServer);
-var routes              = require('./services/protocols/routes');
-var WebAPIRoutesHandler = require('./webapi_routes_handler.js');
+var url                    = require('url');
+var util                   = require('util');
+var bodyParser             = require('body-parser');
+var config                 = require('./services/library/config');
+var logger                 = require('./services/library/logger');
+var mindlinkClient         = require('./services/library/mindlink_client').activate(config.mindlinkClient, logger.mindlinkClient);
+var webapiServer           = require('./services/library/webapi_server').activate(config.webapiServer, logger.webapiServer);
+var routes                 = require('./services/protocols/routes');
+var WebAPIRoutesController = require('./webapi_routes_controller');
 
 // mindlink client
 mindlinkClient.setConnectEventListener(function() {
@@ -47,11 +47,12 @@ webapiServer.setStartEventListener(function() {
     logger.webapiServer.info('webapi server started.');
 });
 webapiServer.setSetupEventListener(function(express, app) {
-    logger.webapiServer.info('api server setup.');
+    logger.webapiServer.info('webapi server setup.');
 
     // setup router
-    var router = express.Router();
-    routes.setup(router, WebAPIRoutesHandler, null, logger.webapiServer);
+    var router              = express.Router();
+    var apiRoutesController = new WebAPIRoutesController();
+    routes.setup(router, apiRoutesController, null, logger.webapiServer);
 
     // setup app
     app.use(webapiServer.bodyDecrypter());

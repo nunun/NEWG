@@ -12,7 +12,6 @@ namespace Services.Protocols {
 
         [Serializable]
         public struct SignupResponse {
-            public bool ok; // 成功したかどうか
         }
 
         // Signup
@@ -29,7 +28,6 @@ namespace Services.Protocols {
 
         [Serializable]
         public struct SigninResponse {
-            public bool ok; // 成功したかどうか
         }
 
         // Signin

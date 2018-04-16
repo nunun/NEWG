@@ -3,10 +3,9 @@ var models       = require('./models');
 exports = {};
 // signup
 // サインアップAPI
-exports.signup = function(playerName, callback, queries = null, forms = null, headers = null) {
+exports.signup = function(callback, queries = null, forms = null, headers = null) {
     var client = webapiClient.getClient();
     var data = {};
-    data["playerName"] = playerName; // プレイヤー名
     return client.post("/signup", data, function(err, responseData) {
         if (err) {
             if (callback != null) {
@@ -38,7 +37,7 @@ exports.signin = function(signinToken, callback, queries = null, forms = null, h
     }, queries, forms, headers);
 }
 // test
-// ユニットテスト用インターフェイス
+// ユニットテスト用
 exports.test = function(reqValue, callback, queries = null, forms = null, headers = null) {
     var client = webapiClient.getClient();
     var data = {};
