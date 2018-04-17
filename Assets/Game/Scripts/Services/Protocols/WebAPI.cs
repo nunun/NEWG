@@ -39,6 +39,36 @@ namespace Services.Protocols {
             return client.Post<SigninRequest,SigninResponse>("/signin", data, callback, queries, forms, headers);
         }
         [Serializable]
+        public struct MatchingRequest {
+        }
+
+        [Serializable]
+        public struct MatchingResponse {
+        }
+
+        // Matching
+        // マッチングをリクエスト
+        public static WebAPIClient.Request Matching(Action<string,MatchingResponse> callback, string[] queries = null, string[] forms = null, string[] headers = null) {
+            var client = WebAPIClient.GetClient();
+            var data = new MatchingRequest();
+            return client.Post<MatchingRequest,MatchingResponse>("/matching", data, callback, queries, forms, headers);
+        }
+        [Serializable]
+        public struct PlayerRequest {
+        }
+
+        [Serializable]
+        public struct PlayerResponse {
+        }
+
+        // Player
+        // プレイヤー情報の取得
+        public static WebAPIClient.Request Player(Action<string,PlayerResponse> callback, string[] queries = null, string[] forms = null, string[] headers = null) {
+            var client = WebAPIClient.GetClient();
+            var data = new PlayerRequest();
+            return client.Post<PlayerRequest,PlayerResponse>("/player", data, callback, queries, forms, headers);
+        }
+        [Serializable]
         public struct TestRequest {
             public int reqValue; // リクエストの値
         }

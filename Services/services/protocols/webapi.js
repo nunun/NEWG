@@ -36,6 +36,40 @@ exports.signin = function(signinToken, callback, queries = null, forms = null, h
         }
     }, queries, forms, headers);
 }
+// matching
+// マッチングをリクエスト
+exports.matching = function(callback, queries = null, forms = null, headers = null) {
+    var client = webapiClient.getClient();
+    var data = {};
+    return client.post("/matching", data, function(err, responseData) {
+        if (err) {
+            if (callback != null) {
+                callback(err, null);
+            }
+            return;
+        }
+        if (callback != null) {
+            callback(err, responseData);
+        }
+    }, queries, forms, headers);
+}
+// player
+// プレイヤー情報の取得
+exports.player = function(callback, queries = null, forms = null, headers = null) {
+    var client = webapiClient.getClient();
+    var data = {};
+    return client.post("/player", data, function(err, responseData) {
+        if (err) {
+            if (callback != null) {
+                callback(err, null);
+            }
+            return;
+        }
+        if (callback != null) {
+            callback(err, responseData);
+        }
+    }, queries, forms, headers);
+}
 // test
 // ユニットテスト用
 exports.test = function(reqValue, callback, queries = null, forms = null, headers = null) {

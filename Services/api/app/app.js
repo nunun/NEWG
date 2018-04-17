@@ -50,10 +50,9 @@ webapiServer.setSetupEventListener(function(express, app) {
     logger.webapiServer.info('webapi server setup.');
 
     // setup router
-    var router      = express.Router();
-    var controller  = new WebAPIController();
-    var middlewares = controller.middlewares;
-    routes.setup(router, controller, middlewares, null, logger.webapiServer);
+    var router     = express.Router();
+    var controller = new WebAPIController();
+    routes.setup(router, controller, null, logger.webapiServer);
 
     // setup app
     app.use(webapiServer.bodyDecrypter());

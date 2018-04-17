@@ -19,6 +19,20 @@ specs:
               type: string
           response: []
 
+        - name: Matching
+          desc: マッチングをリクエスト
+          api_path: /matching
+          use: [userSecurity]
+          request: []
+          response: []
+
+        - name: Player
+          desc: プレイヤー情報の取得
+          api_path: /player
+          use: [userSecurity]
+          request: []
+          response: []
+
         - name: Test
           desc: ユニットテスト用
           api_path: /test
@@ -214,30 +228,40 @@ templates:
     output: routes.js
     template: |
       exports = {}
-      exports.setup = function(router, controller, middlewares, client, logger) {
+      exports.setup = function(router, controller, group, logger) {
+          var alwaysMiddlewares = (!controller.use)? null : controller.use("always");
+          if (alwaysMiddlewares) {
+              for (var i in alwaysMiddlewares) {
+                  router.use(alwaysMiddlewares[i]);
+              }
+          }
           <%- entries.each do |entry| -%>
           <%- name     = entry["name"]      -%>
           <%- impl     = name + "_impl"     -%>
           <%- desc     = entry["desc"]      -%>
           <%- api_path = entry["api_path"]  -%>
           <%- use      = entry["use"] || [] -%>
-          <%- client   = entry["client"]    -%>
-          <%- if client.nil? -%>
-          if (!client) {
+          <%- group    = entry["group"]     -%>
+          <%- if group.nil? -%>
+          if (!group) {
           <%- else -%>
-          if (client && client == "<%= client %>") {
+          if (group && group == "<%= group %>") {
           <%- end -%>
-              logger.debug('routes.setup: binding "<%= name %>" for route "<%= api_path %>".');
+              logger.debug('routes.setup: binding controller method "<%= name %>" to route "<%= api_path %>".');
               // <%= name %>
               // <%= desc %>
               var <%= impl %> = controller.<%= name %>;
               if (<%= impl %>) {
                   do {
+                      var routeMidlewares = null;
                       <%- use.each do |u| -%>
-                      if (middlewares && middlewares["<%= u %>"]) {
-                          router.use("<%= api_path %>", middlewares["<%= u.to_camel %>"]);
+                      routeMiddlewares = (!controller.use)? null : controller.use("<%= u %>");
+                      if (routeMiddlewares) {
+                          for (var i in routeMiddlewares) {
+                              router.use("<%= api_path %>", routeMidlewares[i]);
+                          }
                       } else {
-                          logger.error('routes.setup: no middleware "<%= u %>" for route "<%= api_path %>".');
+                          logger.error('routes.setup: controller has no middleware "<%= u %>" for route "<%= api_path %>".');
                           break;
                       }
                       <%- end -%>
@@ -246,7 +270,7 @@ templates:
                       });
                   } while(false);
               } else {
-                  logger.error('routes.setup: routes controller has no implement "<%= name %>" for route "<%= api_path %>".');
+                  logger.error('routes.setup: controller has no method "<%= name %>" for route "<%= api_path %>".');
               }
           }
           <%- end -%>
