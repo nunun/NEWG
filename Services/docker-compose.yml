@@ -11,10 +11,6 @@
 #  5984 couchdb
 # 15672 rabbitmq webui
 # 17766 mindlink webui
-#
-# NOTE
-# "server" はホストモードで動作する。(docker-compose.override.yml 参照)
-# Docker for Win, Docker for Mac の場合は 10.0.75.2 に接続。
 version: '3.3'
 services:
   client:

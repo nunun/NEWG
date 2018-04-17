@@ -59,16 +59,6 @@ webapiServer.setSetupEventListener(function(express, app) {
     var webapiController = new WebAPIController();
     webapiRoutes.setup(webapiRouter, webapiController, null, logger.webapiServer);
     app.use(webapiRouter);
-
-    // WebUI 経路のセットアップ (デバッグ用)
-    var webuiRouter = express.Router();
-    var webuiRoutes = require('./webui/routes');
-    webuiRoutes(webapiRouter);
-    app.use(webuiRouter);
-    app.use(express.static('./webui/public'));
-    app.use(express.static('./node_modules/monaco-editor/min'));
-    app.set('views', './webui/views');
-    app.set('view engine', 'ejs');
 });
 
 // start app ...
