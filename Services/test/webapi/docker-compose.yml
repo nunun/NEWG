@@ -56,8 +56,3 @@ services:
   redis:
     image: redis:4.0.6-alpine
 
-  sense:
-    image: s12v/sense
-    ports:
-      - 5601:5601
-
