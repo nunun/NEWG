@@ -5,7 +5,7 @@ var config           = require('./services/library/config');
 var logger           = require('./services/library/logger');
 var mindlinkClient   = require('./services/library/mindlink_client').activate(config.mindlinkClient, logger.mindlinkClient);
 var webapiServer     = require('./services/library/webapi_server').activate(config.webapiServer, logger.webapiServer);
-var routes           = require('./services/protocols/routes');
+var webapiRoutes     = require('./services/protocols/routes');
 var WebAPIController = require('./webapi_controller');
 
 // mindlink client
@@ -49,16 +49,26 @@ webapiServer.setStartEventListener(function() {
 webapiServer.setSetupEventListener(function(express, app) {
     logger.webapiServer.info('webapi server setup.');
 
-    // setup router
-    var router     = express.Router();
-    var controller = new WebAPIController();
-    routes.setup(router, controller, null, logger.webapiServer);
-
-    // setup app
+    // express のセットアップ
     app.use(webapiServer.bodyDecrypter());
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({extended: true}));
-    app.use(router);
+
+    // WebAPI 経路のセットアップ
+    var webapiRouter     = express.Router();
+    var webapiController = new WebAPIController();
+    webapiRoutes.setup(webapiRouter, webapiController, null, logger.webapiServer);
+    app.use(webapiRouter);
+
+    // WebUI 経路のセットアップ (デバッグ用)
+    var webuiRouter = express.Router();
+    var webuiRoutes = require('./webui/routes');
+    webuiRoutes(webapiRouter);
+    app.use(webuiRouter);
+    app.use(express.static('./webui/public'));
+    app.use(express.static('./node_modules/monaco-editor/min'));
+    app.set('views', './webui/views');
+    app.set('view engine', 'ejs');
 });
 
 // start app ...

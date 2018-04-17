@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+   <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+</head>
+<body style="margin:0px; padding:0px; background-color: #202020;">
+<div id="editorContainer" style="width:50%; height:100px; margin:0px; padding:0px; float:left;  border-bottom: 1px solid #303030; border-right: 1px solid #303030;"></div>
+<div id="outputContainer" style="width:50%; height:100px; margin:0px; padding:0px; float:right; border-bottom: 1px solid #303030; border-right: 1px solid #303030;"></div>
+<script src="vs/loader.js"></script>
+<script>
+    require.config({paths: {'vs': 'vs'}});
+    require(['vs/editor/editor.main'], function() {
+        var editor = monaco.editor.create(document.getElementById('editorContainer'), {
+            value: [].join('\n'),
+            language: 'json',
+            theme: 'vs-dark',
+            minimap: {
+                enabled: false,
+            },
+        });
+        var output = monaco.editor.create(document.getElementById('outputContainer'), {
+            value: [].join('\n'),
+            language: 'json',
+            theme: 'vs-dark',
+            minimap: {
+                enabled: false,
+            },
+            readOnly: true,
+        });
+
+        function layout() {
+            var editorContainer = document.getElementById('editorContainer');
+            var outputContainer = document.getElementById('outputContainer');
+            var width           = window.innerWidth;
+            var height          = window.innerHeight - 30;
+            var widthHalf       = (width / 2) - 1;
+            editorContainer.style.width  = widthHalf + "px";
+            editorContainer.style.height = height    + "px";
+            outputContainer.style.width  = widthHalf + "px";
+            outputContainer.style.height = height    + "px";
+            editor.layout();
+            editor.layout({width:widthHalf, height:height});
+            output.layout();
+            output.layout({width:widthHalf, height:height});
+        }
+
+        window.onresize = layout;
+        layout();
+    });
+</script>
+</body>
+</html>
