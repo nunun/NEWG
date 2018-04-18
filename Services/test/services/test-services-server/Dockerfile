@@ -11,7 +11,7 @@ RUN if [ "${BUILD_CONFIGURATION}" = "tester" ]; then \
             echo "mocha ./test.js" > /start.sh; \
     elif [ "${BUILD_CONFIGURATION}" = "develop"  ]; then \
             npm -g install nodemon; \
-            echo "nodemon ./app.js" > /start.sh; \
+            echo "nodemon --legacy-watch ./app.js" > /start.sh; \
     else \
             echo "node ./app.js" > /start.sh; \
     fi

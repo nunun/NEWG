@@ -59,7 +59,7 @@ function save(self, key, callback, trycnt, retrycnt, keylen) {
                     return;
                 }
                 if (callback) {
-                    callback(err, null);
+                    callback(err, null, null);
                 }
                 return;
             }

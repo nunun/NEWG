@@ -1,6 +1,8 @@
 var util   = require('util');
+var uuid   = require('uuid/v1');
 var config = require('./services/library/config');
 var logger = require('./services/library/logger');
+var models = require('./services/protocols/models');
 
 // WebAPI コントローラ
 // spec.yml の WebAPI 定義に対応する経路の実装。
@@ -14,9 +16,25 @@ class WebAPIController {
 
     //-------------------------------------------------------------------------- 経路実装
     // サインアップ
-    //Signup(req, res) {
-    //    // TODO
-    //}
+    Signup(req, res) {
+        // データ作成
+        var userData       = new models.UserData();
+        var playerData     = new models.PlayerData();
+        var sessionData    = new models.SessionData();
+        var credentialData = new models.CredentialData();
+
+        // TODO
+        // ID ジェネレータを使って ID の確保
+
+        // 返却
+        res.send({
+            activeData: {
+                playerData:     { active:true, data:playerData     },
+                sessionData:    { active:true, data:sessionData    },
+                credentialData: { active:true, data:credentialData },
+            },
+        });
+    }
 
     // サインイン
     //Signin(req, res) {
