@@ -62,4 +62,17 @@ CredentialData.prototype.clear = function() {
     this.signinToken = null; // サインイントークン
 }
 models.CredentialData = CredentialData;
+// UniqueKeyData
+// 固有キー生成用データ。CouchDB のキー重複制限を使って固有キーを生成するために使用。
+function UniqueKeyData() {
+    this.init();
+}
+util.inherits(UniqueKeyData, ModelData);
+ModelData.setupType(UniqueKeyData, 'UniqueKeyData', 'db_unique_key_data');
+UniqueKeyData.prototype.init = function() {
+    UniqueKeyData.super_.prototype.init.call(this);
+};
+UniqueKeyData.prototype.clear = function() {
+}
+models.UniqueKeyData = UniqueKeyData;
 module.exports = models;

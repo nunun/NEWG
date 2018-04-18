@@ -94,6 +94,10 @@ specs:
               type:  string
               value: (null)
 
+        - name: UniqueKeyData
+          desc: 固有キー生成用データ。CouchDB のキー重複制限を使って固有キーを生成するために使用。
+          properties: []
+
       consts:
         - name: MY_CONST
           desc: テスト定数
