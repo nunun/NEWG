@@ -56,3 +56,10 @@ services:
   redis:
     image: redis:4.0.6-alpine
 
+  sense:
+    image: nunun/sense
+    environment:
+      - DEST=http://api:7780
+    ports:
+      - 17780:80
+
