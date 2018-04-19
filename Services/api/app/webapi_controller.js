@@ -1,8 +1,13 @@
-var util   = require('util');
-var uuid   = require('uuid/v1');
-var config = require('./services/library/config');
-var logger = require('./services/library/logger');
-var models = require('./services/protocols/models');
+var util           = require('util');
+var uuid           = require('uuid/v1');
+var config         = require('./services/library/config');
+var logger         = require('./services/library/logger');
+var models         = require('./services/protocols/models');
+var UniqueKey      = require('./services/library/unique_key');
+var UserData       = models.UserData;
+var PlayerData     = models.PlayerData;
+var SessionData    = models.SessionData;
+var CredentialData = models.CredentialData;
 
 // WebAPI コントローラ
 // spec.yml の WebAPI 定義に対応する経路の実装。
@@ -17,22 +22,55 @@ class WebAPIController {
     //-------------------------------------------------------------------------- 経路実装
     // サインアップ
     Signup(req, res) {
-        // データ作成
-        var userData       = new models.UserData();
-        var playerData     = new models.PlayerData();
-        var sessionData    = new models.SessionData();
-        var credentialData = new models.CredentialData();
+        // SessionToken を作成
+        UniqueKey.create("s%16s", (serr, sessionToken) => {
+            if (err) {
+                res.status(500).send({err:serr});
+                return;
+            }
+            var sessionData = new SessionData();
+            sessionData.sessionToken = sessionToken;
 
-        // TODO
-        // ID ジェネレータを使って ID の確保
+            // SigninToken を作成
+            UniqueKey.create("i%32s", (ierr, signinToken) => {
+                if (err) {
+                    res.status(500).send({err:ierr});
+                    return;
+                }
+                var credentialData = new CredentialData();
+                credentialData.signinToken = signinToken;
 
-        // 返却
-        res.send({
-            activeData: {
-                playerData:     { active:true, data:playerData     },
-                sessionData:    { active:true, data:sessionData    },
-                credentialData: { active:true, data:credentialData },
-            },
+                // PlayerData を登録
+                var playerData = new PlayerData();
+                playerData.playerName = "Player" + (Math.random() * 1000);
+                playerData.save("playerId", "p%8s", (perr, pid, prev) => {
+                    if (err) {
+                        res.status(500).send({err:perr});
+                        return;
+                    }
+
+                    // UserData を登録
+                    var userData = new UserData();
+                    userData.playerId     = pid;
+                    userData.sessionToken = sessionToken;
+                    userData.signinToken  = signinToken;
+                    userData.save("userId", "u%8s", (uerr, uid, urev) => {
+                        if (err) {
+                            res.status(500).send({err:uerr});
+                            return;
+                        }
+
+                        // ユーザ登録完了！
+                        res.send({
+                            activeData: {
+                                playerData:     { active:true, data:playerData     },
+                                sessionData:    { active:true, data:sessionData    },
+                                credentialData: { active:true, data:credentialData },
+                            },
+                        });
+                    });
+                });
+            });
         });
     }
 
