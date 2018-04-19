@@ -2,6 +2,9 @@ var util        = require('util');
 var CouchClient = require('./couch_client');
 var RedisClient = require('./redis_client');
 
+// key generation format on save ModelData.
+var saveKeyRegex = /^(.*)%([0-9]+)s(.*)$/;
+
 // constructor
 function ModelData() {
     this.init();
@@ -21,29 +24,40 @@ ModelData.prototype.clear = function() {
 }
 
 // save
-ModelData.prototype.save = function(key, callback) {
+ModelData.prototype.save = function(fieldName, key, callback) {
     var self = this;
-    if (callback == undefined) {
-        callback = key;
-        key = null;
+    if (key == undefined) {//when one argument
+        callback  = fieldName;
+        key       = null;
+        fieldName = null;
+    } else if (callback == undefined) {//when two arguments
+        callback  = key;
+        key       = fieldName;
+        fieldName = null;
     }
-    var trycnt   = 0;
-    var retrycnt = 0;
-    var keylen   = 0;
-    if (key != null && typeof(key) == "number") {
-        retrycnt = 3;
-        keylen   = key;
+    key = key || 8;
+    var retryCount = 0;
+    if (typeof(key) == "number" || saveKeyRegex.exec(key)) {
+        retryCount = 3;
     }
-    save(self, key, callback, trycnt, retrycnt, keylen);
+    save(self, fieldName, key, callback, retryCount);
 }
-function save(self, key, callback, trycnt, retrycnt, keylen) {
-    ++trycnt;
-    if (keylen > 0) {
-        var sym = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
-        key = '';
-        for(var i = 0; i < keylen; i++) {
-            key += sym[parseInt(Math.random() * sym.length)];
+function save(self, fieldName, key, callback, retryCount) {
+    var k = key;
+    if (typeof(k) == "number") {
+        k = keygen(k);
+    } else {
+        var m = saveKeyRegex.exec(k);
+        if (m) {
+            k = m[1] + keygen(parseInt(m[2])) + m[3];
         }
+    }
+    if (fieldName) {
+        if (!self[fieldName]) {
+            callback(new Error('no field'), null, null);
+            return;
+        }
+        self[fieldName] = k;
     }
     self.getScope(function(err, scope) {
         if (err) {
@@ -52,10 +66,10 @@ function save(self, key, callback, trycnt, retrycnt, keylen) {
             }
             return;
         }
-        scope.insert(self, key, function(err, body) {
+        scope.insert(self, k, function(err, body) {
             if (err) {
-                if (trycnt <= retrycnt) {
-                    save(self, key, callback, trycnt, retrycnt, keylen);
+                if (retryCount >= 0) {
+                    save(self, fieldName, key, callback, retryCount - 1);
                     return;
                 }
                 if (callback) {
@@ -68,6 +82,14 @@ function save(self, key, callback, trycnt, retrycnt, keylen) {
             }
         });
     });
+}
+function keygen(len) {
+    var sym = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
+    var key = '';
+    for(var i = 0; i < len; i++) {
+        key += sym[parseInt(Math.random() * sym.length)];
+    }
+    return key;
 }
 
 // setupType

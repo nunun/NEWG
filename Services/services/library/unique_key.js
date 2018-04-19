@@ -1,5 +1,5 @@
-var util   = require('util');
-var models = require('../protocols/models');
+var util          = require('util');
+var UniqueKeyData = require('../protocols/models').UniqueKeyData;
 
 // 固有キー
 // モデル UniqueKeyData を使って固有キーの生成と破棄を行います。
@@ -10,7 +10,7 @@ class UniqueKey {
     //------------------------------------------------------------------------- 固有キーの生成と破棄
     // 固有キーの生成
     static create(key, callback) {
-        var uniqueKeyData = new models.UniqueKeyData();
+        var uniqueKeyData = new UniqueKeyData();
         uniqueKeyData.save(key, (err, id, rev) => {
             if (callback) {
                 callback(err, id);
@@ -19,8 +19,8 @@ class UniqueKey {
     }
 
     // 固有キーの破棄
-    static destroy(uniqueKey, callback) {
-        UniqueKeyData.get(uniqueKey, (err, data) => {
+    static destroy(key, callback) {
+        UniqueKeyData.get(key, (err, data) => {
             if (err) {
                 if (callback) {
                     callback(err);

@@ -125,6 +125,17 @@ describe('smoke test', function () {
                     assert.ok(key.length == 8, 'invalid response key (' + key + ')');
                     UniqueKey.destroy(key, function(err) {
                         assert.ok(!err, 'invalid response err (' + err + ')');
+                        testUniqueKeyFormat();
+                    });
+                });
+            }
+
+            function testUniqueKeyFormat() {
+                UniqueKey.create("test:%8s", function(err, key) {
+                    assert.ok(!err,             'invalid response err (' + err + ')');
+                    assert.ok(key.length == 13, 'invalid response key (' + key + ')');
+                    UniqueKey.destroy(key, function(err) {
+                        assert.ok(!err, 'invalid response err (' + err + ')');
                         done();
                     });
                 });
