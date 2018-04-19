@@ -53,8 +53,10 @@ function save(self, fieldName, key, callback, retryCount) {
         }
     }
     if (fieldName) {
-        if (!self[fieldName]) {
-            callback(new Error('no field'), null, null);
+        if (!self.hasOwnProperty(fieldName)) {
+            if (callback) {
+                callback(new Error('no field'), null, null);
+            }
             return;
         }
         self[fieldName] = k;

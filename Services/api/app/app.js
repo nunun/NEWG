@@ -4,9 +4,21 @@ var bodyParser       = require('body-parser');
 var config           = require('./services/library/config');
 var logger           = require('./services/library/logger');
 var mindlinkClient   = require('./services/library/mindlink_client').activate(config.mindlinkClient, logger.mindlinkClient);
+var couchClient      = require('./services/library/couch_client').activate(config.couchClient, logger.couchClient);
+var redisClient      = require('./services/library/redis_client').activate(config.redisClient, logger.redisClient);
 var webapiServer     = require('./services/library/webapi_server').activate(config.webapiServer, logger.webapiServer);
 var webapiRoutes     = require('./services/protocols/routes');
 var WebAPIController = require('./webapi_controller');
+
+// couch client
+couchClient.setConnectEventListener(function() {
+    redisClient.start();
+});
+
+// redis client
+redisClient.setConnectEventListener(function() {
+    mindlinkClient.start();
+});
 
 // mindlink client
 mindlinkClient.setConnectEventListener(function() {
@@ -62,4 +74,4 @@ webapiServer.setSetupEventListener(function(express, app) {
 });
 
 // start app ...
-mindlinkClient.start();
+couchClient.start();

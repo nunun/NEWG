@@ -23,8 +23,8 @@ class WebAPIController {
     // サインアップ
     Signup(req, res) {
         // SessionToken を作成
-        UniqueKey.create("s%16s", (serr, sessionToken) => {
-            if (err) {
+        UniqueKey.create("%16s", (serr, sessionToken) => {
+            if (serr) {
                 res.status(500).send({err:serr});
                 return;
             }
@@ -32,8 +32,8 @@ class WebAPIController {
             sessionData.sessionToken = sessionToken;
 
             // SigninToken を作成
-            UniqueKey.create("i%32s", (ierr, signinToken) => {
-                if (err) {
+            UniqueKey.create("%32s", (ierr, signinToken) => {
+                if (ierr) {
                     res.status(500).send({err:ierr});
                     return;
                 }
@@ -42,9 +42,9 @@ class WebAPIController {
 
                 // PlayerData を登録
                 var playerData = new PlayerData();
-                playerData.playerName = "Player" + (Math.random() * 1000);
-                playerData.save("playerId", "p%8s", (perr, pid, prev) => {
-                    if (err) {
+                playerData.playerName = "Player" + Math.floor(Math.random() * 1000);
+                playerData.save("playerId", "%8s", (perr, pid, prev) => {
+                    if (perr) {
                         res.status(500).send({err:perr});
                         return;
                     }
@@ -54,8 +54,8 @@ class WebAPIController {
                     userData.playerId     = pid;
                     userData.sessionToken = sessionToken;
                     userData.signinToken  = signinToken;
-                    userData.save("userId", "u%8s", (uerr, uid, urev) => {
-                        if (err) {
+                    userData.save("userId", "%8s", (uerr, uid, urev) => {
+                        if (uerr) {
                             res.status(500).send({err:uerr});
                             return;
                         }
