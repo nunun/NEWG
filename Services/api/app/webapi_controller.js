@@ -60,12 +60,12 @@ class WebAPIController {
                             return;
                         }
 
-                        // ユーザ登録完了！
+                        // サインアップ完了！
                         res.send({
                             activeData: {
-                                playerData:     { active:true, data:playerData     },
-                                sessionData:    { active:true, data:sessionData    },
-                                credentialData: { active:true, data:credentialData },
+                                playerData:     { active:true, data:playerData.export()     },
+                                sessionData:    { active:true, data:sessionData.export()    },
+                                credentialData: { active:true, data:credentialData.export() },
                             },
                         });
                     });
@@ -75,9 +75,63 @@ class WebAPIController {
     }
 
     // サインイン
-    //Signin(req, res) {
-    //    // TODO
-    //}
+    Signin(req, res) {
+        // サインイントークンからユーザデータを特定
+        var signinToken = req.body.signinToken;
+        UserData.list({signinToken:signinToken, limit:1}, (uerr, userList) => {
+            if (uerr) {
+                res.status(500).send({err:uerr});
+                return;
+            }
+            if (userList.length <= 0) {
+                res.status(500).send({err:'no user.'});
+                return;
+            }
+            var userData = userList[0].activate();
+
+            // SessionToken を再作成
+            UniqueKey.create("%16s", (serr, sessionToken) => {
+                if (serr) {
+                    res.status(500).send({err:serr});
+                    return;
+                }
+                var sessionData = new SessionData();
+                sessionData.sessionToken = sessionToken;
+
+                // ユーザデータ更新
+                var oldSessionToken = userData.sessionToken;
+                userData.sessionToken = sessionToken;
+                userData.save(userData.userId, (verr, vid, vrev) => {
+                    if (verr) {
+                        res.status(500).send({err:verr});
+                        return;
+                    }
+
+                    // セッショントークンを
+                    UniqueKey.destroy(oldSessionToken, (derr) => {
+                        // NOTE
+                        // 削除し損じても無視
+
+                        // プレイヤーデータを取得
+                        PlayerData.get(userData.playerId, (perr, playerData) => {
+                            if (perr) {
+                                res.status(500).send({err:perr});
+                                return;
+                            }
+
+                            // サインイン完了！
+                            res.send({
+                                activeData: {
+                                    playerData:  { active:true, data:playerData.export()  },
+                                    sessionData: { active:true, data:sessionData.export() },
+                                },
+                            });
+                        });
+                    });
+                });
+            });
+        });
+    }
 
     // マッチングのリクエスト
     //Matching(req, res) {

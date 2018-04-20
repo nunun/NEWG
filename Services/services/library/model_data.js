@@ -94,6 +94,17 @@ function keygen(len) {
     return key;
 }
 
+// export
+ModelData.prototype.export = function() {
+    if (this._id) {
+        delete this._id;
+    }
+    if (this._rev) {
+        delete this._rev;
+    }
+    return this;
+}
+
 // setupType
 ModelData.setupType = function(type, typeName, databaseName) {
     type.databaseName = databaseName;
