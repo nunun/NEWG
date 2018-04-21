@@ -11,8 +11,9 @@ public partial class CompileSettings : ISerializationCallbackReceiver {
     // シンボル一覧の定義
     // 必要なシンボルはここに定義してください。
     public static readonly Dictionary<string,string[]> ScriptDefineSymbols = new Dictionary<string,string[]>() {
-        { "DEBUG",       null }, // デバッグコードをバイナリに含めるかどうか
-        { "SERVER_CODE", null }, // サーバコードをバイナリに含めるかどうか
+        { "DEBUG",                  null }, // デバッグコードをバイナリに含めるかどうか
+        { "SERVER_CODE",            null }, // サーバコードをバイナリに含めるかどうか
+        { "NETWORK_EMULATION_MODE", null }, // ネットワークエミュレーションモード
         //{ "ACCESS_SERVER", new string[] {"DEVELOP", "STAGING", "RELEASE"}},
     };
 

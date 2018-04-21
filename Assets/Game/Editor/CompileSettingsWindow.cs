@@ -76,11 +76,14 @@ public class CompileSettingsWindow : EditorWindow {
                 }
                 EditorGUILayout.EndHorizontal();
 
+                var labelWidth = EditorGUIUtility.labelWidth;
+                EditorGUIUtility.labelWidth = 200.0f;
                 //EditorGUILayout.BeginVertical("Box");
                 //{
                     currentData.currentSettings.DrawGUI(true);
                 //}
                 //EditorGUILayout.EndVertical();
+                EditorGUIUtility.labelWidth = labelWidth;
             }
             EditorGUILayout.EndScrollView();
         }

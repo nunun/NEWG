@@ -5,9 +5,26 @@ using UnityEngine;
 // ゲームのメイン処理
 // ここからゲームが始まる
 public class GameMain : MonoBehaviour {
+    //-------------------------------------------------------------------------- 定義
+    public enum ServiceMode { Client, Server, Host }; // サービスモードの定義
+
+    //-------------------------------------------------------------------------- 変数
+    public ServiceMode serviceMode = ServiceMode.Client; // サービスモード
+
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     void Start() {
-        GameSceneManager.ChangeScene("Logo");
+        switch (serviceMode) {
+        case ServiceMode.Server:
+            // サーバスタンバイ画面へ
+            GameSceneManager.ChangeScene("Standby");
+            break;
+        case ServiceMode.Client:
+        case ServiceMode.Host:
+        default:
+            // ロゴ画面へ
+            GameSceneManager.ChangeScene("Logo");
+            break;
+        }
     }
 }
 
