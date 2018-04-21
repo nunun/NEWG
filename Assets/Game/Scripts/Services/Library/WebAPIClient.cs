@@ -1,4 +1,3 @@
-#define WEBAPI_CLIENT_STANDALONE_DEBUG
 using System;
 using System.IO;
 using System.Linq;
@@ -8,7 +7,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
-#if WEBAPI_CLIENT_STANDALONE_DEBUG
+#if NETWORK_EMULATION_MODE
 using Services.Protocols;
 using Services.Protocols.Consts;
 using Services.Protocols.Models;
@@ -137,7 +136,7 @@ public partial class WebAPIClient {
         var request   = requestList[0];
         var deltaTime = Time.deltaTime;
 
-        #if WEBAPI_CLIENT_STANDALONE_DEBUG
+        #if NETWORK_EMULATION_MODE
         // WebAPI クライアントのスタンドアローンデバッグ対応
         // サーバなしでデバッグする処理の実装。
         if (request != null) {
@@ -160,7 +159,7 @@ public partial class WebAPIClient {
         }
 
         // 送信していなければ送信!
-        if (request.IsSent) {
+        if (!request.IsSent) {
             request.Send();
         }
 
@@ -639,7 +638,7 @@ public partial class WebAPIClient {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-#if WEBAPI_CLIENT_STANDALONE_DEBUG
+#if NETWORK_EMULATION_MODE
 
 // WebAPI スタンドアローンデバッグ対応
 // NOTE ゲーム用のコードになるが置き場所も定まらないので一旦ここに書く
