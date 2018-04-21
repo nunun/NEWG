@@ -96,7 +96,11 @@ specs:
 
         - name: UniqueKeyData
           desc: 固有キー生成用データ。CouchDB のキー重複制限を使って固有キーを生成するために使用。
-          properties: []
+          properties:
+            - name:  associatedKey
+              desc:  固有キーデータに紐づけられた関連キー
+              type:  string
+              value: (null)
 
       consts:
         - name: MY_CONST

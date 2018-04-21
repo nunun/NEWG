@@ -3,11 +3,11 @@ var uuid           = require('uuid/v1');
 var config         = require('./services/library/config');
 var logger         = require('./services/library/logger');
 var models         = require('./services/protocols/models');
-var UniqueKey      = require('./services/library/unique_key');
 var UserData       = models.UserData;
 var PlayerData     = models.PlayerData;
 var SessionData    = models.SessionData;
 var CredentialData = models.CredentialData;
+var UniqueKeyData  = models.UniqueKeyData;
 
 // WebAPI コントローラ
 // spec.yml の WebAPI 定義に対応する経路の実装。
@@ -21,115 +21,78 @@ class WebAPIController {
 
     //-------------------------------------------------------------------------- 経路実装
     // サインアップ
-    Signup(req, res) {
-        // SessionToken を作成
-        UniqueKey.create("%16s", (serr, sessionToken) => {
-            if (serr) {
-                res.status(500).send({err:serr});
-                return;
-            }
-            var sessionData = new SessionData();
-            sessionData.sessionToken = sessionToken;
+    async Signup(req, res) {
+        // プレイヤー作成
+        var playerData = new PlayerData();
+        playerData.playerId   = null;
+        playerData.playerName = "Player" + Math.floor(Math.random() * 1000);
+        await saveData(playerData, "playerId", "%8s");
 
-            // SigninToken を作成
-            UniqueKey.create("%32s", (ierr, signinToken) => {
-                if (ierr) {
-                    res.status(500).send({err:ierr});
-                    return;
-                }
-                var credentialData = new CredentialData();
-                credentialData.signinToken = signinToken;
+        // ユーザ作成
+        var userData = new UserData();
+        userData.userId       = null;
+        userData.playerId     = playerData.playerId;
+        userData.sessionToken = null;
+        userData.signinToken  = null;
+        await saveData(userData, "userId", "%8s");
 
-                // PlayerData を登録
-                var playerData = new PlayerData();
-                playerData.playerName = "Player" + Math.floor(Math.random() * 1000);
-                playerData.save("playerId", "%8s", (perr, pid, prev) => {
-                    if (perr) {
-                        res.status(500).send({err:perr});
-                        return;
-                    }
+        // セッショントークン作成
+        var sessionTokenData = new UniqueKeyData();
+        sessionTokenData.associatedKey = userData.userId;
+        await saveData(sessionTokenData, null, "%16s");
+        var sessionData = new SessionData();
+        sessionData.sessionToken = sessionTokenData._id;
 
-                    // UserData を登録
-                    var userData = new UserData();
-                    userData.playerId     = pid;
-                    userData.sessionToken = sessionToken;
-                    userData.signinToken  = signinToken;
-                    userData.save("userId", "%8s", (uerr, uid, urev) => {
-                        if (uerr) {
-                            res.status(500).send({err:uerr});
-                            return;
-                        }
+        // サインイントークン作成
+        var signinTokenData = new UniqueKeyData();
+        signinTokenData.associatedKey = userData.userId;
+        await saveData(signinTokenData, null, "%16s");
+        var credentialData = new CredentialData();
+        credentialData.signinToken = signinTokenData._id;
 
-                        // サインアップ完了！
-                        res.send({
-                            activeData: {
-                                playerData:     { active:true, data:playerData.export()     },
-                                sessionData:    { active:true, data:sessionData.export()    },
-                                credentialData: { active:true, data:credentialData.export() },
-                            },
-                        });
-                    });
-                });
-            });
+        // ユーザ更新
+        userData.sessionToken = sessionData.sessionToken;
+        userData.signinToken  = credentialData.signinToken;
+        await saveData(userData);
+
+        // サインアップ完了！
+        res.send({
+            activeData: {
+                playerData:     { active:true, data:playerData.export()     },
+                sessionData:    { active:true, data:sessionData.export()    },
+                credentialData: { active:true, data:credentialData.export() },
+            },
         });
     }
 
     // サインイン
-    Signin(req, res) {
-        // サインイントークンからユーザデータを特定
+    async Signin(req, res) {
         var signinToken = req.body.signinToken;
-        UserData.list({signinToken:signinToken, limit:1}, (uerr, userList) => {
-            if (uerr) {
-                res.status(500).send({err:uerr});
-                return;
-            }
-            if (userList.length <= 0) {
-                res.status(500).send({err:'no user.'});
-                return;
-            }
-            var userData = userList[0].activate();
 
-            // SessionToken を再作成
-            UniqueKey.create("%16s", (serr, sessionToken) => {
-                if (serr) {
-                    res.status(500).send({err:serr});
-                    return;
-                }
-                var sessionData = new SessionData();
-                sessionData.sessionToken = sessionToken;
+        // サインイントークンからユーザ情報を検索
+        var userData = await findData(UserData, {signinToken:signinToken});
 
-                // ユーザデータ更新
-                var oldSessionToken = userData.sessionToken;
-                userData.sessionToken = sessionToken;
-                userData.save(userData.userId, (verr, vid, vrev) => {
-                    if (verr) {
-                        res.status(500).send({err:verr});
-                        return;
-                    }
+        // セッショントークン作成
+        var sessionData = new SessionData();
+        sessionData.sessionToken = await createUniqueKey("%16s");
 
-                    // セッショントークンを
-                    UniqueKey.destroy(oldSessionToken, (derr) => {
-                        // NOTE
-                        // 削除し損じても無視
+        // ユーザ情報更新
+        var oldSessionToken = userData.sessionToken;
+        userData.sessionToken = sessionData.sessionToken;
+        await saveData(userData);
 
-                        // プレイヤーデータを取得
-                        PlayerData.get(userData.playerId, (perr, playerData) => {
-                            if (perr) {
-                                res.status(500).send({err:perr});
-                                return;
-                            }
+        // 古いセッショントークンを破棄
+        await destroyUniqueKey(oldSessionToken);
 
-                            // サインイン完了！
-                            res.send({
-                                activeData: {
-                                    playerData:  { active:true, data:playerData.export()  },
-                                    sessionData: { active:true, data:sessionData.export() },
-                                },
-                            });
-                        });
-                    });
-                });
-            });
+        // プレイヤー情報取得
+        var playerData = await getData(PlayerData, userData.playerId);
+
+        // サインイン完了！
+        res.send({
+            activeData: {
+                playerData:  { active:true, data:playerData.export()  },
+                sessionData: { active:true, data:sessionData.export() },
+            },
         });
     }
 
@@ -188,6 +151,55 @@ class WebAPIController {
         // TODO
         next();
     }
+}
+
+// データの保存
+async function saveData(data, fieldName, key) {
+    return new Promise((resolve, reject) => {
+        data.save(fieldName, key, (err) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+            resolve();
+        });
+    });
+}
+
+// データの取得
+async function getData(dataType, key) {
+    return new Promise((resolve, reject) => {
+        dataType.get(key, (err, data) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+            if (!data) {
+                reject(err);
+                return;
+            }
+            resolve(data);
+        });
+    });
+}
+
+// データの検索
+async function findData(dataType, params) {
+    return new Promise((resolve, reject) => {
+        params.limit = 1;
+        dataType.list(params, (err, list) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+            if (list.length <= 0) {
+                reject(new Error('no data'));
+                return;
+            }
+            var data = list[0].activate();
+            resolve(data);
+        });
+    });
 }
 
 module.exports = WebAPIController;

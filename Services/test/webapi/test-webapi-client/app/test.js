@@ -8,7 +8,6 @@ var redisClient  = require('./services/library/redis_client').activate(config.re
 var ModelData    = require('./services/library/model_data');
 var models       = require('./services/protocols/models');
 var webapi       = require('./services/protocols/webapi');
-var UniqueKey    = require('./services/library/unique_key');
 
 describe('smoke test', function () {
     describe('smoke test', function () {
@@ -114,28 +113,6 @@ describe('smoke test', function () {
                     TestData.getCache('mycache2', function(err, testData2) {
                         assert.ok(!err,                   'invalid response err ('             + err             + ')');
                         assert.ok(testData2.value == 124, 'invalid response testData2.value (' + testData2.value + ')');
-                        testUniqueKey();
-                    });
-                });
-            }
-
-            function testUniqueKey() {
-                UniqueKey.create(8, function(err, key) {
-                    assert.ok(!err,            'invalid response err (' + err + ')');
-                    assert.ok(key.length == 8, 'invalid response key (' + key + ')');
-                    UniqueKey.destroy(key, function(err) {
-                        assert.ok(!err, 'invalid response err (' + err + ')');
-                        testUniqueKeyFormat();
-                    });
-                });
-            }
-
-            function testUniqueKeyFormat() {
-                UniqueKey.create("test:%8s", function(err, key) {
-                    assert.ok(!err,             'invalid response err (' + err + ')');
-                    assert.ok(key.length == 13, 'invalid response key (' + key + ')');
-                    UniqueKey.destroy(key, function(err) {
-                        assert.ok(!err, 'invalid response err (' + err + ')');
                         done();
                     });
                 });

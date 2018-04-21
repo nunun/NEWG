@@ -63,8 +63,8 @@ webapiServer.setSetupEventListener(function(express, app) {
 
     // express のセットアップ
     app.use(webapiServer.bodyDecrypter());
-    app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({extended: true}));
+    app.use(bodyParser.json());
 
     // WebAPI 経路のセットアップ
     var webapiRouter     = express.Router();

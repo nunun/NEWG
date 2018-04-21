@@ -26,19 +26,26 @@ ModelData.prototype.clear = function() {
 // save
 ModelData.prototype.save = function(fieldName, key, callback) {
     var self = this;
-    if (key == undefined) {//when one argument
-        callback  = fieldName;
-        key       = null;
-        fieldName = null;
-    } else if (callback == undefined) {//when two arguments
+    if (callback !== undefined) {//when 3 arguments
+        // nothing to do
+    } else if (key !== undefined) {//when 2 arguments
         callback  = key;
         key       = fieldName;
         fieldName = null;
+    } else if (fieldName !== undefined) {//when 1 argument
+        callback  = fieldName;
+        key       = null;
+        fieldName = null;
     }
-    key = key || 8;
     var retryCount = 0;
-    if (typeof(key) == "number" || saveKeyRegex.exec(key)) {
-        retryCount = 3;
+    if (key && (typeof(key) == "number" || saveKeyRegex.exec(key))) {
+        retryCount = 3; // generate key
+    } else if (!key && (fieldName && this.hasOwnProperty(fieldName) && self[fieldName])) {
+        key = self[fieldName]; // use field value
+    } else if (!key && (this.hasOwnProperty("_id"))) {
+        key = this._id; // use _id field value
+    } else {
+        key = key || 8; // create new key
     }
     save(self, fieldName, key, callback, retryCount);
 }
@@ -80,6 +87,8 @@ function save(self, fieldName, key, callback, retryCount) {
                 return;
             }
             if (callback) {
+                self._id  = body.id;
+                self._rev = body.rev;
                 callback(null, body.id, body.rev);
             }
         });
