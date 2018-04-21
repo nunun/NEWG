@@ -105,6 +105,11 @@ class WebAPIController {
         };
     }
 
+    // 名前の変更
+    async Rename(req, res) {
+        // TODO
+    }
+
     // マッチングのリクエスト
     //Matching(req, res) {
     //    // TODO
@@ -123,7 +128,7 @@ class WebAPIController {
         res.send(resValue);
     }
 
-    //-------------------------------------------------------------------------- 呼び出し
+    //-------------------------------------------------------------------------- コール
     // コントローラメソッドの呼び出しとエラーハンドリング
     async call(method, req, res) {
         try {
@@ -132,6 +137,14 @@ class WebAPIController {
         } catch (err) {
             res.status(500).send({err:err});
         }
+    }
+
+    //-------------------------------------------------------------------------- バリデーション
+    // リクエストバリデーション
+    validate(req, paramName, validates) {
+        // TODO
+        console.log(req.body, paramName, validates);
+        return true;
     }
 
     //-------------------------------------------------------------------------- ミドルウェア

@@ -17,6 +17,16 @@ specs:
             - name: signinToken
               desc: サインイントークン
               type: string
+              validate: {length: 16}
+          response: []
+
+        - name: Rename
+          desc: 名前変更API
+          api_path: /rename
+          request:
+            - name: name
+              desc: 変更する名前
+              type: string
           response: []
 
         - name: Matching
@@ -250,6 +260,7 @@ templates:
           <%- api_path = entry["api_path"]  -%>
           <%- use      = entry["use"] || [] -%>
           <%- group    = entry["group"]     -%>
+          <%- request  = entry["request"]   -%>
           <%- if group.nil? -%>
           if (!group) {
           <%- else -%>
@@ -274,6 +285,14 @@ templates:
                       }
                       <%- end -%>
                       router.post("<%= api_path %>", function(req, res) {
+                          <%- request.each do |p| -%>
+                          <%- if p.key?('validate') -%>
+                          if (!controller.validate(req, '<%= p['name'] %>', <%= p['validate'].to_json %>)) {
+                              res.status(400).send({err: new Error('bad request')});
+                              return;
+                          }
+                          <%- end -%>
+                          <%- end -%>
                           if (controller.call) {
                             controller.call(<%= impl %>, req, res);
                           } else {

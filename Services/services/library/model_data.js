@@ -24,32 +24,32 @@ ModelData.prototype.clear = function() {
 }
 
 // save
-ModelData.prototype.save = function(fieldName, key, callback) {
+ModelData.prototype.save = function(propertyName, key, callback) {
     var self = this;
     if (callback !== undefined) {//when 3 arguments
         // nothing to do
     } else if (key !== undefined) {//when 2 arguments
-        callback  = key;
-        key       = fieldName;
-        fieldName = null;
-    } else if (fieldName !== undefined) {//when 1 argument
-        callback  = fieldName;
-        key       = null;
-        fieldName = null;
+        callback     = key;
+        key          = propertyName;
+        propertyName = null;
+    } else if (propertyName !== undefined) {//when 1 argument
+        callback     = propertyName;
+        key          = null;
+        propertyName = null;
     }
     var retryCount = 0;
     if (key && (typeof(key) == "number" || saveKeyRegex.exec(key))) {
         retryCount = 3; // generate key
-    } else if (!key && (fieldName && this.hasOwnProperty(fieldName) && self[fieldName])) {
-        key = self[fieldName]; // use field value
+    } else if (!key && (propertyName && this.hasOwnProperty(propertyName) && self[propertyName])) {
+        key = self[propertyName]; // use field value
     } else if (!key && (this.hasOwnProperty("_id"))) {
         key = this._id; // use _id field value
     } else {
         key = key || 8; // create new key
     }
-    save(self, fieldName, key, callback, retryCount);
+    save(self, propertyName, key, callback, retryCount);
 }
-function save(self, fieldName, key, callback, retryCount) {
+function save(self, propertyName, key, callback, retryCount) {
     var k = key;
     if (typeof(k) == "number") {
         k = keygen(k);
@@ -59,14 +59,14 @@ function save(self, fieldName, key, callback, retryCount) {
             k = m[1] + keygen(parseInt(m[2])) + m[3];
         }
     }
-    if (fieldName) {
-        if (!self.hasOwnProperty(fieldName)) {
+    if (propertyName) {
+        if (!self.hasOwnProperty(propertyName)) {
             if (callback) {
                 callback(new Error('no field'), null, null);
             }
             return;
         }
-        self[fieldName] = k;
+        self[propertyName] = k;
     }
     self.getScope(function(err, scope) {
         if (err) {
@@ -78,7 +78,7 @@ function save(self, fieldName, key, callback, retryCount) {
         scope.insert(self, k, function(err, body) {
             if (err) {
                 if (retryCount >= 0) {
-                    save(self, fieldName, key, callback, retryCount - 1);
+                    save(self, propertyName, key, callback, retryCount - 1);
                     return;
                 }
                 if (callback) {
@@ -104,16 +104,16 @@ function keygen(len) {
 }
 
 // promiseSave
-ModelData.prototype.promiseSave = function(fieldName, key) {
+ModelData.prototype.promiseSave = function(propertyName, key) {
     var self = this;
     if (key !== undefined) {//when 2 arguments
         // nothing to do
-    } else if (fieldName !== undefined) {//when 1 arugment
-        key       = fieldName;
-        fieldName = null;
+    } else if (propertyName !== undefined) {//when 1 arugment
+        key          = propertyName;
+        propertyName = null;
     }
     return new Promise((resolve, reject) => {
-        self.save(fieldName, key, (err) => {
+        self.save(propertyName, key, (err) => {
             if (err) {
                 throw err;
             }

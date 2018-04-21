@@ -1,5 +1,6 @@
 require 'erb'
 require 'yaml'
+require 'json'
 require 'optparse'
 require 'fileutils'
 require 'pathname'

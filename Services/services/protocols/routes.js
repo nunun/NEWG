@@ -35,6 +35,10 @@ exports.setup = function(router, controller, group, logger) {
             do {
                 var routeMidlewares = null;
                 router.post("/signin", function(req, res) {
+                    if (!controller.validate(req.body, 'signinToken', {"length":16})) {
+                        res.status(400).send({err: new Error('bad request')});
+                        return;
+                    }
                     if (controller.call) {
                       controller.call(Signin_impl, req, res);
                     } else {
@@ -44,6 +48,26 @@ exports.setup = function(router, controller, group, logger) {
             } while(false);
         } else {
             logger.error('routes.setup: controller has no method "Signin" for route "/signin".');
+        }
+    }
+    if (!group) {
+        logger.debug('routes.setup: binding controller method "Rename" to route "/rename".');
+        // Rename
+        // 名前変更API
+        var Rename_impl = controller.Rename;
+        if (Rename_impl) {
+            do {
+                var routeMidlewares = null;
+                router.post("/rename", function(req, res) {
+                    if (controller.call) {
+                      controller.call(Rename_impl, req, res);
+                    } else {
+                      Rename_impl(req, res);
+                    }
+                });
+            } while(false);
+        } else {
+            logger.error('routes.setup: controller has no method "Rename" for route "/rename".');
         }
     }
     if (!group) {
