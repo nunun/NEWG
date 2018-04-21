@@ -15,7 +15,11 @@ exports.setup = function(router, controller, group, logger) {
             do {
                 var routeMidlewares = null;
                 router.post("/signup", function(req, res) {
-                    Signup_impl(req, res);
+                    if (controller.call) {
+                      controller.call(Signup_impl, req, res);
+                    } else {
+                      Signup_impl(req, res);
+                    }
                 });
             } while(false);
         } else {
@@ -31,7 +35,11 @@ exports.setup = function(router, controller, group, logger) {
             do {
                 var routeMidlewares = null;
                 router.post("/signin", function(req, res) {
-                    Signin_impl(req, res);
+                    if (controller.call) {
+                      controller.call(Signin_impl, req, res);
+                    } else {
+                      Signin_impl(req, res);
+                    }
                 });
             } while(false);
         } else {
@@ -56,7 +64,11 @@ exports.setup = function(router, controller, group, logger) {
                     break;
                 }
                 router.post("/matching", function(req, res) {
-                    Matching_impl(req, res);
+                    if (controller.call) {
+                      controller.call(Matching_impl, req, res);
+                    } else {
+                      Matching_impl(req, res);
+                    }
                 });
             } while(false);
         } else {
@@ -81,7 +93,11 @@ exports.setup = function(router, controller, group, logger) {
                     break;
                 }
                 router.post("/player", function(req, res) {
-                    Player_impl(req, res);
+                    if (controller.call) {
+                      controller.call(Player_impl, req, res);
+                    } else {
+                      Player_impl(req, res);
+                    }
                 });
             } while(false);
         } else {
@@ -97,7 +113,11 @@ exports.setup = function(router, controller, group, logger) {
             do {
                 var routeMidlewares = null;
                 router.post("/test", function(req, res) {
-                    Test_impl(req, res);
+                    if (controller.call) {
+                      controller.call(Test_impl, req, res);
+                    } else {
+                      Test_impl(req, res);
+                    }
                 });
             } while(false);
         } else {

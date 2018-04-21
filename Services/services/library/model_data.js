@@ -103,6 +103,25 @@ function keygen(len) {
     return key;
 }
 
+// promiseSave
+ModelData.prototype.promiseSave = function(fieldName, key) {
+    var self = this;
+    if (key !== undefined) {//when 2 arguments
+        // nothing to do
+    } else if (fieldName !== undefined) {//when 1 arugment
+        key       = fieldName;
+        fieldName = null;
+    }
+    return new Promise((resolve, reject) => {
+        self.save(fieldName, key, (err) => {
+            if (err) {
+                throw err;
+            }
+            resolve();
+        });
+    });
+}
+
 // export
 ModelData.prototype.export = function() {
     if (this._id) {
@@ -164,6 +183,18 @@ ModelData.setupType = function(type, typeName, databaseName) {
         });
     }
 
+    // promiseGet
+    type.promiseGet = function(key) {
+        return new Promise((resolve, reject) => {
+            type.get(key, (err, data) => {
+                if (err) {
+                    throw err;
+                }
+                resolve(data);
+            });
+        });
+    }
+
     // list
     // params is CouchDB query options. see follow.
     // https://wiki.apache.org/couchdb/HTTP_view_API#Querying_Options
@@ -182,7 +213,7 @@ ModelData.setupType = function(type, typeName, databaseName) {
             scope.list(params, function(err, body) {
                 if (err) {
                     if (callback) {
-                        callback(err);
+                        callback(err, null);
                     }
                     return;
                 }
@@ -205,12 +236,51 @@ ModelData.setupType = function(type, typeName, databaseName) {
         });
     }
 
+    // promiseList
+    type.promiseList = function(key) {
+        return new Promise((resolve, reject) => {
+            type.list(key, (err, list) => {
+                if (err) {
+                    throw err;
+                }
+                resolve(list);
+            });
+        });
+    }
+
     // destory
     type.destroy = function(id, rev, callback) {
+        if (callback !== undefined) {//when 3 arguments
+            // nothing to do
+        } else if (rev !== undefined) {//when 2 arguments
+            callback = rev;
+            rev      = null;
+        } else {//when 1 argument
+            callback = null;
+            rev      = null;
+        }
+        if (!rev) {
+            type.get(id, function(err, data) {
+                if (err) {
+                    if (callback) {
+                        callback(err);
+                    }
+                    return;
+                }
+                if (!data._id || !data._rev) {
+                    if (callback) {
+                        callback(new Error('no id or rev'));
+                    }
+                    return;
+                }
+                type.destroy(data._id, data._rev, callback);
+            });
+            return;
+        }
         type.getScope(function(err, scope) {
             if (err) {
                 if (callback) {
-                    callback(err, null);
+                    callback(err);
                 }
                 return;
             }
@@ -218,6 +288,41 @@ ModelData.setupType = function(type, typeName, databaseName) {
                 if (callback) {
                     callback(err);
                 }
+            });
+        });
+    }
+
+    // promiseDestroy
+    type.promiseDestroy = function(id, rev) {
+        return new Promise((resolve, reject) => {
+            type.destroy(id, rev, (err) => {
+                if (err) {
+                    throw err;
+                }
+                resolve();
+            });
+        });
+    }
+
+    // destory (prototype)
+    type.prototype.destroy = function(callback) {
+        var self = this;
+        type.destroy(self._id, self._rev, (err) => {
+            if (callback) {
+                callback(err);
+            }
+        });
+    }
+
+    // promiseDestroy (prototype)
+    type.prototype.promiseDestroy = function(callback) {
+        var self = this;
+        return new Promise((resolve, reject) => {
+            self.destroy((err) => {
+                if (err) {
+                    throw err;
+                }
+                resolve();
             });
         });
     }
@@ -248,12 +353,24 @@ ModelData.setupType = function(type, typeName, databaseName) {
         });
     }
 
+    // promiseGetCache
+    type.promiseGetCache = function(key) {
+        return new Promise((resolve, reject) => {
+            type.getCache(key, (err, data) => {
+                if (err) {
+                    throw err;
+                }
+                resolve(data);
+            });
+        });
+    }
+
     // setCache
     type.prototype.setCache = function(key, callback, ttl) {
         var redis     = RedisClient.getClient().getConnection();
         var cacheKey  = type.getCacheKey(key);
         var cacheData = JSON.stringify(this);
-        if (ttl != undefined) {
+        if (ttl) {
             redis.set(cacheKey, cacheData, 'NX', 'EX', ttl, function(err, reply) {
                 if (err) {
                     if (callback) {
@@ -280,6 +397,19 @@ ModelData.setupType = function(type, typeName, databaseName) {
         }
     }
 
+    // promiseSetCache
+    type.prototype.promiseSetCache = function(key, ttl) {
+        var self = this;
+        return new Promise((resolve, reject) => {
+            self.setCache(key, (err) => {
+                if (err) {
+                    throw err;
+                }
+                resolve();
+            }, ttl);
+        });
+    }
+
     // persistCache
     type.persistCache = function(key, callback) {
         var redis    = RedisClient.getClient().getConnection();
@@ -297,6 +427,18 @@ ModelData.setupType = function(type, typeName, databaseName) {
         });
     }
 
+    // promisePersistCache
+    type.promisePersistCache = function(key) {
+        return new Promise((resolve, reject) => {
+            type.persistCache(key, (err) => {
+                if (err) {
+                    throw err;
+                }
+                resolve();
+            });
+        });
+    }
+
     // destroyCache
     type.destroyCache = function(key, callback) {
         var redis    = RedisClient.getClient().getConnection();
@@ -311,6 +453,18 @@ ModelData.setupType = function(type, typeName, databaseName) {
             if (callback) {
                 callback(null); //((reply == '1')? null : new Error('invalid reply'));
             }
+        });
+    }
+
+    // promiseDestroyCache
+    type.promiseDestroyCache = function(key) {
+        return new Promise((resolve, reject) => {
+            type.destroyCache(key, (err) => {
+                if (err) {
+                    throw err;
+                }
+                resolve();
+            });
         });
     }
 }

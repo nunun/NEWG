@@ -274,7 +274,11 @@ templates:
                       }
                       <%- end -%>
                       router.post("<%= api_path %>", function(req, res) {
-                          <%= impl %>(req, res);
+                          if (controller.call) {
+                            controller.call(<%= impl %>, req, res);
+                          } else {
+                            <%= impl %>(req, res);
+                          }
                       });
                   } while(false);
               } else {

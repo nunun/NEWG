@@ -52,7 +52,9 @@ namespace Services.Protocols.Models {
     // 固有キー生成用データ。CouchDB のキー重複制限を使って固有キーを生成するために使用。
     [Serializable]
     public class UniqueKeyData : ModelData {
+        public string associatedKey; // 固有キーデータに紐づけられた関連キー
         protected override void Clear() {
+            associatedKey = null; // 固有キーデータに紐づけられた関連キー
         }
     }
 }

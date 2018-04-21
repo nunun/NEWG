@@ -26,7 +26,7 @@ class WebAPIController {
         var playerData = new PlayerData();
         playerData.playerId   = null;
         playerData.playerName = "Player" + Math.floor(Math.random() * 1000);
-        await saveData(playerData, "playerId", "%8s");
+        await playerData.promiseSave("playerId", "%8s");
 
         // ユーザ作成
         var userData = new UserData();
@@ -34,66 +34,75 @@ class WebAPIController {
         userData.playerId     = playerData.playerId;
         userData.sessionToken = null;
         userData.signinToken  = null;
-        await saveData(userData, "userId", "%8s");
+        await userData.promiseSave("userId", "%8s");
 
         // セッショントークン作成
         var sessionTokenData = new UniqueKeyData();
         sessionTokenData.associatedKey = userData.userId;
-        await saveData(sessionTokenData, null, "%16s");
+        await sessionTokenData.promiseSave("%16s");
         var sessionData = new SessionData();
         sessionData.sessionToken = sessionTokenData._id;
 
         // サインイントークン作成
         var signinTokenData = new UniqueKeyData();
         signinTokenData.associatedKey = userData.userId;
-        await saveData(signinTokenData, null, "%16s");
+        await signinTokenData.promiseSave("%16s");
         var credentialData = new CredentialData();
         credentialData.signinToken = signinTokenData._id;
 
-        // ユーザ更新
+        // ユーザデータ更新
         userData.sessionToken = sessionData.sessionToken;
         userData.signinToken  = credentialData.signinToken;
-        await saveData(userData);
+        await userData.promiseSave();
 
         // サインアップ完了！
-        res.send({
+        return {
             activeData: {
                 playerData:     { active:true, data:playerData.export()     },
                 sessionData:    { active:true, data:sessionData.export()    },
                 credentialData: { active:true, data:credentialData.export() },
             },
-        });
+        };
     }
 
     // サインイン
     async Signin(req, res) {
         var signinToken = req.body.signinToken;
 
-        // サインイントークンからユーザ情報を検索
-        var userData = await findData(UserData, {signinToken:signinToken});
+        // サインイントークンを探す
+        var signinTokenData = await UniqueKeyData.promiseGet(signinToken);
+
+        // ユーザデータを特定
+        var userData = await UserData.promiseGet(signinTokenData.associatedKey);
+        if (userData.signinToken != signinToken) {
+            throw new Error('invalid token'); // NOTE 古いトークンを使用しようとした
+        }
 
         // セッショントークン作成
+        var sessionTokenData = new UniqueKeyData();
+        sessionTokenData.associatedKey = userData.userId;
+        await sessionTokenData.promiseSave("%16s");
         var sessionData = new SessionData();
-        sessionData.sessionToken = await createUniqueKey("%16s");
+        sessionData.sessionToken = sessionTokenData._id;
 
-        // ユーザ情報更新
+        // ユーザデータ更新
         var oldSessionToken = userData.sessionToken;
         userData.sessionToken = sessionData.sessionToken;
-        await saveData(userData);
+        await userData.promiseSave();
 
-        // 古いセッショントークンを破棄
-        await destroyUniqueKey(oldSessionToken);
+        // 古いトークンは破棄
+        await UniqueKeyData.promiseDestroy(oldSessionToken);
 
         // プレイヤー情報取得
-        var playerData = await getData(PlayerData, userData.playerId);
+        var playerData = await PlayerData.promiseGet(userData.playerId);
 
         // サインイン完了！
-        res.send({
+        return {
             activeData: {
                 playerData:  { active:true, data:playerData.export()  },
                 sessionData: { active:true, data:sessionData.export() },
             },
-        });
+        };
     }
 
     // マッチングのリクエスト
@@ -107,11 +116,22 @@ class WebAPIController {
     //}
 
     // テスト API
-    Test(req, res) {
+    async Test(req, res) {
         var resValue = {resValue:15};
         logger.webapiServer.debug("Test: incoming: " + util.inspect(req.body, {depth:null,breakLength:Infinity}));
         logger.webapiServer.debug("Test: outgoing: " + util.inspect(resValue, {depth:null,breakLength:Infinity}));
         res.send(resValue);
+    }
+
+    //-------------------------------------------------------------------------- 呼び出し
+    // コントローラメソッドの呼び出しとエラーハンドリング
+    async call(method, req, res) {
+        try {
+            var result = await method(req, res);
+            res.status(200).send(result);
+        } catch (err) {
+            res.status(500).send({err:err});
+        }
     }
 
     //-------------------------------------------------------------------------- ミドルウェア
@@ -151,55 +171,6 @@ class WebAPIController {
         // TODO
         next();
     }
-}
-
-// データの保存
-async function saveData(data, fieldName, key) {
-    return new Promise((resolve, reject) => {
-        data.save(fieldName, key, (err) => {
-            if (err) {
-                reject(err);
-                return;
-            }
-            resolve();
-        });
-    });
-}
-
-// データの取得
-async function getData(dataType, key) {
-    return new Promise((resolve, reject) => {
-        dataType.get(key, (err, data) => {
-            if (err) {
-                reject(err);
-                return;
-            }
-            if (!data) {
-                reject(err);
-                return;
-            }
-            resolve(data);
-        });
-    });
-}
-
-// データの検索
-async function findData(dataType, params) {
-    return new Promise((resolve, reject) => {
-        params.limit = 1;
-        dataType.list(params, (err, list) => {
-            if (err) {
-                reject(err);
-                return;
-            }
-            if (list.length <= 0) {
-                reject(new Error('no data'));
-                return;
-            }
-            var data = list[0].activate();
-            resolve(data);
-        });
-    });
 }
 
 module.exports = WebAPIController;

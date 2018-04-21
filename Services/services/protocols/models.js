@@ -73,6 +73,7 @@ UniqueKeyData.prototype.init = function() {
     UniqueKeyData.super_.prototype.init.call(this);
 };
 UniqueKeyData.prototype.clear = function() {
+    this.associatedKey = null; // 固有キーデータに紐づけられた関連キー
 }
 models.UniqueKeyData = UniqueKeyData;
 module.exports = models;
