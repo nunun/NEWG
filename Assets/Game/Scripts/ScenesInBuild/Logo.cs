@@ -10,6 +10,6 @@ public class Logo : GameScene {
         GameAudio.PlayBGM("Abandoned");
         GameAudio.SetBGMVolume("Abandoned", 0.25f);
         yield return new WaitForSeconds(2.0f);
-        GameSceneManager.ChangeScene("Title");
+        GameSceneManager.ChangeScene("Lobby");
     }
 }

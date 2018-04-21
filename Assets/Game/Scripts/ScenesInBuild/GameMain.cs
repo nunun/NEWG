@@ -16,7 +16,7 @@ public class GameMain : MonoBehaviour {
         switch (serviceMode) {
         case ServiceMode.Server:
             // サーバスタンバイ画面へ
-            GameSceneManager.ChangeScene("Standby");
+            GameSceneManager.ChangeScene("ServerStandby");
             break;
         case ServiceMode.Client:
         case ServiceMode.Host:

@@ -5,8 +5,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using Services.Protocols;
 
-// タイトル
-public class Title : GameScene {
+// ロビー
+public class Lobby : GameScene {
     //-------------------------------------------------------------------------- インスタンスの確保と解放
     public CanvasGroupAlphaEffect uiAlphaEffect   = null;
     public Button                 gameStartButton = null;
