@@ -34,8 +34,9 @@ public class MultiSceneEditing {
             return;
         }
 
-        // ゲームメインも除外
-        if (fileName.StartsWith("GameMain")) {
+        // NOTE
+        // "Boot" から始まるシーンは適用しない
+        if (fileName.StartsWith("Boot")) {
             return;
         }
 

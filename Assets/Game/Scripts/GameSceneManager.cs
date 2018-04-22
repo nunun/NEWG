@@ -54,7 +54,7 @@ public class GameSceneManager : MonoBehaviour {
             try {
                 asyncop = SceneManager.LoadSceneAsync(sceneName);
             } catch (Exception e) {
-                GameApplication.Abort(e.ToString());
+                GameManager.Abort(e.ToString());
                 yield break;
             }
             while (!asyncop.isDone) {
@@ -64,7 +64,7 @@ public class GameSceneManager : MonoBehaviour {
             try {
                 SceneManager.LoadScene(sceneName);
             } catch (Exception e) {
-                GameApplication.Abort(e.ToString());
+                GameManager.Abort(e.ToString());
                 yield break;
             }
         }

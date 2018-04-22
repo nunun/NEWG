@@ -5,13 +5,11 @@ using UnityEngine;
 using UnityEngine.UI;
 using Services.Protocols;
 
-// サーバスタンバイ
-public class ServerStandby : GameScene {
+// クライアント起動
+public class BootClient : GameScene {
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     IEnumerator Start() {
-        // TODO
-        // MindlinkConnectorTest を参考にして実装
-        //var connector = MindlinkConnector.GetConnector();
-        yield return null;
+        yield return new WaitForSeconds(0.5f);
+        GameSceneManager.ChangeScene("Logo");
     }
 }

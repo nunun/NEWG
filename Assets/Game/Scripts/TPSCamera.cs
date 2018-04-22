@@ -20,8 +20,8 @@ public class TPSCamera : MonoBehaviour {
             return;
         }
 
-        var horizontal = GameInput.LookHorizontal * rotateSpeed;
-        var vertical   = GameInput.LookVertical   * -rotateSpeed;
+        var horizontal = GameInputManager.LookHorizontal * rotateSpeed;
+        var vertical   = GameInputManager.LookVertical   * -rotateSpeed;
 
         var x = Mathf.Clamp(euler.x + vertical, minVertical, maxVertical);
         var y = (euler.y + horizontal) % 360.0f;

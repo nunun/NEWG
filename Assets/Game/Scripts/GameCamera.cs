@@ -70,7 +70,7 @@ public partial class GameCamera {
         transform.position = new Vector3(0.0f, 1.0f, -10.0f);
         transform.rotation = Quaternion.identity;
         tpsCamera.enabled = false;
-        GameInput.IsEnabled = false;
+        GameInputManager.IsEnabled = false;
         Cursor.lockState = CursorLockMode.None;
     }
 
@@ -87,18 +87,18 @@ public partial class GameCamera {
         mode = Mode.Battle;
         tpsCamera.target  = player.aimPivot;
         tpsCamera.enabled = true;
-        GameInput.IsEnabled = true;
+        GameInputManager.IsEnabled = true;
         Cursor.lockState = CursorLockMode.Locked;
     }
 
     void UpdateBattleMode() {
         if (Cursor.lockState == CursorLockMode.Locked) {
-            if (!GameInput.IsEnabled) {
-                GameInput.IsEnabled = true;
+            if (!GameInputManager.IsEnabled) {
+                GameInputManager.IsEnabled = true;
             }
         } else {
-            if (GameInput.IsEnabled) {
-                GameInput.IsEnabled = false;
+            if (GameInputManager.IsEnabled) {
+                GameInputManager.IsEnabled = false;
             }
             var refocusInput = Input.GetButton("Fire1");
             if (refocusInput) {
@@ -114,7 +114,7 @@ public partial class GameCamera {
     public void SetResultMode() {
         mode = Mode.Menu;
         tpsCamera.enabled = false;
-        GameInput.IsEnabled = false;
+        GameInputManager.IsEnabled = false;
         Cursor.lockState = CursorLockMode.None;
     }
 

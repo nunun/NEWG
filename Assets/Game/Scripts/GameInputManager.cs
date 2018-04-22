@@ -6,8 +6,8 @@ using UnityEngine.Networking;
 
 // ゲーム入力の実装
 [DefaultExecutionOrder(int.MinValue)]
-public class GameInput : MonoBehaviour {
-    //-------------------------------------------------------------------------- 定数
+public class GameInputManager : MonoBehaviour {
+    //-------------------------------------------------------------------------- 定義
     public const string SENSITIVITY_KEY    = "Sensitivity";
     public const int    MAX_SENSITIVIY     = 100;
     public const int    DEFAULT_SENSITIVIY = MAX_SENSITIVIY / 2;
@@ -21,7 +21,7 @@ public class GameInput : MonoBehaviour {
     static bool  isFire         = false;
     static bool  isThrow        = false;
     static bool  isJump         = false;
-    static int   sensitivity    = DEFAULT_SENSITIVIY;
+    static int   sensitivity    = 0;
 
     public static bool  IsEnabled      { get { return isEnabled;      } set { isEnabled = value; }}
     public static float MoveHorizontal { get { return moveHorizontal; }}

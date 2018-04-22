@@ -98,8 +98,8 @@ public partial class Player {
         var gameCamera = GameCamera.Instance;
 
         // 移動入力
-        var horizontal = GameInput.MoveHorizontal;
-        var vertical   = GameInput.MoveVertical;
+        var horizontal = GameInputManager.MoveHorizontal;
+        var vertical   = GameInputManager.MoveVertical;
         var right      = (gameCamera == null)? Vector3.right   : gameCamera.transform.right;
         var forward    = (gameCamera == null)? Vector3.forward : gameCamera.transform.forward;
         var moveInput  = (right * horizontal) + (forward * vertical);
@@ -107,7 +107,7 @@ public partial class Player {
         moveInput = moveInput.normalized;
 
         // ジャンプ入力
-        var jumpInput = GameInput.IsJump;
+        var jumpInput = GameInputManager.IsJump;
 
         // 視線を作成する
         var target = forward;
@@ -200,7 +200,7 @@ public partial class Player {
 
     // ローカル発砲
     void FireLocal() {
-        var isFireInput = GameInput.IsFire;
+        var isFireInput = GameInputManager.IsFire;
         if (isFireInput) {
             gun.Fire(this);
         }
@@ -261,7 +261,7 @@ public partial class Player {
         }
 
         // 投擲入力をチェック
-        var isThrow = GameInput.IsThrow;
+        var isThrow = GameInputManager.IsThrow;
         if (isThrow) {
             var gameCamera = GameCamera.Instance;
             var forward = (gameCamera == null)? Vector3.forward : gameCamera.transform.forward;

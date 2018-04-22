@@ -24,7 +24,7 @@ public class BattleUI : MonoBehaviour {
         // NOTE
         // 有効化時に再設定
         // 表示されない場合があるので。
-        SetSensitivity(GameInput.Sensitivity);
+        SetSensitivity(GameInputManager.Sensitivity);
     }
 
     //-------------------------------------------------------------------------- 操作
