@@ -57,4 +57,42 @@ namespace Services.Protocols.Models {
             associatedKey = null; // 固有キーデータに紐づけられた関連キー
         }
     }
+    // ServerStatus
+    // サーバステータス
+    [Serializable]
+    public class ServerStatus : ModelData {
+        public string state; // 現在状態 (Standby, Ready, Started, Ended)
+        protected override void Clear() {
+            state = null; // 現在状態 (Standby, Ready, Started, Ended)
+        }
+    }
+    // ServerSetupRequest
+    // サーバセットアップリクエスト。API サーバが Unity サーバに対してサーバインスタンスをセットアップしたいときに送信。
+    [Serializable]
+    public class ServerSetupRequest : ModelData {
+        public string matchingId; // サーバ起動をリクエストしたマッチングID
+        public string sceneName; // 起動するシーン名
+        protected override void Clear() {
+            matchingId = null; // サーバ起動をリクエストしたマッチングID
+            sceneName = null; // 起動するシーン名
+        }
+    }
+    // ServerSetupResponse
+    // サーバセットアップレスポンス。ServerBootRequest のレスポンス。
+    [Serializable]
+    public class ServerSetupResponse : ModelData {
+        public string matchingId; // サーバ起動をリクエストしたマッチングID
+        protected override void Clear() {
+            matchingId = null; // サーバ起動をリクエストしたマッチングID
+        }
+    }
+    // ServerSetupDoneRequest
+    // サーバセットアップ完了リクエスト。Unity サーバが API サーバに対してクライアント接続可能状態を通知するときに送信。
+    [Serializable]
+    public class ServerSetupDoneRequest : ModelData {
+        public string matchingId; // サーバ起動をリクエストしたマッチングID
+        protected override void Clear() {
+            matchingId = null; // サーバ起動をリクエストしたマッチングID
+        }
+    }
 }

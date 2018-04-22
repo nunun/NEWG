@@ -112,6 +112,42 @@ specs:
               type:  string
               value: (null)
 
+        - name: ServerStatus
+          desc: サーバステータス
+          properties:
+            - name:  state
+              desc:  現在状態 (Standby, Ready, Started, Ended)
+              type:  string
+              value: (null)
+
+        - name: ServerSetupRequest
+          desc: サーバセットアップリクエスト。API サーバが Unity サーバに対してサーバインスタンスをセットアップしたいときに送信。
+          properties:
+            - name:  matchingId
+              desc:  サーバ起動をリクエストしたマッチングID
+              type:  string
+              value: (null)
+            - name:  sceneName
+              desc:  起動するシーン名
+              type:  string
+              value: (null)
+
+        - name: ServerSetupResponse
+          desc: サーバセットアップレスポンス。ServerBootRequest のレスポンス。
+          properties:
+            - name:  matchingId
+              desc:  サーバ起動をリクエストしたマッチングID
+              type:  string
+              value: (null)
+
+        - name: ServerSetupDoneRequest
+          desc: サーバセットアップ完了リクエスト。Unity サーバが API サーバに対してクライアント接続可能状態を通知するときに送信。
+          properties:
+            - name:  matchingId
+              desc:  サーバ起動をリクエストしたマッチングID
+              type:  string
+              value: (null)
+
       consts:
         - name: MY_CONST
           desc: テスト定数
@@ -131,6 +167,9 @@ templates:
       # nodejs default values
       def nodejs_defval(p)
         case p["type"]
+        when "bool"
+          return "false" if not p.key?("value")
+          return p["value"]
         when "int" || "float" || "double"
           return "0" if not p.key?("value")
           return p["value"]
@@ -173,6 +212,9 @@ templates:
       # cs default values
       def cs_defval(p)
         case p["type"]
+        when "bool"
+          return "false" if not p.key?("value")
+          return p["value"]
         when "int"
           return "0" if not p.key?("value")
           return p["value"]
