@@ -12,6 +12,17 @@ public class BootServer : GameScene {
 
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     IEnumerator Start() {
+        #if NETWORK_EMULATION_MODE
+        // ネットワークエミュレーションモード対応
+        // エミュレーション時はそのままサーバシーンへ
+        var isNetworkEmulationMode = true;
+        if (isNetworkEmulationMode) {
+            GameSceneManager.ChangeSceneImmediately(serverSetupRequest.sceneName);
+            yield break;
+        }
+        #endif
+
+        // マインドリンクコネクタ取得
         var connector = MindlinkConnector.GetConnector();
 
         // イベント設定

@@ -137,9 +137,10 @@ public partial class WebAPIClient {
         var deltaTime = Time.deltaTime;
 
         #if NETWORK_EMULATION_MODE
-        // WebAPI クライアントのスタンドアローンデバッグ対応
+        // ネットワークエミュレーションモード対応
         // サーバなしでデバッグする処理の実装。
-        if (request != null) {
+        var isNetworkEmulationMode = true;
+        if (isNetworkEmulationMode) {
             if (!StandaloneDebug(request, deltaTime)) {
                 requestList.RemoveAt(0);
                 request.ReturnToPool();
