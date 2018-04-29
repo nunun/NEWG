@@ -7,55 +7,147 @@ using UnityEngine;
 // ゲームで使用するアセットを管理します。
 [DefaultExecutionOrder(int.MinValue)]
 public partial class GameAssetManager : MonoBehaviour {
-    //-------------------------------------------------------------------------- 定義
-    // ゲームアセット一覧
-    public class GameAssets : List<GameAsset> {
-        public bool isLoaded = false;
+    //-------------------------------------------------------------------------- 変数 (NETWORK_EMULATION_MODE)
+    #if NETWORK_EMULATION_MODE
+    // ネットワークエミュレータ
+    public static GameAsset<NetworkEmulator> networkEmulator = new GameAsset<NetworkEmulator>("ScriptableObjects/NetworkEmulator");
+    // ネットワークエミュレータの取得
+    public static NetworkEmulator NetworkEmulator { get { return networkEmulator.Loaded; }}
+    #endif
+
+    //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
+    // ゲームデータの初期化
+    void InitializeGameAssets() {
+        #if NETWORK_EMULATION_MODE
+        networkEmulator.LoadImmediately();
+        Debug.Assert(networkEmulator.Loaded != null, "NetworkEmulator ロード失敗");
+        #endif
+    }
+
+    // ゲームデータの後始末
+    void FinalizeGameAssets() {
+        #if NETWORK_EMULATION_MODE
+        networkEmulator.Unload();
+        #endif
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+// ロードの追加と削除とロード処理
+public partial class GameAssetManager {
+    //-------------------------------------------------------------------------- 変数
+    // ロード中のリスト
+    protected List<GameAssetListLoadOperation> loadingList = new List<GameAssetListLoadOperation>();
+
+    //-------------------------------------------------------------------------- ロードとアンロード
+    // アセットリストのロード
+    protected static GameAssetListLoadOperation Load(GameAssetList gameAssetList) {
+        var loading = new GameAssetListLoadOperation(gameAssetList);
+        instance.loadingList.Add(loading);
+        instance.enabled = true; // NOTE 更新を有効に設定
+        return loading;
+    }
+
+    // アセットリストのアンロード
+    protected static void Unload(GameAssetList gameAssetList) {
+        for (int i = instance.loadingList.Count - 1; i >= 0; i--) {
+            var loading = instance.loadingList[i];
+            if (loading.gameAssetList == gameAssetList) {
+                instance.loadingList.RemoveAt(i);
+                loading.CancelLoad();
+            }
+        }
+        for (int i = gameAssetList.Count - 1; i >= 0; i--) {
+            gameAssetList[i].Unload();
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+// ゲームアセットリスト
+public partial class GameAssetManager {
+    public class GameAssetList : List<GameAsset> {
+        //---------------------------------------------------------------------- ロードとアンロード
+        // ロード
         public void Load() {
             GameAssetManager.Load(this);
         }
+
+        // アンロード
         public void Unload() {
             GameAssetManager.Unload(this);
         }
     }
+}
 
-    // ゲームアセット一覧 ロードオペレーション
-    public class GameAssetsLoadOperation : CustomYieldInstruction {
-        public GameAssets gameAssets = null;
-        public GameAssetsLoadOperation(GameAssets gameAssets) { this.gameAssets = gameAssets; }
-        public override bool keepWaiting { get { return (this.gameAssets != null && !this.gameAssets.isLoaded); }}
-    }
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
-    //-------------------------------------------------------------------------- 変数
-    // アセット一覧 ロードオペレーションリスト
-    protected List<GameAssetsLoadOperation> gameAssetsLoadOperationList = new List<GameAssetsLoadOperation>();
+// ゲームアセットリスト ロードオペレーション
+public partial class GameAssetManager {
+    public class GameAssetListLoadOperation : CustomYieldInstruction {
+        //---------------------------------------------------------------------- 変数
+        int loadedCount = 0; // ロード済カウント
 
-    //-------------------------------------------------------------------------- ロードとアンロード
-    // アセットリストのロード
-    protected static GameAssetsLoadOperation Load(GameAssets gameAssets) {
-        var gameAssetsLoadOperation = new GameAssetsLoadOperation(gameAssets);
-        gameAssetsLoadOperation.gameAssets = gameAssets;
-        gameAssets.isLoaded = false;
-        instance.gameAssetsLoadOperationList.Add(gameAssetsLoadOperation);
-        instance.enabled = true; // NOTE 更新を有効に設定
-        return gameAssetsLoadOperation;
-    }
+        // ゲームアセットリストの取得
+        public GameAssetList gameAssetList { get; protected set; }
 
-    // アセットリストのアンロード
-    protected static void Unload(GameAssets gameAssets) {
-        var gameAssetsLoadOperationList = instance.gameAssetsLoadOperationList;
-        for (int i = gameAssetsLoadOperationList.Count - 1; i >= 0; i--) {
-            var gameAssetsLoadOperation = gameAssetsLoadOperationList[i];
-            if (gameAssetsLoadOperation.gameAssets == gameAssets) {
-                gameAssetsLoadOperationList.RemoveAt(i);
+        // ロードが完了したかどうかの取得
+        public bool isDone { get { return (this.gameAssetList != null && (this.loadedCount >= this.gameAssetList.Count)); }}
+
+        // エラーの取得
+        public string error { get; protected set; }
+
+        // CustomYieldInstruction の実装
+        public override bool keepWaiting { get { return !isDone; }}
+
+        //---------------------------------------------------------------------- コンストラクタ
+        public GameAssetListLoadOperation(GameAssetList gameAssetList) {
+            this.gameAssetList = gameAssetList;
+            this.loadedCount   = 0;
+            this.error         = null;
+        }
+
+        //---------------------------------------------------------------------- 操作
+        // ロード更新
+        public void UpdateLoad() {
+            // 完了？
+            if (isDone) {
+                return;
+            }
+
+            // ロード対象取得
+            var gameAsset = gameAssetList[loadedCount];
+            Debug.Assert(gameAsset != null, "ロード対象が null");
+
+            // ロードしていないならロード開始
+            if (!gameAsset.IsLoading) {
+                gameAsset.Load();
+            }
+
+            // ロードが終わったら次
+            if (gameAsset.IsLoaded) {
+                loadedCount++;
             }
         }
-        for (int i = gameAssets.Count - 1; i >= 0; i--) {
-            gameAssets[i].Unload();
-            gameAssets[i] = null;
+
+        // ロードキャンセル
+        public void CancelLoad() {
+            var isDone = this.isDone;
+
+            // ロードカウントを吹き飛ばして強制ロード済にする
+            this.loadedCount = int.MaxValue;
+
+            // 完了していないならエラー設定
+            this.error = (isDone)? null : "cancelled.";
         }
-        gameAssets.Clear();
-        gameAssets.isLoaded = true;
     }
 }
 
@@ -76,6 +168,10 @@ public partial class GameAssetManager {
             return;
         }
         instance = this;
+
+        // NOTE
+        // 各種データを初期化
+        InitializeGameAssets();
     }
 
     void OnDestroy() {
@@ -83,19 +179,30 @@ public partial class GameAssetManager {
             return;
         }
         instance = null;
+
+        // NOTE
+        // 各種データを後始末
+        FinalizeGameAssets();
     }
 
     void Update() {
-        // TODO
-        // ここで共通のロードを走らせる
+        // 常に先頭のロードだけをチェック
+        var loading = default(GameAssetListLoadOperation);
+        do {
+            // ロードオペレーションリストが空になった？
+            if (loadingList.Count <= 0) {
+                enabled = false; // NOTE 更新を無効に設定
+                return;
+            }
 
-        // ロードオペレーションリストが空になった？
-        if (gameAssetsLoadOperationList.Count <= 0) {
-            enabled = false; // NOTE 更新を無効に設定
-            return;
-        }
+            // ロードが終わったかチェックする
+            loading = loadingList[0];
+            if (loading.isDone) {
+                loadingList.RemoveAt(0);
+            }
+        } while(loading.isDone);
 
-        // TODO
-        // ロードオペレーションリストを更新
+        // ロード更新
+        loading.UpdateLoad();
     }
 }

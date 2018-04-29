@@ -7,12 +7,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
-#if NETWORK_EMULATION_MODE
-using Services.Protocols;
-using Services.Protocols.Consts;
-using Services.Protocols.Models;
-#endif
-
 // WebAPI クライアント
 public partial class WebAPIClient : MonoBehaviour {
     //-------------------------------------------------------------------------- 定義
@@ -138,10 +132,9 @@ public partial class WebAPIClient {
 
         #if NETWORK_EMULATION_MODE
         // ネットワークエミュレーションモード対応
-        // サーバなしでデバッグする処理の実装。
-        var isNetworkEmulationMode = true;
-        if (isNetworkEmulationMode) {
-            if (!StandaloneDebug(request, deltaTime)) {
+        var networkEmulator = GameAssetManager.NetworkEmulator;
+        if (networkEmulator != null) {
+            if (!networkEmulator.EmulateWebAPI(request, deltaTime)) {
                 requestList.RemoveAt(0);
                 request.ReturnToPool();
             }
@@ -635,87 +628,3 @@ public partial class WebAPIClient {
         }
     }
 }
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-#if NETWORK_EMULATION_MODE
-
-// WebAPI スタンドアローンデバッグ対応
-// NOTE ゲーム用のコードになるが置き場所も定まらないので一旦ここに書く
-public partial class WebAPIClient {
-    //-------------------------------------------------------------------------- 変数
-    // デバッグディレイ
-    static readonly float DEBUG_DELAY = 0.5f;
-
-    //-------------------------------------------------------------------------- 変数
-    Request debugRequest = null; // デバッグ中のリクエスト
-    float   debugDelay   = 0.0f; // デバッグディレイ
-
-    //-------------------------------------------------------------------------- デバッグ
-    // スタンドアローンデバッグ
-    bool StandaloneDebug(Request request, float deltaTime) {
-        if (debugRequest == null) {
-            Debug.LogFormat("WebAPIClient: リクエストをスタンドアロンデバッグで処理します ({0})", request.ToString());
-            debugRequest = request;
-            debugDelay   = DEBUG_DELAY;
-        }
-        if (debugDelay > 0.0f) {//WebAPIっぽい待ちディレイをつけておく
-            debugDelay -= deltaTime;
-            return true;
-        }
-        StandaloneDebugProcessRequest(request);
-        debugRequest = null;
-        return false;
-    }
-
-    // スタンドアローンデバッグのリクエスト処理
-    void StandaloneDebugProcessRequest(Request request) {
-        switch (request.APIPath) {
-        case "/signup"://サインアップ
-            {
-                //var req = JsonUtility.FromJson<WebAPI.SignupRequest>(request.Parameters.GetText());
-
-                var playerData = new PlayerData();
-                playerData.playerId   = "(dummy playerId)";
-                playerData.playerName = "SignupUser";
-
-                var sessionData = new SessionData();
-                sessionData.sessionToken = "(dummy sessionToken)";
-
-                var credentialData = new CredentialData();
-                credentialData.signinToken = "(dummy signinToken)";
-
-                var playerDataJson     = string.Format("\"playerData\":{{\"active\":true,\"data\":{0}}}",     JsonUtility.ToJson(playerData));
-                var sessionDataJson    = string.Format("\"sessionData\":{{\"active\":true,\"data\":{0}}}",    JsonUtility.ToJson(sessionData));
-                var credentialDataJson = string.Format("\"credentialData\":{{\"active\":true,\"data\":{0}}}", JsonUtility.ToJson(credentialData));
-                var response = string.Format("{{\"activeData\":{{{0},{1},{2}}}}}", playerDataJson, sessionDataJson, credentialDataJson);
-                request.SetResponse(null, response);
-            }
-            break;
-        case "/signin"://サインイン
-            {
-                //var req = JsonUtility.FromJson<WebAPI.SignupRequest>(request.Parameters.GetText());
-
-                var playerData = new PlayerData();
-                playerData.playerId   = "(dummy playerId)";
-                playerData.playerName = "SigninUser";
-
-                var sessionData = new SessionData();
-                sessionData.sessionToken = "(dummy sessionToken)";
-
-                var playerDataJson  = string.Format("\"playerData\":{{\"active\":true,\"data\":{0}}}",  JsonUtility.ToJson(playerData));
-                var sessionDataJson = string.Format("\"sessionData\":{{\"active\":true,\"data\":{0}}}", JsonUtility.ToJson(sessionData));
-                var response = string.Format("{{\"activeData\":{{{0},{1}}}}}", playerDataJson, sessionDataJson);
-                request.SetResponse(null, response);
-            }
-            break;
-        default:
-            Debug.LogErrorFormat("スタンドアローンデバッグで処理できない API パス ({0})", request.APIPath);
-            break;
-        }
-    }
-}
-#endif
-//request.SetResponse(null, "{\"active_data\":{\"playerData\":{\"active\":true,\"content\":{\"player_name\":\"hoge\"}}}}");
-//request.SetResponse(null, "{\"server_data\":{\"playerData\":{\"player_name\":\"hoge\"}}}");

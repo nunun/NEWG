@@ -21,6 +21,8 @@ public partial class GameDataManager : MonoBehaviour {
     //-------------------------------------------------------------------------- 初期化
     // ゲームデータの初期化
     void InitializeGameData() {
+        // NOTE ゲーム共通のデータ処理はここに追記して下さい。
+
         // 認証情報は事前ロード
         GameDataManager.SessionData.Load();
         GameDataManager.CredentialData.Load();

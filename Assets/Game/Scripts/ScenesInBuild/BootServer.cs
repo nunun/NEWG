@@ -14,10 +14,9 @@ public class BootServer : GameScene {
     IEnumerator Start() {
         #if NETWORK_EMULATION_MODE
         // ネットワークエミュレーションモード対応
-        // エミュレーション時はそのままサーバシーンへ
-        var isNetworkEmulationMode = true;
-        if (isNetworkEmulationMode) {
-            GameSceneManager.ChangeSceneImmediately(serverSetupRequest.sceneName);
+        var networkEmulator = GameAssetManager.NetworkEmulator;
+        if (networkEmulator != null) {
+            GameSceneManager.ChangeSceneImmediately(networkEmulator.battleScene);
             yield break;
         }
         #endif
