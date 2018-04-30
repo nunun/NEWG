@@ -23,7 +23,6 @@ public class CanvasGroupAlphaEffect : UIEffect {
         enabled = play;
         currentTime = normalizedTime * effectTime;
         reverse = false;
-        canvasGroup.blocksRaycasts = true;
         UpdateAlpha();
     }
 
@@ -32,9 +31,6 @@ public class CanvasGroupAlphaEffect : UIEffect {
         enabled = play;
         currentTime = normalizedTime * effectTime;
         reverse = true;
-        if (normalizedTime >= 1.0f) {
-            canvasGroup.blocksRaycasts = false;
-        }
         UpdateAlpha();
     }
 

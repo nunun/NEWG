@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 // "Yes", "No" ボタンがあるポップアップの実装
 public class YesNoPopup : UIComponent<bool> {
-    //-------------------------------------------------------------------------- インスタンスの確保と解放
+    //-------------------------------------------------------------------------- 変数
     [SerializeField] Text   messageText   = null;
     [SerializeField] Button yesButton     = null;
     [SerializeField] Text   yesButtonText = null;

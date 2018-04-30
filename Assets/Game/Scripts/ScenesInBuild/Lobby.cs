@@ -96,8 +96,8 @@ public partial class Lobby : GameScene {
 // ロビー処理
 public partial class Lobby {
     //-------------------------------------------------------------------------- 変数
-    [SerializeField] CanvasGroupAlphaEffect lobbyUI         = null;
-    [SerializeField] Button                 gameStartButton = null;
+    [SerializeField] SceneUI lobbyUI         = null;
+    [SerializeField] Button  gameStartButton = null;
 
     IEnumerator updateLobby = null;
 
@@ -112,14 +112,14 @@ public partial class Lobby {
     }
 
     void StartLobby() {
-        lobbyUI.Effect();
+        lobbyUI.Open();
         GameAudio.SetBGMVolume("Abandoned", 1.0f);
         updateLobby = updateLobby ?? UpdateLobby();
         StartCoroutine(updateLobby);
     }
 
     void StopLobby() {
-        lobbyUI.Uneffect();
+        lobbyUI.Close();
         StopCoroutine(updateLobby);
     }
 
@@ -137,8 +137,8 @@ public partial class Lobby {
 // マッチング処理
 public partial class Lobby {
     //-------------------------------------------------------------------------- 変数
-    [SerializeField] CanvasGroupAlphaEffect matchingUI   = null;
-    [SerializeField] Button                 cancelButton = null;
+    [SerializeField] SceneUI matchingUI   = null;
+    [SerializeField] Button  cancelButton = null;
 
     IEnumerator updateMatching = null;
 
@@ -153,14 +153,14 @@ public partial class Lobby {
     }
 
     void StartMatching() {
-        matchingUI.Effect();
+        matchingUI.Open();
         GameAudio.SetBGMVolume("Abandoned", 0.3f, 5.0f);
         updateMatching = updateMatching ?? UpdateMatching();
         StartCoroutine(updateMatching);
     }
 
     void StopMatching() {
-        matchingUI.Uneffect();
+        matchingUI.Close();
         StopCoroutine(updateMatching);
     }
 

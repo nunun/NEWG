@@ -32,8 +32,7 @@ public partial class UIObject : MonoBehaviour {
         if (IsOpen) {
             return; // 既に開いている
         }
-        gameObject.SetActive(true);
-        InvokeOpenCallback();
+        SetActive();
         if (uiEffect != null) {
             uiEffect.Effect();
         }
@@ -56,19 +55,31 @@ public partial class UIObject : MonoBehaviour {
         if (uiEffect != null) {
             uiEffect.SetUneffected();
         }
-        gameObject.SetActive(false);
-        InvokeCloseCallback();
+        SetInactive();
     }
 
     // 完了
     public void Done() {
-        gameObject.SetActive(false);
-        InvokeCloseCallback();
+        SetInactive();
         if (recycler != null) {
             recycler();
             return;
         }
         GameObject.Destroy(this.gameObject);// NOTE リサイクルしないなら削除
+    }
+
+    //------------------------------------------------------------------------- 内部処理
+    // ゲームオブジェクトをアクティブに設定
+    void SetActive() {
+        gameObject.SetActive(true);
+        InvokeOpenCallback();
+    }
+
+    // ゲームオブジェクトを非アクティブに設定
+    void SetInactive() {
+        InvokeCloseCallback();
+        gameObject.SetActive(false);
+        //DoneWaitForClose(); // NOTE WaitForClose は使わないかもしれないので
     }
 }
 
@@ -77,7 +88,7 @@ public partial class UIObject : MonoBehaviour {
 ////////////////////////////////////////////////////////////////////////////////
 
 // 完了 (Done()) で閉じないようにするユーティリティ
-// 主に動作チェック (UIComponentTester) 等で使用。
+// 主に動作チェック (UITester) 等で使用。
 public partial class UIObject : MonoBehaviour {
     //------------------------------------------------------------------------- 変数
     Action recyclerBackup = null;
@@ -111,13 +122,14 @@ public partial class UIObject : MonoBehaviour {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-// UI のコルーチン関連の実装
-// UI が開いたときに Coroutine を実行できるようにします。
+// UI 処理でコルーチンを使えるようにする実装
+// UI 処理を Start() を使って書かずに
+// 任意のコールバックおよびコルーチンで実装できるようにします。
 public partial class UIObject {
     //------------------------------------------------------------------------- 変数
-    IEnumerator openCoroutine = null;
-    Action      openCallback  = null;
-    Action      closeCallback = null;
+    IEnumerator openCoroutine = null; // "開く" コールバック ("開く" コルーチンと排他)
+    Action      openCallback  = null; // "開く" コルーチン ("開く" コールバックと排他)
+    Action      closeCallback = null; // "閉じる" コールバック
 
     //------------------------------------------------------------------------- 設定関数
     void InvokeOpenCallback() {
@@ -158,3 +170,41 @@ public partial class UIObject {
         closeCallback = callback;
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+// NOTE
+// WaitForClose は使わないかもしれないので。
+//// UI 閉じ待ち実装
+//// "UI が閉じるまで待つ" を yield return で出来るようにします。
+//// UI のレスポンスを取ることはできません。
+//public partial class UIObject {
+//    //------------------------------------------------------------------------- 定義
+//    // UI 閉じ待ちオペレーション
+//    public class WaitForCloseOperation : CustomYieldInstruction {
+//        public bool isDone = false;
+//        public override bool keepWaiting { get { return !isDone; }}
+//    }
+//
+//    //------------------------------------------------------------------------- 変数
+//    WaitForCloseOperation waitForCloseOperation = null;
+//
+//    //------------------------------------------------------------------------- 操作
+//    // 閉じるまで待つ
+//    public WaitForCloseOperation WaitForClose() {
+//        waitForCloseOperation = waitForCloseOperation ?? new WaitForCloseOperation();
+//        return waitForCloseOperation;
+//    }
+//
+//    //------------------------------------------------------------------------- 操作
+//    // 閉じるまで待つ、を完了
+//    void DoneWaitForClose() {
+//        if (waitForCloseOperation != null) {
+//            var operation = waitForCloseOperation;
+//            waitForCloseOperation = null;
+//            operation.isDone = true;
+//        }
+//    }
+//}
