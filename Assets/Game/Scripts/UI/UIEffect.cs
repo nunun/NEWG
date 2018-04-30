@@ -38,12 +38,9 @@ using UnityEngine.Events;
 // UI エフェクト
 // 全ての UI エフェクトの基礎クラス
 public class UIEffect : MonoBehaviour {
-    //-------------------------------------------------------------------------- 変数
+    //-------------------------------------------------------------------------- 定義
+    // エフェクト状態
     public enum State { Effecting, Effected, Uneffecting, Uneffected };
-
-    //-------------------------------------------------------------------------- 変数
-    // 現在状態
-    State currentState = State.Uneffected;
 
     // イベント
     [Serializable]
@@ -55,7 +52,12 @@ public class UIEffect : MonoBehaviour {
         public UnityEvent onSetUneffected; // 初期化時などで即座に非表示に設定されたとき
         public UnityEvent onUneffected;    // 非表示を完了したとき
     }
-    [SerializeField] UIEffectEvents events;
+
+    //-------------------------------------------------------------------------- 変数
+    [SerializeField] protected UIEffectEvents events; // イベント
+
+    // 現在状態
+    State currentState = State.Uneffected;
 
     // 現在状態の取得
     public bool IsEffecting   { get { return currentState == State.Effecting;   }}
@@ -64,12 +66,12 @@ public class UIEffect : MonoBehaviour {
     public bool IsUneffected  { get { return currentState == State.Uneffected;  }}
 
     // イベント
-    public UnityEvent onEffect        { get { return events.onEffect;        }}
-    public UnityEvent onSetEffected   { get { return events.onSetEffected;   }}
-    public UnityEvent onEffected      { get { return events.onEffected;      }}
-    public UnityEvent onUneffect      { get { return events.onUneffect;      }}
-    public UnityEvent onSetUneffected { get { return events.onSetUneffected; }}
-    public UnityEvent onUneffected    { get { return events.onUneffected;    }}
+    public UnityEvent onEffect        { get { return events.onEffect        ?? (events.onEffect        = new UnityEvent()); }}
+    public UnityEvent onSetEffected   { get { return events.onSetEffected   ?? (events.onSetEffected   = new UnityEvent()); }}
+    public UnityEvent onEffected      { get { return events.onEffected      ?? (events.onEffect        = new UnityEvent()); }}
+    public UnityEvent onUneffect      { get { return events.onUneffect      ?? (events.onUneffect      = new UnityEvent()); }}
+    public UnityEvent onSetUneffected { get { return events.onSetUneffected ?? (events.onSetUneffected = new UnityEvent()); }}
+    public UnityEvent onUneffected    { get { return events.onUneffected    ?? (events.onUneffected    = new UnityEvent()); }}
 
     //-------------------------------------------------------------------------- 実装ポイント
     // エフェクト再生時間の変更時

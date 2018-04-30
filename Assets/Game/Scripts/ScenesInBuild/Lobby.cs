@@ -5,25 +5,39 @@ using UnityEngine;
 using UnityEngine.UI;
 using Services.Protocols;
 
-// TODO
-// * マッチング処理
-// * 排他的な UI の制御
-// * 急激に UI を切り替えた場合の切り替えエラーの修正
-
 // ロビー
 public partial class Lobby : GameScene {
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     void Awake() {
+        InitSignin();
         InitLobby();
         InitMatching();
     }
 
-    void OnDestroy() {
-        StopLobby();
-        StopMatching();
+    IEnumerator Start() {
+        signinUI.Open();
+        yield break;
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+// サインイン処理
+public partial class Lobby {
+    //-------------------------------------------------------------------------- 変数
+    [SerializeField] SceneUI signinUI = null;
+
+    //-------------------------------------------------------------------------- ロビーの初期化、開始、停止、更新
+    void InitSignin() {
+        Debug.Assert(signinUI        != null, "signinUI がない");
+        Debug.Assert(gameStartButton != null, "gameStartButton がない");
+        signinUI.onOpen.AddListener(() => { StartCoroutine("UpdateSignin"); });
+        signinUI.onClose.AddListener(() => { StopCoroutine("UpdateSignin"); });
     }
 
-    IEnumerator Start() {
+    IEnumerator UpdateSignin() {
         GameAudio.PlayBGM("Abandoned");
         GameAudio.SetBGMVolume("Abandoned", 1.0f);
 
@@ -81,11 +95,8 @@ public partial class Lobby : GameScene {
         // サインイン結果
         Debug.Log("Player Name = " + GameDataManager.PlayerData.playerName);
 
-        // ロビー状態を開始
-        StartLobby();
-
-        // セットアップ完了！
-        //GameAudio.MixBGM("Revenge2");
+        // ロビーへ
+        signinUI.Switch(lobbyUI);
     }
 }
 
@@ -99,33 +110,17 @@ public partial class Lobby {
     [SerializeField] SceneUI lobbyUI         = null;
     [SerializeField] Button  gameStartButton = null;
 
-    IEnumerator updateLobby = null;
-
     //-------------------------------------------------------------------------- ロビーの初期化、開始、停止、更新
     void InitLobby() {
         Debug.Assert(lobbyUI         != null, "lobbyUI がない");
         Debug.Assert(gameStartButton != null, "gameStartButton がない");
-        gameStartButton.onClick.AddListener(() => {
-            StopLobby();
-            StartMatching();
-        });
-    }
-
-    void StartLobby() {
-        lobbyUI.Open();
-        GameAudio.SetBGMVolume("Abandoned", 1.0f);
-        updateLobby = updateLobby ?? UpdateLobby();
-        StartCoroutine(updateLobby);
-    }
-
-    void StopLobby() {
-        lobbyUI.Close();
-        StopCoroutine(updateLobby);
+        lobbyUI.onOpen.AddListener(() => { StartCoroutine("UpdateLobby"); });
+        lobbyUI.onClose.AddListener(() => { StopCoroutine("UpdateLobby"); });
+        gameStartButton.onClick.AddListener(() => { lobbyUI.Switch(matchingUI); });
     }
 
     IEnumerator UpdateLobby() {
-        // NOTE
-        // 特に処理なし
+        GameAudio.SetBGMVolume("Abandoned", 1.0f);
         yield break;
     }
 }
@@ -140,33 +135,17 @@ public partial class Lobby {
     [SerializeField] SceneUI matchingUI   = null;
     [SerializeField] Button  cancelButton = null;
 
-    IEnumerator updateMatching = null;
-
     //-------------------------------------------------------------------------- マッチングの初期化、開始、停止、更新
     void InitMatching() {
         Debug.Assert(matchingUI   != null, "matchingUI がない");
         Debug.Assert(cancelButton != null, "cancelButton がない");
-        cancelButton.onClick.AddListener(() => {
-            StartLobby();
-            StopMatching();
-        });
-    }
-
-    void StartMatching() {
-        matchingUI.Open();
-        GameAudio.SetBGMVolume("Abandoned", 0.3f, 5.0f);
-        updateMatching = updateMatching ?? UpdateMatching();
-        StartCoroutine(updateMatching);
-    }
-
-    void StopMatching() {
-        matchingUI.Close();
-        StopCoroutine(updateMatching);
+        matchingUI.onOpen.AddListener(() => { StartCoroutine("UpdateMatching"); });
+        matchingUI.onClose.AddListener(() => { StopCoroutine("UpdateMatching"); });
+        cancelButton.onClick.AddListener(() => { matchingUI.Switch(lobbyUI); });
     }
 
     IEnumerator UpdateMatching() {
-        // TODO
-        // マッチング処理
+        GameAudio.SetBGMVolume("Abandoned", 0.3f, 5.0f);
         yield break;
     }
 }

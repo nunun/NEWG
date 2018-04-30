@@ -7,6 +7,7 @@ using UnityEngine.UI;
 // テキストに設定します。
 // 複数行で適切なフォントサイズを決定して自動設定します。
 // TODO UnityEditor 上での自動設定
+[ExecuteInEditMode]
 public class MultilineBestFit : MonoBehaviour {
     //-------------------------------------------------------------------------- インスタンスの確保と解放
     [SerializeField] float rows = 2.0f;
@@ -23,7 +24,9 @@ public class MultilineBestFit : MonoBehaviour {
     }
 
     void Update() {
-        text.fontSize = (int)(((rectTransform.rect.height / rows) - text.lineSpacing) / 1.7f);
-        enabled = false;
+        var fontSize = (int)(((rectTransform.rect.height / rows) - text.lineSpacing) / 1.7f);
+        if (text.fontSize != fontSize) {
+            text.fontSize = fontSize;
+        }
     }
 }

@@ -2,13 +2,28 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 // UI オブジェクト
 // 全ての UI の基礎クラス
 public partial class UIObject : MonoBehaviour {
     //------------------------------------------------------------------------- 変数
-    // 出現と消失エフェクト
-    [SerializeField] protected UIEffect uiEffect = null;
+    // イベント
+    [Serializable]
+    public struct UIObjectEvents {
+        public UnityEvent onOpen;  // 表示を開始したとき
+        public UnityEvent onClose; // 表示を完了したとき
+    }
+
+    //------------------------------------------------------------------------- 変数
+    [SerializeField] protected UIObjectEvents events;          // イベント
+    [SerializeField] protected UIEffect       uiEffect = null; // 出現と消失エフェクト
+
+    // "開く" 中に実行される Hide() を無効化する。ワークフラグ。
+    bool disableHideOnOpen = false;
+
+    // 次の UI
+    UIObject nextUIObject = null;
 
     // 再利用関数の設定
     Action recycler = null;
@@ -19,6 +34,10 @@ public partial class UIObject : MonoBehaviour {
     public bool IsOpened  { get { return IsOpen && ((uiEffect == null)? true  : uiEffect.IsEffected);    }}
     public bool IsClosing { get { return IsOpen && ((uiEffect == null)? false : uiEffect.IsUneffecting); }}
     public bool IsClosed  { get { return !IsOpen;                                                        }}
+
+    // イベントの取得
+    public UnityEvent onOpen  { get { return events.onOpen  ?? (events.onOpen  = new UnityEvent()); }}
+    public UnityEvent onClose { get { return events.onClose ?? (events.onClose = new UnityEvent()); }}
 
     //------------------------------------------------------------------------- UI 結果関連
     // 再利用関数の設定
@@ -32,7 +51,9 @@ public partial class UIObject : MonoBehaviour {
         if (IsOpen) {
             return; // 既に開いている
         }
+        disableHideOnOpen = true; // NOTE Hide 無効化, Awake などで UI が Hide されるのを無視
         SetActive();
+        disableHideOnOpen = false; // NOTE Hide 無効化解除
         if (uiEffect != null) {
             uiEffect.Effect();
         }
@@ -40,8 +61,16 @@ public partial class UIObject : MonoBehaviour {
 
     // 閉じる
     public void Close() {
+        Switch(null);
+    }
+
+    // 切り替え
+    public void Switch(UIObject nextUIObject) {
         if (IsClosing) {
             return; // 既に閉じている
+        }
+        if (nextUIObject != null) {
+            this.nextUIObject = nextUIObject;
         }
         if (uiEffect != null) {
             uiEffect.Uneffect();
@@ -52,15 +81,23 @@ public partial class UIObject : MonoBehaviour {
 
     // 隠す
     public void Hide() {
+        if (disableHideOnOpen) { // NOTE Hide 無効化, Awake などで UI が Hide されるのを無視
+            return;
+        }
         if (uiEffect != null) {
             uiEffect.SetUneffected();
         }
-        SetInactive();
+        SetHide();
     }
 
     // 完了
     public void Done() {
         SetInactive();
+        if (nextUIObject != null) {
+            var uiObject = nextUIObject;
+            nextUIObject = null;
+            uiObject.Open();
+        }
         if (recycler != null) {
             recycler();
             return;
@@ -72,14 +109,18 @@ public partial class UIObject : MonoBehaviour {
     // ゲームオブジェクトをアクティブに設定
     void SetActive() {
         gameObject.SetActive(true);
-        InvokeOpenCallback();
+        events.onOpen.Invoke();
     }
 
     // ゲームオブジェクトを非アクティブに設定
     void SetInactive() {
-        InvokeCloseCallback();
-        gameObject.SetActive(false);
+        events.onClose.Invoke();
         //DoneWaitForClose(); // NOTE WaitForClose は使わないかもしれないので
+        SetHide();
+    }
+
+    void SetHide() {
+        gameObject.SetActive(false);
     }
 }
 
@@ -115,59 +156,6 @@ public partial class UIObject : MonoBehaviour {
     static void NothingToDo() {
         // NOTE
         // 何もしない
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
-// UI 処理でコルーチンを使えるようにする実装
-// UI 処理を Start() を使って書かずに
-// 任意のコールバックおよびコルーチンで実装できるようにします。
-public partial class UIObject {
-    //------------------------------------------------------------------------- 変数
-    IEnumerator openCoroutine = null; // "開く" コールバック ("開く" コルーチンと排他)
-    Action      openCallback  = null; // "開く" コルーチン ("開く" コールバックと排他)
-    Action      closeCallback = null; // "閉じる" コールバック
-
-    //------------------------------------------------------------------------- 設定関数
-    void InvokeOpenCallback() {
-        if (openCallback != null) {
-            StartCoroutine(openCoroutine);
-        }
-        if (openCallback != null) {
-            openCallback();
-        }
-    }
-
-    void InvokeCloseCallback() {
-        if (openCallback != null) {
-            StopCoroutine(openCoroutine);
-        }
-        if (closeCallback != null) {
-            closeCallback();
-        }
-    }
-
-    //------------------------------------------------------------------------- 設定関数
-    // "開く" コールバックの設定
-    protected void SetUIOpenCallback(IEnumerator coroutine) {
-        Debug.Assert(openCallback != null, "開くコールバック設定済");
-        openCallback  = null;
-        openCoroutine = coroutine;
-    }
-
-    // "開く" コルーチンの設定
-    protected void SetUIOpenCallback(Action callback) {
-        Debug.Assert(openCoroutine != null, "開くコルーチン設定済");
-        openCallback  = callback;
-        openCoroutine = null;
-    }
-
-    // "閉じる" コルーチンの設定
-    protected void SetUICloseCallback(Action callback) {
-        closeCallback = callback;
     }
 }
 
