@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-// 複数行で適切なフォントサイズを決める
+// テキストに設定します。
+// 複数行で適切なフォントサイズを決定して自動設定します。
+// TODO UnityEditor 上での自動設定
 public class MultilineBestFit : MonoBehaviour {
     //-------------------------------------------------------------------------- インスタンスの確保と解放
     [SerializeField] float rows = 2.0f;

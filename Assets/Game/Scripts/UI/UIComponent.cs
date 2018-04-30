@@ -7,24 +7,24 @@ using UnityEngine;
 //public class SampleUI : UIComponent<string> {
 //    public static SampleUI Open(Action<string> callback = null) {
 //        var component = GameObjectPool<SampleUI>.RentGameObject();
-//        component.SetUICallback(callback);
-//        component.Open();
+//        component.SetUICallback(callback);//コールバック設定
+//        component.Open();//実際に開く
 //        return component;
 //    }
 //    void ReturnToPool() {
-//        SetUIDone();
+//        SetUIDone();//プールに戻る時、結果を確定
 //        GameObjectPool<SampleUI>.ReturnObject(this);
 //    }
 //    void Awake() {
-//        SetUIRecycle(ReturnToPool);
+//        SetUIRecycle(ReturnToPool);//リサイクル関数を設定
 //    }
 //    void OnDestroy() {
-//        SetUIDone();
+//        SetUIDone();//破棄される時、結果を確定
 //    }
 //}
-//var ui = SampleUI.RentFromPool(callback);
-//ui.Close();
-//GameObject.Destroy(ui.gameObject);
+//var sampleUI = SampleUI.Open(Callback);
+//sampleUI.Close();
+//GameObject.Destroy(sampleUI.gameObject);
 
 
 // UI コンポーネント

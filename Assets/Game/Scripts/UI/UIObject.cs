@@ -3,25 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// [UI 挙動の実装例]
-//public class SampleUI : UIComponent<string> {
-//    public static SampleUI RentFromPool(Action<string> callback) {
-//        var component = GameObjectPool<SampleUI>.RentGameObject();
-//        component.SetUICallback(callback);
-//        component.Open();
-//    }
-//    public void ReturnToPool() {
-//        GameObjectPool<SampleUI>.ReturnObject(this);
-//    }
-//    void Awake() {
-//        SetUIRecycle(ReturnToPool);
-//    }
-//}
-//var ui = SampleUI.RentFromPool(callback);
-//ui.Close();
-//GameObject.Destroy(ui.gameObject);
-
-
 // UI オブジェクト
 // 全ての UI の基礎クラス
 public partial class UIObject : MonoBehaviour {
@@ -52,6 +33,7 @@ public partial class UIObject : MonoBehaviour {
             return; // 既に開いている
         }
         gameObject.SetActive(true);
+        InvokeOpenCallback();
         if (uiEffect != null) {
             uiEffect.Effect();
         }
@@ -75,11 +57,13 @@ public partial class UIObject : MonoBehaviour {
             uiEffect.SetUneffected();
         }
         gameObject.SetActive(false);
+        InvokeCloseCallback();
     }
 
     // 完了
     public void Done() {
         gameObject.SetActive(false);
+        InvokeCloseCallback();
         if (recycler != null) {
             recycler();
             return;
@@ -99,6 +83,7 @@ public partial class UIObject : MonoBehaviour {
     Action recyclerBackup = null;
 
     //------------------------------------------------------------------------- ユーティリティ
+    // Done() の呼び出しで閉じないように設定
     public void DontDestroyOnDone() {
         if (recycler == NothingToDo) {
             return;
@@ -107,6 +92,7 @@ public partial class UIObject : MonoBehaviour {
         recycler = NothingToDo;
     }
 
+    // Done() の呼び出しで閉じるように設定
     public void DestroyOnDone() {
         if (recycler != NothingToDo) {
             return;
@@ -118,5 +104,57 @@ public partial class UIObject : MonoBehaviour {
     static void NothingToDo() {
         // NOTE
         // 何もしない
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+// UI のコルーチン関連の実装
+// UI が開いたときに Coroutine を実行できるようにします。
+public partial class UIObject {
+    //------------------------------------------------------------------------- 変数
+    IEnumerator openCoroutine = null;
+    Action      openCallback  = null;
+    Action      closeCallback = null;
+
+    //------------------------------------------------------------------------- 設定関数
+    void InvokeOpenCallback() {
+        if (openCallback != null) {
+            StartCoroutine(openCoroutine);
+        }
+        if (openCallback != null) {
+            openCallback();
+        }
+    }
+
+    void InvokeCloseCallback() {
+        if (openCallback != null) {
+            StopCoroutine(openCoroutine);
+        }
+        if (closeCallback != null) {
+            closeCallback();
+        }
+    }
+
+    //------------------------------------------------------------------------- 設定関数
+    // "開く" コールバックの設定
+    protected void SetUIOpenCallback(IEnumerator coroutine) {
+        Debug.Assert(openCallback != null, "開くコールバック設定済");
+        openCallback  = null;
+        openCoroutine = coroutine;
+    }
+
+    // "開く" コルーチンの設定
+    protected void SetUIOpenCallback(Action callback) {
+        Debug.Assert(openCoroutine != null, "開くコルーチン設定済");
+        openCallback  = callback;
+        openCoroutine = null;
+    }
+
+    // "閉じる" コルーチンの設定
+    protected void SetUICloseCallback(Action callback) {
+        closeCallback = callback;
     }
 }
