@@ -19,8 +19,11 @@ public partial class UIObject : MonoBehaviour {
     [SerializeField] protected UIObjectEvents events;          // イベント
     [SerializeField] protected UIEffect       uiEffect = null; // 出現と消失エフェクト
 
-    // "開く" 中に実行される Hide() を無効化する。ワークフラグ。
+    // "開く" 中に実行される Hide() を無効化する。表示/非表示ロジック制御用のワークフラグ。
     bool disableHideOnOpen = false;
+
+    // アクティブに設定されたかどうか。イベント呼び出し制御用のワークフラグ。
+    bool isSetActive = false;
 
     // 次の UI、または次のシーンへ
     UIObject nextUIObject        = null; // 次の UI
@@ -86,7 +89,15 @@ public partial class UIObject : MonoBehaviour {
         Close();
     }
 
-    // 隠す
+    // 表示
+    public void Show() {
+        if (uiEffect != null) {
+            uiEffect.SetEffected();
+        }
+        SetActive();
+    }
+
+    // 非表示
     public void Hide() {
         if (disableHideOnOpen) { // NOTE Hide 無効化, Awake などで UI が Hide されるのを無視
             return;
@@ -94,7 +105,7 @@ public partial class UIObject : MonoBehaviour {
         if (uiEffect != null) {
             uiEffect.SetUneffected();
         }
-        SetHide();
+        SetInactive();
     }
 
     // 完了
@@ -122,17 +133,19 @@ public partial class UIObject : MonoBehaviour {
     // ゲームオブジェクトをアクティブに設定
     void SetActive() {
         gameObject.SetActive(true);
-        events.onOpen.Invoke();
+        if (!isSetActive) {
+            isSetActive = true;
+            events.onOpen.Invoke();
+        }
     }
 
     // ゲームオブジェクトを非アクティブに設定
     void SetInactive() {
-        events.onClose.Invoke();
+        if (isSetActive) {
+            isSetActive = false;
+            events.onClose.Invoke();
+        }
         //DoneWaitForClose(); // NOTE WaitForClose は使わないかもしれないので
-        SetHide();
-    }
-
-    void SetHide() {
         gameObject.SetActive(false);
     }
 }

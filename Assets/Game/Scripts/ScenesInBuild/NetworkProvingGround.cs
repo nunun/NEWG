@@ -9,11 +9,11 @@ using Services.Protocols;
 public partial class NetworkProvingGround : GameScene {
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     void Awake() {
-        //InitSignin();
+        InitLoading();
     }
 
     void Start() {
-        //signinUI.Open();
+        loadingUI.Show();
     }
 }
 
@@ -21,81 +21,30 @@ public partial class NetworkProvingGround : GameScene {
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-// サインイン処理
-//public partial class NetworkProvingGround {
-//    //-------------------------------------------------------------------------- 変数
-//    [SerializeField] SceneUI signinUI = null;
-//
-//    //-------------------------------------------------------------------------- ロビーの初期化、開始、停止、更新
-//    void InitSignin() {
-//        Debug.Assert(signinUI        != null, "signinUI がない");
-//        Debug.Assert(gameStartButton != null, "gameStartButton がない");
-//        signinUI.onOpen.AddListener(() => { StartCoroutine("UpdateSignin"); });
-//        signinUI.onClose.AddListener(() => { StopCoroutine("UpdateSignin"); });
-//    }
-//
-//    IEnumerator UpdateSignin() {
-//        GameAudio.PlayBGM("Abandoned");
-//        GameAudio.SetBGMVolume("Abandoned", 1.0f);
-//
-//        // セットアップ
-//        var subject = StatusLine.Observe();
-//        try {
-//            // ロード中
-//            subject.message = "ロード中 ...";
-//            yield return new WaitForSeconds(1.0f);
-//
-//            // サインイン
-//            var signinToken = GameDataManager.CredentialData.signinToken;
-//            do {
-//                subject.message = "サーバに接続しています ...";
-//
-//                // サインアップしていないならサインイン
-//                // そうでないならサインアップ
-//                var error = default(string);
-//                if (string.IsNullOrEmpty(signinToken)) {
-//                    using (var wait = UIWait<WebAPI.SignupResponse>.RentFromPool()) {
-//                        WebAPI.Signup(wait.Callback);
-//                        yield return wait;
-//                        error = wait.error;
-//                    }
-//                } else {
-//                    using (var wait = UIWait<WebAPI.SigninResponse>.RentFromPool()) {
-//                        WebAPI.Signin(signinToken, wait.Callback);
-//                        yield return wait;
-//                        error = wait.error;
-//                    }
-//                }
-//                if (error == default(string)) {
-//                    subject.message = "接続完了！";
-//                    GameAudio.Play("BootUp");
-//                    yield return new WaitForSeconds(1.75f);
-//                    break;//サインイン成功!
-//                }
-//
-//                // エラー
-//                Debug.LogError(error);
-//
-//                // エラーの場合はリトライ
-//                subject.Dispose();
-//                using (var wait = UIWait.RentFromPool()) {
-//                    OkPopup.Open("ログインに失敗しました。", wait.Callback);
-//                    yield return wait;
-//                }
-//                subject = StatusLine.Observe();
-//            } while(true);
-//        } finally {
-//            subject.Dispose();
-//        }
-//
-//        // TODO
-//        // サインイン結果
-//        Debug.Log("Player Name = " + GameDataManager.PlayerData.playerName);
-//
-//        // ロビーへ
-//        signinUI.Change(lobbyUI);
-//    }
-//}
+// ロード処理
+public partial class NetworkProvingGround {
+    //-------------------------------------------------------------------------- 変数
+    [SerializeField] SceneUI loadingUI = null;
+
+    //-------------------------------------------------------------------------- ロビーの初期化、開始、停止、更新
+    void InitLoading() {
+        Debug.Assert(loadingUI != null, "loadingUI がない");
+        loadingUI.onOpen.AddListener(() => { StartCoroutine("UpdateLoading"); });
+        loadingUI.onClose.AddListener(() => { StopCoroutine("UpdateLoading"); });
+    }
+
+    IEnumerator UpdateLoading() {
+        //GameAudio.PlayBGM("Abandoned");
+        //GameAudio.SetBGMVolume("Abandoned", 1.0f);
+
+        // TODO
+        // ロード処理
+        yield return new WaitForSeconds(3.0f);
+
+        // ローディング完了
+        loadingUI.Close();
+    }
+}
 
 //using (var wait = UIWait.RentFromPool()) {
 //    var popup = MessagePopup.Open("これはメッセージポップアップです。", wait.Callback);
