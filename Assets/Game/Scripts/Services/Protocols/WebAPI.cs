@@ -56,21 +56,6 @@ namespace Services.Protocols {
             return client.Post<RenameRequest,RenameResponse>("/rename", data, callback, queries, forms, headers);
         }
         [Serializable]
-        public struct MatchingRequest {
-        }
-
-        [Serializable]
-        public struct MatchingResponse {
-        }
-
-        // Matching
-        // マッチングをリクエスト
-        public static WebAPIClient.Request Matching(Action<string,MatchingResponse> callback, string[] queries = null, string[] forms = null, string[] headers = null) {
-            var client = WebAPIClient.GetClient();
-            var data = new MatchingRequest();
-            return client.Post<MatchingRequest,MatchingResponse>("/matching", data, callback, queries, forms, headers);
-        }
-        [Serializable]
         public struct PlayerRequest {
         }
 
@@ -84,6 +69,23 @@ namespace Services.Protocols {
             var client = WebAPIClient.GetClient();
             var data = new PlayerRequest();
             return client.Post<PlayerRequest,PlayerResponse>("/player", data, callback, queries, forms, headers);
+        }
+        [Serializable]
+        public struct MatchingRequest {
+        }
+
+        [Serializable]
+        public struct MatchingResponse {
+            public string matchingToken; // マッチングトークン
+            public string matchingServerUrl; // マッチングサーバURL
+        }
+
+        // Matching
+        // マッチングをリクエスト
+        public static WebAPIClient.Request Matching(Action<string,MatchingResponse> callback, string[] queries = null, string[] forms = null, string[] headers = null) {
+            var client = WebAPIClient.GetClient();
+            var data = new MatchingRequest();
+            return client.Post<MatchingRequest,MatchingResponse>("/matching", data, callback, queries, forms, headers);
         }
         [Serializable]
         public struct TestRequest {

@@ -17,8 +17,17 @@ public partial class NetworkEmulator : ScriptableObject {
     // プレイヤー名
     public string playerName = "NetworkEmulator";
 
-    // 先頭シーン
-    public string battleScene = "ProvingGround";
+    // ゲームサーバ アドレス
+    public string serverAddress = "localhost";
+
+    // ゲームサーバ ポート
+    public int serverPort = 7777;
+
+    // ゲームサーバ トークン
+    public string serverToken = "(dummy serverToken)";
+
+    // ゲームサーバ シーン名
+    public string serverSceneName = "ProvingGround";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -89,6 +98,19 @@ public partial class NetworkEmulator {
                 var playerDataJson  = string.Format("\"playerData\":{{\"active\":true,\"data\":{0}}}",  JsonUtility.ToJson(playerData));
                 var sessionDataJson = string.Format("\"sessionData\":{{\"active\":true,\"data\":{0}}}", JsonUtility.ToJson(sessionData));
                 var response = string.Format("{{\"activeData\":{{{0},{1}}}}}", playerDataJson, sessionDataJson);
+                request.SetResponse(null, response);
+            }
+            break;
+        case "/matching"://マッチング
+            {
+                //var req = JsonUtility.FromJson<WebAPI.SignupRequest>(request.Parameters.GetText());
+
+                var matchingResponse = new WebAPI.MatchingResponse();
+                matchingResponse.matchingToken     = "(dummy matchingToken)";
+                matchingResponse.matchingServerUrl = "ws//localhost:7755";
+
+                var matchingResponseJson = JsonUtility.ToJson(matchingResponse);
+                var response = string.Format("{0}", matchingResponseJson);
                 request.SetResponse(null, response);
             }
             break;

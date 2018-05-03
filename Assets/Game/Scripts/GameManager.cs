@@ -7,6 +7,7 @@ using UnityEditor;
 #endif
 
 // ゲームマネージャ
+// ゲーム自体の制御と設定保持を行います。
 [DefaultExecutionOrder(int.MinValue)]
 public partial class GameManager : MonoBehaviour {
     // NOTE

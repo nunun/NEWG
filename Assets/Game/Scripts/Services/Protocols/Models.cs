@@ -95,4 +95,17 @@ namespace Services.Protocols.Models {
             matchingId = null; // サーバ起動をリクエストしたマッチングID
         }
     }
+    // ServerConnectData
+    // サーバ接続データ
+    [Serializable]
+    public class ServerConnectData : ModelData {
+        public string serverAddress; // 接続先のサーバアドレス
+        public int serverPort; // 接続先のサーバポート
+        public string serverToken; // 接続用サーバトークン
+        protected override void Clear() {
+            serverAddress = null; // 接続先のサーバアドレス
+            serverPort = 7777; // 接続先のサーバポート
+            serverToken = null; // 接続用サーバトークン
+        }
+    }
 }

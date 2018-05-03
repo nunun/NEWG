@@ -10,13 +10,15 @@ using Services.Protocols.Models;
 [DefaultExecutionOrder(int.MinValue)]
 public partial class GameDataManager : MonoBehaviour {
     //-------------------------------------------------------------------------- 変数
-    PlayerData     playerData     = new PlayerData();
-    SessionData    sessionData    = new SessionData();
-    CredentialData credentialData = new CredentialData();
+    PlayerData        playerData        = new PlayerData();        // 自分のプレイヤー情報
+    SessionData       sessionData       = new SessionData();       // セッション情報
+    CredentialData    credentialData    = new CredentialData();    // 認証情報
+    ServerConnectData serverConnectData = new ServerConnectData(); // サーバ接続用情報
 
-    public static PlayerData     PlayerData     { get { return instance.playerData;     }}
-    public static SessionData    SessionData    { get { return instance.sessionData;    }}
-    public static CredentialData CredentialData { get { return instance.credentialData; }}
+    public static PlayerData        PlayerData        { get { return instance.playerData;        }}
+    public static SessionData       SessionData       { get { return instance.sessionData;       }}
+    public static CredentialData    CredentialData    { get { return instance.credentialData;    }}
+    public static ServerConnectData ServerConnectData { get { return instance.serverConnectData; }}
 
     //-------------------------------------------------------------------------- 初期化
     // ゲームデータの初期化

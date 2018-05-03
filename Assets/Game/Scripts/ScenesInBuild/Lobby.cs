@@ -14,9 +14,8 @@ public partial class Lobby : GameScene {
         InitMatching();
     }
 
-    IEnumerator Start() {
+    void Start() {
         signinUI.Open();
-        yield break;
     }
 }
 
@@ -147,9 +146,37 @@ public partial class Lobby {
     IEnumerator UpdateMatching() {
         GameAudio.SetBGMVolume("Abandoned", 0.3f, 5.0f);
 
+        // 接続情報を取得
+        var error            = default(string);
+        var matchingResponse = default(WebAPI.MatchingResponse);
+        using (var wait = UIWait<WebAPI.MatchingResponse>.RentFromPool()) {
+            WebAPI.Matching(wait.Callback);
+            yield return wait;
+            error            = wait.error;
+            matchingResponse = wait.Value1;
+        }
+
+        #if NETWORK_EMULATION_MODE
+        // ネットワークエミュレーションモード対応
+        var networkEmulator = GameAssetManager.NetworkEmulator;
+        if (networkEmulator != null) {
+            GameDataManager.ServerConnectData.serverAddress = networkEmulator.serverAddress;
+            GameDataManager.ServerConnectData.serverPort    = networkEmulator.serverPort;
+            GameDataManager.ServerConnectData.serverToken   = networkEmulator.serverToken;
+            GameSceneManager.ChangeScene(networkEmulator.serverSceneName);
+            yield break;
+        }
+        #endif
+
+        // TODO
+        // マッチングサーバに接続
+        Debug.Log(error);
+        Debug.Log(matchingResponse.matchingToken);
+        Debug.Log(matchingResponse.matchingServerUrl);
+
         // TODO
         // マッチングサーバへの接続とシーン切り替え
-        yield return new WaitForSeconds(3.0f);
+        yield return new WaitForSeconds(1.0f);
         matchingUI.ChangeScene("Logo");
     }
 }

@@ -29,19 +29,25 @@ specs:
               type: string
           response: []
 
-        - name: Matching
-          desc: マッチングをリクエスト
-          api_path: /matching
-          use: [userSecurity]
-          request: []
-          response: []
-
         - name: Player
           desc: プレイヤー情報の取得
           api_path: /player
           use: [userSecurity]
           request: []
           response: []
+
+        - name: Matching
+          desc: マッチングをリクエスト
+          api_path: /matching
+          use: [userSecurity]
+          request: []
+          response:
+            - name: matchingToken
+              desc: マッチングトークン
+              type: string
+            - name: matchingServerUrl
+              desc: マッチングサーバURL
+              type: string
 
         - name: Test
           desc: ユニットテスト用
@@ -145,6 +151,22 @@ specs:
           properties:
             - name:  matchingId
               desc:  サーバ起動をリクエストしたマッチングID
+              type:  string
+              value: (null)
+
+        - name: ServerConnectData
+          desc: サーバ接続データ
+          properties:
+            - name:  serverAddress
+              desc:  接続先のサーバアドレス
+              type:  string
+              value: (null)
+            - name:  serverPort
+              desc:  接続先のサーバポート
+              type:  int
+              value: 7777
+            - name:  serverToken
+              desc:  接続用サーバトークン
               type:  string
               value: (null)
 

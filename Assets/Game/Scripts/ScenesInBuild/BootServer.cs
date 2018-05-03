@@ -16,7 +16,7 @@ public class BootServer : GameScene {
         // ネットワークエミュレーションモード対応
         var networkEmulator = GameAssetManager.NetworkEmulator;
         if (networkEmulator != null) {
-            GameSceneManager.ChangeSceneImmediately(networkEmulator.battleScene);
+            GameSceneManager.ChangeSceneImmediately(networkEmulator.serverSceneName);
             yield break;
         }
         #endif

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // ゲームアセットマネージャ
-// ゲームで使用するアセットを管理します。
+// ゲームで使用するアセット (プレハブ、スクリプタブルオブジェクト) を管理します。
 [DefaultExecutionOrder(int.MinValue)]
 public partial class GameAssetManager : MonoBehaviour {
     //-------------------------------------------------------------------------- 変数 (NETWORK_EMULATION_MODE)
