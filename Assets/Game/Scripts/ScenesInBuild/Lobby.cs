@@ -96,7 +96,7 @@ public partial class Lobby {
         Debug.Log("Player Name = " + GameDataManager.PlayerData.playerName);
 
         // ロビーへ
-        signinUI.Switch(lobbyUI);
+        signinUI.Change(lobbyUI);
     }
 }
 
@@ -116,7 +116,7 @@ public partial class Lobby {
         Debug.Assert(gameStartButton != null, "gameStartButton がない");
         lobbyUI.onOpen.AddListener(() => { StartCoroutine("UpdateLobby"); });
         lobbyUI.onClose.AddListener(() => { StopCoroutine("UpdateLobby"); });
-        gameStartButton.onClick.AddListener(() => { lobbyUI.Switch(matchingUI); });
+        gameStartButton.onClick.AddListener(() => { lobbyUI.Change(matchingUI); });
     }
 
     IEnumerator UpdateLobby() {
@@ -141,12 +141,16 @@ public partial class Lobby {
         Debug.Assert(cancelButton != null, "cancelButton がない");
         matchingUI.onOpen.AddListener(() => { StartCoroutine("UpdateMatching"); });
         matchingUI.onClose.AddListener(() => { StopCoroutine("UpdateMatching"); });
-        cancelButton.onClick.AddListener(() => { matchingUI.Switch(lobbyUI); });
+        cancelButton.onClick.AddListener(() => { matchingUI.Change(lobbyUI); });
     }
 
     IEnumerator UpdateMatching() {
         GameAudio.SetBGMVolume("Abandoned", 0.3f, 5.0f);
-        yield break;
+
+        // TODO
+        // マッチングサーバへの接続とシーン切り替え
+        yield return new WaitForSeconds(3.0f);
+        matchingUI.ChangeScene("Logo");
     }
 }
 

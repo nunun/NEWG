@@ -22,8 +22,10 @@ public partial class UIObject : MonoBehaviour {
     // "開く" 中に実行される Hide() を無効化する。ワークフラグ。
     bool disableHideOnOpen = false;
 
-    // 次の UI
-    UIObject nextUIObject = null;
+    // 次の UI、または次のシーンへ
+    UIObject nextUIObject        = null; // 次の UI
+    string   nextSceneName       = null; // 次のシーン名
+    string   nextSceneEffectName = null; // 次のシーン切り替えエフェクト名
 
     // 再利用関数の設定
     Action recycler = null;
@@ -61,22 +63,27 @@ public partial class UIObject : MonoBehaviour {
 
     // 閉じる
     public void Close() {
-        Switch(null);
-    }
-
-    // 切り替え
-    public void Switch(UIObject nextUIObject) {
         if (IsClosing) {
             return; // 既に閉じている
-        }
-        if (nextUIObject != null) {
-            this.nextUIObject = nextUIObject;
         }
         if (uiEffect != null) {
             uiEffect.Uneffect();
         } else {
             Done();
         }
+    }
+
+    // UI を変更
+    public void Change(UIObject nextUIObject) {
+        this.nextUIObject = nextUIObject;
+        Close();
+    }
+
+    // シーンを変更
+    public void ChangeScene(string nextSceneName, string nextSceneEffectName = null) {
+        this.nextSceneName       = nextSceneName;
+        this.nextSceneEffectName = nextSceneEffectName;
+        Close();
     }
 
     // 隠す
@@ -93,9 +100,15 @@ public partial class UIObject : MonoBehaviour {
     // 完了
     public void Done() {
         SetInactive();
-        if (nextUIObject != null) {
-            var uiObject = nextUIObject;
-            nextUIObject = null;
+        var uiObject        = nextUIObject;
+        var sceneName       = nextSceneName;
+        var sceneEffectName = nextSceneEffectName;
+        nextUIObject        = null;
+        nextSceneName       = null;
+        nextSceneEffectName = null;
+        if (sceneName != null) {
+            GameSceneManager.ChangeScene(sceneName, sceneEffectName);
+        } else if (uiObject != null) {
             uiObject.Open();
         }
         if (recycler != null) {
