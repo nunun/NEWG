@@ -27,7 +27,7 @@ public partial class NetworkEmulator : ScriptableObject {
     public string serverToken = "(dummy serverToken)";
 
     // ゲームサーバ シーン名
-    public string serverSceneName = "ProvingGround";
+    public string serverSceneName = "NetworkProvingGround";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
