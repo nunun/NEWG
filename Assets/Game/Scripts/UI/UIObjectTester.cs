@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class UITester : MonoBehaviour {
+public class UIObjectTester : MonoBehaviour {
     //-------------------------------------------------------------------------- 変数
     UIObject uiObject      = null;
     bool     destroyOnDone = false;

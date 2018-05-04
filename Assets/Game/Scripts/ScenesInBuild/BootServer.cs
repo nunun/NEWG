@@ -12,9 +12,9 @@ public class BootServer : GameScene {
 
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     IEnumerator Start() {
-        #if NETWORK_EMULATION_MODE
+        #if STANDALONE_MODE
         // ネットワークエミュレーションモード時
-        if (GameManager.NetworkEmulator != null) {
+        if (GameManager.IsStandaloneMode) {
             GameSceneManager.ChangeSceneImmediately(GameManager.ServerSceneName);
             yield break;
         }

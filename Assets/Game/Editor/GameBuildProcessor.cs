@@ -79,7 +79,7 @@ public partial class GameBuildProcessor {
         if (gameManager != null) {
             gameManager.runtimeServiceMode = binaryServiceMode;
             if (!isDebugBinary) {
-                gameManager.networkEmulator = null; // NOTE リリース版は絶対にネットワークエミュレーションを許さない
+                gameManager.standaloneSimulator = null; // NOTE リリース版は絶対にスタンドアローンシミュレータを許さない
             }
         }
 

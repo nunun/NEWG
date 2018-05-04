@@ -4,27 +4,27 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
-#if NETWORK_EMULATION_MODE
+#if STANDALONE_MODE
 using Services.Protocols;
 using Services.Protocols.Consts;
 using Services.Protocols.Models;
 #endif
 
-// ネットワークエミュレータ
-[CreateAssetMenu(fileName = "NetworkEmulator", menuName = "ScriptableObject/NetworkEmulator", order = 1000)]
-public partial class NetworkEmulator : ScriptableObject {
+// スタンドアローンシミュレータ
+[CreateAssetMenu(fileName = "StandaloneSimulator", menuName = "ScriptableObject/StandaloneSimulator", order = 1000)]
+public partial class StandaloneSimulator : ScriptableObject {
     //-------------------------------------------------------------------------- 変数
     // プレイヤー名
-    public string playerName = "NetworkEmulator";
+    public string playerName = "StandaloneSimulator";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-#if NETWORK_EMULATION_MODE
+#if STANDALONE_MODE
 
 // WebAPI の処理
-public partial class NetworkEmulator {
+public partial class StandaloneSimulator {
     //-------------------------------------------------------------------------- 変数
     static readonly float DEBUG_DELAY = 0.5f; // デバッグディレイ
 
@@ -33,9 +33,9 @@ public partial class NetworkEmulator {
     float                debugDelay   = 0.0f; // デバッグディレイ
 
     //-------------------------------------------------------------------------- WebAPI エミュレーション
-    public bool EmulateWebAPI(WebAPIClient.Request request, float deltaTime) {
+    public bool SimulateWebAPI(WebAPIClient.Request request, float deltaTime) {
         if (debugRequest == null) {
-            Debug.LogWarningFormat("NetworkEmulator: WebAPI リクエストを処理 ({0})", request.ToString());
+            Debug.LogWarningFormat("StandaloneSimulator: WebAPI リクエストを処理 ({0})", request.ToString());
             debugRequest = request;
             debugDelay   = DEBUG_DELAY;
         }
@@ -43,13 +43,13 @@ public partial class NetworkEmulator {
             debugDelay -= deltaTime;
             return true;
         }
-        EmulateWebAPIRequest(request);
+        SimulateWebAPIRequest(request);
         debugRequest = null;
         return false;
     }
 
     //-------------------------------------------------------------------------- WebAPI エミュレーションの処理
-    void EmulateWebAPIRequest(WebAPIClient.Request request) {
+    void SimulateWebAPIRequest(WebAPIClient.Request request) {
         switch (request.APIPath) {
         case "/signup"://サインアップ
             {

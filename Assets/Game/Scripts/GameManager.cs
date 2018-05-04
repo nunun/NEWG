@@ -34,7 +34,7 @@ public partial class GameManager {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-// サーバ接続先の情報
+// サーバ接続先情報
 // マッチングで決定したサーバ接続先の一時的な情報です。
 public partial class GameManager {
     //-------------------------------------------------------------------------- 変数
@@ -61,13 +61,25 @@ public partial class GameManager {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-// ネットワークエミュレータの情報
+// スタンドアローンモード情報
 public partial class GameManager {
     //-------------------------------------------------------------------------- 変数
-    public NetworkEmulator networkEmulator = null; // ネットワークエミュレータ
+    public StandaloneSimulator standaloneSimulator = null; // スタンドアローンシミュレータ
 
-    // ネットワークエミュレータの取得
-    public static NetworkEmulator NetworkEmulator { get { return instance.networkEmulator; }}
+    // スタンドアローンシミュレータの取得
+    public static StandaloneSimulator StandaloneSimulator { get { return instance.standaloneSimulator; }}
+
+    // スタンドアローンモードかどうか
+    // このフラグの if 文を置くことによって Unreachable コードの警告を回避
+    public static bool IsStandaloneMode {
+        get {
+            #if STANDALONE_MODE
+            return true;
+            #else
+            return false;
+            #endif
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

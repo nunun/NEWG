@@ -156,9 +156,9 @@ public partial class Lobby {
             matchingResponse = wait.Value1;
         }
 
-        #if NETWORK_EMULATION_MODE
-        // ネットワークエミュレーションモード時
-        if (GameManager.NetworkEmulator != null) {
+        #if STANDALONE_MODE
+        // スタンドアローンモード時
+        if (GameManager.IsStandaloneMode) {
             GameSceneManager.ChangeScene(GameManager.ServerSceneName);
             yield break;
         }

@@ -130,10 +130,10 @@ public partial class WebAPIClient {
         var request   = requestList[0];
         var deltaTime = Time.deltaTime;
 
-        #if NETWORK_EMULATION_MODE
-        // ネットワークエミュレーションモード時
-        if (GameManager.NetworkEmulator != null) {
-            if (!GameManager.NetworkEmulator.EmulateWebAPI(request, deltaTime)) {
+        #if STANDALONE_MODE
+        // スタンドアローンモード時
+        if (GameManager.IsStandaloneMode) {
+            if (!GameManager.StandaloneSimulator.SimulateWebAPI(request, deltaTime)) {
                 requestList.RemoveAt(0);
                 request.ReturnToPool();
             }
