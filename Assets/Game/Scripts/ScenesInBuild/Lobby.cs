@@ -157,13 +157,9 @@ public partial class Lobby {
         }
 
         #if NETWORK_EMULATION_MODE
-        // ネットワークエミュレーションモード対応
-        var networkEmulator = GameAssetManager.NetworkEmulator;
-        if (networkEmulator != null) {
-            GameDataManager.ServerConnectData.serverAddress = networkEmulator.serverAddress;
-            GameDataManager.ServerConnectData.serverPort    = networkEmulator.serverPort;
-            GameDataManager.ServerConnectData.serverToken   = networkEmulator.serverToken;
-            GameSceneManager.ChangeScene(networkEmulator.serverSceneName);
+        // ネットワークエミュレーションモード時
+        if (GameManager.NetworkEmulator != null) {
+            GameSceneManager.ChangeScene(GameManager.ServerSceneName);
             yield break;
         }
         #endif
@@ -173,6 +169,10 @@ public partial class Lobby {
         Debug.Log(error);
         Debug.Log(matchingResponse.matchingToken);
         Debug.Log(matchingResponse.matchingServerUrl);
+
+        // TODO
+        //GameManager.SetServerInformation(address, port, token, sceneName);
+        //matchingUI.ChangeScene(GameManager.ServerSceneName);
 
         // TODO
         // マッチングサーバへの接続とシーン切り替え

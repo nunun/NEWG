@@ -78,6 +78,9 @@ public partial class GameBuildProcessor {
         var gameManager = FindObjectOfType<GameManager>();
         if (gameManager != null) {
             gameManager.runtimeServiceMode = binaryServiceMode;
+            if (!isDebugBinary) {
+                gameManager.networkEmulator = null; // NOTE リリース版は絶対にネットワークエミュレーションを許さない
+            }
         }
 
         // ゲームネットワークマネージャ

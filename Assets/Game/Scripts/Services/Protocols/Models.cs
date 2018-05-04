@@ -103,7 +103,7 @@ namespace Services.Protocols.Models {
         public int serverPort; // 接続先のサーバポート
         public string serverToken; // 接続用サーバトークン
         protected override void Clear() {
-            serverAddress = null; // 接続先のサーバアドレス
+            serverAddress = "localhost"; // 接続先のサーバアドレス
             serverPort = 7777; // 接続先のサーバポート
             serverToken = null; // 接続用サーバトークン
         }

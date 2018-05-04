@@ -7,29 +7,8 @@ using UnityEngine;
 // ゲームで使用するアセット (プレハブ、スクリプタブルオブジェクト) を管理します。
 [DefaultExecutionOrder(int.MinValue)]
 public partial class GameAssetManager : MonoBehaviour {
-    //-------------------------------------------------------------------------- 変数 (NETWORK_EMULATION_MODE)
-    #if NETWORK_EMULATION_MODE
-    // ネットワークエミュレータ
-    public static GameAsset<NetworkEmulator> networkEmulator = new GameAsset<NetworkEmulator>("ScriptableObjects/NetworkEmulator");
-    // ネットワークエミュレータの取得
-    public static NetworkEmulator NetworkEmulator { get { return networkEmulator.Loaded; }}
-    #endif
-
-    //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
-    // ゲームデータの初期化
-    void InitializeGameAssets() {
-        #if NETWORK_EMULATION_MODE
-        networkEmulator.LoadImmediately();
-        Debug.Assert(networkEmulator.Loaded != null, "NetworkEmulator ロード失敗");
-        #endif
-    }
-
-    // ゲームデータの後始末
-    void FinalizeGameAssets() {
-        #if NETWORK_EMULATION_MODE
-        networkEmulator.Unload();
-        #endif
-    }
+    // NOTE
+    // パーシャルクラスを参照
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -168,10 +147,6 @@ public partial class GameAssetManager {
             return;
         }
         instance = this;
-
-        // NOTE
-        // 各種データを初期化
-        InitializeGameAssets();
     }
 
     void OnDestroy() {
@@ -179,10 +154,6 @@ public partial class GameAssetManager {
             return;
         }
         instance = null;
-
-        // NOTE
-        // 各種データを後始末
-        FinalizeGameAssets();
     }
 
     void Update() {

@@ -16,18 +16,6 @@ public partial class NetworkEmulator : ScriptableObject {
     //-------------------------------------------------------------------------- 変数
     // プレイヤー名
     public string playerName = "NetworkEmulator";
-
-    // ゲームサーバ アドレス
-    public string serverAddress = "localhost";
-
-    // ゲームサーバ ポート
-    public int serverPort = 7777;
-
-    // ゲームサーバ トークン
-    public string serverToken = "(dummy serverToken)";
-
-    // ゲームサーバ シーン名
-    public string serverSceneName = "NetworkProvingGround";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -47,7 +35,7 @@ public partial class NetworkEmulator {
     //-------------------------------------------------------------------------- WebAPI エミュレーション
     public bool EmulateWebAPI(WebAPIClient.Request request, float deltaTime) {
         if (debugRequest == null) {
-            Debug.LogFormat("NetworkEmulator: WebAPI リクエストをエミュレータで処理します ({0})", request.ToString());
+            Debug.LogWarningFormat("NetworkEmulator: WebAPI リクエストを処理 ({0})", request.ToString());
             debugRequest = request;
             debugDelay   = DEBUG_DELAY;
         }

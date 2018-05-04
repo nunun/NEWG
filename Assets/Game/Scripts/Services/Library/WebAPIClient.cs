@@ -131,10 +131,9 @@ public partial class WebAPIClient {
         var deltaTime = Time.deltaTime;
 
         #if NETWORK_EMULATION_MODE
-        // ネットワークエミュレーションモード対応
-        var networkEmulator = GameAssetManager.NetworkEmulator;
-        if (networkEmulator != null) {
-            if (!networkEmulator.EmulateWebAPI(request, deltaTime)) {
+        // ネットワークエミュレーションモード時
+        if (GameManager.NetworkEmulator != null) {
+            if (!GameManager.NetworkEmulator.EmulateWebAPI(request, deltaTime)) {
                 requestList.RemoveAt(0);
                 request.ReturnToPool();
             }

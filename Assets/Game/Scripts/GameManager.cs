@@ -34,6 +34,46 @@ public partial class GameManager {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
+// サーバ接続先の情報
+// マッチングで決定したサーバ接続先の一時的な情報です。
+public partial class GameManager {
+    //-------------------------------------------------------------------------- 変数
+    public string serverAddress   = "localhost";            // サーバアドレス
+    public int    serverPort      = 7777;                   // サーバポート
+    public string serverToken     = null;                   // サーバトークン
+    public string serverSceneName = "NetworkProvingGround"; // サーバシーン名
+
+    public static string ServerAddress   { get { return instance.serverAddress;   }}
+    public static int    ServerPort      { get { return instance.serverPort;      }}
+    public static string ServerToken     { get { return instance.serverToken;     }}
+    public static string ServerSceneName { get { return instance.serverSceneName; }}
+
+    //-------------------------------------------------------------------------- 設定
+    public static void SetServerInformation(string address, int port, string token, string sceneName) {
+        instance.serverAddress   = address;
+        instance.serverPort      = port;
+        instance.serverToken     = token;
+        instance.serverSceneName = sceneName;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+// ネットワークエミュレータの情報
+public partial class GameManager {
+    //-------------------------------------------------------------------------- 変数
+    public NetworkEmulator networkEmulator = null; // ネットワークエミュレータ
+
+    // ネットワークエミュレータの取得
+    public static NetworkEmulator NetworkEmulator { get { return instance.networkEmulator; }}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
 // ゲームの中断と終了
 public partial class GameManager {
     //-------------------------------------------------------------------------- 変数

@@ -9,11 +9,11 @@ using Services.Protocols;
 public partial class NetworkProvingGround : GameScene {
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     void Awake() {
-        InitLoading();
+        InitStandby();
     }
 
     void Start() {
-        loadingUI.Show();
+        standbyUI.Show();
     }
 }
 
@@ -21,28 +21,51 @@ public partial class NetworkProvingGround : GameScene {
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-// ロード処理
+// スタンバイ処理
 public partial class NetworkProvingGround {
     //-------------------------------------------------------------------------- 変数
-    [SerializeField] SceneUI loadingUI = null;
+    [SerializeField] SceneUI standbyUI = null;
 
     //-------------------------------------------------------------------------- ロビーの初期化、開始、停止、更新
-    void InitLoading() {
-        Debug.Assert(loadingUI != null, "loadingUI がない");
-        loadingUI.onOpen.AddListener(() => { StartCoroutine("UpdateLoading"); });
-        loadingUI.onClose.AddListener(() => { StopCoroutine("UpdateLoading"); });
+    void InitStandby() {
+        Debug.Assert(standbyUI != null, "standbyUI がない");
+        standbyUI.onOpen.AddListener(() => { StartCoroutine("UpdateStandby"); });
+        standbyUI.onClose.AddListener(() => { StopCoroutine("UpdateStandby"); });
     }
 
-    IEnumerator UpdateLoading() {
-        //GameAudio.PlayBGM("Abandoned");
-        //GameAudio.SetBGMVolume("Abandoned", 1.0f);
+    IEnumerator UpdateStandby() {
+        GameAudio.PlayBGM("Abandoned");
+        GameAudio.SetBGMVolume("Abandoned", 1.0f);
+
+        // マッチング結果から接続先を設定
+        var networkManager = GameNetworkManager.singleton;
+        networkManager.networkAddress = GameManager.ServerAddress;
+        networkManager.networkPort    = GameManager.ServerPort;
+
+        // サービス開始
+        var serviceMode = GameManager.RuntimeServiceMode;
+        switch (serviceMode) {
+        case GameManager.ServiceMode.Client:
+            Debug.Log("Start Client ...");
+            networkManager.StartClient();
+            break;
+        case GameManager.ServiceMode.Server:
+            Debug.Log("Start Server ...");
+            networkManager.StartServer();
+            break;
+        case GameManager.ServiceMode.Host:
+        default:
+            Debug.Log("Start Host ...");
+            networkManager.StartHost();
+            break;
+        }
 
         // TODO
         // ロード処理
         yield return new WaitForSeconds(3.0f);
 
         // ローディング完了
-        loadingUI.Close();
+        standbyUI.Close();
     }
 }
 

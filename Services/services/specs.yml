@@ -160,7 +160,7 @@ specs:
             - name:  serverAddress
               desc:  接続先のサーバアドレス
               type:  string
-              value: (null)
+              value: localhost
             - name:  serverPort
               desc:  接続先のサーバポート
               type:  int
