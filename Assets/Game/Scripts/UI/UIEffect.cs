@@ -56,6 +56,10 @@ public class UIEffect : MonoBehaviour {
     //-------------------------------------------------------------------------- 変数
     [SerializeField] protected UIEffectEvents events; // イベント
 
+    // 表示状態が初期化済かどうか
+    // SetEffected, SetUneffected 後の Awake で二重初期化を防止するためのワークフラグ。
+    bool isEffectVisibilityInitialized = false;
+
     // 現在状態
     State currentState = State.Uneffected;
 
@@ -86,6 +90,18 @@ public class UIEffect : MonoBehaviour {
         // 継承して実装
     }
 
+    //-------------------------------------------------------------------------- 内部インターフェイス
+    protected void SetEffectVisibility(bool isEffected) {
+        if (isEffectVisibilityInitialized) {
+            return;
+        }
+        if (isEffected) {
+            SetEffected();
+        } else {
+            SetUneffected();
+        }
+    }
+
     //-------------------------------------------------------------------------- エフェクト
     // エフェクト
     public void Effect(float normalizedTime = 0.0f) {
@@ -99,6 +115,7 @@ public class UIEffect : MonoBehaviour {
     public void SetEffected() {
         Debug.AssertFormat(currentState == State.Effected || currentState == State.Uneffected, "エフェクト中 ({0}/{1})", name, currentState);
         currentState = State.Effected;
+        isEffectVisibilityInitialized = true;
         OnEffect(false, 1.0f);
         onSetEffected.Invoke();
     }
@@ -124,6 +141,7 @@ public class UIEffect : MonoBehaviour {
     public void SetUneffected() {
         Debug.AssertFormat(currentState == State.Effected || currentState == State.Uneffected, "エフェクト中 ({0}/{1})", name, currentState);
         currentState = State.Uneffected;
+        isEffectVisibilityInitialized = true;
         OnUneffect(false, 1.0f);
         onSetUneffected.Invoke();
     }

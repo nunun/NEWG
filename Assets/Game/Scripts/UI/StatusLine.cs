@@ -36,7 +36,7 @@ public class StatusLine : UIComponent<bool> {
    //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     void Awake() {
         SetUIRecycle(() => {});
-        Hide();
+        SetUIVisibility(false);
     }
 
     void OnDestroy() {

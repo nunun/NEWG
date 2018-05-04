@@ -56,8 +56,8 @@ public partial class NetworkProvingGround {
         // ロード処理
         yield return new WaitForSeconds(3.0f);
 
-        // ローディング完了
-        standbyUI.Change(exitUI);
+        // スタンバイ完了
+        standbyUI.Close();
     }
 }
 

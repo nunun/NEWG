@@ -26,7 +26,7 @@ public class MessagePopup : UIComponent {
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     void Awake() {
         SetUIRecycle(ReturnToPool);
-        Hide();
+        SetUIVisibility(false);
     }
 
     void OnDestroy() {

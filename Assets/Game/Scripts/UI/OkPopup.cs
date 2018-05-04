@@ -38,7 +38,7 @@ public class OkPopup : UIComponent {
     void Awake() {
         SetUIRecycle(ReturnToPool);
         okButton.onClick.AddListener(OnClickOk);
-        Hide();
+        SetUIVisibility(false);
     }
 
     void OnDestroy() {

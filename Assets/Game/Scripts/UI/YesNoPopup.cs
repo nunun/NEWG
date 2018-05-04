@@ -51,7 +51,7 @@ public class YesNoPopup : UIComponent<bool> {
         SetUIRecycle(ReturnToPool);
         yesButton.onClick.AddListener(OnClickYes);
         noButton.onClick.AddListener(OnClickNo);
-        Hide();
+        SetUIVisibility(false);
     }
 
     void OnDestroy() {

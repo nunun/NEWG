@@ -9,23 +9,21 @@ using UnityEngine.UI;
 // シーンの実装が、この UI に対して Open() と Close() するために使います。
 public class SceneUI : UIComponent {
     //-------------------------------------------------------------------------- 定義
-    public enum Visibility { Show, Hide, SceneSetting };
+    public enum Visibility { Hide = 0, SceneSetting = 1 };
 
     //-------------------------------------------------------------------------- 変数
-    public Visibility initialVisibility = Visibility.Hide;
+    public Visibility initialVisibility = Visibility.SceneSetting;
 
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     void Awake() {
         SetUIRecycle(SetUIDone);
         switch (initialVisibility) {
-        case Visibility.Show:
-            Show();
-            break;
         case Visibility.Hide:
-            Hide();
+            SetUIVisibility(false);
             break;
         case Visibility.SceneSetting:
         default:
+            SetUIVisibility(gameObject.activeSelf);
             break;
         }
     }
