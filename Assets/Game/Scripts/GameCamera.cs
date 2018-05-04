@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using UnityEngine.Assertions;
 using UnityEngine.Networking;
 
@@ -102,6 +104,9 @@ public partial class GameCamera {
             }
             var refocusInput = Input.GetButton("Fire1");
             if (refocusInput) {
+                if (EventSystem.current.IsPointerOverGameObject()) {
+                    return; // NOTE UI をクリックした場合はそのまま
+                }
                 Cursor.lockState = CursorLockMode.Locked;
             }
         }

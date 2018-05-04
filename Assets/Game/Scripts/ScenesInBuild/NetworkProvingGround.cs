@@ -12,6 +12,12 @@ public partial class NetworkProvingGround : GameScene {
         InitStandby();
     }
 
+    void OnDestroy() {
+        // NOTE
+        // ここでサービス停止
+        StopService();
+    }
+
     void Start() {
         standbyUI.Show();
     }
@@ -24,27 +30,50 @@ public partial class NetworkProvingGround : GameScene {
 // スタンバイ処理
 public partial class NetworkProvingGround {
     //-------------------------------------------------------------------------- 変数
-    [SerializeField] SceneUI standbyUI = null;
+    [SerializeField] SceneUI standbyUI  = null;
+    [SerializeField] SceneUI exitUI     = null;
+    [SerializeField] Button  exitButton = null;
 
     //-------------------------------------------------------------------------- ロビーの初期化、開始、停止、更新
     void InitStandby() {
-        Debug.Assert(standbyUI != null, "standbyUI がない");
+        Debug.Assert(standbyUI  != null, "standbyUI がない");
+        Debug.Assert(exitUI     != null, "exitUI がない");
+        Debug.Assert(exitButton != null, "exitButton がない");
         standbyUI.onOpen.AddListener(() => { StartCoroutine("UpdateStandby"); });
         standbyUI.onClose.AddListener(() => { StopCoroutine("UpdateStandby"); });
+        exitButton.onClick.AddListener(() => { GameSceneManager.ChangeScene("Lobby"); });
     }
 
     IEnumerator UpdateStandby() {
         GameAudio.PlayBGM("Abandoned");
         GameAudio.SetBGMVolume("Abandoned", 1.0f);
 
-        // マッチング結果から接続先を設定
+        // NOTE
+        // ここでサービス開始
+        StartService();
+
+        // TODO
+        // ロード処理
+        yield return new WaitForSeconds(3.0f);
+
+        // ローディング完了
+        standbyUI.Change(exitUI);
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+// ネットワークサービス処理
+public partial class NetworkProvingGround {
+    //-------------------------------------------------------------------------- ネットワークサービスの開始と停止
+    // ネットワークサービスの開始
+    void StartService() {
         var networkManager = GameNetworkManager.singleton;
         networkManager.networkAddress = GameManager.ServerAddress;
         networkManager.networkPort    = GameManager.ServerPort;
-
-        // サービス開始
-        var serviceMode = GameManager.RuntimeServiceMode;
-        switch (serviceMode) {
+        switch (GameManager.RuntimeServiceMode) {
         case GameManager.ServiceMode.Client:
             Debug.Log("Start Client ...");
             networkManager.StartClient();
@@ -59,67 +88,25 @@ public partial class NetworkProvingGround {
             networkManager.StartHost();
             break;
         }
+    }
 
-        // TODO
-        // ロード処理
-        yield return new WaitForSeconds(3.0f);
-
-        // ローディング完了
-        standbyUI.Close();
+    // ネットワークサービスの停止
+    void StopService() {
+        var networkManager = GameNetworkManager.singleton;
+        switch (GameManager.RuntimeServiceMode) {
+        case GameManager.ServiceMode.Client:
+            Debug.Log("Stop Client ...");
+            networkManager.StopClient();
+            break;
+        case GameManager.ServiceMode.Server:
+            Debug.Log("Stop Server ...");
+            networkManager.StopServer();
+            break;
+        case GameManager.ServiceMode.Host:
+        default:
+            Debug.Log("Stop Host ...");
+            networkManager.StopHost();
+            break;
+        }
     }
 }
-
-//using (var wait = UIWait.RentFromPool()) {
-//    var popup = MessagePopup.Open("これはメッセージポップアップです。", wait.Callback);
-//    yield return new WaitForSeconds(2.0f);
-//    popup.Close();
-//    yield return wait;
-//    Debug.Log(wait.error);
-//}
-//using (var wait = UIWait.RentFromPool()) {
-//    OkPopup.Open("これは OK ポップアップです。", wait.Callback, "がんばるぞい");
-//    yield return wait;
-//    Debug.Log(wait.error);
-//}
-//using (var wait = UIWait<bool>.RentFromPool()) {
-//    YesNoPopup.Open("これは OK ポップアップです。", wait.Callback, "やる", "やめた");
-//    yield return wait;
-//    Debug.Log(wait.error);
-//    Debug.Log(wait.Value1);
-//}
-//[SerializeData]
-//public class MyData {
-//    public int val = 0;
-//}
-//
-//[SerializeData]
-//public class MyDataImporter {
-//    MyData my_data = new MyData();
-//}
-//[Serializable]
-//public class TestC {
-//    public bool dirty;
-//}
-//
-//[Serializable]
-//public class TestB<T> {
-//    public T t;
-//}
-//
-////[Serializable]
-//public class TestA {
-//    [Serializable] public class TestD : TestB<TestC> {}
-//    public TestD foo = new TestD();
-//    [Serializable] public class TestE : TestB<TestC> {}
-//    public TestE bar = new TestE();
-//}
-//static void Import<T>(string message, T data) {
-//    JsonUtility.FromJsonOverwrite(message, data);
-//}
-//var result = new TestA();
-//JsonUtility.FromJsonOverwrite("{}", result);
-//Debug.Log(result.foo.t.dirty);
-//JsonUtility.FromJsonOverwrite("{\"foo\":{\"t\":{\"dirty\":true}}}", result);
-//Debug.Log(result.bar.t.dirty);
-//Debug.Log(result.qux.t.dirty);
-//yield break;
