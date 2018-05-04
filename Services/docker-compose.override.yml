@@ -4,7 +4,7 @@ services:
     build:
       context: ./client
       args:
-        - BUILD_CONFIGURATION=${BUILD_CONFIGURATION}
+        - BUILD_CONFIGURATION=develop
     environment:
       - LOG_LEVEL=debug
     volumes:
@@ -14,7 +14,7 @@ services:
     build:
       context: ./server
       args:
-        - BUILD_CONFIGURATION=${BUILD_CONFIGURATION}
+        - BUILD_CONFIGURATION=develop
     environment:
       - LOG_LEVEL=debug
     volumes:
@@ -25,7 +25,7 @@ services:
     build:
       context: ./matching
       args:
-        - BUILD_CONFIGURATION=${BUILD_CONFIGURATION}
+        - BUILD_CONFIGURATION=develop
     environment:
       - LOG_LEVEL=debug
     volumes:
@@ -36,7 +36,7 @@ services:
     build:
       context: ./api
       args:
-        - BUILD_CONFIGURATION=${BUILD_CONFIGURATION}
+        - BUILD_CONFIGURATION=develop
     environment:
       - LOG_LEVEL=debug
     volumes:
@@ -47,7 +47,7 @@ services:
     build:
       context: ./mindlink
       args:
-        - BUILD_CONFIGURATION=${BUILD_CONFIGURATION}
+        - BUILD_CONFIGURATION=develop
     environment:
       - DEBUG_HTTP_CHANNEL_ENABLE=1
       - LOG_LEVEL=debug

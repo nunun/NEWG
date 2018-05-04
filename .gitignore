@@ -41,6 +41,7 @@ Assets/InitTestScene*.unity
 Assets/InitTestScene*.unity.meta
 
 # Services
+Services/.task.conf
 Services/client/Builds
 Services/server/Builds
 Services/matching/app/node_modules

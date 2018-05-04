@@ -14,7 +14,7 @@
 version: '3.3'
 services:
   client:
-    image: newg/client:1
+    image: ${REPOSITORY}/client
     ports:
       - 80:80
     depends_on:
@@ -22,19 +22,19 @@ services:
       - matching
 
   server:
-    image: newg/server:1
+    image: ${REPOSITORY}/server
     depends_on:
       - mindlink
 
   matching:
-    image: newg/matching:1
+    image: ${REPOSITORY}/matching
     ports:
       - 7755:7755
     depends_on:
       - mindlink
 
   api:
-    image: newg/api:1
+    image: ${REPOSITORY}/api
     depends_on:
       - mindlink
       - couchdb
