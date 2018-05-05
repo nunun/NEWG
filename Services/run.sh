@@ -35,5 +35,6 @@ task_bundle() {
         echo ""
         echo "'docker stack deploy' to deploy services on host."
         echo "ex) docker stack deploy services --compose-file ${OUTPUT_FILENAME}"
+        echo "    docker stack rm services"
 }
 . "`dirname ${0}`/.task.sh" up ${*}
