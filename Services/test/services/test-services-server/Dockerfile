@@ -2,9 +2,8 @@ FROM services/node:latest
 ARG BUILD_CONFIGURATION
 WORKDIR /app
 ADD app /app
+RUN rm -rf /app/services /app/node_modules
 RUN mv /services /app/services
-RUN rm -rf /app/node_modules
-RUN apk add --no-cache git
 RUN npm install
 RUN if [ "${BUILD_CONFIGURATION}" = "tester" ]; then \
             npm -g install mocha; \

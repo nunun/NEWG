@@ -27,7 +27,7 @@ task_bundle() {
         (cd ${PROJECT_TASK_DIR}; sh run.sh services build)
         BUNDLE_YAMLS="-f docker-compose.yml -f docker-compose.bundle.yml"
         CONFIG_YAMLS="-f docker-compose.yml -f docker-compose.stack.yml"
-        docker-compose ${BUNDLE_YAMLS} build --force-rm
+        docker-compose ${BUNDLE_YAMLS} build --force-rm --no-cache
         docker-compose ${BUNDLE_YAMLS} push
         docker-compose ${CONFIG_YAMLS} config --resolve-image-digest > ${OUTPUT_FILENAME}
         echo ""
