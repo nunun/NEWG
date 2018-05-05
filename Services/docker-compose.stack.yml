@@ -9,8 +9,6 @@ services:
           - node.role == worker
 
   server:
-    networks:
-      - outside
     deploy:
       mode: replicated
       replicas: 1
@@ -66,7 +64,3 @@ services:
         constraints:
           - node.role == manager
 
-networks:
-  outside:
-    external:
-      name: "host"

@@ -19,7 +19,6 @@ services:
       - LOG_LEVEL=debug
     volumes:
       - ./server/Builds:/server
-    network_mode: host
 
   matching:
     build:

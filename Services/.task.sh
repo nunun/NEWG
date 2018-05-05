@@ -81,9 +81,9 @@ PROJECT_TASK_DIR=`project_task_dir`
 DEFAULT_TASK="${1?specify default task}"
 shift 1
 
-# load task.conf file
+# load .task.conf file
 TASK_CONF_FILE="${PROJECT_TASK_DIR}/.task.conf"
-TASK_CONF_EXAMPLE_FILE="${PROJECT_TASK_DIR}/.task.conf.example"
+TASK_CONF_EXAMPLE_FILE="${PROJECT_TASK_DIR}/${TASK_CONF_FILE}.example"
 if [ ! -f "${TASK_CONF_FILE}" ]; then
         #echo "(copy ${TASK_CONF_FILE_EXAMPLE} to ${TASK_CONF_FILE})"
         cp ${TASK_CONF_FILE_EXAMPLE} ${TASK_CONF_FILE}
@@ -93,19 +93,16 @@ if [   -f "${TASK_CONF_FILE}" ]; then
         . ${TASK_CONF_FILE}
 fi
 
-# load .env file
-ENV_FILE="${TASK_DIR}/.env"
-if [ -f "${ENV_FILE}" ]; then
-        #echo "(load ${ENV_FILE})"
-        . ${ENV_FILE}
-fi
-
-# load special .env file
-SPECIAL_ENV_FILE="${TASK_DIR}/.env.${1}"
-if [ -f "${SPECIAL_ENV_FILE}" ]; then
-        #echo "(load ${SPECIAL_ENV_FILE})"
-        . ${SPECIAL_ENV_FILE}
+# load .task.env file
+TASK_ENV_FILE="${TASK_DIR}/.task.env.${1}"
+TASK_ENV_DEFAULT_FILE="${TASK_DIR}/.task.env"
+if [ -f "${TASK_ENV_FILE}" ]; then
+        #echo "(load ${TASK_ENV_FILE})"
+        . ${TASK_ENV_FILE}
         shift 1
+elif [ -f "${TASK_ENV_DEFAULT_FILE}" ]; then
+        #echo "(load ${TASK_ENV_DEFAULT_FILE})"
+        . ${TASK_ENV_DEFAULT_FILE}
 fi
 
 # setup execute task

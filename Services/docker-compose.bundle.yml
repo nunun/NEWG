@@ -1,0 +1,23 @@
+version: '3.3'
+services:
+  client:
+    build: ./client
+
+  server:
+    build: ./server
+
+  matching:
+    build: ./matching
+
+  api:
+    build: ./api
+
+  mindlink:
+    build: ./mindlink
+
+  rabbitmq: {}
+
+  couchdb: {}
+
+  redis: {}
+

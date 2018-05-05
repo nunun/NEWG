@@ -1,0 +1,88 @@
+services:
+  api:
+    depends_on:
+    - couchdb
+    - mindlink
+    deploy:
+      mode: replicated
+      placement:
+        constraints:
+        - node.role == manager
+      replicas: 1
+    image: fu-n.net:5000/newg-develop/api@sha256:d352cff8d5972c8d91adbc27171b2b201b0af71ea4ff4ac02be6228a35a4f9d5
+  client:
+    depends_on:
+    - matching
+    - server
+    deploy:
+      mode: replicated
+      placement:
+        constraints:
+        - node.role == worker
+      replicas: 1
+    image: fu-n.net:5000/newg-develop/client@sha256:ab5b0710961e0e399a9ea9788c71f716a4f34ac42cf9401dc5214f533b0f6b19
+    ports:
+    - published: 80
+      target: 80
+  couchdb:
+    deploy:
+      mode: replicated
+      placement:
+        constraints:
+        - node.role == manager
+      replicas: 1
+    image: couchdb@sha256:7bff6cce6812bd1fe7a9d985d1e7d27ee8351e255a66d847a231cf31384ee4ac
+  matching:
+    depends_on:
+    - mindlink
+    deploy:
+      mode: replicated
+      placement:
+        constraints:
+        - node.role == worker
+      replicas: 1
+    image: fu-n.net:5000/newg-develop/matching@sha256:e492fac1cad8bcd80238fee06c17ab67470437c0e58bb71200bda30516b66609
+    ports:
+    - published: 7755
+      target: 7755
+  mindlink:
+    depends_on:
+    - rabbitmq
+    deploy:
+      mode: replicated
+      placement:
+        constraints:
+        - node.role == manager
+      replicas: 1
+    image: fu-n.net:5000/newg-develop/mindlink@sha256:37488e282abef7d96be1783c6918b9c473a676225ff05ee69443ddc20b3c12fc
+    ports:
+    - published: 7766
+      target: 7766
+  rabbitmq:
+    deploy:
+      mode: replicated
+      placement:
+        constraints:
+        - node.role == manager
+      replicas: 1
+    image: rabbitmq@sha256:ae2339bfd2154b10af527f0a6d98395f9047efc372f5947df53c9ad77835a6d2
+  redis:
+    deploy:
+      mode: replicated
+      placement:
+        constraints:
+        - node.role == manager
+      replicas: 1
+    image: redis@sha256:f57b2cdc24a1ab6752a738d81060a81ad9f0883fd006fd1cf1fb9bb75af584d7
+  server:
+    depends_on:
+    - mindlink
+    deploy:
+      mode: replicated
+      placement:
+        constraints:
+        - node.role == worker
+      replicas: 1
+    image: fu-n.net:5000/newg-develop/server@sha256:916b7e1eb164188ee76b4759f6eda4a4325e896c6005a13547e68d358e9855f5
+version: '3.3'
+
