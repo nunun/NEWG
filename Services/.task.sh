@@ -106,8 +106,12 @@ elif [ -f "${TASK_ENV_DEFAULT_FILE}" ]; then
 fi
 
 # setup execute task
-EXECUTE_TASK=${1:-"${DEFAULT_TASK}"}
-shift 1
+EXECUTE_TASK="${1}"
+if [   "${EXECUTE_TASK}" = "" ]; then
+        EXECUTE_TASK="${DEFAULT_TASK}"
+else
+        shift 1
+fi
 
 # execute task
 task_${EXECUTE_TASK} ${*}

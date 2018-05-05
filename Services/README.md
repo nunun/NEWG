@@ -4,13 +4,11 @@
 
 ````
 sh run.sh help
-
 sh run.sh build
 sh run.sh [up]
 sh run.sh down
-
-sh run.sh publish <publish to>
-<publish to> = docker private registry address
+sh run.sh <env> bundle
+<env> = local, develop ...
 
 sh run.sh services protocols
 
