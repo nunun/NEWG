@@ -1,7 +1,7 @@
 version: '3.3'
 services:
   test-webapi-client:
-    image: test-webapi/test-webapi-client
+    image: ${ENV_REPOSITORY}/test-webapi-client
     build:
       context: ./test-webapi-client
       args:
@@ -16,7 +16,7 @@ services:
       - mindlink
 
   api:
-    image: test-webapi/api
+    image: ${ENV_REPOSITORY}/api
     build:
       context: ./../../api
       args:
@@ -34,7 +34,7 @@ services:
       - redis
 
   mindlink:
-    image: test-webapi/mindlink
+    image: ${ENV_REPOSITORY}/mindlink
     build:
       context: ./../../mindlink
       args:

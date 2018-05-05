@@ -1,7 +1,7 @@
 version: '3.3'
 services:
   test-services-client:
-    image: test-services/test-services-client
+    image: ${ENV_REPOSITORY}/test-services-client
     build:
       context: ./test-services-client
       args:
@@ -19,7 +19,7 @@ services:
       - redis
 
   test-services-server:
-    image: test-services/test-services-server
+    image: ${ENV_REPOSITORY}/test-services-server
     build:
       context: ./test-services-server
       args:
@@ -31,7 +31,7 @@ services:
       - ./../../services:/app/services
 
   mindlink1:
-    image: test-services/mindlink
+    image: ${ENV_REPOSITORY}/mindlink
     build:
       context: ./../../mindlink
       args:
@@ -48,7 +48,7 @@ services:
       - rabbitmq
 
   mindlink2:
-    image: test-services/mindlink
+    image: ${ENV_REPOSITORY}/mindlink
     environment:
       - DEBUG_HTTP_CHANNEL_ENABLE=1
       - LOG_LEVEL=debug

@@ -72,6 +72,7 @@ task_help() {
 }
 
 # setup environment variables
+TASK_DIR=`pwd`
 PROJECT_NAME=`project_name`
 PROJECT_DIR=`project_dir`
 PROJECT_TASK_DIR=`project_task_dir`
@@ -79,25 +80,33 @@ PROJECT_TASK_DIR=`project_task_dir`
 # setup default task
 DEFAULT_TASK="${1?specify default task}"
 shift 1
-if [ "${1}" = "" ]; then
-        echo "${0} [envname] <command> <argument>..."
-        echo ""
-        echo " ex) ${0} up"
-        echo "     ${0} develop build && ${0} develop push"
-        exit
-fi
 
 # load task.conf file
 TASK_CONF_FILE="${PROJECT_TASK_DIR}/.task.conf"
 TASK_CONF_EXAMPLE_FILE="${PROJECT_TASK_DIR}/.task.conf.example"
-[ ! -f "${TASK_CONF_FILE}" ] && cp -v ${TASK_CONF_FILE_EXAMPLE} ${TASK_CONF_FILE}
-[   -f "${TASK_CONF_FILE}" ] && . ${TASK_CONF_FILE}
+if [ ! -f "${TASK_CONF_FILE}" ]; then
+        #echo "(copy ${TASK_CONF_FILE_EXAMPLE} to ${TASK_CONF_FILE})"
+        cp ${TASK_CONF_FILE_EXAMPLE} ${TASK_CONF_FILE}
+fi
+if [   -f "${TASK_CONF_FILE}" ]; then
+        #echo "(load ${TASK_CONF_FILE})"
+        . ${TASK_CONF_FILE}
+fi
 
 # load .env file
-ENV_FILE_NAME="${PROJECT_TASK_DIR}/.env.${1}"
-ENV_FILE_DEFAULT_NAME="${PROJECT_TASK_DIR}/.env"
-[ ! -f "${ENV_FILE_NAME}" ] && . ${ENV_FILE_DEFAULT_NAME}
-[   -f "${ENV_FILE_NAME}" ] && . ${ENV_FILE_NAME} && shift 1
+ENV_FILE="${TASK_DIR}/.env"
+if [ -f "${ENV_FILE}" ]; then
+        #echo "(load ${ENV_FILE})"
+        . ${ENV_FILE}
+fi
+
+# load special .env file
+SPECIAL_ENV_FILE="${TASK_DIR}/.env.${1}"
+if [ -f "${SPECIAL_ENV_FILE}" ]; then
+        #echo "(load ${SPECIAL_ENV_FILE})"
+        . ${SPECIAL_ENV_FILE}
+        shift 1
+fi
 
 # setup execute task
 EXECUTE_TASK=${1:-"${DEFAULT_TASK}"}
