@@ -11,7 +11,7 @@
 #  5984 couchdb
 # 15672 rabbitmq webui
 # 17766 mindlink webui
-version: '3.3'
+version: '3.4'
 services:
   client:
     image: ${ENV_REPOSITORY}/client
@@ -20,7 +20,6 @@ services:
     depends_on:
       - server
       - matching
-
   server:
     image: ${ENV_REPOSITORY}/server
     depends_on:
