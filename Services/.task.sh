@@ -63,16 +63,6 @@ unity() {
 }
 
 # task stack
-# stack tasks for deploy control.
-# ex) write .task.env and do below to up local stack on local host.
-#   sh run.sh stack bundle
-#   sh run.sh stack deploy
-#   sh run.sh stack rm
-# ex) write .task.env.develop and do below to up develop stack on remote host.
-#   sh run.sh develop stack bundle
-#   sh run.sh develop stack push
-#   sh services/stack.sh <deploy tag> deploy
-#   sh services/stack.sh <deploy tag> rm
 task_stack() {
         case "${1}" in
         deploy)
@@ -83,8 +73,8 @@ task_stack() {
                 docker stack rm ${ENV_STACK_NAME}
                 echo "stack '${ENV_STACK_NAME}' removed."
                 ;;
-        bundle)
-                echo "bundling compose files into a stack file ..."
+        build)
+                echo "building stack file ..."
                 (cd ${PROJECT_TASK_DIR}; sh run.sh services build)
                 BUILD_YAMLS="${ENV_STACK_BUNDLE_BUILD_YAMLS}"
                 CONFIG_YAMLS="${ENV_STACK_BUNDLE_CONFIG_YAMLS}"
@@ -97,11 +87,14 @@ task_stack() {
                 fi
                 docker-compose ${BUILD_YAMLS} push
                 docker-compose ${CONFIG_YAMLS} config --resolve-image-digest > ${ENV_STACK_BUNDLE_FILE}
+                echo ""
                 echo "successfully wrote to '${ENV_STACK_BUNDLE_FILE}'."
+                echo "* 'sh run.sh${TASK_ENV_NAME:+" "}${TASK_ENV_NAME} stack deploy' to deploy stack locally."
+                echo "* 'sh run.sh${TASK_ENV_NAME:+" "}${TASK_ENV_NAME} stack push'   to upload stack to '${ENV_STACK_DEPLOY_TAG}'."
                 ;;
         push)
                 echo "push stack file to ${ENV_STACK_DEPLOY_TAG} ..."
-                BUNDLE_DIR="/tmp/bundle"
+                BUNDLE_DIR="/tmp/stack"
                 DOCKER_FILE="${BUNDLE_DIR}/Dockerfile"
                 TASK_SH_FILE="${PROJECT_TASK_DIR}/.task.sh"
                 mkdir -p ${BUNDLE_DIR}
@@ -109,16 +102,41 @@ task_stack() {
                 cp ${TASK_ENV_FILE}             ${BUNDLE_DIR}/.task.env
                 cp ${PROJECT_TASK_DIR}/.task.sh ${BUNDLE_DIR}/.task.sh
                 echo "FROM alpine"                      > "${DOCKER_FILE}"
-                echo "WORKDIR /bundle"                 >> "${DOCKER_FILE}"
+                echo "WORKDIR /stack"                  >> "${DOCKER_FILE}"
                 echo "ADD ${ENV_STACK_BUNDLE_FILE} ./" >> "${DOCKER_FILE}"
                 echo "ADD .task.env                ./" >> "${DOCKER_FILE}"
                 echo "ADD .task.sh                 ./" >> "${DOCKER_FILE}"
                 (cd ${BUNDLE_DIR}; \
                  docker build --no-cache -t ${ENV_STACK_DEPLOY_TAG} .; \
                  docker push ${ENV_STACK_DEPLOY_TAG})
+                echo ""
+                echo "successfully upload stack to '${ENV_STACK_DEPLOY_TAG}'."
+                echo "* 'sh services/stack.sh ${ENV_STACK_DEPLOY_TAG} deploy' to deploy stack to host."
+                echo "* 'sh services/stack.sh ${ENV_STACK_DEPLOY_TAG} rm'     to remove stack from host."
                 ;;
         *)
-                echo "invalid command."
+                echo ""
+                echo "sh run.sh <env> stack build"
+                echo "sh run.sh <env> stack push"
+                echo "sh run.sh <env> stack deploy"
+                echo "sh run.sh <env> stack rm"
+                echo "sh services/stack.sh <deploy tag> deploy"
+                echo "sh services/stack.sh <deploy tag> rm"
+                echo ""
+                echo "ex) to up local stack on local host, write .task.env and do below:"
+                echo "  sh run.sh stack build"
+                echo "  sh run.sh stack deploy"
+                echo "  sh run.sh stack rm"
+                echo ""
+                echo "ex) to up develop stack on remote host, write .task.env.develop and do below:"
+                echo "  sh run.sh develop stack build"
+                echo "  sh run.sh develop stack push"
+                echo "  sh services/stack.sh registry:5000/myapp/stack deploy"
+                echo "  sh services/stack.sh registry:5000/myapp/stack rm"
+                echo ""
+                if [ ! "${1}" = "" ]; then
+                        echo "invalid command (${1})."
+                fi
                 ;;
         esac
 }
@@ -157,11 +175,14 @@ if [ -f "${TASK_CONF_FILE}" ]; then
 fi
 
 # load .task.env file
+TASK_ENV_NAME=""
 TASK_ENV_FILE="${TASK_DIR}/.task.env.${1}"
 TASK_ENV_DEFAULT_FILE="${TASK_DIR}/.task.env"
 if [ -f "${TASK_ENV_FILE}" ]; then
+        TASK_ENV_NAME="${1}"
         shift 1
 else
+        TASK_ENV_NAME=""
         TASK_ENV_FILE="${TASK_ENV_DEFAULT_FILE}"
 fi
 if [ -f "${TASK_ENV_FILE}" ]; then
