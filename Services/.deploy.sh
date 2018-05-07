@@ -1,7 +1,8 @@
 task_up() {
         echo "deploy: starting '${ENV_STACK_NAME}' ..."
         STACK_FILE=".stack${TASK_ENV_NAME_WITH_DOT}.yml"
-        docker stack deploy ${ENV_STACK_NAME} --compose-file ${STACK_FILE}
+        docker stack deploy ${ENV_STACK_NAME} \
+                --with-registry-auth --compose-file ${STACK_FILE}
 }
 
 task_down() {

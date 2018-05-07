@@ -1,10 +1,19 @@
-TAG="${1}"
-TMP_DIR="/tmp/deploy/`echo ${TAG} | md5sum | cut -d" " -f1`"
-VOL_DIR="${TMP_DIR}"
-[ "${OSTYPE}" = "cygwin" ] && VOL_DIR=`cygpath -w ${TMP_DIR}`
-echo "pull stack file from ${TAG} ..."
-mkdir -p "${TMP_DIR}" && cd ${TMP_DIR}
-docker pull ${TAG}
-docker run --rm -v ${VOL_DIR}:/deploy ${TAG} \
-sh -c "cp -a . /deploy/; chmod -R 777 /deploy"
-shift 1 && sh ./.stack.sh ${*}
+DEPLOY_TAG="${1?no deploy tag specified.}"
+shift 1
+set -e
+
+MD5=`which md5 || which md5sum` || (echo "no md5 command." && exit 1)
+HASH=`echo ${DEPLOY_TAG} | ${MD5} | cut -d" " -f1`
+DEPLOY_DIR="/tmp/deploy/stacks/${HASH}"
+VOLUME_DIR="${DEPLOY_DIR}"
+[ "${OSTYPE}" = "cygwin" ] && VOLUME_DIR=`cygpath -w ${DEPLOY_DIR}`
+
+mkdir -p "${DEPLOY_DIR}"
+cd "${DEPLOY_DIR}"
+
+echo "(in ${DEPLOY_DIR})"
+echo "pull stack file from '${DEPLOY_TAG}' ..."
+docker pull ${DEPLOY_TAG}
+docker run --rm -v ${VOLUME_DIR}:/stack ${DEPLOY_TAG} \
+        sh -c "cp -a . /stack/; chmod -R 777 /stack"
+sh ./.deploy.sh ${*}
