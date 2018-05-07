@@ -1,5 +1,6 @@
 task_up() {
         echo "deploy: starting '${ENV_STACK_NAME}' ..."
+        task_init # NOTE init automatically
         STACK_FILE=".stack${TASK_ENV_NAME_WITH_DOT}.yml"
         docker stack deploy ${ENV_STACK_NAME} \
                 --with-registry-auth --compose-file ${STACK_FILE}
@@ -8,74 +9,6 @@ task_up() {
 task_down() {
         echo "deploy: stopping '${ENV_STACK_NAME}' ..."
         docker stack rm ${ENV_STACK_NAME}
-}
-
-# TODO
-# renew + reset or setup + renew
-task_setup() {
-        # reset certs
-        if [ -n "${ENV_CERT}" ]; then
-                secret_rm "${ENV_CERT_PEM}"
-                secret_rm "${ENV_CHAIN_PEM}"
-                secret_rm "${ENV_FULLCHAIN_PEM}"
-                secret_rm "${ENV_PRIVKEY_PEM}"
-        fi
-
-        # remove all cache
-        CACHE_DIR="${PROJECT_TASK_DIR}/.cache/deploy"
-        rm -rf "${CACHE_DIR}"
-}
-
-task_renew() {
-        # renew certs
-        if [ -n "${ENV_CERT}" ]; then
-                CACHE_DIR="${PROJECT_TASK_DIR}/.cache/deploy/certs"
-                RECREATE="NO"
-                mkdir -p "${CACHE_DIR}"
-                case "${ENV_CERT}" in
-                selfsigned)
-                        CRT_FILE="${CACHE_DIR}/domain.crt"
-                        KEY_FILE="${CACHE_DIR}/domain.key"
-                        if [ ! -f "${CRT_FILE}" -o ! -f "${KEY_FILE}" ]; then
-                                openssl req -x509 -nodes -days 365 -newkey rsa:2048  \
-                                        -subj "/CN=${ENV_FQDN} /O=${ENV_FQDN} /C=JP" \
-                                        -out "${CRT_FILE}" -keyout "${KEY_FILE}"
-                                RECREATE="YES"
-                        fi
-                        CERT_PEM_FILE="${CRT_FILE}"
-                        CHAIN_PEM_FILE="${CRT_FILE}"
-                        FULLCHAIN_PEM_FILE="${CRT_FILE}"
-                        PRIVKEY_PEM_FILE="${KEY_FILE}"
-                        ;;
-                certbot)
-                        # TODO check update time
-                        docker run --rm -p "80:80" \
-                                -v `ospath ${CACHE_DIR}`:/etc/letsencrypt \
-                                deliverous/certbot certonly \
-                                --standalone --renew-by-default --non-interactive \
-                                --agree-tos --preferred-challenges http \
-                                -d "${ENV_FQDN}" --email "${ENV_EMAIL}"
-                        RECREATE="YES"                               # TODO
-                        CERT_PEM_FILE="${CACHE_DIR}/domain.crt"      # TODO
-                        CHAIN_PEM_FILE="${CACHE_DIR}/domain.crt"     # TODO
-                        FULLCHAIN_PEM_FILE="${CACHE_DIR}/domain.crt" # TODO
-                        PRIVKEY_PEM_FILE="${CACHE_DIR}/domain.key"   # TODO
-                        ;;
-                *)
-                        echo "'${ENV_CERT}' is not supported."
-                        ;;
-                esac
-                if [ "${RECREATE}" = "YES" ]; then
-                        secret_rm     "${ENV_CERT_PEM}"
-                        secret_rm     "${ENV_CHAIN_PEM}"
-                        secret_rm     "${ENV_FULLCHAIN_PEM}"
-                        secret_rm     "${ENV_PRIVKEY_PEM}"
-                        secret_create "${ENV_CERT_PEM}"      "${CERT_PEM_FILE}"
-                        secret_create "${ENV_CHAIN_PEM}"     "${CHAIN_PEM_FILE}"
-                        secret_create "${ENV_FULLCHAIN_PEM}" "${FULLCHAIN_PEM_FILE}"
-                        secret_create "${ENV_PRIVKEY_PEM}"   "${PRIVKEY_PEM_FILE}"
-                fi
-        fi
 }
 
 task_build() {
@@ -125,28 +58,168 @@ task_usage() {
         echo "sh run.sh <env> deploy push"
         echo "sh run.sh <env> deploy up"
         echo "sh run.sh <env> deploy down"
+        echo "sh run.sh <env> deploy init"
         echo "sh run.sh <env> deploy setup"
         echo "sh run.sh <env> deploy renew"
+        echo "sh run.sh <env> deploy reset"
         echo "sh deploy.sh <deploy tag> up"
         echo "sh deploy.sh <deploy tag> down"
+        echo "sh deploy.sh <deploy tag> init"
         echo "sh deploy.sh <deploy tag> setup"
         echo "sh deploy.sh <deploy tag> renew"
+        echo "sh deploy.sh <deploy tag> reset"
         echo ""
         echo "ex) to up local stack on local host, write .task.env and do below:"
         echo "  sh run.sh deploy build"
-        echo "  sh run.sh deploy setup"
         echo "  sh run.sh deploy up"
         echo "  sh run.sh deploy down"
-        echo "  sh run.sh deploy renew"
         echo ""
         echo "ex) to up develop stack on remote host, write .task.env.develop and do below:"
         echo "  sh run.sh develop deploy build"
         echo "  sh run.sh develop deploy push"
-        echo "  sh deploy.sh registry:5000/myapp/stack setup"
         echo "  sh deploy.sh registry:5000/myapp/stack up"
         echo "  sh deploy.sh registry:5000/myapp/stack down"
-        echo "  sh deploy.sh registry:5000/myapp/stack renew"
         echo ""
+}
+
+###############################################################################
+###############################################################################
+###############################################################################
+
+task_init() {
+        if [ "${ENV_CERT}" ]; then
+                if [    ! "`secret_exists ${ENV_CERT_PEM}`" \
+                     -o ! "`secret_exists ${ENV_CHAIN_PEM}`" \
+                     -o ! "`secret_exists ${ENV_FULLCHAIN_PEM}`" \
+                     -o ! "`secret_exists ${ENV_PRIVKEY_PEM}`" ]; then
+                        update_certs
+                fi
+        fi
+        if [ "${ENV_HTPASSWD}" ]; then
+                if [ ! "`secret_exists ${ENV_HTPASSWD}`" ]; then \
+                        update_htpasswd
+                fi
+        fi
+        if [ "${ENV_APIKEY}" ]; then
+                if [ ! "`secret_exists ${ENV_APIKEY}`" ]; then \
+                        update_apikey
+                fi
+        fi
+}
+
+task_setup() {
+        task_down
+        task_init
+        if [ "${ENV_HTPASSWD}" ]; then
+                read  -p "username: " USERNAME
+                read -sp "password: " PASSWORD
+                update_htpasswd "${USERNAME}" "${PASSWORD}"
+        fi
+}
+
+task_renew() {
+        task_down
+        task_init
+        if [ "${ENV_CERT}" ]; then
+                update_certs
+        fi
+}
+
+task_reset() {
+        task_down
+        remove_certs
+        remove_htpasswd
+        remove_apikey
+}
+
+###############################################################################
+###############################################################################
+###############################################################################
+
+update_certs() {
+        remove_certs
+        CACHE_DIR="${PROJECT_TASK_DIR}/.certs"
+        mkdir -p "${CACHE_DIR}"
+        case "${ENV_CERT}" in
+        selfsigned)
+                CRT_FILE="${CACHE_DIR}/domain.crt"
+                KEY_FILE="${CACHE_DIR}/domain.key"
+                openssl req -x509 -nodes -days 365 -newkey rsa:2048  \
+                        -subj "/CN=${ENV_FQDN} /O=${ENV_FQDN} /C=JP" \
+                        -out "${CRT_FILE}" -keyout "${KEY_FILE}"
+                CERT_PEM_FILE="${CRT_FILE}"
+                CHAIN_PEM_FILE="${CRT_FILE}"
+                FULLCHAIN_PEM_FILE="${CRT_FILE}"
+                PRIVKEY_PEM_FILE="${KEY_FILE}"
+                ;;
+        certbot)
+                docker run --rm -p "80:80" \
+                        -v `ospath ${CACHE_DIR}`:/etc/letsencrypt \
+                        deliverous/certbot certonly --dry-run \
+                        --standalone --renew-by-default --non-interactive \
+                        --agree-tos --preferred-challenges http \
+                        -d "${ENV_FQDN}" --email "${ENV_EMAIL}"
+                CERT_PEM_FILE="${CACHE_DIR}/live/${ENV_FQDN}/cert.pem"
+                CHAIN_PEM_FILE="${CACHE_DIR}/live/${ENV_FQDN}/chain.pem"
+                FULLCHAIN_PEM_FILE="${CACHE_DIR}/live/${ENV_FQDN}/fullchain.pem"
+                PRIVKEY_PEM_FILE="${CACHE_DIR}/live/${ENV_FQDN}/privkey.pem"
+                ;;
+        rent)
+                if [    "`secret_exists ${ENV_CERT_PEM}`" \
+                     -a "`secret_exists ${ENV_CHAIN_PEM}`" \
+                     -a "`secret_exists ${ENV_FULLCHAIN_PEM}`" \
+                     -a "`secret_exists ${ENV_PRIVKEY_PEM}`" ]; then
+                        return
+                fi
+                echo "cert does not exist."
+                exit 1
+                ;;
+        *)
+                echo "'${ENV_CERT}' is not supported."
+                exit 1
+                ;;
+        esac
+        secret_create "${ENV_CERT_PEM}"      "${CERT_PEM_FILE}"
+        secret_create "${ENV_CHAIN_PEM}"     "${CHAIN_PEM_FILE}"
+        secret_create "${ENV_FULLCHAIN_PEM}" "${FULLCHAIN_PEM_FILE}"
+        secret_create "${ENV_PRIVKEY_PEM}"   "${PRIVKEY_PEM_FILE}"
+}
+
+remove_certs() {
+        secret_rm "${ENV_CERT_PEM}"
+        secret_rm "${ENV_CHAIN_PEM}"
+        secret_rm "${ENV_FULLCHAIN_PEM}"
+        secret_rm "${ENV_PRIVKEY_PEM}"
+        CACHE_DIR="${PROJECT_TASK_DIR}/.certs"
+        rm -rf "${CACHE_DIR}"
+}
+
+update_htpasswd() {
+        remove_htpasswd
+        if [ "${1}" -o "${2}" ]; then
+                USERNAME="${1}"
+                PASSWORD="${2}"
+        else
+                USERNAME="`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1`"
+                PASSWORD="`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1`"
+        fi
+        docker run --rm --entrypoint htpasswd registry:2 \
+                -Bbn "${USERNAME}" "${PASSWORD}" \
+                | docker secret create "${ENV_HTPASSWD}" -
+}
+
+remove_htpasswd() {
+        secret_rm "${ENV_HTPASSWD}"
+}
+
+update_apikey() {
+        remove_apikey
+        APIKEY="`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 128 | head -n 1`"
+        echo "${APIKEY}" | docker secret create "${ENV_APIKEY}" -
+}
+
+remove_apikey() {
+        secret_rm "${ENV_APIKEY}"
 }
 
 ###############################################################################
@@ -154,18 +227,22 @@ task_usage() {
 ###############################################################################
 
 secret_create() {
-        SECRET_NAME="${1}"
-        FILE_PATH="${2}"
+        SECRET_NAME="${1?empty secret name}"
+        FILE_PATH="${2?empty file path}"
         echo "create docker secret '${SECRET_NAME}' from ${FILE_PATH} ..."
         cat "${FILE_PATH}" | docker secret create "${SECRET_NAME}" -
 }
 
 secret_rm() {
-        SECRET_NAME="${1}"
-        FOUND="`docker secret ls -q -f name="${SECRET_NAME}"`"
-        if [ -n "${FOUND}" ]; then
-                echo "remove docker secret '${SECRET_NAME}' ..."
-                docker secret rm "${SECRET_NAME}"
+        if [ "${1}" -a "`secret_exists ${1}`" ]; then
+                echo "remove docker secret '${1}' ..."
+                docker secret rm "${1}"
+        fi
+}
+
+secret_exists() {
+        if [ "${1}" ]; then
+                echo "`docker secret ls -q -f name="${1}"`"
         fi
 }
 
