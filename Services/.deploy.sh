@@ -38,7 +38,7 @@ task_push() {
         cp ${PROJECT_TASK_DIR}/.task.sh   ${BUNDLE_DIR}/.task.sh
         cp ${PROJECT_TASK_DIR}/.deploy.sh ${BUNDLE_DIR}/.deploy.sh
         echo "FROM alpine"           > "${DOCKER_FILE}"
-        echo "WORKDIR /deploy"       >> "${DOCKER_FILE}"
+        echo "WORKDIR /deploy"      >> "${DOCKER_FILE}"
         echo "ADD ${STACK_FILE} ./" >> "${DOCKER_FILE}"
         echo "ADD .task.env     ./" >> "${DOCKER_FILE}"
         echo "ADD .task.sh      ./" >> "${DOCKER_FILE}"
@@ -87,21 +87,21 @@ task_usage() {
 ###############################################################################
 
 task_init() {
-        if [ "${ENV_CERT}" ]; then
-                if [    ! "`secret_exists ${ENV_CERT_PEM}`" \
-                     -o ! "`secret_exists ${ENV_CHAIN_PEM}`" \
-                     -o ! "`secret_exists ${ENV_FULLCHAIN_PEM}`" \
-                     -o ! "`secret_exists ${ENV_PRIVKEY_PEM}`" ]; then
+        if [ "${ENV_SECRET_CERT}" ]; then
+                if [    ! "`secret_exists ${ENV_SECRET_CERT_PEM}`" \
+                     -o ! "`secret_exists ${ENV_SECRET_CHAIN_PEM}`" \
+                     -o ! "`secret_exists ${ENV_SECRET_FULLCHAIN_PEM}`" \
+                     -o ! "`secret_exists ${ENV_SECRET_PRIVKEY_PEM}`" ]; then
                         update_certs
                 fi
         fi
-        if [ "${ENV_HTPASSWD}" ]; then
-                if [ ! "`secret_exists ${ENV_HTPASSWD}`" ]; then \
+        if [ "${ENV_SECRET_HTPASSWD}" ]; then
+                if [ ! "`secret_exists ${ENV_SECRET_HTPASSWD}`" ]; then \
                         update_htpasswd
                 fi
         fi
-        if [ "${ENV_APIKEY}" ]; then
-                if [ ! "`secret_exists ${ENV_APIKEY}`" ]; then \
+        if [ "${ENV_SECRET_APIKEY}" ]; then
+                if [ ! "`secret_exists ${ENV_SECRET_APIKEY}`" ]; then \
                         update_apikey
                 fi
         fi
@@ -110,9 +110,9 @@ task_init() {
 task_setup() {
         task_down
         task_init
-        if [ "${ENV_HTPASSWD}" ]; then
-                read  -p "username: " USERNAME
-                read -sp "password: " PASSWORD
+        if [ "${ENV_SECRET_HTPASSWD}" ]; then
+                read  -p "htpasswd username: " USERNAME
+                read -sp "htpasswd password: " PASSWORD
                 update_htpasswd "${USERNAME}" "${PASSWORD}"
         fi
 }
@@ -120,7 +120,7 @@ task_setup() {
 task_renew() {
         task_down
         task_init
-        if [ "${ENV_CERT}" ]; then
+        if [ "${ENV_SECRET_CERT}" ]; then
                 update_certs
         fi
 }
@@ -140,7 +140,7 @@ update_certs() {
         remove_certs
         CACHE_DIR="${PROJECT_TASK_DIR}/.certs"
         mkdir -p "${CACHE_DIR}"
-        case "${ENV_CERT}" in
+        case "${ENV_SECRET_CERT}" in
         selfsigned)
                 CRT_FILE="${CACHE_DIR}/domain.crt"
                 KEY_FILE="${CACHE_DIR}/domain.key"
@@ -164,32 +164,32 @@ update_certs() {
                 FULLCHAIN_PEM_FILE="${CACHE_DIR}/live/${ENV_FQDN}/fullchain.pem"
                 PRIVKEY_PEM_FILE="${CACHE_DIR}/live/${ENV_FQDN}/privkey.pem"
                 ;;
-        rent)
-                if [    "`secret_exists ${ENV_CERT_PEM}`" \
-                     -a "`secret_exists ${ENV_CHAIN_PEM}`" \
-                     -a "`secret_exists ${ENV_FULLCHAIN_PEM}`" \
-                     -a "`secret_exists ${ENV_PRIVKEY_PEM}`" ]; then
+        external)
+                if [    "`secret_exists ${ENV_SECRET_CERT_PEM}`" \
+                     -a "`secret_exists ${ENV_SECRET_CHAIN_PEM}`" \
+                     -a "`secret_exists ${ENV_SECRET_FULLCHAIN_PEM}`" \
+                     -a "`secret_exists ${ENV_SECRET_PRIVKEY_PEM}`" ]; then
                         return
                 fi
                 echo "cert does not exist."
                 exit 1
                 ;;
         *)
-                echo "'${ENV_CERT}' is not supported."
+                echo "'${ENV_SECRET_CERT}' is not supported."
                 exit 1
                 ;;
         esac
-        secret_create "${ENV_CERT_PEM}"      "${CERT_PEM_FILE}"
-        secret_create "${ENV_CHAIN_PEM}"     "${CHAIN_PEM_FILE}"
-        secret_create "${ENV_FULLCHAIN_PEM}" "${FULLCHAIN_PEM_FILE}"
-        secret_create "${ENV_PRIVKEY_PEM}"   "${PRIVKEY_PEM_FILE}"
+        secret_create_from_file "${ENV_SECRET_CERT_PEM}"      "${CERT_PEM_FILE}"
+        secret_create_from_file "${ENV_SECRET_CHAIN_PEM}"     "${CHAIN_PEM_FILE}"
+        secret_create_from_file "${ENV_SECRET_FULLCHAIN_PEM}" "${FULLCHAIN_PEM_FILE}"
+        secret_create_from_file "${ENV_SECRET_PRIVKEY_PEM}"   "${PRIVKEY_PEM_FILE}"
 }
 
 remove_certs() {
-        secret_rm "${ENV_CERT_PEM}"
-        secret_rm "${ENV_CHAIN_PEM}"
-        secret_rm "${ENV_FULLCHAIN_PEM}"
-        secret_rm "${ENV_PRIVKEY_PEM}"
+        secret_rm "${ENV_SECRET_CERT_PEM}"
+        secret_rm "${ENV_SECRET_CHAIN_PEM}"
+        secret_rm "${ENV_SECRET_FULLCHAIN_PEM}"
+        secret_rm "${ENV_SECRET_PRIVKEY_PEM}"
         CACHE_DIR="${PROJECT_TASK_DIR}/.certs"
         rm -rf "${CACHE_DIR}"
 }
@@ -203,33 +203,39 @@ update_htpasswd() {
                 USERNAME="`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1`"
                 PASSWORD="`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1`"
         fi
-        docker run --rm --entrypoint htpasswd registry:2 \
-                -Bbn "${USERNAME}" "${PASSWORD}" \
-                | docker secret create "${ENV_HTPASSWD}" -
+        secret_create_from_string "${ENV_SECRET_HTPASSWD}" \
+                "`docker run --rm --entrypoint htpasswd registry:2 -Bbn "${USERNAME}" "${PASSWORD}"`"
 }
 
 remove_htpasswd() {
-        secret_rm "${ENV_HTPASSWD}"
+        secret_rm "${ENV_SECRET_HTPASSWD}"
 }
 
 update_apikey() {
         remove_apikey
         APIKEY="`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 128 | head -n 1`"
-        echo "${APIKEY}" | docker secret create "${ENV_APIKEY}" -
+        secret_create_from_string "${ENV_SECRET_APIKEY}" "${APIKEY}"
 }
 
 remove_apikey() {
-        secret_rm "${ENV_APIKEY}"
+        secret_rm "${ENV_SECRET_APIKEY}"
 }
 
 ###############################################################################
 ###############################################################################
 ###############################################################################
 
-secret_create() {
+secret_create_from_string() {
+        SECRET_NAME="${1?empty secret name}"
+        SECRET_DATA="${2?empty secret data}"
+        echo "create docker secret '${SECRET_NAME}' ..."
+        echo "${SECRET_DATA}" | docker secret create "${SECRET_NAME}" -
+}
+
+secret_create_from_file() {
         SECRET_NAME="${1?empty secret name}"
         FILE_PATH="${2?empty file path}"
-        echo "create docker secret '${SECRET_NAME}' from ${FILE_PATH} ..."
+        echo "create docker secret '${SECRET_NAME}' from '${FILE_PATH}' ..."
         cat "${FILE_PATH}" | docker secret create "${SECRET_NAME}" -
 }
 
