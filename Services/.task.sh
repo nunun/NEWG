@@ -62,6 +62,13 @@ unity() {
         return ${?}
 }
 
+# ospath
+ospath() {
+        [ "${OSTYPE}" = "cygwin" ] \
+                && echo "`cygpath -w ${1}`" \
+                || echo "${1}"
+}
+
 # task help
 task_help() {
         local tasks=`declare -f | grep "^task_" | sed "s/^task_\(.*\) ()/\1/g"`
