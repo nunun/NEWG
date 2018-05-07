@@ -1,5 +1,5 @@
 task_up() {
-        echo "deploy: starting '${ENV_STACK_NAME}' ..."
+        echo "deploy: up stack '${ENV_STACK_NAME}' ..."
         task_init # NOTE init automatically
         STACK_FILE=".stack${TASK_ENV_NAME_WITH_DOT}.yml"
         docker stack deploy ${ENV_STACK_NAME} \
@@ -7,7 +7,7 @@ task_up() {
 }
 
 task_down() {
-        echo "deploy: stopping '${ENV_STACK_NAME}' ..."
+        echo "deploy: down stack '${ENV_STACK_NAME}' ..."
         docker stack rm ${ENV_STACK_NAME}
 }
 
@@ -48,8 +48,13 @@ task_push() {
          docker push ${ENV_STACK_DEPLOY_TAG})
         echo ""
         echo "successfully push stack file to '${ENV_STACK_DEPLOY_TAG}'."
-        echo "* 'sh deploy.sh ${ENV_STACK_DEPLOY_TAG} up'   to up   stack on host."
-        echo "* 'sh deploy.sh ${ENV_STACK_DEPLOY_TAG} down' to down stack on host."
+        echo "copy 'deploy.sh' to any host, and ..."
+        echo "* 'sh deploy.sh ${ENV_STACK_DEPLOY_TAG} up'    to up    stack on the host."
+        echo "* 'sh deploy.sh ${ENV_STACK_DEPLOY_TAG} down'  to down  stack on the host."
+        echo "* 'sh deploy.sh ${ENV_STACK_DEPLOY_TAG} init'  to init  stack on the host."
+        echo "* 'sh deploy.sh ${ENV_STACK_DEPLOY_TAG} setup' to setup stack on the host."
+        echo "* 'sh deploy.sh ${ENV_STACK_DEPLOY_TAG} renew' to renew stack on the host."
+        echo "* 'sh deploy.sh ${ENV_STACK_DEPLOY_TAG} reset' to reset stack on the host."
 }
 
 task_usage() {

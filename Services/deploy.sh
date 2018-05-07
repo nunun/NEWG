@@ -2,7 +2,7 @@ DEPLOY_TAG="${1?no deploy tag specified.}"
 shift 1
 set -e
 
-MD5=`which md5 || which md5sum` || (echo "no md5 command." && exit 1)
+MD5=`which md5sum || which md5` || (echo "no md5 command." && exit 1)
 HASH=`echo ${DEPLOY_TAG} | ${MD5} | cut -d" " -f1`
 DEPLOY_DIR="/tmp/deploy/stacks/${HASH}"
 VOLUME_DIR="${DEPLOY_DIR}"
