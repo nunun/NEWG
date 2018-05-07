@@ -9,7 +9,7 @@ services:
         constraints:
         - node.role == manager
       replicas: 1
-    image: fu-n.net:5000/newg-local/api@sha256:4f4d64bef84458b427695073da07617f77580c427ab59f8921a40091c544eb30
+    image: fu-n.net:5000/newg-local/api@sha256:e414a203ee6851a1195949faa45745dc279a970bbcb521fb8e314e691d17bb1b
   client:
     depends_on:
     - matching
@@ -20,7 +20,7 @@ services:
         constraints:
         - node.role == worker
       replicas: 1
-    image: fu-n.net:5000/newg-local/client@sha256:0aa87e300ab8284ccc97675aeefb2bd9a4be1c928f7c18216b36112627388914
+    image: fu-n.net:5000/newg-local/client@sha256:e0995deed0a45bc17589697a34fae789578857fd614d31c5cc6ec045bf88b1ae
     ports:
     - published: 80
       target: 80
@@ -41,7 +41,7 @@ services:
         constraints:
         - node.role == worker
       replicas: 1
-    image: fu-n.net:5000/newg-local/matching@sha256:7ce47d3b92c426753d4177a7237040f8840bb7d4d823f4549c7037604a0b05c6
+    image: fu-n.net:5000/newg-local/matching@sha256:b25656e7e9fb77132c87031559c1dd763321a4ec29e6e45f105fe62251bd9c87
     ports:
     - published: 7755
       target: 7755
@@ -54,7 +54,7 @@ services:
         constraints:
         - node.role == manager
       replicas: 1
-    image: fu-n.net:5000/newg-local/mindlink@sha256:e809e0478efdda8d2455ad7d56689e6b87961dda8d40aee9ccc024d06f5c9bcd
+    image: fu-n.net:5000/newg-local/mindlink@sha256:07e08004d3efd1d623154c98e9f3c1882d5db042561e5c8d150eabc1c176eb22
     ports:
     - published: 7766
       target: 7766
@@ -83,6 +83,6 @@ services:
         constraints:
         - node.role == worker
       replicas: 1
-    image: fu-n.net:5000/newg-local/server@sha256:24161b87cdc3f9ab7a5ed786bb0e5d5d0ef6d48d012abad37f75aefa1b5b9b7a
+    image: fu-n.net:5000/newg-local/server@sha256:6850134b2eb2bcb2e12f4843c28201d72765752077c7b9ffc29760ec16214d05
 version: '3.4'
 
