@@ -9,7 +9,10 @@ services:
         constraints:
         - node.role == manager
       replicas: 1
-    image: fu-n.net:5000/newg-local/api@sha256:be6fd8d6ce2e20702a688b9ba3e71f1c279ac66ecf6207bb700eaee05b6ce98a
+    image: fu-n.net:5000/newg-local/api@sha256:43b9b19b4b926fa64f074d5f616652b90eb6f43b04c236b7fb33ae977fc68256
+    ports:
+    - published: 7780
+      target: 7780
   client:
     depends_on:
     - matching
@@ -20,7 +23,7 @@ services:
         constraints:
         - node.role == worker
       replicas: 1
-    image: fu-n.net:5000/newg-local/client@sha256:61aeb711ca489f9781dec14028aab3b49a8f3e9ac1981c67a3e9629a06ca55a0
+    image: fu-n.net:5000/newg-local/client@sha256:078f6b693b8818a218d2087df053f8b84e518f3eac9bddd313c17cef1abb9533
     ports:
     - published: 80
       target: 80
@@ -41,7 +44,7 @@ services:
         constraints:
         - node.role == worker
       replicas: 1
-    image: fu-n.net:5000/newg-local/matching@sha256:d54d819a7a599a0a73aa4cbb774c75373bd73424952853336a773e226f8442e3
+    image: fu-n.net:5000/newg-local/matching@sha256:7a51022b1a57433c944f591544d81a71c42f6b56069eabdfc8173dc54e2d5b3b
     ports:
     - published: 7755
       target: 7755
@@ -54,10 +57,21 @@ services:
         constraints:
         - node.role == manager
       replicas: 1
-    image: fu-n.net:5000/newg-local/mindlink@sha256:f586817168bb484b0e56d20626fb600994db846cf2aef6c470a3d8a44716138d
+    image: fu-n.net:5000/newg-local/mindlink@sha256:0c61eb1075a8b67b477c75802d59b746489e4eb0c0bf25fb7323bcaeef0cba61
+  portainer:
+    deploy:
+      mode: replicated
+      placement:
+        constraints:
+        - node.role == manager
+      replicas: 1
+    image: portainer/portainer@sha256:c73269fd2ee84806be9e0051291f47e7a5ac0ad5842ac1dfd378dbafe22e3c93
     ports:
-    - published: 7766
-      target: 7766
+    - published: 19000
+      target: 9000
+    volumes:
+    - portainer_data:/data:rw
+    - /var/run/docker.sock:/var/run/docker.sock:rw
   rabbitmq:
     deploy:
       mode: replicated
@@ -83,6 +97,8 @@ services:
         constraints:
         - node.role == worker
       replicas: 1
-    image: fu-n.net:5000/newg-local/server@sha256:bbec32618cb0f921836db8eded0a63027835446cd3111bb02c1955f0786d78c8
+    image: fu-n.net:5000/newg-local/server@sha256:f17536fce955591b2a1727869b84541916912aa5595d76e0a9db7c1004f3ebf0
 version: '3.4'
+volumes:
+  portainer_data: {}
 

@@ -9,6 +9,8 @@ services:
       - LOG_LEVEL=debug
     volumes:
       - ./client/Builds/Client:/usr/share/nginx/html
+    ports:
+      - 80:80
 
   server:
     build:
@@ -19,6 +21,8 @@ services:
       - LOG_LEVEL=debug
     volumes:
       - ./server/Builds:/server
+    ports:
+      - 7777:7777
 
   matching:
     build:
@@ -30,6 +34,8 @@ services:
     volumes:
       - ./matching/app:/app
       - ./services:/app/services
+    ports:
+      - 7755:7755
 
   api:
     build:
@@ -41,6 +47,8 @@ services:
     volumes:
       - ./api/app:/app
       - ./services:/app/services
+    ports:
+      - 7780:7780
 
   mindlink:
     build:
@@ -64,3 +72,11 @@ services:
   couchdb: {}
 
   redis: {}
+
+  portainer:
+    volumes:
+      - ./.volumes/portainer_data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - 19000:9000
+

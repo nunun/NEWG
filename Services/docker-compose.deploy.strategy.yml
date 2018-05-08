@@ -1,6 +1,8 @@
 version: '3.4'
 services:
   client:
+    ports:
+      - 80:80
     deploy:
       mode: replicated
       replicas: 1
@@ -8,6 +10,7 @@ services:
         constraints:
           - node.role == worker
 
+  # TODO host network mode
   server:
     deploy:
       mode: replicated
@@ -17,6 +20,8 @@ services:
           - node.role == worker
 
   matching:
+    ports:
+      - 7755:7755
     deploy:
       mode: replicated
       replicas: 1
@@ -25,6 +30,8 @@ services:
           - node.role == worker
 
   api:
+    ports:
+      - 7780:7780
     deploy:
       mode: replicated
       replicas: 1
@@ -64,3 +71,18 @@ services:
         constraints:
           - node.role == manager
 
+  portainer:
+    volumes:
+      - portainer_data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - 19000:9000
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+
+volumes:
+  portainer_data:

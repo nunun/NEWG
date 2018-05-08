@@ -1,25 +1,27 @@
 # NOTE
 #    80 client   (http)
-#  RAND server   (Unity Networking)
 #  7755 matching (websocket)
 #  7766 mindlink (websocket)
+#  7777 server   (Unity Networking (fixed port for debug))
 #  7780 api      (http)
 #  7788 api      (websocket)
 #  7799 test     (websocket)
+#
+#  8000-9999 server (Unity Networking (random port for service))
 #
 #  5672 rabbitmq
 #  5984 couchdb
 # 15672 rabbitmq webui
 # 17766 mindlink webui
+# 19000 portainer
 version: '3.4'
 services:
   client:
     image: ${ENV_REPOSITORY}/client
-    ports:
-      - 80:80
     depends_on:
       - server
       - matching
+
   server:
     image: ${ENV_REPOSITORY}/server
     depends_on:
@@ -27,8 +29,6 @@ services:
 
   matching:
     image: ${ENV_REPOSITORY}/matching
-    ports:
-      - 7755:7755
     depends_on:
       - mindlink
 
@@ -40,8 +40,6 @@ services:
 
   mindlink:
     image: ${ENV_REPOSITORY}/mindlink
-    ports:
-      - 7766:7766
     depends_on:
       - rabbitmq
 
@@ -53,4 +51,7 @@ services:
 
   redis:
     image: redis:4.0.6-alpine
+
+  portainer:
+    image: portainer/portainer
 

@@ -119,6 +119,7 @@ task_setup() {
         if [ "${ENV_SECRET_HTPASSWD}" ]; then
                 read  -p "htpasswd username: " USERNAME
                 read -sp "htpasswd password: " PASSWORD
+                echo ""
                 update_htpasswd "${USERNAME}" "${PASSWORD}"
         fi
 }
