@@ -21,5 +21,5 @@ task_clean() {
         find ${PROJECT_TASK_DIR} -name "node_modules"      -exec rm -rf '{}' +
         find ${PROJECT_TASK_DIR} -name "package-lock.json" -exec rm -rf '{}' +
 }
-task_deploy() { sh .deploy.sh ${*}; }
+task_stack() { sh .stack.sh ${*}; }
 . "`dirname ${0}`/.task.sh" up ${*}

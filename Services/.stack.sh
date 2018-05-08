@@ -1,5 +1,5 @@
 task_up() {
-        echo "deploy: up stack '${ENV_STACK_NAME}' ..."
+        echo "up stack '${ENV_STACK_NAME}' ..."
         task_init # NOTE init automatically
         STACK_FILE=".stack${TASK_ENV_NAME_WITH_DOT}.yml"
         docker stack deploy ${ENV_STACK_NAME} \
@@ -7,15 +7,15 @@ task_up() {
 }
 
 task_down() {
-        echo "deploy: down stack '${ENV_STACK_NAME}' ..."
+        echo "down stack '${ENV_STACK_NAME}' ..."
         docker stack rm ${ENV_STACK_NAME}
 }
 
 task_build() {
-        echo "deploy: building stack file ..."
+        echo "building stack file ..."
         STACK_FILE=".stack${TASK_ENV_NAME_WITH_DOT}.yml"
-        BUILD_YAMLS="-f docker-compose.yml -f docker-compose.deploy.build.yml"
-        CONFIG_YAMLS="-f docker-compose.yml -f docker-compose.deploy.strategy.yml"
+        BUILD_YAMLS="-f docker-compose.yml -f docker-compose.stack.build.yml"
+        CONFIG_YAMLS="-f docker-compose.yml -f docker-compose.stack.deploy.yml"
         (cd ${PROJECT_TASK_DIR}; sh run.sh services build)
         #(cd ${PROJECT_TASK_DIR}; sh run.sh unity)
         docker-compose ${BUILD_YAMLS} build --force-rm --no-cache
@@ -24,67 +24,67 @@ task_build() {
         echo ""
         echo "successfully build stack file to '${STACK_FILE}'."
         echo "you can up stack locally and push stack file to docker image registry for deploy."
-        echo "> sh run.sh${TASK_ENV_NAME:+" "}${TASK_ENV_NAME} deploy up    # up   stack locally"
-        echo "> sh run.sh${TASK_ENV_NAME:+" "}${TASK_ENV_NAME} deploy push  # push stack file to '${ENV_STACK_DEPLOY_TAG}'"
+        echo "> sh run.sh${TASK_ENV_NAME:+" "}${TASK_ENV_NAME} stack up    # up   stack locally"
+        echo "> sh run.sh${TASK_ENV_NAME:+" "}${TASK_ENV_NAME} stack push  # push stack file to '${ENV_STACK_DEPLOY_TAG}' for deploy"
 }
 
 task_push() {
-        echo "deploy: push stack file to ${ENV_STACK_DEPLOY_TAG} ..."
-        BUNDLE_DIR="/tmp/deploy"
+        echo "push stack file to ${ENV_STACK_DEPLOY_TAG} ..."
+        BUNDLE_DIR="/tmp/stack"
         DOCKER_FILE="${BUNDLE_DIR}/Dockerfile"
         STACK_FILE=".stack${TASK_ENV_NAME_WITH_DOT}.yml"
         mkdir -p ${BUNDLE_DIR}
-        cp ${STACK_FILE}                  ${BUNDLE_DIR}/${STACK_FILE}
-        cp ${TASK_ENV_FILE}               ${BUNDLE_DIR}/.task.env
-        cp ${PROJECT_TASK_DIR}/.task.sh   ${BUNDLE_DIR}/.task.sh
-        cp ${PROJECT_TASK_DIR}/.deploy.sh ${BUNDLE_DIR}/.deploy.sh
+        cp ${STACK_FILE}                 ${BUNDLE_DIR}/${STACK_FILE}
+        cp ${TASK_ENV_FILE}              ${BUNDLE_DIR}/.task.env
+        cp ${PROJECT_TASK_DIR}/.task.sh  ${BUNDLE_DIR}/.task.sh
+        cp ${PROJECT_TASK_DIR}/.stack.sh ${BUNDLE_DIR}/.stack.sh
         echo "FROM alpine"           > "${DOCKER_FILE}"
-        echo "WORKDIR /deploy"      >> "${DOCKER_FILE}"
+        echo "WORKDIR /stack"       >> "${DOCKER_FILE}"
         echo "ADD ${STACK_FILE} ./" >> "${DOCKER_FILE}"
         echo "ADD .task.env     ./" >> "${DOCKER_FILE}"
         echo "ADD .task.sh      ./" >> "${DOCKER_FILE}"
-        echo "ADD .deploy.sh    ./" >> "${DOCKER_FILE}"
+        echo "ADD .stack.sh     ./" >> "${DOCKER_FILE}"
         (cd ${BUNDLE_DIR}; \
          docker build --no-cache -t ${ENV_STACK_DEPLOY_TAG} .; \
          docker push ${ENV_STACK_DEPLOY_TAG})
         echo ""
         echo "successfully push stack file to '${ENV_STACK_DEPLOY_TAG}'."
         echo "you can copy 'deploy.sh' to any host and deploy stack on the host."
-        echo "> sh deploy.sh ${ENV_STACK_DEPLOY_TAG} up"
-        echo "> sh deploy.sh ${ENV_STACK_DEPLOY_TAG} down"
-        echo "> sh deploy.sh ${ENV_STACK_DEPLOY_TAG} init"
-        echo "> sh deploy.sh ${ENV_STACK_DEPLOY_TAG} setup"
-        echo "> sh deploy.sh ${ENV_STACK_DEPLOY_TAG} renew"
-        echo "> sh deploy.sh ${ENV_STACK_DEPLOY_TAG} reset"
+        echo "> sh deploy.sh ${ENV_STACK_DEPLOY_TAG} stack up"
+        echo "> sh deploy.sh ${ENV_STACK_DEPLOY_TAG} stack down"
+        echo "> sh deploy.sh ${ENV_STACK_DEPLOY_TAG} stack init"
+        echo "> sh deploy.sh ${ENV_STACK_DEPLOY_TAG} stack setup"
+        echo "> sh deploy.sh ${ENV_STACK_DEPLOY_TAG} stack renew"
+        echo "> sh deploy.sh ${ENV_STACK_DEPLOY_TAG} stack reset"
 }
 
 task_usage() {
         echo ""
-        echo "sh run.sh <env> deploy build"
-        echo "sh run.sh <env> deploy push"
-        echo "sh run.sh <env> deploy up"
-        echo "sh run.sh <env> deploy down"
-        echo "sh run.sh <env> deploy init"
-        echo "sh run.sh <env> deploy setup"
-        echo "sh run.sh <env> deploy renew"
-        echo "sh run.sh <env> deploy reset"
-        echo "sh deploy.sh <deploy tag> up"
-        echo "sh deploy.sh <deploy tag> down"
-        echo "sh deploy.sh <deploy tag> init"
-        echo "sh deploy.sh <deploy tag> setup"
-        echo "sh deploy.sh <deploy tag> renew"
-        echo "sh deploy.sh <deploy tag> reset"
+        echo "sh run.sh <env> stack build"
+        echo "sh run.sh <env> stack push"
+        echo "sh run.sh <env> stack up"
+        echo "sh run.sh <env> stack down"
+        echo "sh run.sh <env> stack init"
+        echo "sh run.sh <env> stack setup"
+        echo "sh run.sh <env> stack renew"
+        echo "sh run.sh <env> stack reset"
+        echo "sh deploy.sh <deploy tag> stack up"
+        echo "sh deploy.sh <deploy tag> stack down"
+        echo "sh deploy.sh <deploy tag> stack init"
+        echo "sh deploy.sh <deploy tag> stack setup"
+        echo "sh deploy.sh <deploy tag> stack renew"
+        echo "sh deploy.sh <deploy tag> stack reset"
         echo ""
         echo "ex) to up local stack on local host, write .task.env and do below:"
-        echo "  sh run.sh deploy build"
-        echo "  sh run.sh deploy up"
-        echo "  sh run.sh deploy down"
+        echo "  sh run.sh stack build"
+        echo "  sh run.sh stack up"
+        echo "  sh run.sh stack down"
         echo ""
         echo "ex) to up develop stack on remote host, write .task.env.develop and do below:"
-        echo "  sh run.sh develop deploy build"
-        echo "  sh run.sh develop deploy push"
-        echo "  sh deploy.sh registry:5000/myapp/stack up"
-        echo "  sh deploy.sh registry:5000/myapp/stack down"
+        echo "  sh run.sh develop stack build"
+        echo "  sh run.sh develop stack push"
+        echo "  sh deploy.sh registry:5000/myapp/stack stack up"
+        echo "  sh deploy.sh registry:5000/myapp/stack stack down"
         echo ""
 }
 

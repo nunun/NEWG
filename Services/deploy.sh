@@ -14,6 +14,10 @@ cd "${DEPLOY_DIR}"
 echo "(in ${DEPLOY_DIR})"
 echo "pull stack file from '${DEPLOY_TAG}' ..."
 docker pull ${DEPLOY_TAG}
-docker run --rm -v ${VOLUME_DIR}:/stack ${DEPLOY_TAG} \
-        sh -c "cp -a . /stack/; chmod -R 777 /stack"
-sh ./.deploy.sh ${*}
+docker run --rm -v ${VOLUME_DIR}:/deploy ${DEPLOY_TAG} \
+        sh -c "cp -a . /deploy/; chmod -R 777 /deploy"
+
+function task_stack() {
+        sh ./.stack.sh ${*}
+}
+. ./.task.sh help ${*}

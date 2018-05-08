@@ -79,7 +79,7 @@ services:
       - 19000:9000
     deploy:
       mode: replicated
-      replicas: 1
+      replicas: 0
       placement:
         constraints:
           - node.role == manager
