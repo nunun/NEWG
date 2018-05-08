@@ -1,19 +1,17 @@
-# NOTE
-#    80 client   (http)
-#  7755 matching (websocket)
-#  7766 mindlink (websocket)
-#  7777 server   (Unity Networking (fixed port for debug))
-#  7780 api      (http)
-#  7788 api      (websocket)
-#  7799 test     (websocket)
-#
-#  8000-9999 server (Unity Networking (random port for service))
-#
-#  5672 rabbitmq
-#  5984 couchdb
-# 15672 rabbitmq webui
-# 17766 mindlink webui
-# 19000 portainer
+#         80 client          => http
+#       7755 matching        => websocket
+#       7766 mindlink        => websocket
+#       7777 server          => Unity Networking (fixed port  for debug)
+#  8000-9999 server          => Unity Networking (random port for service)
+#       7780 api             => http
+#       7788 api             => websocket
+#       7799 test            => websocket
+#       5672 rabbitmq        => rabbitmq
+#       5984 couchdb         => couchdb
+#      15672 rabbitmq  webui => http://localhost:15672
+#      15984 rabbitmq  webui => http://localhost:15984/_utils
+#      17766 mindlink  webui => http://localhost:17766
+#      19000 portainer webui => http://localhost:19000
 version: '3.4'
 services:
   client:
@@ -44,7 +42,7 @@ services:
       - rabbitmq
 
   rabbitmq:
-    image: rabbitmq:3.7.0-alpine
+    image: rabbitmq:3.7.0-management-alpine
 
   couchdb:
     image: couchdb:2.1.1

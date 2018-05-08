@@ -62,21 +62,28 @@ services:
       - ./mindlink/app:/app
       - ./services:/app/services
     ports:
-      - 17766:17766
+      - 127.0.0.1:17766:17766
 
   rabbitmq:
-    image: rabbitmq:3.7.0-management-alpine
+    #volumes:
+    #  - ./.volumes/rabbitmq_data:/var/lib/rabbitmq
     ports:
-      - 15672:15672
+      - 127.0.0.1:15672:15672
 
-  couchdb: {}
+  couchdb:
+    volumes:
+      - ./.volumes/couchdb_data:/opt/couchdb/data
+    ports:
+      - 127.0.0.1:15984:5984
 
-  redis: {}
+  redis:
+    volumes:
+      - ./.volumes/redis_data:/data
 
   portainer:
     volumes:
       - ./.volumes/portainer_data:/data
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
-      - 19000:9000
+      - 127.0.0.1:19000:9000
 

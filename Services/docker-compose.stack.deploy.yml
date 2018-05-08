@@ -40,6 +40,10 @@ services:
           - node.role == manager
 
   mindlink:
+    environment:
+      - DEBUG_HTTP_CHANNEL_ENABLE=1
+    ports:
+      - 127.0.0.1:17766:17766
     deploy:
       mode: replicated
       replicas: 1
@@ -48,6 +52,10 @@ services:
           - node.role == manager
 
   rabbitmq:
+    #volumes:
+    #  - redis_data:/opt/couchdb/data
+    ports:
+      - 127.0.0.1:15672:15672
     deploy:
       mode: replicated
       replicas: 1
@@ -56,6 +64,10 @@ services:
           - node.role == manager
 
   couchdb:
+    volumes:
+      - redis_data:/opt/couchdb/data
+    ports:
+      - 127.0.0.1:15984:5984
     deploy:
       mode: replicated
       replicas: 1
@@ -64,6 +76,8 @@ services:
           - node.role == manager
 
   redis:
+    volumes:
+      - redis_data:/data
     deploy:
       mode: replicated
       replicas: 1
@@ -76,7 +90,7 @@ services:
       - portainer_data:/data
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
-      - 19000:9000
+      - 127.0.0.1:19000:9000
     deploy:
       mode: replicated
       replicas: 1
@@ -85,4 +99,8 @@ services:
           - node.role == manager
 
 volumes:
+  #rabbitmq_data:
+  couchdb_data:
+  redis_data:
   portainer_data:
+
