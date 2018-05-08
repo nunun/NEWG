@@ -1,6 +1,6 @@
 task_up() {
         echo "up stack '${ENV_STACK_NAME}' ..."
-        task_init # NOTE init automatically
+        task_init
         STACK_FILE=".stack${TASK_ENV_NAME_WITH_DOT}.yml"
         docker stack deploy ${ENV_STACK_NAME} \
                 --with-registry-auth --compose-file ${STACK_FILE}
@@ -16,6 +16,7 @@ task_build() {
         STACK_FILE=".stack${TASK_ENV_NAME_WITH_DOT}.yml"
         BUILD_YAMLS="-f docker-compose.yml -f docker-compose.stack.build.yml"
         CONFIG_YAMLS="-f docker-compose.yml -f docker-compose.stack.deploy.yml"
+        export COMPOSE_CONVERT_WINDOWS_PATHS=1 # NOTE disable windows path
         (cd ${PROJECT_TASK_DIR}; sh run.sh services build)
         #(cd ${PROJECT_TASK_DIR}; sh run.sh unity)
         docker-compose ${BUILD_YAMLS} build --force-rm --no-cache
