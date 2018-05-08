@@ -22,9 +22,10 @@ task_build() {
         docker-compose ${BUILD_YAMLS} push
         docker-compose ${CONFIG_YAMLS} config --resolve-image-digest > ${STACK_FILE}
         echo ""
-        echo "successfully build stack file '${STACK_FILE}'."
-        echo "* 'sh run.sh${TASK_ENV_NAME:+" "}${TASK_ENV_NAME} deploy up'   to up   stack locally."
-        echo "* 'sh run.sh${TASK_ENV_NAME:+" "}${TASK_ENV_NAME} deploy push' to push stack file to '${ENV_STACK_DEPLOY_TAG}'."
+        echo "successfully build stack file to '${STACK_FILE}'."
+        echo "you can up stack locally and push stack file to docker image registry for deploy."
+        echo "> sh run.sh${TASK_ENV_NAME:+" "}${TASK_ENV_NAME} deploy up    # up   stack locally"
+        echo "> sh run.sh${TASK_ENV_NAME:+" "}${TASK_ENV_NAME} deploy push  # push stack file to '${ENV_STACK_DEPLOY_TAG}'"
 }
 
 task_push() {
@@ -48,13 +49,13 @@ task_push() {
          docker push ${ENV_STACK_DEPLOY_TAG})
         echo ""
         echo "successfully push stack file to '${ENV_STACK_DEPLOY_TAG}'."
-        echo "copy 'deploy.sh' to any host, and ..."
-        echo "* 'sh deploy.sh ${ENV_STACK_DEPLOY_TAG} up'    to up    stack on the host."
-        echo "* 'sh deploy.sh ${ENV_STACK_DEPLOY_TAG} down'  to down  stack on the host."
-        echo "* 'sh deploy.sh ${ENV_STACK_DEPLOY_TAG} init'  to init  stack on the host."
-        echo "* 'sh deploy.sh ${ENV_STACK_DEPLOY_TAG} setup' to setup stack on the host."
-        echo "* 'sh deploy.sh ${ENV_STACK_DEPLOY_TAG} renew' to renew stack on the host."
-        echo "* 'sh deploy.sh ${ENV_STACK_DEPLOY_TAG} reset' to reset stack on the host."
+        echo "you can copy 'deploy.sh' to any host and deploy stack on the host."
+        echo "> sh deploy.sh ${ENV_STACK_DEPLOY_TAG} up"
+        echo "> sh deploy.sh ${ENV_STACK_DEPLOY_TAG} down"
+        echo "> sh deploy.sh ${ENV_STACK_DEPLOY_TAG} init"
+        echo "> sh deploy.sh ${ENV_STACK_DEPLOY_TAG} setup"
+        echo "> sh deploy.sh ${ENV_STACK_DEPLOY_TAG} renew"
+        echo "> sh deploy.sh ${ENV_STACK_DEPLOY_TAG} reset"
 }
 
 task_usage() {
