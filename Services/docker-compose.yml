@@ -1,18 +1,21 @@
-#         80 client          => http
-#       7755 matching        => websocket
-#       7766 mindlink        => websocket
-#       7777 server          => Unity Networking (fixed port  for debug)
-#  8000-9999 server          => Unity Networking (random port for service)
-#       7780 api             => http
-#       7788 api             => websocket
-#       7799 test            => websocket
-#       5672 rabbitmq        => rabbitmq
-#       5984 couchdb         => couchdb
-#      15672 rabbitmq  webui => http://localhost:15672
-#      15984 rabbitmq  webui => http://localhost:15984/_utils
-#      17766 mindlink  webui => http://localhost:17766
-#      17780 sense     webui => http://localhost:17780
-#      19000 portainer webui => http://localhost:19000
+# +---------------------------+-----------+------------------+---------------------------------------------------------+------------+
+# | ports  (exposed:internal) | service   | protocol         | description                                             | remarks    |
+# +---------------------------+-----------+------------------+---------------------------------------------------------+------------+
+# |              80:80        | client    | http             | game client                                             |            |
+# |            7777:7777      | server    | Unity Networking | game server                                             | debug port |
+# |       8000-9999:8000-9999 | server    | Unity Networking | game server                                             |            |
+# |            7755:7755      | matching  | ws/wss           | game matching server                                    |            |
+# |            7780:7780      | api       | http/https       | game webapi                                             |            |
+# |                :7766      | mindlink  | ws/wss           | service discovery & cluster messaging                   |            |
+# |                :5672      | rabbitmq  | amqp             | backend message queue                                   |            |
+# |                :6379      | redis     | redis            | key value database                                      |            |
+# |                :5984      | couchdb   | http             | document oriented database                              |            |
+# | 127.0.0.1:15672:15672     | rabbitmq  | http             | webui for rabbitmq      (http://localhost:15672)        | debug port |
+# | 127.0.0.1:15984:5984      | couchdb   | http             | webui for couchdb       (http://localhost:15984/_utils) | debug port |
+# | 127.0.0.1:17766:17766     | mindlink  | http             | webui for mindlink      (http://localhost:17766)        | debug port |
+# | 127.0.0.1:17780:17780     | sense     | http             | webui for api           (http://localhost:17780)        | debug port |
+# | 127.0.0.1:19000:9000      | portainer | http             | webui for docker daemon (http://localhost:19000)        | debug port |
+# +---------------------------+-----------+------------------+---------------------------------------------------------+------------+
 version: '3.4'
 services:
   client:
