@@ -52,8 +52,8 @@ services:
           - node.role == manager
 
   rabbitmq:
-    #volumes:
-    #  - redis_data:/opt/couchdb/data
+    volumes:
+      - redis_data:/opt/couchdb/data/mnesia
     ports:
       - 127.0.0.1:15672:15672
     deploy:
@@ -86,6 +86,7 @@ services:
           - node.role == manager
 
   portainer:
+    command: --no-auth
     volumes:
       - portainer_data:/data
       - /var/run/docker.sock:/var/run/docker.sock
@@ -99,7 +100,7 @@ services:
           - node.role == manager
 
 volumes:
-  #rabbitmq_data:
+  rabbitmq_data:
   couchdb_data:
   redis_data:
   portainer_data:

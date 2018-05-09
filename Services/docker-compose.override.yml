@@ -65,8 +65,8 @@ services:
       - 127.0.0.1:17766:17766
 
   rabbitmq:
-    #volumes:
-    #  - ./.volumes/rabbitmq_data:/var/lib/rabbitmq
+    volumes:
+      - ./.volumes/rabbitmq_data:/var/lib/rabbitmq/mnesia
     ports:
       - 127.0.0.1:15672:15672
 
@@ -81,6 +81,7 @@ services:
       - ./.volumes/redis_data:/data
 
   portainer:
+    command: --no-auth
     volumes:
       - ./.volumes/portainer_data:/data
       - /var/run/docker.sock:/var/run/docker.sock
