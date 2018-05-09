@@ -21,3 +21,6 @@ services:
 
   redis: {}
 
+  sense: {}
+
+  portainer: {}

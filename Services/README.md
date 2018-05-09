@@ -4,11 +4,26 @@
 
 ````
 sh run.sh help
+
 sh run.sh build
 sh run.sh [up]
 sh run.sh down
-sh run.sh <env> bundle
-<env> = local, develop ...
+
+sh run.sh stack build
+sh run.sh stack up
+sh run.sh stack down
+sh run.sh stack push
+sh run.sh stack [usage]
+
+sh run.sh <env> build
+sh run.sh <env> [up]
+sh run.sh <env> down
+sh run.sh <env> stack build
+sh run.sh <env> stack up
+sh run.sh <env> stack down
+sh run.sh <env> stack push
+sh run.sh <env> stack [usage]
+<env> = env name referrence env file named '.task.env[.<env>]'.
 
 sh run.sh services protocols
 
