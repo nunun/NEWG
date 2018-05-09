@@ -11,6 +11,7 @@
 #      15672 rabbitmq  webui => http://localhost:15672
 #      15984 rabbitmq  webui => http://localhost:15984/_utils
 #      17766 mindlink  webui => http://localhost:17766
+#      17780 sense     webui => http://localhost:17780
 #      19000 portainer webui => http://localhost:19000
 version: '3.4'
 services:
@@ -49,6 +50,9 @@ services:
 
   redis:
     image: redis:4.0.6-alpine
+
+  sense:
+    image: nunun/sense
 
   portainer:
     image: portainer/portainer

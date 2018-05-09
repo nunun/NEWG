@@ -80,6 +80,12 @@ services:
     volumes:
       - ./.volumes/redis_data:/data
 
+  sense:
+    environment:
+      - DEST=http://api:7780
+    ports:
+      - 127.0.0.1:17780:80
+
   portainer:
     command: --no-auth
     volumes:
