@@ -39,23 +39,6 @@ namespace Services.Protocols {
             return client.Post<SigninRequest,SigninResponse>("/signin", data, callback, queries, forms, headers);
         }
         [Serializable]
-        public struct RenameRequest {
-            public string name; // 変更する名前
-        }
-
-        [Serializable]
-        public struct RenameResponse {
-        }
-
-        // Rename
-        // 名前変更API
-        public static WebAPIClient.Request Rename(string name, Action<string,RenameResponse> callback, string[] queries = null, string[] forms = null, string[] headers = null) {
-            var client = WebAPIClient.GetClient();
-            var data = new RenameRequest();
-            data.name = name; // 変更する名前
-            return client.Post<RenameRequest,RenameResponse>("/rename", data, callback, queries, forms, headers);
-        }
-        [Serializable]
         public struct PlayerRequest {
         }
 
@@ -69,6 +52,23 @@ namespace Services.Protocols {
             var client = WebAPIClient.GetClient();
             var data = new PlayerRequest();
             return client.Post<PlayerRequest,PlayerResponse>("/player", data, callback, queries, forms, headers);
+        }
+        [Serializable]
+        public struct RenameRequest {
+            public string playerName; // 変更する名前
+        }
+
+        [Serializable]
+        public struct RenameResponse {
+        }
+
+        // Rename
+        // 名前変更API
+        public static WebAPIClient.Request Rename(string playerName, Action<string,RenameResponse> callback, string[] queries = null, string[] forms = null, string[] headers = null) {
+            var client = WebAPIClient.GetClient();
+            var data = new RenameRequest();
+            data.playerName = playerName; // 変更する名前
+            return client.Post<RenameRequest,RenameResponse>("/rename", data, callback, queries, forms, headers);
         }
         [Serializable]
         public struct MatchingRequest {

@@ -36,12 +36,29 @@ exports.signin = function(signinToken, callback, queries = null, forms = null, h
         }
     }, queries, forms, headers);
 }
-// rename
-// 名前変更API
-exports.rename = function(name, callback, queries = null, forms = null, headers = null) {
+// player
+// プレイヤー情報の取得
+exports.player = function(callback, queries = null, forms = null, headers = null) {
     var client = webapiClient.getClient();
     var data = {};
-    data["name"] = name; // 変更する名前
+    return client.post("/player", data, function(err, responseData) {
+        if (err) {
+            if (callback != null) {
+                callback(err, null);
+            }
+            return;
+        }
+        if (callback != null) {
+            callback(err, responseData);
+        }
+    }, queries, forms, headers);
+}
+// rename
+// 名前変更API
+exports.rename = function(playerName, callback, queries = null, forms = null, headers = null) {
+    var client = webapiClient.getClient();
+    var data = {};
+    data["playerName"] = playerName; // 変更する名前
     return client.post("/rename", data, function(err, responseData) {
         if (err) {
             if (callback != null) {
@@ -60,23 +77,6 @@ exports.matching = function(callback, queries = null, forms = null, headers = nu
     var client = webapiClient.getClient();
     var data = {};
     return client.post("/matching", data, function(err, responseData) {
-        if (err) {
-            if (callback != null) {
-                callback(err, null);
-            }
-            return;
-        }
-        if (callback != null) {
-            callback(err, responseData);
-        }
-    }, queries, forms, headers);
-}
-// player
-// プレイヤー情報の取得
-exports.player = function(callback, queries = null, forms = null, headers = null) {
-    var client = webapiClient.getClient();
-    var data = {};
-    return client.post("/player", data, function(err, responseData) {
         if (err) {
             if (callback != null) {
                 callback(err, null);

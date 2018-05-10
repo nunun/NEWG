@@ -17,6 +17,7 @@ UserData.prototype.clear = function() {
     this.playerId = null; // 固有のプレイヤID
     this.sessionToken = null; // セッショントークン
     this.signinToken = null; // ログイントークン
+    this.role = null; // 役職
 }
 models.UserData = UserData;
 // PlayerData
@@ -76,4 +77,77 @@ UniqueKeyData.prototype.clear = function() {
     this.associatedKey = null; // 固有キーデータに紐づけられた関連キー
 }
 models.UniqueKeyData = UniqueKeyData;
+// ServerStatus
+// サーバステータス
+function ServerStatus() {
+    this.init();
+}
+util.inherits(ServerStatus, ModelData);
+ModelData.setupType(ServerStatus, 'ServerStatus', 'db_server_status');
+ServerStatus.prototype.init = function() {
+    ServerStatus.super_.prototype.init.call(this);
+};
+ServerStatus.prototype.clear = function() {
+    this.state = null; // 現在状態 (Standby, Ready, Started, Ended)
+}
+models.ServerStatus = ServerStatus;
+// ServerSetupRequest
+// サーバセットアップリクエスト。API サーバが Unity サーバに対してサーバインスタンスをセットアップしたいときに送信。
+function ServerSetupRequest() {
+    this.init();
+}
+util.inherits(ServerSetupRequest, ModelData);
+ModelData.setupType(ServerSetupRequest, 'ServerSetupRequest', 'db_server_setup_request');
+ServerSetupRequest.prototype.init = function() {
+    ServerSetupRequest.super_.prototype.init.call(this);
+};
+ServerSetupRequest.prototype.clear = function() {
+    this.matchingId = null; // サーバ起動をリクエストしたマッチングID
+    this.sceneName = null; // 起動するシーン名
+}
+models.ServerSetupRequest = ServerSetupRequest;
+// ServerSetupResponse
+// サーバセットアップレスポンス。ServerBootRequest のレスポンス。
+function ServerSetupResponse() {
+    this.init();
+}
+util.inherits(ServerSetupResponse, ModelData);
+ModelData.setupType(ServerSetupResponse, 'ServerSetupResponse', 'db_server_setup_response');
+ServerSetupResponse.prototype.init = function() {
+    ServerSetupResponse.super_.prototype.init.call(this);
+};
+ServerSetupResponse.prototype.clear = function() {
+    this.matchingId = null; // サーバ起動をリクエストしたマッチングID
+}
+models.ServerSetupResponse = ServerSetupResponse;
+// ServerSetupDoneRequest
+// サーバセットアップ完了リクエスト。Unity サーバが API サーバに対してクライアント接続可能状態を通知するときに送信。
+function ServerSetupDoneRequest() {
+    this.init();
+}
+util.inherits(ServerSetupDoneRequest, ModelData);
+ModelData.setupType(ServerSetupDoneRequest, 'ServerSetupDoneRequest', 'db_server_setup_done_request');
+ServerSetupDoneRequest.prototype.init = function() {
+    ServerSetupDoneRequest.super_.prototype.init.call(this);
+};
+ServerSetupDoneRequest.prototype.clear = function() {
+    this.matchingId = null; // サーバ起動をリクエストしたマッチングID
+}
+models.ServerSetupDoneRequest = ServerSetupDoneRequest;
+// ServerConnectData
+// サーバ接続データ
+function ServerConnectData() {
+    this.init();
+}
+util.inherits(ServerConnectData, ModelData);
+ModelData.setupType(ServerConnectData, 'ServerConnectData', 'db_server_connect_data');
+ServerConnectData.prototype.init = function() {
+    ServerConnectData.super_.prototype.init.call(this);
+};
+ServerConnectData.prototype.clear = function() {
+    this.serverAddress = "localhost"; // 接続先のサーバアドレス
+    this.serverPort = 7777; // 接続先のサーバポート
+    this.serverToken = null; // 接続用サーバトークン
+}
+models.ServerConnectData = ServerConnectData;
 module.exports = models;

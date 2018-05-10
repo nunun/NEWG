@@ -12,11 +12,13 @@ namespace Services.Protocols.Models {
         public string playerId; // 固有のプレイヤID
         public string sessionToken; // セッショントークン
         public string signinToken; // ログイントークン
+        public string role; // 役職
         protected override void Clear() {
             userId = null; // 固有のユーザID
             playerId = null; // 固有のプレイヤID
             sessionToken = null; // セッショントークン
             signinToken = null; // ログイントークン
+            role = null; // 役職
         }
     }
     // PlayerData

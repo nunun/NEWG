@@ -55,7 +55,7 @@ class WebAPIController {
         userData.signinToken  = credentialData.signinToken;
         await userData.promiseSave();
 
-        // サインアップ完了！
+        // リクエスト完了！
         return {
             activeData: {
                 playerData:     { active:true, data:playerData.export()     },
@@ -75,7 +75,7 @@ class WebAPIController {
         // ユーザデータを特定
         var userData = await UserData.promiseGet(signinTokenData.associatedKey);
         if (userData.signinToken != signinToken) {
-            throw new Error('invalid token'); // NOTE 古いトークンを使用しようとした
+            throw new Error(401, 'invalid token'); // NOTE 古いトークンを使用しようとした
         }
 
         // セッショントークン作成
@@ -96,7 +96,7 @@ class WebAPIController {
         // プレイヤー情報取得
         var playerData = await PlayerData.promiseGet(userData.playerId);
 
-        // サインイン完了！
+        // リクエスト完了！
         return {
             activeData: {
                 playerData:  { active:true, data:playerData.export()  },
@@ -105,18 +105,38 @@ class WebAPIController {
         };
     }
 
+    // プレイヤ情報の取得
+    async Player(req, res) {
+        // プレイヤー情報取得
+        var playerData = await PlayerData.promiseGet(req.userData.playerId);
+
+        // リクエスト完了！
+        return {
+            activeData: {
+                playerData: { active:true, data:playerData.export() },
+            },
+        };
+    }
+
     // 名前の変更
     async Rename(req, res) {
-        // TODO
+        // プレイヤー情報取得
+        var playerData = await PlayerData.promiseGet(req.userData.playerId);
+
+        // プレイヤ名を変更して保存
+        playerData.playerName = req.body.playerName;
+        await playerData.promiseSave();
+
+        // リクエスト完了！
+        return {
+            activeData: {
+                playerData: { active:true, data:playerData.export() },
+            },
+        };
     }
 
     // マッチングのリクエスト
     //Matching(req, res) {
-    //    // TODO
-    //}
-
-    // プレイヤ情報の取得
-    //Player(req, res) {
     //    // TODO
     //}
 
@@ -135,7 +155,10 @@ class WebAPIController {
             var result = await method(req, res);
             res.status(200).send(result);
         } catch (err) {
-            res.status(500).send({err:err});
+            if (!(err instanceof Error)) {
+                err = new Error(500, err);
+            }
+            res.status(err.number || 500).send({err:err});
         }
     }
 
@@ -169,19 +192,66 @@ class WebAPIController {
 
     // セッショントークン確認
     checkSessionToken(req, res, next) {
-        // TODO
-        next();
+        // ヘッダから探す
+        var sessionToken = req.get('SessionToken');
+        if (!sessionToken) {
+            // 一応リクエスト本文からも探す
+            sessionToken = req.body.sessionToken;
+            if (!sessionToken) {
+                req.userData = null;
+                next();
+                return;
+            }
+        }
+
+        // サインイントークンを探す
+        UniqueKeyData.get(sessionToken, (err, sessionTokenData) => {
+            if (err) {
+                req.userData = null;
+                next();
+                return;
+            }
+
+            // ユーザデータを特定
+            UserData.get(sessionTokenData.associatedKey, (err, userData) => {
+                if (err) {
+                    req.userData = null;
+                    next();
+                    return;
+                }
+
+                // NOTE
+                // 古いトークンを使用しようとした
+                if (!userData || userData.sessionToken != sessionToken) {
+                    req.userData = null;
+                    next();
+                    return;
+                }
+
+                // ユーザ特定成功
+                req.userData = userData;
+                next();
+            });
+        });
     }
 
     // サインインユーザ確認
     userSecurity(req, res, next) {
-        // TODO
+        // ユーザ情報チェック
+        if (!req.userData) {
+            res.status(401).send({err:new Error('unauthorized')});
+            return;
+        }
         next();
     }
 
     // 管理者ユーザ確認
     adminSecurity(req, res, next) {
-        // TODO
+        // ユーザ情報 && 役職チェック
+        if (!req.userData || req.userData.role != 'admin') {
+            res.status(401).send({err:new Error('unauthorized')});
+            return;
+        }
         next();
     }
 }

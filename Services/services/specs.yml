@@ -20,20 +20,20 @@ specs:
               validate: {length: 16}
           response: []
 
-        - name: Rename
-          desc: 名前変更API
-          api_path: /rename
-          request:
-            - name: name
-              desc: 変更する名前
-              type: string
-          response: []
-
         - name: Player
           desc: プレイヤー情報の取得
           api_path: /player
           use: [userSecurity]
           request: []
+          response: []
+
+        - name: Rename
+          desc: 名前変更API
+          api_path: /rename
+          request:
+            - name: playerName
+              desc: 変更する名前
+              type: string
           response: []
 
         - name: Matching
@@ -79,6 +79,10 @@ specs:
               value: (null)
             - name:  signinToken
               desc:  ログイントークン
+              type:  string
+              value: (null)
+            - name:  role
+              desc:  役職
               type:  string
               value: (null)
 
@@ -336,12 +340,12 @@ templates:
               var <%= impl %> = controller.<%= name %>;
               if (<%= impl %>) {
                   do {
-                      var routeMidlewares = null;
+                      var routeMiddlewares = null;
                       <%- use.each do |u| -%>
                       routeMiddlewares = (!controller.use)? null : controller.use("<%= u %>");
                       if (routeMiddlewares) {
                           for (var i in routeMiddlewares) {
-                              router.use("<%= api_path %>", routeMidlewares[i]);
+                              router.use("<%= api_path %>", routeMiddlewares[i]);
                           }
                       } else {
                           logger.error('routes.setup: controller has no middleware "<%= u %>" for route "<%= api_path %>".');

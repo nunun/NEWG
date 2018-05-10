@@ -13,7 +13,7 @@ exports.setup = function(router, controller, group, logger) {
         var Signup_impl = controller.Signup;
         if (Signup_impl) {
             do {
-                var routeMidlewares = null;
+                var routeMiddlewares = null;
                 router.post("/signup", function(req, res) {
                     if (controller.call) {
                       controller.call(Signup_impl, req, res);
@@ -33,9 +33,9 @@ exports.setup = function(router, controller, group, logger) {
         var Signin_impl = controller.Signin;
         if (Signin_impl) {
             do {
-                var routeMidlewares = null;
+                var routeMiddlewares = null;
                 router.post("/signin", function(req, res) {
-                    if (!controller.validate(req.body, 'signinToken', {"length":16})) {
+                    if (!controller.validate(req, 'signinToken', {"length":16})) {
                         res.status(400).send({err: new Error('bad request')});
                         return;
                     }
@@ -51,13 +51,42 @@ exports.setup = function(router, controller, group, logger) {
         }
     }
     if (!group) {
+        logger.debug('routes.setup: binding controller method "Player" to route "/player".');
+        // Player
+        // プレイヤー情報の取得
+        var Player_impl = controller.Player;
+        if (Player_impl) {
+            do {
+                var routeMiddlewares = null;
+                routeMiddlewares = (!controller.use)? null : controller.use("userSecurity");
+                if (routeMiddlewares) {
+                    for (var i in routeMiddlewares) {
+                        router.use("/player", routeMiddlewares[i]);
+                    }
+                } else {
+                    logger.error('routes.setup: controller has no middleware "userSecurity" for route "/player".');
+                    break;
+                }
+                router.post("/player", function(req, res) {
+                    if (controller.call) {
+                      controller.call(Player_impl, req, res);
+                    } else {
+                      Player_impl(req, res);
+                    }
+                });
+            } while(false);
+        } else {
+            logger.error('routes.setup: controller has no method "Player" for route "/player".');
+        }
+    }
+    if (!group) {
         logger.debug('routes.setup: binding controller method "Rename" to route "/rename".');
         // Rename
         // 名前変更API
         var Rename_impl = controller.Rename;
         if (Rename_impl) {
             do {
-                var routeMidlewares = null;
+                var routeMiddlewares = null;
                 router.post("/rename", function(req, res) {
                     if (controller.call) {
                       controller.call(Rename_impl, req, res);
@@ -77,11 +106,11 @@ exports.setup = function(router, controller, group, logger) {
         var Matching_impl = controller.Matching;
         if (Matching_impl) {
             do {
-                var routeMidlewares = null;
+                var routeMiddlewares = null;
                 routeMiddlewares = (!controller.use)? null : controller.use("userSecurity");
                 if (routeMiddlewares) {
                     for (var i in routeMiddlewares) {
-                        router.use("/matching", routeMidlewares[i]);
+                        router.use("/matching", routeMiddlewares[i]);
                     }
                 } else {
                     logger.error('routes.setup: controller has no middleware "userSecurity" for route "/matching".');
@@ -100,42 +129,13 @@ exports.setup = function(router, controller, group, logger) {
         }
     }
     if (!group) {
-        logger.debug('routes.setup: binding controller method "Player" to route "/player".');
-        // Player
-        // プレイヤー情報の取得
-        var Player_impl = controller.Player;
-        if (Player_impl) {
-            do {
-                var routeMidlewares = null;
-                routeMiddlewares = (!controller.use)? null : controller.use("userSecurity");
-                if (routeMiddlewares) {
-                    for (var i in routeMiddlewares) {
-                        router.use("/player", routeMidlewares[i]);
-                    }
-                } else {
-                    logger.error('routes.setup: controller has no middleware "userSecurity" for route "/player".');
-                    break;
-                }
-                router.post("/player", function(req, res) {
-                    if (controller.call) {
-                      controller.call(Player_impl, req, res);
-                    } else {
-                      Player_impl(req, res);
-                    }
-                });
-            } while(false);
-        } else {
-            logger.error('routes.setup: controller has no method "Player" for route "/player".');
-        }
-    }
-    if (!group) {
         logger.debug('routes.setup: binding controller method "Test" to route "/test".');
         // Test
         // ユニットテスト用
         var Test_impl = controller.Test;
         if (Test_impl) {
             do {
-                var routeMidlewares = null;
+                var routeMiddlewares = null;
                 router.post("/test", function(req, res) {
                     if (controller.call) {
                       controller.call(Test_impl, req, res);
