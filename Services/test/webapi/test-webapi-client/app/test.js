@@ -88,21 +88,21 @@ describe('smoke test', function () {
                     TestData.list({value: 100}, function(err, list) {
                         assert.ok(!err,              'invalid response err ('          + err          + ')');
                         assert.ok(list.length  == 0, 'invalid response list.length ('  + list.length  + ')');
-                        testSetCache();
+                        testSaveCache();
                     });
                 });
             }
 
-            function testSetCache() {
+            function testSaveCache() {
                 var testData = new TestData();
                 testData.value = 122;
-                testData.setCache('mycache1', function(err) {
+                testData.saveCache('mycache1', function(err) {
                     assert.ok(!err, 'invalid response err (' + err + ')');
                     testData.value = 124;
-                    testData.setCache('mycache2', function(err) {
+                    testData.cacheTTL(2).saveCache('mycache2', function(err) {
                         assert.ok(!err, 'invalid response err (' + err + ')');
                         testGetCache();
-                    }, 3000);
+                    });
                 });
             }
 
@@ -113,7 +113,13 @@ describe('smoke test', function () {
                     TestData.getCache('mycache2', function(err, testData2) {
                         assert.ok(!err,                   'invalid response err ('             + err             + ')');
                         assert.ok(testData2.value == 124, 'invalid response testData2.value (' + testData2.value + ')');
-                        done();
+                        setTimeout(() => {
+                            TestData.getCache('mycache2', function(err, testData2_ttl) {
+                                assert.ok(!err,           'invalid response err (' + err + ')');
+                                assert.ok(!testData2_ttl, 'invalid response testData3 (' + testData2_ttl + ')');
+                                done();
+                            });
+                        }, 3000);
                     });
                 });
             }

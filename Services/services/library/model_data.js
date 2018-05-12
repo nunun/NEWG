@@ -23,50 +23,61 @@ ModelData.prototype.clear = function() {
     // implement by inherit
 }
 
-// save
-ModelData.prototype.save = function(propertyName, key, callback) {
-    var self = this;
-    if (callback !== undefined) {//when 3 arguments
-        // nothing to do
-    } else if (key !== undefined) {//when 2 arguments
-        callback     = key;
-        key          = propertyName;
-        propertyName = null;
-    } else if (propertyName !== undefined) {//when 1 argument
-        callback     = propertyName;
-        key          = null;
-        propertyName = null;
-    }
-    var retryCount = 0;
-    if (key && (typeof(key) == "number" || saveKeyRegex.exec(key))) {
-        retryCount = 3; // generate key
-    } else if (!key && (propertyName && this.hasOwnProperty(propertyName) && self[propertyName])) {
-        key = self[propertyName]; // use field value
-    } else if (!key && (this.hasOwnProperty("_id"))) {
-        key = this._id; // use _id field value
-    } else {
-        key = key || 8; // create new key
-    }
-    save(self, propertyName, key, callback, retryCount);
+// save options 'keyProperty'
+ModelData.prototype.keyProperty = function(propertyName) {
+    this._saveOptions = this._saveOptions || {};
+    this._saveOptions.keyProperty = propertyName;
+    return this;
 }
-function save(self, propertyName, key, callback, retryCount) {
-    var k = key;
-    if (typeof(k) == "number") {
-        k = keygen(k);
-    } else {
-        var m = saveKeyRegex.exec(k);
-        if (m) {
-            k = m[1] + keygen(parseInt(m[2])) + m[3];
+
+// save options 'cacheTTL'
+ModelData.prototype.cacheTTL = function(seconds) {
+    this._saveOptions = this._saveOptions || {};
+    this._saveOptions.cacheTTL = seconds;
+    return this;
+}
+
+// save
+ModelData.prototype.save = function(key, callback) {
+    var self = this;
+    if (key === undefined) {
+        callback = key;
+        key      = null;
+    }
+    if (!key) {
+        if (self.hasOwnProperty(self._saveOptions.keyProperty) && self[self._saveOptions.keyProperty]) {
+            key = self[self._saveOptions.keyProperty];
+        } else if (self.hasOwnProperty("_id")) {
+            key = self._id;
         }
     }
-    if (propertyName) {
-        if (!self.hasOwnProperty(propertyName)) {
+    if (!key) {
+        if (callback) {
+            callback(new Error('no id'));
+        }
+        return;
+    }
+    var saveOptions = self._saveOptions;
+    if (self._saveOptions) {
+        delete self._saveOptions;
+    }
+    save(self, key, callback, (saveOptions || {}), ((saveKeyRegex.exec(key))? 3 : 0));
+}
+function save(self, key, callback, saveOptions, retryCount) {
+    var k = key;
+    var m = saveKeyRegex.exec(k);
+    if (m) {
+        k = m[1] + keygen(parseInt(m[2])) + m[3];
+    }
+    var keyProperty = saveOptions.keyProperty;
+    if (keyProperty) {
+        if (!self.hasOwnProperty(keyProperty)) {
             if (callback) {
                 callback(new Error('no field'), null, null);
             }
             return;
         }
-        self[propertyName] = k;
+        self[keyProperty] = k;
     }
     self.getScope(function(err, scope) {
         if (err) {
@@ -78,11 +89,11 @@ function save(self, propertyName, key, callback, retryCount) {
         scope.insert(self, k, function(err, body) {
             if (err) {
                 if (retryCount >= 0) {
-                    save(self, propertyName, key, callback, retryCount - 1);
+                    save(self, key, callback, retryCount - 1);
                     return;
                 }
                 if (callback) {
-                    callback(err, null, null);
+                    callback(err || new Error('retry exceeded.'), null, null);
                 }
                 return;
             }
@@ -94,26 +105,15 @@ function save(self, propertyName, key, callback, retryCount) {
         });
     });
 }
-function keygen(len) {
-    var sym = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
-    var key = '';
-    for(var i = 0; i < len; i++) {
-        key += sym[parseInt(Math.random() * sym.length)];
-    }
-    return key;
-}
 
 // promiseSave
-ModelData.prototype.promiseSave = function(propertyName, key) {
+ModelData.prototype.promiseSave = function(key) {
     var self = this;
-    if (key !== undefined) {//when 2 arguments
-        // nothing to do
-    } else if (propertyName !== undefined) {//when 1 arugment
-        key          = propertyName;
-        propertyName = null;
+    if (key === undefined) {
+        key = null;
     }
     return new Promise((resolve, reject) => {
-        self.save(propertyName, key, (err) => {
+        self.save(key, (err) => {
             if (err) {
                 throw err;
             }
@@ -129,6 +129,9 @@ ModelData.prototype.export = function() {
     }
     if (this._rev) {
         delete this._rev;
+    }
+    if (this._saveOptions) {
+        delete this._saveOptions;
     }
     return this;
 }
@@ -327,6 +330,88 @@ ModelData.setupType = function(type, typeName, databaseName) {
         });
     }
 
+    // saveCache
+    ModelData.prototype.saveCache = function(key, callback) {
+        var self = this;
+        if (key === undefined) {
+            callback = key;
+            key      = null;
+        }
+        if (!key) {
+            if (self.hasOwnProperty(self._saveOptions.keyProperty) && self[self._saveOptions.keyProperty]) {
+                key = self[self._saveOptions.keyProperty];
+            }
+        }
+        if (!key) {
+            if (callback) {
+                callback(new Error('no id'));
+            }
+            return;
+        }
+        var saveOptions = self._saveOptions;
+        if (self._saveOptions) {
+            delete self._saveOptions;
+        }
+        saveCache(self, key, callback, (saveOptions || {}), ((saveKeyRegex.exec(key))? 3 : 0));
+    }
+    function saveCache(self, key, callback, saveOptions, retryCount) {
+        var k = key;
+        var m = saveKeyRegex.exec(k);
+        if (m) {
+            k = m[1] + keygen(parseInt(m[2])) + m[3];
+        }
+        var keyProperty = saveOptions.keyProperty;
+        if (keyProperty) {
+            if (!self.hasOwnProperty(keyProperty)) {
+                if (callback) {
+                    callback(new Error('no field'), null, null);
+                }
+                return;
+            }
+            self[keyProperty] = k;
+        }
+        var setArgs = [type.getCacheKey(key), JSON.stringify(self)];
+        if (m) {
+            setArgs.push('NX');
+        }
+        if (saveOptions.cacheTTL) {
+            setArgs.push('EX', saveOptions.cacheTTL);
+        }
+        setArgs.push(function(err, reply) {
+            if (err || reply != "OK") {
+                if (retryCount >= 0) {
+                    saveCache(self, key, callback, saveOptions, retryCount - 1);
+                    return;
+                }
+                if (callback) {
+                    callback(err || new Error('retry exceeded.'));
+                }
+                return;
+            }
+            if (callback) {
+                callback(null);
+            }
+        });
+        var redis = RedisClient.getClient().getConnection();
+        redis.set.apply(redis, setArgs);
+    }
+
+    // promiseSaveCache
+    ModelData.prototype.promiseSaveCache = function(key) {
+        var self = this;
+        if (key === undefined) {
+            key = null;
+        }
+        return new Promise((resolve, reject) => {
+            self.saveCache(key, (err) => {
+                if (err) {
+                    throw err;
+                }
+                resolve();
+            });
+        });
+    }
+
     // getCache
     type.getCache = function(key, callback) {
         var redis    = RedisClient.getClient().getConnection();
@@ -339,6 +424,10 @@ ModelData.setupType = function(type, typeName, databaseName) {
                 return;
             }
             if (callback) {
+                if (reply == null) {
+                    callback(null, null);
+                    return;
+                }
                 var data = null;
                 try {
                     var replyData = JSON.parse(reply);
@@ -362,51 +451,6 @@ ModelData.setupType = function(type, typeName, databaseName) {
                 }
                 resolve(data);
             });
-        });
-    }
-
-    // setCache
-    type.prototype.setCache = function(key, callback, ttl) {
-        var redis     = RedisClient.getClient().getConnection();
-        var cacheKey  = type.getCacheKey(key);
-        var cacheData = JSON.stringify(this);
-        if (ttl) {
-            redis.set(cacheKey, cacheData, 'NX', 'EX', ttl, function(err, reply) {
-                if (err) {
-                    if (callback) {
-                        callback(err);
-                    }
-                    return;
-                }
-                if (callback) {
-                    callback((reply == "OK")? null : new Error('invalid reply'));
-                }
-            });
-        } else {
-            redis.set(cacheKey, cacheData, 'NX', function(err, reply) {
-                if (err) {
-                    if (callback) {
-                        callback(err);
-                    }
-                    return;
-                }
-                if (callback) {
-                    callback((reply == "OK")? null : new Error('invalid reply'));
-                }
-            });
-        }
-    }
-
-    // promiseSetCache
-    type.prototype.promiseSetCache = function(key, ttl) {
-        var self = this;
-        return new Promise((resolve, reject) => {
-            self.setCache(key, (err) => {
-                if (err) {
-                    throw err;
-                }
-                resolve();
-            }, ttl);
         });
     }
 
@@ -467,6 +511,16 @@ ModelData.setupType = function(type, typeName, databaseName) {
             });
         });
     }
+}
+
+// generate random key
+function keygen(len) {
+    var sym = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
+    var key = '';
+    for(var i = 0; i < len; i++) {
+        key += sym[parseInt(Math.random() * sym.length)];
+    }
+    return key;
 }
 
 // exports

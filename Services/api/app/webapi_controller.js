@@ -26,7 +26,7 @@ class WebAPIController {
         var playerData = new PlayerData();
         playerData.playerId   = null;
         playerData.playerName = "Player" + Math.floor(Math.random() * 1000);
-        await playerData.promiseSave("playerId", "%8s");
+        await playerData.keyProperty("playerId").promiseSave("%8s");
 
         // ユーザ作成
         var userData = new UserData();
@@ -34,18 +34,20 @@ class WebAPIController {
         userData.playerId     = playerData.playerId;
         userData.sessionToken = null;
         userData.signinToken  = null;
-        await userData.promiseSave("userId", "%8s");
+        await userData.keyProperty("userId").promiseSave("%8s");
 
         // セッショントークン作成
         var sessionTokenData = new UniqueKeyData();
-        sessionTokenData.associatedKey = userData.userId;
+        sessionTokenData.associatedDataType = "userId";
+        sessionTokenData.associatedDataKey  = userData.userId;
         await sessionTokenData.promiseSave("%16s");
         var sessionData = new SessionData();
         sessionData.sessionToken = sessionTokenData._id;
 
         // サインイントークン作成
         var signinTokenData = new UniqueKeyData();
-        signinTokenData.associatedKey = userData.userId;
+        signinTokenData.associatedDataType = "userId";
+        signinTokenData.associatedDataKey  = userData.userId;
         await signinTokenData.promiseSave("%16s");
         var credentialData = new CredentialData();
         credentialData.signinToken = signinTokenData._id;
@@ -73,14 +75,15 @@ class WebAPIController {
         var signinTokenData = await UniqueKeyData.promiseGet(signinToken);
 
         // ユーザデータを特定
-        var userData = await UserData.promiseGet(signinTokenData.associatedKey);
+        var userData = await UserData.promiseGet(signinTokenData.associatedDataKey);
         if (userData.signinToken != signinToken) {
             throw new Error(401, 'invalid token'); // NOTE 古いトークンを使用しようとした
         }
 
         // セッショントークン作成
         var sessionTokenData = new UniqueKeyData();
-        sessionTokenData.associatedKey = userData.userId;
+        sessionTokenData.associatedDataType = "userId";
+        sessionTokenData.associatedDataKey   = userData.userId;
         await sessionTokenData.promiseSave("%16s");
         var sessionData = new SessionData();
         sessionData.sessionToken = sessionTokenData._id;
@@ -136,9 +139,20 @@ class WebAPIController {
     }
 
     // マッチングのリクエスト
-    //Matching(req, res) {
-    //    // TODO
-    //}
+    Matching(req, res) {
+
+        // マッチングトークン作成
+        //var matchingTokenData = new UniqueKeyData();
+        //matchingTokenData.associatedDataType = "userId";
+        //matchingTokenData.associatedDataKey   = req.userData.userId;
+        //await matchingTokenData.promiseSave("%16s");
+        //var sessionData = new SessionData();
+        //sessionData.sessionToken = sessionTokenData._id;
+
+        // TODO
+        // マッチングトークンを作って返す
+        // トークンは redis で作る
+    }
 
     // テスト API
     async Test(req, res) {
@@ -213,7 +227,7 @@ class WebAPIController {
             }
 
             // ユーザデータを特定
-            UserData.get(sessionTokenData.associatedKey, (err, userData) => {
+            UserData.get(sessionTokenData.associatedDataKey, (err, userData) => {
                 if (err) {
                     req.userData = null;
                     next();
