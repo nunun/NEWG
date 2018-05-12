@@ -370,7 +370,7 @@ ModelData.setupType = function(type, typeName, databaseName) {
             }
             self[keyProperty] = k;
         }
-        var setArgs = [type.getCacheKey(key), JSON.stringify(self)];
+        var setArgs = [type.getCacheKey(k), JSON.stringify(self)];
         if (m) {
             setArgs.push('NX');
         }
@@ -378,7 +378,7 @@ ModelData.setupType = function(type, typeName, databaseName) {
             setArgs.push('EX', saveOptions.cacheTTL);
         }
         setArgs.push(function(err, reply) {
-            if (err || reply != "OK") {
+            if (err || reply != "OK") { // NOTE reply become null if key always exists with 'NX'.
                 if (retryCount >= 0) {
                     saveCache(self, key, callback, saveOptions, retryCount - 1);
                     return;
