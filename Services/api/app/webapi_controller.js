@@ -7,6 +7,7 @@ var UserData       = models.UserData;
 var PlayerData     = models.PlayerData;
 var SessionData    = models.SessionData;
 var CredentialData = models.CredentialData;
+var MatchingData   = models.MatchingData;
 var UniqueKeyData  = models.UniqueKeyData;
 
 // WebAPI コントローラ
@@ -140,18 +141,16 @@ class WebAPIController {
 
     // マッチングのリクエスト
     Matching(req, res) {
+        // マッチング情報作成
+        var matchingData = new MatchingData();
+        matchingData.matchingId = null;
+        matchingData.users      = [req.userData.userId];
+        await matchingData.keyProperty("matchingId").cacheTTL(30).saveCache("%16s");
 
-        // マッチングトークン作成
-        //var matchingTokenData = new UniqueKeyData();
-        //matchingTokenData.associatedDataType = "userId";
-        //matchingTokenData.associatedDataKey   = req.userData.userId;
-        //await matchingTokenData.promiseSave("%16s");
-        //var sessionData = new SessionData();
-        //sessionData.sessionToken = sessionTokenData._id;
-
-        // TODO
-        // マッチングトークンを作って返す
-        // トークンは redis で作る
+        // リクエスト完了！
+        return {
+            matchingServerUrl: "ws://localhost:7755?matchingId=" + matchingData.matchingId,
+        };
     }
 
     // テスト API

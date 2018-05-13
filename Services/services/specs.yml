@@ -45,9 +45,6 @@ specs:
             - name: matchingServerUrl
               desc: マッチングサーバURL
               type: string
-            - name: matchingToken
-              desc: マッチングトークン
-              type: string
 
         - name: Test
           desc: ユニットテスト用
@@ -117,6 +114,10 @@ specs:
         - name: MatchingData
           desc: マッチングデータ。マッチングするユーザ一覧などの情報。
           properties:
+            - name:    matchingId
+              desc:    マッチングID
+              type:    string
+              value:   (null)
             - name:    users
               desc:    マッチングするユーザID一覧
               type:    array
@@ -126,6 +127,10 @@ specs:
         - name: MatchData
           desc: マッチデータ。マッチングなどで確定したマッチの情報。
           properties:
+            - name:    matchId
+              desc:    マッチID
+              type:    string
+              value:   (null)
             - name:    matchState
               desc:    マッチ状態 (standby, ready, started, ended)
               type:    string
@@ -155,8 +160,8 @@ specs:
               desc:  接続先のゲームサーバポート
               type:  int
               value: 7777
-            - name:  matchToken
-              desc:  マッチトークン。サーバ側で生成された固有ID。
+            - name:  matchId
+              desc:  マッチID
               type:  string
               value: (null)
 
@@ -171,8 +176,8 @@ specs:
         - name: ServerSetupRequestMessage
           desc: サーバセットアップリクエストメッセージ。API サーバが Unity サーバに対してサーバインスタンスをセットアップしたいときに送信。
           properties:
-            - name:  matchToken
-              desc:  サーバ起動をリクエストしたマッチトークン
+            - name:  matchId
+              desc:  サーバ起動をリクエストしたマッチID
               type:  string
               value: (null)
             - name:  sceneName
@@ -183,16 +188,16 @@ specs:
         - name: ServerSetupResponseMessage
           desc: サーバセットアップレスポンスメッセージ。ServerSetupRequest のレスポンス。
           properties:
-            - name:  matchToken
-              desc:  サーバ起動をリクエストしたマッチトークン
+            - name:  matchId
+              desc:  サーバ起動をリクエストしたマッチID
               type:  string
               value: (null)
 
         - name: ServerSetupDoneMessage
           desc: サーバセットアップ完了メッセージ。Unity サーバが API サーバに対してクライアント接続可能状態を通知するときに送信。
           properties:
-            - name:  matchToken
-              desc:  サーバ起動をリクエストしたマッチトークン
+            - name:  matchId
+              desc:  サーバ起動をリクエストしたマッチID
               type:  string
               value: (null)
 
