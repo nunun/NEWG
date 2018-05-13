@@ -25,11 +25,11 @@ namespace Services.Protocols.Models {
     // プレイヤデータ。全ユーザに公開されるプレイヤのデータ。
     [Serializable]
     public class PlayerData : ModelData {
-        public string playerId; // プレイヤー番号
-        public string playerName; // プレイヤー名
+        public string playerId; // プレイヤID
+        public string playerName; // プレイヤ名
         protected override void Clear() {
-            playerId = null; // プレイヤー番号
-            playerName = null; // プレイヤー名
+            playerId = null; // プレイヤID
+            playerName = null; // プレイヤ名
         }
     }
     // SessionData
@@ -50,64 +50,90 @@ namespace Services.Protocols.Models {
             signinToken = null; // サインイントークン
         }
     }
+    // MatchingData
+    // マッチングデータ。マッチングするユーザ一覧などの情報。
+    [Serializable]
+    public class MatchingData : ModelData {
+        public string[] users; // マッチングするユーザID一覧
+        protected override void Clear() {
+            users = new string[0]; // マッチングするユーザID一覧
+        }
+    }
+    // MatchData
+    // マッチデータ。マッチングなどで確定したマッチの情報。
+    [Serializable]
+    public class MatchData : ModelData {
+        public string matchState; // マッチ状態 (standby, ready, started, ended)
+        public string serverAddress; // 接続先のゲームサーバアドレス
+        public int serverPort; // 接続先のゲームサーバポート
+        public string[] users; // このマッチに参加する全てのユーザID一覧
+        protected override void Clear() {
+            matchState = "standby"; // マッチ状態 (standby, ready, started, ended)
+            serverAddress = "localhost"; // 接続先のゲームサーバアドレス
+            serverPort = 7777; // 接続先のゲームサーバポート
+            users = new string[0]; // このマッチに参加する全てのユーザID一覧
+        }
+    }
+    // MatchConnectData
+    // マッチ接続データ。この情報をもってゲームサーバに接続。
+    [Serializable]
+    public class MatchConnectData : ModelData {
+        public string serverAddress; // 接続先のゲームサーバアドレス
+        public int serverPort; // 接続先のゲームサーバポート
+        public string matchToken; // マッチトークン。サーバ側で生成された固有ID。
+        protected override void Clear() {
+            serverAddress = "localhost"; // 接続先のゲームサーバアドレス
+            serverPort = 7777; // 接続先のゲームサーバポート
+            matchToken = null; // マッチトークン。サーバ側で生成された固有ID。
+        }
+    }
+    // ServerStatusData
+    // サーバ状態データ。サーバの情報を示すデータ。
+    [Serializable]
+    public class ServerStatusData : ModelData {
+        public string serverState; // サーバ状態 (standby, ready)
+        protected override void Clear() {
+            serverState = "standby"; // サーバ状態 (standby, ready)
+        }
+    }
+    // ServerSetupRequestMessage
+    // サーバセットアップリクエストメッセージ。API サーバが Unity サーバに対してサーバインスタンスをセットアップしたいときに送信。
+    [Serializable]
+    public class ServerSetupRequestMessage : ModelData {
+        public string matchToken; // サーバ起動をリクエストしたマッチトークン
+        public string sceneName; // 起動するシーン名
+        protected override void Clear() {
+            matchToken = null; // サーバ起動をリクエストしたマッチトークン
+            sceneName = null; // 起動するシーン名
+        }
+    }
+    // ServerSetupResponseMessage
+    // サーバセットアップレスポンスメッセージ。ServerSetupRequest のレスポンス。
+    [Serializable]
+    public class ServerSetupResponseMessage : ModelData {
+        public string matchToken; // サーバ起動をリクエストしたマッチトークン
+        protected override void Clear() {
+            matchToken = null; // サーバ起動をリクエストしたマッチトークン
+        }
+    }
+    // ServerSetupDoneMessage
+    // サーバセットアップ完了メッセージ。Unity サーバが API サーバに対してクライアント接続可能状態を通知するときに送信。
+    [Serializable]
+    public class ServerSetupDoneMessage : ModelData {
+        public string matchToken; // サーバ起動をリクエストしたマッチトークン
+        protected override void Clear() {
+            matchToken = null; // サーバ起動をリクエストしたマッチトークン
+        }
+    }
     // UniqueKeyData
     // 固有キー生成用データ。CouchDB のキー重複制限を使って固有キーを生成するために使用。
     [Serializable]
     public class UniqueKeyData : ModelData {
-        public string associatedKey; // 固有キーデータに紐づけられた関連キー
+        public string associatedDataType; // 固有キーデータに紐づけられたデータタイプ
+        public string associatedDataKey; // 固有キーデータに紐づけられたデータキー
         protected override void Clear() {
-            associatedKey = null; // 固有キーデータに紐づけられた関連キー
-        }
-    }
-    // ServerStatus
-    // サーバステータス
-    [Serializable]
-    public class ServerStatus : ModelData {
-        public string state; // 現在状態 (Standby, Ready, Started, Ended)
-        protected override void Clear() {
-            state = null; // 現在状態 (Standby, Ready, Started, Ended)
-        }
-    }
-    // ServerSetupRequest
-    // サーバセットアップリクエスト。API サーバが Unity サーバに対してサーバインスタンスをセットアップしたいときに送信。
-    [Serializable]
-    public class ServerSetupRequest : ModelData {
-        public string matchingId; // サーバ起動をリクエストしたマッチングID
-        public string sceneName; // 起動するシーン名
-        protected override void Clear() {
-            matchingId = null; // サーバ起動をリクエストしたマッチングID
-            sceneName = null; // 起動するシーン名
-        }
-    }
-    // ServerSetupResponse
-    // サーバセットアップレスポンス。ServerBootRequest のレスポンス。
-    [Serializable]
-    public class ServerSetupResponse : ModelData {
-        public string matchingId; // サーバ起動をリクエストしたマッチングID
-        protected override void Clear() {
-            matchingId = null; // サーバ起動をリクエストしたマッチングID
-        }
-    }
-    // ServerSetupDoneRequest
-    // サーバセットアップ完了リクエスト。Unity サーバが API サーバに対してクライアント接続可能状態を通知するときに送信。
-    [Serializable]
-    public class ServerSetupDoneRequest : ModelData {
-        public string matchingId; // サーバ起動をリクエストしたマッチングID
-        protected override void Clear() {
-            matchingId = null; // サーバ起動をリクエストしたマッチングID
-        }
-    }
-    // ServerConnectData
-    // サーバ接続データ
-    [Serializable]
-    public class ServerConnectData : ModelData {
-        public string serverAddress; // 接続先のサーバアドレス
-        public int serverPort; // 接続先のサーバポート
-        public string serverToken; // 接続用サーバトークン
-        protected override void Clear() {
-            serverAddress = "localhost"; // 接続先のサーバアドレス
-            serverPort = 7777; // 接続先のサーバポート
-            serverToken = null; // 接続用サーバトークン
+            associatedDataType = null; // 固有キーデータに紐づけられたデータタイプ
+            associatedDataKey = null; // 固有キーデータに紐づけられたデータキー
         }
     }
 }

@@ -42,11 +42,11 @@ specs:
           use: [userSecurity]
           request: []
           response:
-            - name: matchingToken
-              desc: マッチングトークン
-              type: string
             - name: matchingServerUrl
               desc: マッチングサーバURL
+              type: string
+            - name: matchingToken
+              desc: マッチングトークン
               type: string
 
         - name: Test
@@ -90,11 +90,11 @@ specs:
           desc: プレイヤデータ。全ユーザに公開されるプレイヤのデータ。
           properties:
             - name:  playerId
-              desc:  プレイヤー番号
+              desc:  プレイヤID
               type:  string
               value: (null)
             - name:  playerName
-              desc:  プレイヤー名
+              desc:  プレイヤ名
               type:  string
               value: (null)
 
@@ -114,19 +114,65 @@ specs:
               type:  string
               value: (null)
 
-        - name: ServerStatus
-          desc: サーバステータス
+        - name: MatchingData
+          desc: マッチングデータ。マッチングするユーザ一覧などの情報。
           properties:
-            - name:  state
-              desc:  現在状態 (Standby, Ready, Started, Ended)
+            - name:    users
+              desc:    マッチングするユーザID一覧
+              type:    array
+              subtype: string
+              value:   (empty)
+
+        - name: MatchData
+          desc: マッチデータ。マッチングなどで確定したマッチの情報。
+          properties:
+            - name:    matchState
+              desc:    マッチ状態 (standby, ready, started, ended)
+              type:    string
+              value:   standby
+            - name:    serverAddress
+              desc:    接続先のゲームサーバアドレス
+              type:    string
+              value:   localhost
+            - name:    serverPort
+              desc:    接続先のゲームサーバポート
+              type:    int
+              value:   7777
+            - name:    users
+              desc:    このマッチに参加する全てのユーザID一覧
+              type:    array
+              subtype: string
+              value:   (empty)
+
+        - name: MatchConnectData
+          desc: マッチ接続データ。この情報をもってゲームサーバに接続。
+          properties:
+            - name:  serverAddress
+              desc:  接続先のゲームサーバアドレス
+              type:  string
+              value: localhost
+            - name:  serverPort
+              desc:  接続先のゲームサーバポート
+              type:  int
+              value: 7777
+            - name:  matchToken
+              desc:  マッチトークン。サーバ側で生成された固有ID。
               type:  string
               value: (null)
 
-        - name: ServerSetupRequest
-          desc: サーバセットアップリクエスト。API サーバが Unity サーバに対してサーバインスタンスをセットアップしたいときに送信。
+        - name: ServerStatusData
+          desc: サーバ状態データ。サーバの情報を示すデータ。
           properties:
-            - name:  matchingId
-              desc:  サーバ起動をリクエストしたマッチングID
+            - name:  serverState
+              desc:  サーバ状態 (standby, ready)
+              type:  string
+              value: standby
+
+        - name: ServerSetupRequestMessage
+          desc: サーバセットアップリクエストメッセージ。API サーバが Unity サーバに対してサーバインスタンスをセットアップしたいときに送信。
+          properties:
+            - name:  matchToken
+              desc:  サーバ起動をリクエストしたマッチトークン
               type:  string
               value: (null)
             - name:  sceneName
@@ -134,35 +180,19 @@ specs:
               type:  string
               value: (null)
 
-        - name: ServerSetupResponse
-          desc: サーバセットアップレスポンス。ServerBootRequest のレスポンス。
+        - name: ServerSetupResponseMessage
+          desc: サーバセットアップレスポンスメッセージ。ServerSetupRequest のレスポンス。
           properties:
-            - name:  matchingId
-              desc:  サーバ起動をリクエストしたマッチングID
+            - name:  matchToken
+              desc:  サーバ起動をリクエストしたマッチトークン
               type:  string
               value: (null)
 
-        - name: ServerSetupDoneRequest
-          desc: サーバセットアップ完了リクエスト。Unity サーバが API サーバに対してクライアント接続可能状態を通知するときに送信。
+        - name: ServerSetupDoneMessage
+          desc: サーバセットアップ完了メッセージ。Unity サーバが API サーバに対してクライアント接続可能状態を通知するときに送信。
           properties:
-            - name:  matchingId
-              desc:  サーバ起動をリクエストしたマッチングID
-              type:  string
-              value: (null)
-
-        - name: ServerConnectData
-          desc: サーバ接続データ
-          properties:
-            - name:  serverAddress
-              desc:  接続先のサーバアドレス
-              type:  string
-              value: localhost
-            - name:  serverPort
-              desc:  接続先のサーバポート
-              type:  int
-              value: 7777
-            - name:  serverToken
-              desc:  接続用サーバトークン
+            - name:  matchToken
+              desc:  サーバ起動をリクエストしたマッチトークン
               type:  string
               value: (null)
 
@@ -573,3 +603,38 @@ templates:
           <%- end -%>
       }
 
+# - name: ServerStatus
+#   desc: サーバステータス。
+#   properties:
+#     - name:  state
+#       desc:  現在状態 (Standby, Ready, Started, Ended)
+#       type:  string
+#       value: (null)
+#
+# - name: ServerSetupRequest
+#   desc: サーバセットアップリクエスト。API サーバが Unity サーバに対してサーバインスタンスをセットアップしたいときに送信。
+#   properties:
+#     - name:  matchingId
+#       desc:  サーバ起動をリクエストしたマッチングID
+#       type:  string
+#       value: (null)
+#     - name:  sceneName
+#       desc:  起動するシーン名
+#       type:  string
+#       value: (null)
+#
+# - name: ServerSetupResponse
+#   desc: サーバセットアップレスポンス。ServerSetupRequest のレスポンス。
+#   properties:
+#     - name:  matchingId
+#       desc:  サーバ起動をリクエストしたマッチングID
+#       type:  string
+#       value: (null)
+#
+# - name: ServerSetupDoneRequest
+#   desc: サーバセットアップ完了リクエスト。Unity サーバが API サーバに対してクライアント接続可能状態を通知するときに送信。
+#   properties:
+#     - name:  matchingId
+#       desc:  サーバ起動をリクエストしたマッチングID
+#       type:  string
+#       value: (null)

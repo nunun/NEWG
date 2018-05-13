@@ -76,8 +76,8 @@ namespace Services.Protocols {
 
         [Serializable]
         public struct MatchingResponse {
-            public string matchingToken; // マッチングトークン
             public string matchingServerUrl; // マッチングサーバURL
+            public string matchingToken; // マッチングトークン
         }
 
         // Matching

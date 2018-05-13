@@ -8,7 +8,7 @@ using Services.Protocols.Models;
 // サーバ起動
 public class BootServer : GameScene {
     //-------------------------------------------------------------------------- 変数
-    ServerSetupRequest serverSetupRequest = null; // サーバ起動リクエスト
+    ServerSetupRequestMessage serverSetupRequestMessage = null; // サーバセットアップリクエストメッセージ
 
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     IEnumerator Start() {
@@ -32,12 +32,12 @@ public class BootServer : GameScene {
             Debug.LogError(error);
             GameManager.Quit(); // NOTE マインドリンク切断でサーバ強制終了
         });
-        connector.SetDataFromRemoteEventListener<ServerSetupRequest,ServerSetupResponse>(0, (req,res) => {
-            Debug.Log("サーバセットアップリクエスト受信");
-            serverSetupRequest = req; // NOTE リクエストを記録
-            var serverSetupResponse = new ServerSetupResponse();
-            serverSetupResponse.matchingId = req.matchingId;
-            res.Send(serverSetupResponse);
+        connector.SetDataFromRemoteEventListener<ServerSetupRequestMessage,ServerSetupResponseMessage>(0, (req,res) => {
+            Debug.Log("サーバ セットアップ リクエスト メッセージ受信");
+            serverSetupRequestMessage = req; // NOTE リクエストを記録
+            var serverSetupResponseMessage = new ServerSetupResponseMessage();
+            serverSetupResponseMessage.matchToken = req.matchToken;
+            res.Send(serverSetupResponseMessage);
         });
 
         // マインドリンクへ接続
@@ -52,11 +52,11 @@ public class BootServer : GameScene {
         }
 
         // サーバ状態を送信
-        Debug.Log("サーバステータスを送信 (Standby) ...");
-        var serverStatus = new ServerStatus();
-        serverStatus.state = "Standby";
-        connector.SendStatus(serverStatus, (error) => {
-            Debug.Log("サーバステータス送信完了");
+        Debug.Log("サーバ ステータス データを送信 (standby) ...");
+        var serverStatusData = new ServerStatusData();
+        serverStatusData.serverState = "standby";
+        connector.SendStatus(serverStatusData, (error) => {
+            Debug.Log("サーバ ステータス データ送信完了");
             if (error != null) {
                 Debug.LogError(error);
                 GameManager.Quit();
@@ -65,16 +65,16 @@ public class BootServer : GameScene {
 
         // 起動パラメータを受け付けるまで待つ
         Debug.Log("サーバセットアップリクエストを待っています ...");
-        while (serverSetupRequest == null) {
+        while (serverSetupRequestMessage == null) {
             yield return null;
         }
 
         // シーン切り替え
-        Debug.Log("シーンを切り替え (" + serverSetupRequest.sceneName + ") ...");
-        GameSceneManager.ChangeSceneImmediately(serverSetupRequest.sceneName);
+        Debug.Log("シーンを切り替え (" + serverSetupRequestMessage.sceneName + ") ...");
+        GameSceneManager.ChangeSceneImmediately(serverSetupRequestMessage.sceneName);
 
         // TODO
         // 先のシーンでネットワークマネージャを起動して、
-        // ポート番号が判明次第 ServerReadyRequest を API サーバに送信。
+        // ポート番号が判明次第 ServerSetupDoneMessage を API サーバに送信。
     }
 }
