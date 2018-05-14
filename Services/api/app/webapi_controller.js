@@ -147,17 +147,23 @@ class WebAPIController {
         matchingData.users      = [req.userData.userId];
         await matchingData.keyProperty("matchingId").cacheTTL(30).saveCache("%16s");
 
-        // TODO
         // マインドリンクからサーバを取得する
+        var cond = ".*{.alias == \"matching\" && .matchingServerState == \"ready\" && .load < 1.0}";
+        mindlinkClient.sendQuery(cond, (err,services) => {
+            if (err) {
+                throw err;
+            }
+            if (!services || services.length <= 0) {
+                throw new Error('no matching server found.');
+            }
+            var service = services[0];
+            logger.mindlinkClient.debug('matching server found: service[' + util.inspect(service, {depth:null,breakLength:Infinity}) + ']');
 
-        // マッチングサーバへの URL を作成
-        var fqdn = config.webapiServer.fqdn;
-        var matchingServerUrl = "ws://" + fqdn + ":7755?matchingId=" + matchingData.matchingId;
-
-        // リクエスト完了！
-        return {
-            matchingServerUrl: matchingServerUrl,
-        };
+            // マッチングサーバ情報を返却
+            var matchingServerUrl = service.matchingServerUrl
+                                  + "?matchingId=" + matchingData._id;
+            return { matchingServerUrl: matchingServerUrl };
+        });
     }
 
     // テスト API

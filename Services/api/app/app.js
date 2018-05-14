@@ -1,14 +1,17 @@
-var url              = require('url');
-var util             = require('util');
-var bodyParser       = require('body-parser');
-var config           = require('./services/library/config');
-var logger           = require('./services/library/logger');
-var mindlinkClient   = require('./services/library/mindlink_client').activate(config.mindlinkClient, logger.mindlinkClient);
-var couchClient      = require('./services/library/couch_client').activate(config.couchClient, logger.couchClient);
-var redisClient      = require('./services/library/redis_client').activate(config.redisClient, logger.redisClient);
-var webapiServer     = require('./services/library/webapi_server').activate(config.webapiServer, logger.webapiServer);
-var webapiRoutes     = require('./services/protocols/routes');
-var WebAPIController = require('./webapi_controller');
+var url                 = require('url');
+var util                = require('util');
+var bodyParser          = require('body-parser');
+var config              = require('./services/library/config');
+var logger              = require('./services/library/logger');
+var models              = require('./services/protocols/models');
+var mindlinkClient      = require('./services/library/mindlink_client').activate(config.mindlinkClient, logger.mindlinkClient);
+var couchClient         = require('./services/library/couch_client').activate(config.couchClient, logger.couchClient);
+var redisClient         = require('./services/library/redis_client').activate(config.redisClient, logger.redisClient);
+var webapiServer        = require('./services/library/webapi_server').activate(config.webapiServer, logger.webapiServer);
+var webapiRoutes        = require('./services/protocols/routes');
+var WebAPIController    = require('./webapi_controller');
+var APIServerStatusData = models.MatchingServerStatusData;
+var statusData          = new APIServerStatusData();
 
 // couch client
 couchClient.setConnectEventListener(function() {
@@ -22,7 +25,11 @@ redisClient.setConnectEventListener(function() {
 
 // mindlink client
 mindlinkClient.setConnectEventListener(function() {
-    mindlinkClient.sendStatus({alias:'api'}, function(err) {
+    // サーバステータス設定
+    statusData.apiServerState = 'standby';
+
+    // サーバステータス送信
+    mindlinkClient.sendStatus(statusData, function(err) {
         if (err) {
             logger.mindlinkClient.error(err.toString());
             process.exit(1);
@@ -36,11 +43,11 @@ mindlinkClient.setConnectEventListener(function() {
 
 // webapi server
 webapiServer.setStartEventListener(function() {
-    logger.webapiServer.info('webapi server started.');
+    // サーバステータス更新
+    statusData.apiServerState = 'ready';
+    mindlinkClient.sendStatus(statusData);
 });
 webapiServer.setSetupEventListener(function(express, app) {
-    logger.webapiServer.info('webapi server setup.');
-
     // express のセットアップ
     app.use(webapiServer.bodyDecrypter());
     app.use(bodyParser.urlencoded({extended: true}));

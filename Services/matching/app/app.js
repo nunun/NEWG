@@ -1,15 +1,22 @@
-var url              = require('url');
-var config           = require('./services/library/config');
-var logger           = require('./services/library/logger');
-var models           = require('./services/protocols/models');
-var mindlinkClient   = require('./services/library/mindlink_client').activate(config.mindlinkClient, logger.mindlinkClient);
-var matchingServer   = require('./services/library/websocket_server').activate(config.matchingServer, logger.matchingServer);
-var MatchData        = models.MatchConnectData;
-var MatchConnectData = models.MatchConnectData;
+var url                      = require('url');
+var config                   = require('./services/library/config');
+var logger                   = require('./services/library/logger');
+var models                   = require('./services/protocols/models');
+var mindlinkClient           = require('./services/library/mindlink_client').activate(config.mindlinkClient, logger.mindlinkClient);
+var matchingServer           = require('./services/library/websocket_server').activate(config.matchingServer, logger.matchingServer);
+var MatchData                = models.MatchData;
+var MatchConnectData         = models.MatchConnectData;
+var MatchingServerStatusData = models.MatchingServerStatusData;
+var statusData               = new MatchingServerStatusData();
 
 // mindlink client
 mindlinkClient.setConnectEventListener(function() {
-    mindlinkClient.sendStatus({alias:'matching'}, function(err) {
+    // サーバステータス設定
+    statusData.matchingServerStatus = 'standby';
+    statusData.matchingServerUrl    = 'ws://localhost:7755'; // TODO URL作成
+
+    // サーバステータス送信
+    mindlinkClient.sendStatus(statusData, function(err) {
         if (err) {
             logger.mindlinkClient.error(err.toString());
             process.exit(1);
@@ -22,6 +29,11 @@ mindlinkClient.setConnectEventListener(function() {
 });
 
 // matching server
+matchingServer.setStartEventListener(function() {
+    // サーバステータス更新
+    statusData.matchingServerStatus = 'ready';
+    mindlinkClient.sendStatus(statusData);
+});
 matchingServer.setAcceptEventListener(function(req) {
     // クエリから マッチングID を確認, なければ弾く
     var location = url.parse(req.url, true);
@@ -33,47 +45,40 @@ matchingServer.setAcceptEventListener(function(req) {
     return {matchingId:location.query.matchingId};
 });
 matchingServer.setConnectEventListener(function(matchingClient) {
-    // マッチングID を検索
     var matchingId = matchingClient.acceptData.matchingId;
     MatchingData.getCache(matchingId, (err,data) => {
+        // NOTE
         // ユーザ特定
-        var userId = data.users[0];
+        // 本来であればユーザをチェックして難易度別にサーバを選択。
+        // 今はシンプルマッチングなのでやらない。
+        //var userId = data.users[0];
 
-        // TODO
-        // 本来であれば、マッチングキューに追加してマッチングするが、
-        // 現在はダミーマッチングのためやらない。
-
-        // ダミーマッチング
+        // シンプルマッチング
         // サービス一覧からゲームサーバをとって返却
-        var cond = ".*{.alias == \"server\" && .serverState == \"ready\" && .serverAddress != "" && .serverPort > 0 && .load < 1.0}";
+        var cond = ".*{.alias == \"server\" && .serverState == \"ready\" && .load < 1.0}";
         mindlinkClient.sendQuery(cond, function(err,services) {
             if (err) {
                 res.send({err:err.toString()});
                 return;
             }
-
-            // サービスがあるか確認
-            if (services.length <= 0) {
-                res.send({err:new Error('server full.')});
+            if (!services || services.length <= 0) {
+                res.send({err:new Error('no server found.')});
                 return;
             }
-
-            // サービス発見
-            // ただし常にリストの最初のサービスを利用
             var service = services[0];
-            logger.mindlinkClient.debug('service found: service[' + util.inspect(service, {depth:null,breakLength:Infinity}) + ']');
+            logger.mindlinkClient.debug('server found: service[' + util.inspect(service, {depth:null,breakLength:Infinity}) + ']');
 
             // サーバ接続情報を返却
             var matchConnectData = new MatchConnectData();
             matchConnectData.serverAddress = service.serverAddress;
             matchConnectData.serverPort    = service.serverPort;
-            matchConnectData.matchId       = null; // NOTE ダミーマッチングのため必要無し
+            matchConnectData.matchId       = null; // NOTE シンプルマッチングのため必要無し
             matchingClient.send(0, matchConnectData);
 
-            // 返却後 3 秒で切断
+            // 返却後 2 秒で切断
             setTimeout(() => {
                 matchingClient.stop();
-            }, 3000);
+            }, 2000);
         });
     });
 });

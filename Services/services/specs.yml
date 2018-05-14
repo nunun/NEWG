@@ -165,8 +165,40 @@ specs:
               type:  string
               value: (null)
 
+        - name: APIServerStatusData
+          desc: API サーバ状態データ。API サーバの状態を示すデータ。
+          properties:
+            - name:  apiServerState
+              desc:  サーバ状態 (standby, ready)
+              type:  string
+              value: standby
+            - name:  alias
+              desc:  サーバエイリアス
+              type:  string
+              value: api
+
+        - name: MatchingServerStatusData
+          desc: マッチングサーバ状態データ。マッチングサーバの状態を示すデータ。
+          properties:
+            - name:  matchingServerState
+              desc:  サーバ状態 (standby, ready)
+              type:  string
+              value: standby
+            - name:  matchingServerUrl
+              desc:  マッチングサーバへの URL
+              type:  string
+              value: localhost:7755
+            - name:  load
+              desc:  サーバ利用率。1.0 は満杯。サーバ人口とキャパシティから計算される。
+              type:  float
+              value: 0.0
+            - name:  alias
+              desc:  サーバエイリアス
+              type:  string
+              value: matching
+
         - name: ServerStatusData
-          desc: サーバ状態データ。サーバの情報を示すデータ。
+          desc: サーバ状態データ。サーバの状態を示すデータ。
           properties:
             - name:  serverState
               desc:  サーバ状態 (standby, ready)
@@ -184,6 +216,10 @@ specs:
               desc:  サーバ利用率。1.0 は満杯。サーバ人口とキャパシティから計算される。
               type:  float
               value: 0.0
+            - name:  alias
+              desc:  サーバエイリアス
+              type:  string
+              value: server
 
         - name: ServerSetupRequestMessage
           desc: サーバセットアップリクエストメッセージ。API サーバが Unity サーバに対してサーバインスタンスをセットアップしたいときに送信。
@@ -620,38 +656,3 @@ templates:
           <%- end -%>
       }
 
-# - name: ServerStatus
-#   desc: サーバステータス。
-#   properties:
-#     - name:  state
-#       desc:  現在状態 (Standby, Ready, Started, Ended)
-#       type:  string
-#       value: (null)
-#
-# - name: ServerSetupRequest
-#   desc: サーバセットアップリクエスト。API サーバが Unity サーバに対してサーバインスタンスをセットアップしたいときに送信。
-#   properties:
-#     - name:  matchingId
-#       desc:  サーバ起動をリクエストしたマッチングID
-#       type:  string
-#       value: (null)
-#     - name:  sceneName
-#       desc:  起動するシーン名
-#       type:  string
-#       value: (null)
-#
-# - name: ServerSetupResponse
-#   desc: サーバセットアップレスポンス。ServerSetupRequest のレスポンス。
-#   properties:
-#     - name:  matchingId
-#       desc:  サーバ起動をリクエストしたマッチングID
-#       type:  string
-#       value: (null)
-#
-# - name: ServerSetupDoneRequest
-#   desc: サーバセットアップ完了リクエスト。Unity サーバが API サーバに対してクライアント接続可能状態を通知するときに送信。
-#   properties:
-#     - name:  matchingId
-#       desc:  サーバ起動をリクエストしたマッチングID
-#       type:  string
-#       value: (null)
