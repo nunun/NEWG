@@ -33,26 +33,6 @@ mindlinkClient.setConnectEventListener(function() {
         webapiServer.start();
     });
 });
-mindlinkClient.setDataFromRemoteEventListener(1 /*protocols.CMD.API.MATCHING_REQUEST*/, function(data, res) {
-    // マッチング開始
-    // サービス一覧からゲームサーバをとって返却
-    // TODO 将来的には人数や空部屋などもチェック。
-    mindlinkClient.sendQuery('.*{.address != ""}', function(err,services) {
-        if (err) {
-            res.send({err:err.toString()});
-            return;
-        }
-        // サービスがあるか確認
-        if (services.length <= 0) {
-            res.send({err:'no service found.'});
-            return;
-        }
-        // 最初のサービスをとって返却
-        var service = services[0];
-        logger.mindlinkClient.debug('service found: service[' + util.inspect(service, {depth:null,breakLength:Infinity}) + ']');
-        res.send(service);
-    });
-});
 
 // webapi server
 webapiServer.setStartEventListener(function() {

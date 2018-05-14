@@ -151,8 +151,11 @@ update_certs() {
         selfsigned)
                 CRT_FILE="${CACHE_DIR}/domain.crt"
                 KEY_FILE="${CACHE_DIR}/domain.key"
+                SUBJ="/C=JP /CN=${ENV_SECRET_CERT_FQDN}"
+                SUBJ="${SUBJECT} /O=${ENV_SECRET_CERT_FQDN}"
+                SUBJ="${SUBJECT} /emailAddress=${ENV_SECRET_CERT_EMAIL}"
                 openssl req -x509 -nodes -days 365 -newkey rsa:2048  \
-                        -subj "/CN=${ENV_FQDN} /O=${ENV_FQDN} /C=JP" \
+                        -subj "${SUBJ}" \
                         -out "${CRT_FILE}" -keyout "${KEY_FILE}"
                 CERT_PEM_FILE="${CRT_FILE}"
                 CHAIN_PEM_FILE="${CRT_FILE}"
@@ -160,12 +163,14 @@ update_certs() {
                 PRIVKEY_PEM_FILE="${KEY_FILE}"
                 ;;
         certbot)
+                DRY_RUN="--dry-run" && echo "<<< DRY RUN >>>"
                 docker run --rm -p "80:80" \
                         -v `ospath ${CACHE_DIR}`:/etc/letsencrypt \
-                        deliverous/certbot certonly --dry-run \
+                        deliverous/certbot certonly ${DRY_RUN} \
                         --standalone --renew-by-default --non-interactive \
                         --agree-tos --preferred-challenges http \
-                        -d "${ENV_FQDN}" --email "${ENV_EMAIL}"
+                        -d "${ENV_SECRET_CERT_FQDN}" \
+                        --email "${ENV_SECRET_CERT_EMAIL}"
                 CERT_PEM_FILE="${CACHE_DIR}/live/${ENV_FQDN}/cert.pem"
                 CHAIN_PEM_FILE="${CACHE_DIR}/live/${ENV_FQDN}/chain.pem"
                 FULLCHAIN_PEM_FILE="${CACHE_DIR}/live/${ENV_FQDN}/fullchain.pem"

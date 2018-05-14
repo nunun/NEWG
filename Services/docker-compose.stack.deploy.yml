@@ -1,6 +1,8 @@
 version: '3.4'
 services:
   client:
+    environment:
+      - FQDN=${ENV_FQDN}
     ports:
       - 80:80
     deploy:
@@ -13,6 +15,8 @@ services:
   # TODO
   # host network mode
   server:
+    environment:
+      - FQDN=${ENV_FQDN}
     deploy:
       mode: replicated
       replicas: 1
@@ -21,6 +25,8 @@ services:
           - node.role == worker
 
   matching:
+    environment:
+      - FQDN=${ENV_FQDN}
     ports:
       - 7755:7755
     deploy:
@@ -31,6 +37,8 @@ services:
           - node.role == worker
 
   api:
+    environment:
+      - FQDN=${ENV_FQDN}
     ports:
       - 7780:7780
     deploy:

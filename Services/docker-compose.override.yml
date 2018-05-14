@@ -6,6 +6,7 @@ services:
       args:
         - BUILD_CONFIGURATION=develop
     environment:
+      - FQDN=${ENV_FQDN}
       - LOG_LEVEL=debug
     volumes:
       - ./client/Builds/Client:/usr/share/nginx/html
@@ -18,6 +19,7 @@ services:
       args:
         - BUILD_CONFIGURATION=develop
     environment:
+      - FQDN=${ENV_FQDN}
       - LOG_LEVEL=debug
     volumes:
       - ./server/Builds:/server
@@ -30,6 +32,7 @@ services:
       args:
         - BUILD_CONFIGURATION=develop
     environment:
+      - FQDN=${ENV_FQDN}
       - LOG_LEVEL=debug
     volumes:
       - ./matching/app:/app
@@ -43,6 +46,7 @@ services:
       args:
         - BUILD_CONFIGURATION=develop
     environment:
+      - FQDN=${ENV_FQDN}
       - LOG_LEVEL=debug
     volumes:
       - ./api/app:/app

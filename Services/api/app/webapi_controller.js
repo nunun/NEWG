@@ -140,16 +140,23 @@ class WebAPIController {
     }
 
     // マッチングのリクエスト
-    Matching(req, res) {
+    async Matching(req, res) {
         // マッチング情報作成
         var matchingData = new MatchingData();
         matchingData.matchingId = null;
         matchingData.users      = [req.userData.userId];
         await matchingData.keyProperty("matchingId").cacheTTL(30).saveCache("%16s");
 
+        // TODO
+        // マインドリンクからサーバを取得する
+
+        // マッチングサーバへの URL を作成
+        var fqdn = config.webapiServer.fqdn;
+        var matchingServerUrl = "ws://" + fqdn + ":7755?matchingId=" + matchingData.matchingId;
+
         // リクエスト完了！
         return {
-            matchingServerUrl: "ws://localhost:7755?matchingId=" + matchingData.matchingId,
+            matchingServerUrl: matchingServerUrl,
         };
     }
 

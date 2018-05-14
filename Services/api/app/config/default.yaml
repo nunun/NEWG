@@ -1,12 +1,13 @@
+# webapi server
+webapiServer:
+  fqdn: ["localhost", "${FQDN}"]
+  port: [7780,        "${PORT}"]
+
 # mindlink client
 mindlinkClient:
   url:           ["ws://mindlink:7766/", "${MINDLINK_URL}"]
   retryCount:    [20,                    "${MINDLINK_RETRY_COUNT}"]
   retryInterval: [1000,                  "${MINDLINK_RETRY_INTERVAL}"]
-
-# webapi server
-webapiServer:
-  port: [7780, "${PORT}"]
 
 # couch client
 couchClient:
@@ -25,10 +26,10 @@ log4js:
     default:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
-    mindlinkClient:
+    webapiServer:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
-    webapiServer:
+    mindlinkClient:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
     couchClient:

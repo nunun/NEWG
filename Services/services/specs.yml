@@ -172,6 +172,18 @@ specs:
               desc:  サーバ状態 (standby, ready)
               type:  string
               value: standby
+            - name:  serverAddress
+              desc:  接続先のゲームサーバアドレス
+              type:  string
+              value: localhost
+            - name:  serverPort
+              desc:  接続先のゲームサーバポート
+              type:  int
+              value: 7777
+            - name:  load
+              desc:  サーバ利用率。1.0 は満杯。サーバ人口とキャパシティから計算される。
+              type:  float
+              value: 0.0
 
         - name: ServerSetupRequestMessage
           desc: サーバセットアップリクエストメッセージ。API サーバが Unity サーバに対してサーバインスタンスをセットアップしたいときに送信。

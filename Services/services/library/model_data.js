@@ -45,7 +45,9 @@ ModelData.prototype.save = function(key, callback) {
         key      = null;
     }
     if (!key) {
-        if (self.hasOwnProperty(self._saveOptions.keyProperty) && self[self._saveOptions.keyProperty]) {
+        if (   self._saveOptions
+            && self.hasOwnProperty(self._saveOptions.keyProperty)
+            && self[self._saveOptions.keyProperty]) {
             key = self[self._saveOptions.keyProperty];
         } else if (self.hasOwnProperty("_id")) {
             key = self._id;
