@@ -283,7 +283,7 @@ templates:
         when "bool"
           return "false" if not p.key?("value")
           return p["value"]
-        when "int" || "float" || "double"
+        when "int", "float", "double"
           return "0" if not p.key?("value")
           return p["value"]
         when "string"
@@ -333,7 +333,7 @@ templates:
           return p["value"]
         when "float"
           return "0.0f" if not p.key?("value")
-          return p["value"]
+          return p["value"].to_s + "f"
         when "double"
           return "0.0" if not p.key?("value")
           return p["value"]

@@ -2,12 +2,12 @@ var util         = require('util');
 var assert       = require('assert');
 var config       = require('./services/library/config');
 var logger       = require('./services/library/logger');
+var webapi       = require('./services/protocols/webapi');
+var models       = require('./services/protocols/models');
 var webapiClient = require('./services/library/webapi_client').activate(config.webapiClient, logger.webapiClient);
 var couchClient  = require('./services/library/couch_client').activate(config.couchClient, logger.couchClient);
 var redisClient  = require('./services/library/redis_client').activate(config.redisClient, logger.redisClient);
 var ModelData    = require('./services/library/model_data');
-var models       = require('./services/protocols/models');
-var webapi       = require('./services/protocols/webapi');
 
 describe('smoke test', function () {
     describe('smoke test', function () {

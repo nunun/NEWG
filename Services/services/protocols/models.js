@@ -74,6 +74,7 @@ MatchingData.prototype.init = function() {
     MatchingData.super_.prototype.init.call(this);
 };
 MatchingData.prototype.clear = function() {
+    this.matchingId = null; // マッチングID
     this.users = []; // マッチングするユーザID一覧
 }
 models.MatchingData = MatchingData;
@@ -88,6 +89,7 @@ MatchData.prototype.init = function() {
     MatchData.super_.prototype.init.call(this);
 };
 MatchData.prototype.clear = function() {
+    this.matchId = null; // マッチID
     this.matchState = "standby"; // マッチ状態 (standby, ready, started, ended)
     this.serverAddress = "localhost"; // 接続先のゲームサーバアドレス
     this.serverPort = 7777; // 接続先のゲームサーバポート
@@ -107,11 +109,43 @@ MatchConnectData.prototype.init = function() {
 MatchConnectData.prototype.clear = function() {
     this.serverAddress = "localhost"; // 接続先のゲームサーバアドレス
     this.serverPort = 7777; // 接続先のゲームサーバポート
-    this.matchToken = null; // マッチトークン。サーバ側で生成された固有ID。
+    this.matchId = null; // マッチID
 }
 models.MatchConnectData = MatchConnectData;
+// APIServerStatusData
+// API サーバ状態データ。API サーバの状態を示すデータ。
+function APIServerStatusData() {
+    this.init();
+}
+util.inherits(APIServerStatusData, ModelData);
+ModelData.setupType(APIServerStatusData, 'APIServerStatusData', 'db_api_server_status_data');
+APIServerStatusData.prototype.init = function() {
+    APIServerStatusData.super_.prototype.init.call(this);
+};
+APIServerStatusData.prototype.clear = function() {
+    this.apiServerState = "standby"; // サーバ状態 (standby, ready)
+    this.alias = "api"; // サーバエイリアス
+}
+models.APIServerStatusData = APIServerStatusData;
+// MatchingServerStatusData
+// マッチングサーバ状態データ。マッチングサーバの状態を示すデータ。
+function MatchingServerStatusData() {
+    this.init();
+}
+util.inherits(MatchingServerStatusData, ModelData);
+ModelData.setupType(MatchingServerStatusData, 'MatchingServerStatusData', 'db_matching_server_status_data');
+MatchingServerStatusData.prototype.init = function() {
+    MatchingServerStatusData.super_.prototype.init.call(this);
+};
+MatchingServerStatusData.prototype.clear = function() {
+    this.matchingServerState = "standby"; // サーバ状態 (standby, ready)
+    this.matchingServerUrl = "localhost:7755"; // マッチングサーバへの URL
+    this.load = 0.0; // サーバ利用率。1.0 は満杯。サーバ人口とキャパシティから計算される。
+    this.alias = "matching"; // サーバエイリアス
+}
+models.MatchingServerStatusData = MatchingServerStatusData;
 // ServerStatusData
-// サーバ状態データ。サーバの情報を示すデータ。
+// サーバ状態データ。サーバの状態を示すデータ。
 function ServerStatusData() {
     this.init();
 }
@@ -122,6 +156,10 @@ ServerStatusData.prototype.init = function() {
 };
 ServerStatusData.prototype.clear = function() {
     this.serverState = "standby"; // サーバ状態 (standby, ready)
+    this.serverAddress = "localhost"; // 接続先のゲームサーバアドレス
+    this.serverPort = 7777; // 接続先のゲームサーバポート
+    this.load = 0.0; // サーバ利用率。1.0 は満杯。サーバ人口とキャパシティから計算される。
+    this.alias = "server"; // サーバエイリアス
 }
 models.ServerStatusData = ServerStatusData;
 // ServerSetupRequestMessage
@@ -135,7 +173,7 @@ ServerSetupRequestMessage.prototype.init = function() {
     ServerSetupRequestMessage.super_.prototype.init.call(this);
 };
 ServerSetupRequestMessage.prototype.clear = function() {
-    this.matchToken = null; // サーバ起動をリクエストしたマッチトークン
+    this.matchId = null; // サーバ起動をリクエストしたマッチID
     this.sceneName = null; // 起動するシーン名
 }
 models.ServerSetupRequestMessage = ServerSetupRequestMessage;
@@ -150,7 +188,7 @@ ServerSetupResponseMessage.prototype.init = function() {
     ServerSetupResponseMessage.super_.prototype.init.call(this);
 };
 ServerSetupResponseMessage.prototype.clear = function() {
-    this.matchToken = null; // サーバ起動をリクエストしたマッチトークン
+    this.matchId = null; // サーバ起動をリクエストしたマッチID
 }
 models.ServerSetupResponseMessage = ServerSetupResponseMessage;
 // ServerSetupDoneMessage
@@ -164,7 +202,7 @@ ServerSetupDoneMessage.prototype.init = function() {
     ServerSetupDoneMessage.super_.prototype.init.call(this);
 };
 ServerSetupDoneMessage.prototype.clear = function() {
-    this.matchToken = null; // サーバ起動をリクエストしたマッチトークン
+    this.matchId = null; // サーバ起動をリクエストしたマッチID
 }
 models.ServerSetupDoneMessage = ServerSetupDoneMessage;
 // UniqueKeyData

@@ -3,6 +3,7 @@ var uuid           = require('uuid/v1');
 var config         = require('./services/library/config');
 var logger         = require('./services/library/logger');
 var models         = require('./services/protocols/models');
+var mindlinkClient = require('./services/library/mindlink_client').getClient();
 var UserData       = models.UserData;
 var PlayerData     = models.PlayerData;
 var SessionData    = models.SessionData;

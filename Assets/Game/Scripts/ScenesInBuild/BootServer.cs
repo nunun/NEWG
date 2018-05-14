@@ -36,7 +36,7 @@ public class BootServer : GameScene {
             Debug.Log("サーバ セットアップ リクエスト メッセージ受信");
             serverSetupRequestMessage = req; // NOTE リクエストを記録
             var serverSetupResponseMessage = new ServerSetupResponseMessage();
-            serverSetupResponseMessage.matchToken = req.matchToken;
+            serverSetupResponseMessage.matchId = req.matchId;
             res.Send(serverSetupResponseMessage);
         });
 

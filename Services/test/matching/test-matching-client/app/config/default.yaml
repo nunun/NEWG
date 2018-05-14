@@ -5,6 +5,12 @@
 mindlinkClient:
   url: "ws://mindlink:7766"
 
+# webapi client
+webapiClient:
+  url: "http://api:7780"
+  headers:
+    content-type: "application/json"
+
 # matching client
 matchingClient:
   url: "ws://matching:7755"
@@ -22,6 +28,9 @@ log4js:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
     mindlinkClient:
+      appenders: [console]
+      level: [info, "${LOG_LEVEL}"]
+    webapiClient:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
     matchingClient:

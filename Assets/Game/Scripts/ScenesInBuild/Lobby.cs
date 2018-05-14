@@ -167,7 +167,6 @@ public partial class Lobby {
         // TODO
         // マッチングサーバに接続
         Debug.Log(error);
-        Debug.Log(matchingResponse.matchingToken);
         Debug.Log(matchingResponse.matchingServerUrl);
 
         // TODO

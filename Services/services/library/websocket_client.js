@@ -54,28 +54,34 @@ WebSocketClient.prototype.clear = function() {
 }
 
 // connect
-WebSocketClient.prototype.start = function(connectQueries) {
-    var self = this;
+WebSocketClient.prototype.start = function(url, queries) {
+    var self    = this;
     self.logger.info('start');
-    var connectUrl    = self.config.url           || null;
-    var queries       = self.config.queries       || null;
-    var retryCount    = self.config.retryCount    || 10;
-    var retryInterval = self.config.retryInterval || 3000;
+    var startUrl     = url;
+    var startQueries = queries;
+    if (queries == undefined && typeof(url) !== 'string') {
+        startUrl     = null;
+        startQueries = url;
+    }
+    var connectUrl     = startUrl || self.config.url           || null;
+    var connectQueries =             self.config.queries       || null;
+    var retryCount     =             self.config.retryCount    || 10;
+    var retryInterval  =             self.config.retryInterval || 3000;
 
     // setup
     self.clear();
 
-    // add connect query params and query params
-    if (queries || connectQueries) {
+    // add connect queries and start queries
+    if (connectQueries || startQueries) {
         var parsedUrl = url.parse(connectUrl, true);
-        if (queries) {
-            for (var i in queries) {
-                parsedUrl.query[i] = queries[i];
-            }
-        }
         if (connectQueries) {
             for (var i in connectQueries) {
                 parsedUrl.query[i] = connectQueries[i];
+            }
+        }
+        if (startQueries) {
+            for (var i in startQueries) {
+                parsedUrl.query[i] = startQueries[i];
             }
         }
         connectUrl = url.format(parsedUrl);
@@ -118,7 +124,7 @@ WebSocketClient.prototype.start = function(connectQueries) {
             if ((retryCount < 0) || (retryCount > 0 && self.retryCount < retryCount)) {
                 self.retryCount += 1;
                 setTimeout(function() {
-                    self.start(connectQueries);
+                    self.start(url, queries);
                 }, retryInterval);
                 return;
             }

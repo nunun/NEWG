@@ -1,8 +1,13 @@
-var assert         = require('assert');
-var config         = require('./services/library/config');
-var logger         = require('./services/library/logger');
-var mindlinkClient = require('./services/library/mindlink_client').activate(config.mindlinkClient, logger.mindlinkClient);
-var matchingClient = require('./services/library/websocket_client').activate(config.matchingClient, logger.matchingClient);
+var assert           = require('assert');
+var config           = require('./services/library/config');
+var logger           = require('./services/library/logger');
+var webapi           = require('./services/protocols/webapi');
+var models           = require('./services/protocols/models');
+var mindlinkClient   = require('./services/library/mindlink_client').activate(config.mindlinkClient, logger.mindlinkClient);
+var webapiClient     = require('./services/library/webapi_client').activate(config.webapiClient, logger.webapiClient);
+var matchingClient   = require('./services/library/websocket_client').activate(config.matchingClient, logger.matchingClient);
+var ServerStatusData = models.ServerStatusData;
+var statusData       = new ServerStatusData();
 
 describe('smoke test', function () {
     describe('smoke test', function () {
@@ -10,10 +15,24 @@ describe('smoke test', function () {
         it('smoke test', function (done) {
             mindlinkClient.test([
                 {connect: function() {
-                    mindlinkClient.sendStatus({address:'example.com:7777', population:0, capacity:16}, function(err, responseData) {
+                    var statusData = new ServerStatusData();
+                    statusData.serverState   = "ready";
+                    statusData.serverAddress = "example.com";
+                    statusData.serverPort    = 7777;
+                    statusData.load          = 0.0;
+                    statusData.alias         = "server";
+                    mindlinkClient.sendStatus(statusData, function(err, responseData) {
                         assert.ok(!err,         'invalid response err (' + err + ')');
-                        assert.ok(responseData, 'invalid response responseData');
-                        matchingClient.start({user_id:'test'});
+                        assert.ok(responseData, 'invalid response responseData (' + responseData + ')');
+                        webapi.signup(function(err, data) {
+                            assert.ok(!err, 'invalid response err (' + err + ')');
+                            var headers = {SessionToken: data.activeData.sessionData.data.sessionToken};
+                            webapi.matching(function(err, data) {
+                                assert.ok(!err, 'invalid response err (' + err + ')');
+                                var matchingServerUrl = data.matchingServerUrl;
+                                matchingClient.start(matchingServerUrl);
+                            }, null, null, headers);
+                        });
                     });
                 }}
             ]);
@@ -21,8 +40,9 @@ describe('smoke test', function () {
             matchingClient.test([
                 {connect: function() {}},
                 {data_type0: function(data) {
-                    assert.ok(!data.err,                          'invalid response data.err (' + data.err + ')');
-                    assert.ok(data.address == 'example.com:7777', 'invalid response data.address');
+                    assert.ok(!data.err,                           'invalid response data.err (' + data.err + ')');
+                    assert.ok(data.serverAddress == 'example.com', 'invalid response data.serverAddress (' + data.serverAddress + ')');
+                    assert.ok(data.serverPort    == '7777',        'invalid response data.serverPort (' + data.serverPort + ')');
                 }},
                 {disconnect: function() {
                     done();

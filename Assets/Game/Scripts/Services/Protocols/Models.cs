@@ -54,8 +54,10 @@ namespace Services.Protocols.Models {
     // マッチングデータ。マッチングするユーザ一覧などの情報。
     [Serializable]
     public class MatchingData : ModelData {
+        public string matchingId; // マッチングID
         public string[] users; // マッチングするユーザID一覧
         protected override void Clear() {
+            matchingId = null; // マッチングID
             users = new string[0]; // マッチングするユーザID一覧
         }
     }
@@ -63,11 +65,13 @@ namespace Services.Protocols.Models {
     // マッチデータ。マッチングなどで確定したマッチの情報。
     [Serializable]
     public class MatchData : ModelData {
+        public string matchId; // マッチID
         public string matchState; // マッチ状態 (standby, ready, started, ended)
         public string serverAddress; // 接続先のゲームサーバアドレス
         public int serverPort; // 接続先のゲームサーバポート
         public string[] users; // このマッチに参加する全てのユーザID一覧
         protected override void Clear() {
+            matchId = null; // マッチID
             matchState = "standby"; // マッチ状態 (standby, ready, started, ended)
             serverAddress = "localhost"; // 接続先のゲームサーバアドレス
             serverPort = 7777; // 接続先のゲームサーバポート
@@ -80,30 +84,64 @@ namespace Services.Protocols.Models {
     public class MatchConnectData : ModelData {
         public string serverAddress; // 接続先のゲームサーバアドレス
         public int serverPort; // 接続先のゲームサーバポート
-        public string matchToken; // マッチトークン。サーバ側で生成された固有ID。
+        public string matchId; // マッチID
         protected override void Clear() {
             serverAddress = "localhost"; // 接続先のゲームサーバアドレス
             serverPort = 7777; // 接続先のゲームサーバポート
-            matchToken = null; // マッチトークン。サーバ側で生成された固有ID。
+            matchId = null; // マッチID
+        }
+    }
+    // APIServerStatusData
+    // API サーバ状態データ。API サーバの状態を示すデータ。
+    [Serializable]
+    public class APIServerStatusData : ModelData {
+        public string apiServerState; // サーバ状態 (standby, ready)
+        public string alias; // サーバエイリアス
+        protected override void Clear() {
+            apiServerState = "standby"; // サーバ状態 (standby, ready)
+            alias = "api"; // サーバエイリアス
+        }
+    }
+    // MatchingServerStatusData
+    // マッチングサーバ状態データ。マッチングサーバの状態を示すデータ。
+    [Serializable]
+    public class MatchingServerStatusData : ModelData {
+        public string matchingServerState; // サーバ状態 (standby, ready)
+        public string matchingServerUrl; // マッチングサーバへの URL
+        public float load; // サーバ利用率。1.0 は満杯。サーバ人口とキャパシティから計算される。
+        public string alias; // サーバエイリアス
+        protected override void Clear() {
+            matchingServerState = "standby"; // サーバ状態 (standby, ready)
+            matchingServerUrl = "localhost:7755"; // マッチングサーバへの URL
+            load = 0.0f; // サーバ利用率。1.0 は満杯。サーバ人口とキャパシティから計算される。
+            alias = "matching"; // サーバエイリアス
         }
     }
     // ServerStatusData
-    // サーバ状態データ。サーバの情報を示すデータ。
+    // サーバ状態データ。サーバの状態を示すデータ。
     [Serializable]
     public class ServerStatusData : ModelData {
         public string serverState; // サーバ状態 (standby, ready)
+        public string serverAddress; // 接続先のゲームサーバアドレス
+        public int serverPort; // 接続先のゲームサーバポート
+        public float load; // サーバ利用率。1.0 は満杯。サーバ人口とキャパシティから計算される。
+        public string alias; // サーバエイリアス
         protected override void Clear() {
             serverState = "standby"; // サーバ状態 (standby, ready)
+            serverAddress = "localhost"; // 接続先のゲームサーバアドレス
+            serverPort = 7777; // 接続先のゲームサーバポート
+            load = 0.0f; // サーバ利用率。1.0 は満杯。サーバ人口とキャパシティから計算される。
+            alias = "server"; // サーバエイリアス
         }
     }
     // ServerSetupRequestMessage
     // サーバセットアップリクエストメッセージ。API サーバが Unity サーバに対してサーバインスタンスをセットアップしたいときに送信。
     [Serializable]
     public class ServerSetupRequestMessage : ModelData {
-        public string matchToken; // サーバ起動をリクエストしたマッチトークン
+        public string matchId; // サーバ起動をリクエストしたマッチID
         public string sceneName; // 起動するシーン名
         protected override void Clear() {
-            matchToken = null; // サーバ起動をリクエストしたマッチトークン
+            matchId = null; // サーバ起動をリクエストしたマッチID
             sceneName = null; // 起動するシーン名
         }
     }
@@ -111,18 +149,18 @@ namespace Services.Protocols.Models {
     // サーバセットアップレスポンスメッセージ。ServerSetupRequest のレスポンス。
     [Serializable]
     public class ServerSetupResponseMessage : ModelData {
-        public string matchToken; // サーバ起動をリクエストしたマッチトークン
+        public string matchId; // サーバ起動をリクエストしたマッチID
         protected override void Clear() {
-            matchToken = null; // サーバ起動をリクエストしたマッチトークン
+            matchId = null; // サーバ起動をリクエストしたマッチID
         }
     }
     // ServerSetupDoneMessage
     // サーバセットアップ完了メッセージ。Unity サーバが API サーバに対してクライアント接続可能状態を通知するときに送信。
     [Serializable]
     public class ServerSetupDoneMessage : ModelData {
-        public string matchToken; // サーバ起動をリクエストしたマッチトークン
+        public string matchId; // サーバ起動をリクエストしたマッチID
         protected override void Clear() {
-            matchToken = null; // サーバ起動をリクエストしたマッチトークン
+            matchId = null; // サーバ起動をリクエストしたマッチID
         }
     }
     // UniqueKeyData

@@ -94,8 +94,7 @@ public partial class StandaloneSimulator {
                 //var req = JsonUtility.FromJson<WebAPI.SignupRequest>(request.Parameters.GetText());
 
                 var matchingResponse = new WebAPI.MatchingResponse();
-                matchingResponse.matchingToken     = "(dummy matchingToken)";
-                matchingResponse.matchingServerUrl = "ws//localhost:7755";
+                matchingResponse.matchingServerUrl = "ws//localhost:7755?matchingId=dummy_token";
 
                 var matchingResponseJson = JsonUtility.ToJson(matchingResponse);
                 var response = string.Format("{0}", matchingResponseJson);
