@@ -1,6 +1,6 @@
 # couch client
-#couchClient:
-#  url: ["http://couchdb:5984/db", "${COUCH_URL}"]
+couchClient:
+  url: ["http://couchdb:5984/db", "${COUCH_URL}"]
 
 # redis client
 redisClient:
@@ -27,9 +27,9 @@ log4js:
     default:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
-    #couchClient:
-    #  appenders: [console]
-    #  level: [info, "${LOG_LEVEL}"]
+    couchClient:
+      appenders: [console]
+      level: [info, "${LOG_LEVEL}"]
     redisClient:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
@@ -39,3 +39,4 @@ log4js:
     matchingServer:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
+

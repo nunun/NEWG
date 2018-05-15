@@ -3,7 +3,7 @@ var util                     = require('util');
 var config                   = require('./services/library/config');
 var logger                   = require('./services/library/logger');
 var models                   = require('./services/protocols/models');
-//var couchClient            = require('./services/library/couch_client').activate(config.couchClient, logger.couchClient);
+var couchClient              = require('./services/library/couch_client').activate(config.couchClient, logger.couchClient);
 var redisClient              = require('./services/library/redis_client').activate(config.redisClient, logger.redisClient);
 var mindlinkClient           = require('./services/library/mindlink_client').activate(config.mindlinkClient, logger.mindlinkClient);
 var matchingServer           = require('./services/library/websocket_server').activate(config.matchingServer, logger.matchingServer);
@@ -13,9 +13,9 @@ var MatchingServerStatusData = models.MatchingServerStatusData;
 var statusData               = new MatchingServerStatusData();
 
 // couch client
-//couchClient.setConnectEventListener(function() {
-//    redisClient.start();
-//});
+couchClient.setConnectEventListener(function() {
+    redisClient.start();
+});
 
 // redis client
 redisClient.setConnectEventListener(function() {
@@ -101,5 +101,4 @@ matchingServer.setDisconnectEventListener(function(matchingClient) {
 });
 
 // start app ...
-//couchClient.start();
-redisClient.start();
+couchClient.start();
