@@ -1,4 +1,5 @@
 var url                      = require('url');
+var util                     = require('util');
 var config                   = require('./services/library/config');
 var logger                   = require('./services/library/logger');
 var models                   = require('./services/protocols/models');
