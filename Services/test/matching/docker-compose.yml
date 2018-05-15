@@ -22,6 +22,7 @@ services:
       args:
         - BUILD_CONFIGURATION=develop
     environment:
+      - FQDN=matching
       - LOG_LEVEL=debug
     volumes:
       - ./../../matching/app:/app

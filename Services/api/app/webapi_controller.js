@@ -150,21 +150,12 @@ class WebAPIController {
 
         // マインドリンクからサーバを取得する
         var cond = ".*{.alias == \"matching\" && .matchingServerState == \"ready\" && .load < 1.0}";
-        mindlinkClient.sendQuery(cond, (err,services) => {
-            if (err) {
-                throw err;
-            }
-            if (!services || services.length <= 0) {
-                throw new Error('no matching server found.');
-            }
-            var service = services[0];
-            logger.mindlinkClient.debug('matching server found: service[' + util.inspect(service, {depth:null,breakLength:Infinity}) + ']');
+        var service = await this.sendQuery(cond);
+        logger.mindlinkClient.debug('matching server found: service[' + util.inspect(service, {depth:null,breakLength:Infinity}) + ']');
 
-            // マッチングサーバ情報を返却
-            var matchingServerUrl = service.matchingServerUrl
-                                  + "?matchingId=" + matchingData._id;
-            return { matchingServerUrl: matchingServerUrl };
-        });
+        // マッチングサーバ情報を返却
+        var matchingServerUrl = service.matchingServerUrl + "?matchingId=" + matchingData.matchingId;
+        return {matchingServerUrl: matchingServerUrl};
     }
 
     // テスト API
@@ -179,7 +170,7 @@ class WebAPIController {
     // コントローラメソッドの呼び出しとエラーハンドリング
     async call(method, req, res) {
         try {
-            var result = await method(req, res);
+            var result = await method.call(this, req, res);
             res.status(200).send(result);
         } catch (err) {
             if (!(err instanceof Error)) {
@@ -281,6 +272,21 @@ class WebAPIController {
         }
         next();
     }
-}
 
+    //-------------------------------------------------------------------------- マインドリンク
+    // サービス情報の検索
+    sendQuery(cond) {
+        return new Promise((resolve) => {
+            mindlinkClient.sendQuery(cond, (err,services) => {
+                if (err) {
+                    throw err;
+                }
+                if (!services || services.length <= 0) {
+                    throw new Error('no matching server found.');
+                }
+                resolve(services[0]);
+            });
+        });
+    }
+}
 module.exports = WebAPIController;

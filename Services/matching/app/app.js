@@ -2,18 +2,31 @@ var url                      = require('url');
 var config                   = require('./services/library/config');
 var logger                   = require('./services/library/logger');
 var models                   = require('./services/protocols/models');
+//var couchClient            = require('./services/library/couch_client').activate(config.couchClient, logger.couchClient);
+var redisClient              = require('./services/library/redis_client').activate(config.redisClient, logger.redisClient);
 var mindlinkClient           = require('./services/library/mindlink_client').activate(config.mindlinkClient, logger.mindlinkClient);
 var matchingServer           = require('./services/library/websocket_server').activate(config.matchingServer, logger.matchingServer);
-var MatchData                = models.MatchData;
+var MatchingData             = models.MatchingData;
 var MatchConnectData         = models.MatchConnectData;
 var MatchingServerStatusData = models.MatchingServerStatusData;
 var statusData               = new MatchingServerStatusData();
 
+// couch client
+//couchClient.setConnectEventListener(function() {
+//    redisClient.start();
+//});
+
+// redis client
+redisClient.setConnectEventListener(function() {
+    mindlinkClient.start();
+});
+
 // mindlink client
 mindlinkClient.setConnectEventListener(function() {
     // サーバステータス設定
-    statusData.matchingServerStatus = 'standby';
-    statusData.matchingServerUrl    = 'ws://localhost:7755'; // TODO URL作成
+    statusData.matchingServerState = 'standby';
+    statusData.matchingServerUrl   = 'ws://' + config.matchingServer.fqdn
+                                   +     ':' + config.matchingServer.port;
 
     // サーバステータス送信
     mindlinkClient.sendStatus(statusData, function(err) {
@@ -31,7 +44,7 @@ mindlinkClient.setConnectEventListener(function() {
 // matching server
 matchingServer.setStartEventListener(function() {
     // サーバステータス更新
-    statusData.matchingServerStatus = 'ready';
+    statusData.matchingServerState = 'ready';
     mindlinkClient.sendStatus(statusData);
 });
 matchingServer.setAcceptEventListener(function(req) {
@@ -86,5 +99,6 @@ matchingServer.setDisconnectEventListener(function(matchingClient) {
     mindlinkClient.cancelRequest(matchingClient.requestId);
 });
 
-// 開始
-mindlinkClient.start();
+// start app ...
+//couchClient.start();
+redisClient.start();

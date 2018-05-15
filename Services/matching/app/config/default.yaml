@@ -1,14 +1,22 @@
-# matching server
-matchingServer:
-  fqdn:    ["localhost", "${FQDN}"]
-  port:    [7755,        "${PORT}"]
-  timeout: [300000,      "${TIMEOUT}"]
+# couch client
+#couchClient:
+#  url: ["http://couchdb:5984/db", "${COUCH_URL}"]
+
+# redis client
+redisClient:
+  url: ["redis://redis:6379/", "${REDIS_URL}"]
 
 # mindlink client
 mindlinkClient:
   url:           ["ws://mindlink:7766/", "${MINDLINK_URL}"]
   retryCount:    [20,                    "${MINDLINK_RETRY_COUNT}"]
   retryInterval: [3000,                  "${MINDLINK_RETRY_INTERVAL}"]
+
+# matching server
+matchingServer:
+  fqdn:    ["localhost", "${FQDN}"]
+  port:    [7755,        "${PORT}"]
+  timeout: [300000,      "${TIMEOUT}"]
 
 # log4js
 log4js:
@@ -19,9 +27,15 @@ log4js:
     default:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
-    matchingServer:
+    #couchClient:
+    #  appenders: [console]
+    #  level: [info, "${LOG_LEVEL}"]
+    redisClient:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
     mindlinkClient:
+      appenders: [console]
+      level: [info, "${LOG_LEVEL}"]
+    matchingServer:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]

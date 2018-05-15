@@ -11,6 +11,14 @@ webapiClient:
   headers:
     content-type: "application/json"
 
+# couch client
+couchClient:
+  url: "http://couchdb:5984/db"
+
+# redis client
+redisClient:
+  url: "redis://redis:6379/"
+
 # matching client
 matchingClient:
   url: "ws://matching:7755"
@@ -31,6 +39,12 @@ log4js:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
     webapiClient:
+      appenders: [console]
+      level: [info, "${LOG_LEVEL}"]
+    couchClient:
+      appenders: [console]
+      level: [info, "${LOG_LEVEL}"]
+    redisClient:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
     matchingClient:

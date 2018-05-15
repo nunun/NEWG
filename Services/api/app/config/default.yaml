@@ -1,14 +1,3 @@
-# webapi server
-webapiServer:
-  fqdn: ["localhost", "${FQDN}"]
-  port: [7780,        "${PORT}"]
-
-# mindlink client
-mindlinkClient:
-  url:           ["ws://mindlink:7766/", "${MINDLINK_URL}"]
-  retryCount:    [20,                    "${MINDLINK_RETRY_COUNT}"]
-  retryInterval: [1000,                  "${MINDLINK_RETRY_INTERVAL}"]
-
 # couch client
 couchClient:
   url: ["http://couchdb:5984/db", "${COUCH_URL}"]
@@ -16,6 +5,17 @@ couchClient:
 # redis client
 redisClient:
   url: ["redis://redis:6379/", "${REDIS_URL}"]
+
+# mindlink client
+mindlinkClient:
+  url:           ["ws://mindlink:7766/", "${MINDLINK_URL}"]
+  retryCount:    [20,                    "${MINDLINK_RETRY_COUNT}"]
+  retryInterval: [1000,                  "${MINDLINK_RETRY_INTERVAL}"]
+
+# webapi server
+webapiServer:
+  fqdn: ["localhost", "${FQDN}"]
+  port: [7780,        "${PORT}"]
 
 # log4js
 log4js:
@@ -26,16 +26,15 @@ log4js:
     default:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
-    webapiServer:
-      appenders: [console]
-      level: [info, "${LOG_LEVEL}"]
-    mindlinkClient:
-      appenders: [console]
-      level: [info, "${LOG_LEVEL}"]
     couchClient:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
     redisClient:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
-
+    mindlinkClient:
+      appenders: [console]
+      level: [info, "${LOG_LEVEL}"]
+    webapiServer:
+      appenders: [console]
+      level: [info, "${LOG_LEVEL}"]
