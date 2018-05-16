@@ -1,17 +1,18 @@
-var url                      = require('url');
-var util                     = require('util');
-var config                   = require('./services/library/config');
-var logger                   = require('./services/library/logger');
-var models                   = require('./services/protocols/models');
-var couchClient              = require('./services/library/couch_client').activate(config.couchClient, logger.couchClient);
-var redisClient              = require('./services/library/redis_client').activate(config.redisClient, logger.redisClient);
-var mindlinkClient           = require('./services/library/mindlink_client').activate(config.mindlinkClient, logger.mindlinkClient);
-var matchingServer           = require('./services/library/websocket_server').activate(config.matchingServer, logger.matchingServer);
-var UserData                 = models.UserData;
-var MatchingData             = models.MatchingData;
-var MatchConnectData         = models.MatchConnectData;
-var MatchingServerStatusData = models.MatchingServerStatusData;
-var statusData               = new MatchingServerStatusData();
+var url                       = require('url');
+var util                      = require('util');
+var config                    = require('./services/library/config');
+var logger                    = require('./services/library/logger');
+var models                    = require('./services/protocols/models');
+var couchClient               = require('./services/library/couch_client').activate(config.couchClient, logger.couchClient);
+var redisClient               = require('./services/library/redis_client').activate(config.redisClient, logger.redisClient);
+var mindlinkClient            = require('./services/library/mindlink_client').activate(config.mindlinkClient, logger.mindlinkClient);
+var matchingServer            = require('./services/library/websocket_server').activate(config.matchingServer, logger.matchingServer);
+var UserData                  = models.UserData;
+var MatchingData              = models.MatchingData;
+var MatchConnectData          = models.MatchConnectData;
+var MatchingServerStatusData  = models.MatchingServerStatusData;
+var ServerSetupRequestMessage = models.ServerSetupRequestMessage;
+var statusData                = new MatchingServerStatusData();
 
 // couch client
 couchClient.setConnectEventListener(function() {
@@ -25,6 +26,7 @@ redisClient.setConnectEventListener(function() {
 
 // mindlink client
 mindlinkClient.setConnectEventListener(function() {
+    // NOTE
     // マッチングサーバステータス設定
     statusData.matchingServerState = 'standby';
     statusData.matchingServerUrl   = 'ws://' + config.matchingServer.fqdn
@@ -40,6 +42,11 @@ mindlinkClient.setConnectEventListener(function() {
         logger.mindlinkClient.info('mindlink client initialized.');
         logger.mindlinkClient.info('starting matching server ...');
         matchingServer.start();
+    });
+
+    // サーバ セットアップ レスポンス受け取り
+    mindlinkClient.setDataFromRemoteEventListener(0, (data,res) => {
+        serverSetupResponse(res.to, data.matchId);
     });
 });
 
@@ -63,10 +70,6 @@ matchingServer.setConnectEventListener(function(matchingClient) {
 });
 matchingServer.setDisconnectEventListener(function(matchingClient) {
     matchingCancel(matchingClient);
-
-    // NOTE
-    // 今は必要ないのでコメントアウト
-    //mindlinkClient.cancelRequest(matchingClient.requestId);
 });
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -77,16 +80,18 @@ matchingServer.setDisconnectEventListener(function(matchingClient) {
 var matchingQueue = [];
 
 // マッチング更新タイマーID
-var matchingUpdateTimerId = 0;
+var matchingQueueUpdateTimerId = null;
 
 // マッチング開始
 function matchingStart(matchingClient) {
+    // マッチングクライアント初期化
+    matchingClient.userId   = null;
+    matchingClient.userData = null;
+
     // キューに追加
     matchingQueue.push(matchingClient);
-
-    // 更新ループの起動
-    if (!matchingUpdateTimerId) {
-        setInterval(matchingUpdate, 100); // NOTE 500ms で更新する
+    if (!matchingQueueUpdateTimerId) {
+        setInterval(matchingUpdate, 500);//500ms更新
     }
 
     // ユーザ特定
@@ -131,20 +136,24 @@ function matchingUpdate() {
         return;
     }
 
+    // NOTE
+    // ここにマッチング処理を書きこむ。
+    // 現在はシンプルマッチングなので、
+    // キューの先頭からマッチが成立して
+    // 空きサーバに順次接続するようになっている。
+
     // 最初のユーザを取得する
     var matchingClient = matchingQueue[0];
     if (!matchingClient.userData) {
         return; // ユーザデータ取得中の場合は無視
     }
 
-    // NOTE
     // マッチングからは除外 (後戻りできない)
     matchingCancel(matchingClient);
 
-    // NOTE
-    // ダミーマッチングなので
-    // 最初の人から必ずマッチが確定
-    joinStart(matchingClient);
+    // 参加開始
+    var sceneName = "NetworkProvingGround";//NOTE 仮マップ
+    joinStart([matchingClient], sceneName);
 }
 
 // マッチング終了
@@ -179,15 +188,46 @@ function matchingCancel(matchingClient) {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-// マッチ番号 (自動生成用)
+// 参加キュー
+var joinQueue = [];
+
+// 参加キュー更新タイマー
+var joinQueueUpdateTimerId = null;
+
+// マッチ番号自動生成用
 var matchIdCounter = 0;
 
 // 参加開始
-function joinStart(matchingClient) {
-    // マッチデータ (仮)
+function joinStart(matchingClients, sceneName) {
+    // マッチID生成
+    var matchId = ++matchIdCounter;
+
+    // マッチングユーザ一覧生成
+    var matchingUsers = [];
+    for (var matchingClient in matchingClients) {
+        matchingUsers.push(matchingClient.userId);
+    }
+
+    // サーバ セットアップ リクエストメッセージ
+    var serverSetupRequestMessage = new ServerSetupRequestMessage();
+    serverSetupRequestMessage.matchId       = matchId;
+    serverSetupRequestMessage.sceneName     = sceneName;
+    serverSetupRequestMessage.matchingUsers = matchingUsers;
+
+    // マッチデータ初期化
     var matchData = {};
-    matchData.matchId         = ++matchIdCounter;
-    matchData.matchingClients = [matchingClient];
+    matchData.matchId                   = matchId;
+    matchData.matchingClients           = matchingClients;
+    matchData.serverSetupRequestMessage = serverSetupRequestMessage;
+    matchData.service                   = null;
+    matchData.waitCount                 = 0;
+    matchData.requestCount              = 0;
+
+    // 参加キューに追加
+    joinQueue.push(matchData);
+    if (!joinQueueUpdateTimerId) {
+        setInterval(joinUpdate, 500);//500ms更新
+    }
 
     // サービス検索
     joinSearch(matchData);
@@ -207,16 +247,70 @@ function joinSearch(matchData) {
         }
         var service = services[0];
         logger.mindlinkClient.debug('server found: service[' + util.inspect(service, {depth:null,breakLength:Infinity}) + ']');
-        joinConfirm(matchData, service);
+        matchData.service = service;
     });
 }
 
-// 参加できそうなサービスに参加を確認
-function joinConfirm(matchData, service) {
-    // TODO
-    // 参加可能かサーバに確認する
-    // サーバの初期化が終わってから入れるので...
-    //joinReady(matchData, service.serverAddress, service.serverPort);
+// 参加更新
+function joinUpdate() {
+    // 参加キューが空なら何もしない
+    if (joinQueue.length <= 0) {
+        return;
+    }
+
+    // 参加キューを処理
+    var abortList = [];
+    for (var i in joinQueue) {
+        var matchData = joinQueue[i];
+
+        // サービスが確定していない場合は無視
+        if (!matchData.service) {
+            continue;
+        }
+
+        // サーバ セットアップ リクエスト送信
+        matchData.waitCount--;
+        if (matchData.waitCount <= 0) {
+            // 待ちカウンタリセット
+            matchData.waitCount = 6;
+
+            // 送信しすぎの場合は中断予約
+            matchData.sendCount++;
+            if (matchData.sendCount > 3) {
+                abortList.push(matchData);
+                continue;
+            }
+
+            // 送信
+            serverSetupRequest(matchData);
+        }
+    }
+
+    // 中断してるものを処理
+    for (var i in abortList) {
+        var matchData = abortList[i];
+        joinAbort(matchData, new Error('send limit exceeded.'));
+    }
+}
+
+// サービス参加リクエスト
+function serverSetupRequest(matchData) {
+    mindlinkClient.sendToRemote(matchData.service.serverUuid, 0, matchData.serverSetupRequestMessage);
+}
+
+// サービス参加レスポンス
+function serverSetupResponse(from, matchId) {
+    // サーバがセットアップされたが根拠となるデータが既に無い
+    // その場合はサーバ側に通知して、サーバを終了する。
+    var matchData = joinQueue[matchId];
+    if (!matchData) {
+        logger.matchingServer.debug('matchId not found?');
+        mindlinkClient.sendToRemote(from, 1, {err:'matchId not found?'});
+        return;
+    }
+
+    // 参加成功！
+    joinReady(matchData, service.serverAddress, service.serverPort);
 }
 
 // 参加可能
@@ -230,6 +324,10 @@ function joinReady(matchData, serverAddress, serverPort) {
 
 // 参加終了
 function joinClose(matchData, data) {
+    // 即キャンセル
+    joinCancel(matchData);
+
+    // メッセージ送信
     var matchingClients = matchData.matchingClients;
     for (var i in matchingClients) {
         var matchingClient = matchingClients[i];
@@ -241,6 +339,15 @@ function joinClose(matchData, data) {
 // 参加中断
 function joinAbort(matchData, err) {
     joinClose(matchData, {err:err});
+}
+
+// 参加キャンセル
+function joinCancel(matchData) {
+    for (i = joinQueue.length - 1; i >= 0; i--) {
+        if (joinQueue[i] == matchData) {
+            joinQueue.splice(i, 1);
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
