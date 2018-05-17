@@ -305,7 +305,7 @@ function serverSetupResponse(from, matchId) {
     var matchData = joinQueue[matchId];
     if (!matchData) {
         logger.matchingServer.debug('matchId not found?');
-        mindlinkClient.sendToRemote(from, 1, {err:'matchId not found?'});
+        mindlinkClient.sendToRemote(from, 0, {err:'matchId not found?'});
         return;
     }
 

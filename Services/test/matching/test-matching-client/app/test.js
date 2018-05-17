@@ -1,18 +1,28 @@
-var assert           = require('assert');
-var config           = require('./services/library/config');
-var logger           = require('./services/library/logger');
-var webapi           = require('./services/protocols/webapi');
-var models           = require('./services/protocols/models');
-var mindlinkClient   = require('./services/library/mindlink_client').activate(config.mindlinkClient, logger.mindlinkClient);
-var webapiClient     = require('./services/library/webapi_client').activate(config.webapiClient, logger.webapiClient);
-var matchingClient   = require('./services/library/websocket_client').activate(config.matchingClient, logger.matchingClient);
-var ServerStatusData = models.ServerStatusData;
-var statusData       = new ServerStatusData();
+var assert                     = require('assert');
+var config                     = require('./services/library/config');
+var logger                     = require('./services/library/logger');
+var webapi                     = require('./services/protocols/webapi');
+var models                     = require('./services/protocols/models');
+var mindlinkClient             = require('./services/library/mindlink_client').activate(config.mindlinkClient, logger.mindlinkClient);
+var webapiClient               = require('./services/library/webapi_client').activate(config.webapiClient, logger.webapiClient);
+var matchingClient             = require('./services/library/websocket_client').activate(config.matchingClient, logger.matchingClient);
+var ServerStatusData           = models.ServerStatusData;
+var ServerSetupResponseMessage = models.ServerSetupResponseMessage;
+var statusData                 = new ServerStatusData();
 
-describe('smoke test', function () {
+describe('smoke test', function() {
     describe('smoke test', function () {
         this.timeout(20000);
-        it('smoke test', function (done) {
+        it('smoke test', function(done) {
+            mindlinkClient.setDataFromRemote(0, function(data,res) {
+                assert.ok(!data.err, 'invalid response data.err (' + data.err + ')');
+                assert.ok(res.to,    'invalid response res.to ('   + res.to   + ')');
+                logger.testClient.debug('send ServerSetupResponseMessage to "' + res.to + '"')
+                var serverSetupResponseMessage = new ServerSetupResponseMessage();
+                serverSetupResponseMessage.matchId = data.matchId;
+                mindlinkClient.sendToRemote(res.to, 0, serverSetupResponseMessage);
+            });
+
             mindlinkClient.test([
                 {connect: function() {
                     testMatching();
