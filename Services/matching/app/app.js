@@ -85,8 +85,12 @@ var matchingQueueUpdateTimerId = null;
 // マッチング開始
 function matchingStart(matchingClient) {
     // マッチングクライアント初期化
-    matchingClient.userId   = null;
-    matchingClient.userData = null;
+    matchingClient.matchingId = matchingClient.acceptData.matchingId;
+    matchingClient.userId     = null;
+    matchingClient.userData   = null;
+
+    // 情報表示
+    logger.matchingServer.debug('start matching with matchingId "' + matchingClient.matchingId + '".');
 
     // キューに追加
     matchingQueue.push(matchingClient);
@@ -246,7 +250,7 @@ function joinSearch(matchData) {
             return;
         }
         var service = services[0];
-        logger.mindlinkClient.debug('server found: service[' + util.inspect(service, {depth:null,breakLength:Infinity}) + ']');
+        logger.matchingServer.debug('server found: service[' + util.inspect(service, {depth:null,breakLength:Infinity}) + ']');
         matchData.service = service;
     });
 }

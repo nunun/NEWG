@@ -43,7 +43,7 @@ services:
       - ./../../mindlink/app:/app
       - ./../../services:/app/services
     ports:
-      - 17766:17766
+      - 127.0.0.1:17766:17766
     depends_on:
       - rabbitmq
 
@@ -56,18 +56,22 @@ services:
       - ./../../mindlink/app:/app
       - ./../../services:/app/services
     ports:
-      - 17767:17766
+      - 127.0.0.1:17767:17766
     depends_on:
       - rabbitmq
 
   rabbitmq:
     image: rabbitmq:3.7.0-management-alpine
     ports:
-      - 15672:15672
+      - 127.0.0.1:15672:15672
 
   couchdb:
     image: couchdb:2.1.1
+    ports:
+      - 127.0.0.1:15984:5984
 
   redis:
     image: redis:4.0.6-alpine
+    ports:
+      - 127.0.0.1:6379:6379
 

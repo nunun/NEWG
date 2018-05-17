@@ -333,7 +333,7 @@ ModelData.setupType = function(type, typeName, databaseName) {
     }
 
     // saveCache
-    ModelData.prototype.saveCache = function(key, callback) {
+    type.prototype.saveCache = function(key, callback) {
         var self = this;
         if (key === undefined) {
             callback = key;
@@ -399,7 +399,7 @@ ModelData.setupType = function(type, typeName, databaseName) {
     }
 
     // promiseSaveCache
-    ModelData.prototype.promiseSaveCache = function(key) {
+    type.prototype.promiseSaveCache = function(key) {
         var self = this;
         if (key === undefined) {
             key = null;
