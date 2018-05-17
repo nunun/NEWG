@@ -14,7 +14,7 @@ describe('smoke test', function() {
     describe('smoke test', function () {
         this.timeout(20000);
         it('smoke test', function(done) {
-            mindlinkClient.setDataFromRemote(0, function(data,res) {
+            mindlinkClient.setDataFromRemoteEventListener(0, function(data,res) {
                 assert.ok(!data.err, 'invalid response data.err (' + data.err + ')');
                 assert.ok(res.to,    'invalid response res.to ('   + res.to   + ')');
                 logger.testClient.debug('send ServerSetupResponseMessage to "' + res.to + '"')
