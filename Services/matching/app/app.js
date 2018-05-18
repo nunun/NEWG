@@ -305,15 +305,23 @@ function serverSetupRequest(matchData) {
 function serverSetupResponse(from, matchId) {
     // サーバがセットアップされたが根拠となるデータが既に無い
     // その場合はサーバ側に通知して、サーバを終了する。
-    var matchData = joinQueue[matchId];
-    if (!matchData) {
-        logger.matchingServer.debug('matchId not found?');
-        mindlinkClient.sendToRemote(from, 0, {err:'matchId not found?'});
+    var foundMatchData = null;
+    for (var i in joinQueue) {
+        var matchData = joinQueue[i];
+        if (matchData.matchId == matchId) {
+            foundMatchData = matchData;
+            break;
+        }
+    }
+    if (!foundMatchData) {
+        var errorMessage = 'matchId not found? (' + matchId + ')';
+        logger.matchingServer.debug(errorMessage);
+        mindlinkClient.sendToRemote(from, 0, {err:new Error(errorMessage)});
         return;
     }
 
     // 参加成功！
-    joinReady(matchData, service.serverAddress, service.serverPort);
+    joinReady(foundMatchData, foundMatchData.service.serverAddress, foundMatchData.service.serverPort);
 }
 
 // 参加可能

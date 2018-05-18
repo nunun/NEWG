@@ -26,7 +26,7 @@ describe('smoke test', function() {
             mindlinkClient.test([
                 {connect: function() {
                     waitMatching();
-                }}
+                }},
             ]);
 
             function waitMatching() {
@@ -93,14 +93,14 @@ var profiles = [{
         mindlinkClient.setDisconnectEventListener(function() { check('disconnect', null); });
         mindlinkClient.setDataEventListener(mindlinkClient.DATA_TYPE.S, function(data) { check('S', data); });
         mindlinkClient.setDataEventListener(mindlinkClient.DATA_TYPE.Q, function(data) { check('Q', data); });
-        mindlinkClient.setDataEventListener(mindlinkClient.DATA_TYPE.M, function(data) { check('M', data); });
+        //mindlinkClient.setDataEventListener(mindlinkClient.DATA_TYPE.M, function(data) { check('M', data); });
     },
     unlisten: function() {
         mindlinkClient.setConnectEventListener(null);
         mindlinkClient.setDisconnectEventListener(null);
         mindlinkClient.setDataEventListener(mindlinkClient.DATA_TYPE.S, null);
         mindlinkClient.setDataEventListener(mindlinkClient.DATA_TYPE.Q, null);
-        mindlinkClient.setDataEventListener(mindlinkClient.DATA_TYPE.M, null);
+        //mindlinkClient.setDataEventListener(mindlinkClient.DATA_TYPE.M, null);
         mindlinkClient.stop();
     }
 }, {

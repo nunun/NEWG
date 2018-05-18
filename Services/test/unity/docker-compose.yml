@@ -56,6 +56,7 @@ services:
       args:
         - BUILD_CONFIGURATION=develop
     environment:
+      - DEBUG_HTTP_CHANNEL_ENABLE=1
       - LOG_LEVEL=debug
     volumes:
       - ./../../mindlink/app:/app
