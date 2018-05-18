@@ -12,7 +12,7 @@ var statusData                 = new ServerStatusData();
 
 describe('smoke test', function() {
     describe('smoke test', function () {
-        this.timeout(20000);
+        this.timeout(180000);
         it('smoke test', function(done) {
             mindlinkClient.setDataFromRemoteEventListener(0, function(data,res) {
                 assert.ok(!data.err, 'invalid response data.err (' + data.err + ')');
@@ -25,15 +25,29 @@ describe('smoke test', function() {
 
             mindlinkClient.test([
                 {connect: function() {
-                    testMatching();
+                    waitMatching();
                 }}
             ]);
+
+            function waitMatching() {
+                mindlinkClient.sendQuery('.*{.alias=="matching"}', function(err,services) {
+                    if (err || !services || services.length <= 0) {
+                        logger.testClient.debug('waiting for matching server ...')
+                        setTimeout(function() {
+                            waitMatching();
+                        }, 1000);
+                        return;
+                    }
+                    logger.testClient.debug('matching server up detected.')
+                    testMatching();
+                });
+            }
 
             function testMatching() {
                 webapi.signup(function(err, data) {
                     assert.ok(!err, 'invalid response err (' + err + ')');
                     var statusData = new ServerStatusData();
-                    statusData.serverState   = "ready";
+                    statusData.serverState   = "standby";
                     statusData.serverAddress = "example.com";
                     statusData.serverPort    = 7777;
                     statusData.load          = 0.0;

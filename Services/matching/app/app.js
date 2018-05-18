@@ -43,11 +43,9 @@ mindlinkClient.setConnectEventListener(function() {
         logger.mindlinkClient.info('starting matching server ...');
         matchingServer.start();
     });
-
-    // サーバ セットアップ レスポンス受け取り
-    mindlinkClient.setDataFromRemoteEventListener(0, (data,res) => {
-        serverSetupResponse(res.to, data.matchId);
-    });
+});
+mindlinkClient.setDataFromRemoteEventListener(0, (data,res) => {
+    serverSetupResponse(res.to, data.matchId);
 });
 
 // matching server
@@ -113,7 +111,7 @@ function matchingIdentifyParameter(matchingClient) {
             matchingAbort(matchingClient, new Error("invalid matchingId."));
             return;
         }
-        matchingClient.userId = users[0];
+        matchingClient.userId = data.users[0];
         matchingIdentifyUser(matchingClient);
     });
 }
@@ -208,7 +206,8 @@ function joinStart(matchingClients, sceneName) {
 
     // マッチングユーザ一覧生成
     var matchingUsers = [];
-    for (var matchingClient in matchingClients) {
+    for (var i in matchingClients) {
+        var matchingClient = matchingClients[i];
         matchingUsers.push(matchingClient.userId);
     }
 
@@ -299,7 +298,7 @@ function joinUpdate() {
 
 // サービス参加リクエスト
 function serverSetupRequest(matchData) {
-    mindlinkClient.sendToRemote(matchData.service.serverUuid, 0, matchData.serverSetupRequestMessage);
+    mindlinkClient.sendToRemote(matchData.service.clientUuid, 0, matchData.serverSetupRequestMessage);
 }
 
 // サービス参加レスポンス
