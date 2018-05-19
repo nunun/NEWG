@@ -3,9 +3,9 @@ services:
   generator:
     image: ruby:2
     volumes:
-      # generator and spec
+      # generator and specs
       - ./generate.rb:/generate.rb
       - ./specs.yml:/specs.yml
-      # output
+      # output destination
       - ./protocols:/output/nodejs/services/protocols
       - ./../../Assets/Game/Scripts/Services/Protocols:/output/cs/Services/Protocols

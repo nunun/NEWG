@@ -4,12 +4,11 @@ services:
     image: ${ENV_REPOSITORY}/test-services-server
     build:
       context: ./../services/test-services-server
-      args:
-        - BUILD_CONFIGURATION=develop
+      dockerfile: ./../../../services/Dockerfile.node.develop
     environment:
       - LOG_LEVEL=debug
     volumes:
-      - ./../services/test-services-server/app:/app
+      - ./../services/test-services-server:/app
       - ./../../services:/app/services
     ports:
       - 7799:7799
@@ -18,12 +17,11 @@ services:
     image: ${ENV_REPOSITORY}/matching
     build:
       context: ./../../matching
-      args:
-        - BUILD_CONFIGURATION=develop
+      dockerfile: ./../services/Dockerfile.node.develop
     environment:
       - LOG_LEVEL=debug
     volumes:
-      - ./../../matching/app:/app
+      - ./../../matching:/app
       - ./../../services:/app/services
     ports:
       - 7755:7755
@@ -35,12 +33,11 @@ services:
     image: ${ENV_REPOSITORY}/api
     build:
       context: ./../../api
-      args:
-        - BUILD_CONFIGURATION=develop
+      dockerfile: ./../services/Dockerfile.node.develop
     environment:
       - LOG_LEVEL=debug
     volumes:
-      - ./../../api/app:/app
+      - ./../../api:/app
       - ./../../services:/app/services
     depends_on:
       - mindlink
@@ -53,13 +50,12 @@ services:
     image: ${ENV_REPOSITORY}/mindlink
     build:
       context: ./../../mindlink
-      args:
-        - BUILD_CONFIGURATION=develop
+      dockerfile: ./../services/Dockerfile.node.develop
     environment:
       - DEBUG_HTTP_CHANNEL_ENABLE=1
       - LOG_LEVEL=debug
     volumes:
-      - ./../../mindlink/app:/app
+      - ./../../mindlink:/app
       - ./../../services:/app/services
     ports:
       - 127.0.0.1:17766:17766

@@ -1,5 +1,3 @@
-# var   webapi = require('./services/protocols/webapi');
-# using WebAPI = Services.Protocols.WebAPI;
 specs:
   services:
     protocols:
@@ -273,11 +271,10 @@ specs:
 ################################################################################
 ################################################################################
 ################################################################################
-# コード生成テンプレート
 templates:
   - generate: before
     eval: |
-      # nodejs default values
+      # nodejs default value
       def nodejs_defval(p)
         case p["type"]
         when "bool"
@@ -322,7 +319,7 @@ templates:
           end
         end
       end
-      # cs default values
+      # cs default value
       def cs_defval(p)
         case p["type"]
         when "bool"
@@ -373,7 +370,7 @@ templates:
           end
         end
       end
-      # cs type
+      # cs types
       def cs_type(p)
         case p["type"]
         when "array"
@@ -384,7 +381,7 @@ templates:
           return cs_type_name(p["type"])
         end
       end
-      # cs type name
+      # cs type names
       def cs_type_name(type)
         #case type
         #when "int", "float", "double", "string"
@@ -395,7 +392,7 @@ templates:
         return type
       end
 
-  # nodejs
+  # nodejs code templates
   - generate: webapi
     in: /output/nodejs/services/protocols
     output: routes.js
@@ -549,7 +546,7 @@ templates:
       <%- end -%>
       module.exports = exports;
 
-  # cs
+  # cs code templates
   - generate: webapi
     in: /output/cs/Services/Protocols
     output: WebAPI.cs

@@ -1,19 +1,29 @@
 version: '3.4'
 services:
   client:
-    build: ./client
+    build:
+      context: ./client
+      dockerfile: ./../services/Dockerfile.node.release
 
   server:
-    build: ./server
+    build:
+      context: ./server
+      dockerfile: ./../services/Dockerfile.node.release
 
   matching:
-    build: ./matching
+    build:
+      context: ./matching
+      dockerfile: ./../services/Dockerfile.node.release
 
   api:
-    build: ./api
+    build:
+      context: ./api
+      dockerfile: ./../services/Dockerfile.node.release
 
   mindlink:
-    build: ./mindlink
+    build:
+      context: ./mindlink
+      dockerfile: ./../services/Dockerfile.node.release
 
   rabbitmq: {}
 
@@ -24,3 +34,4 @@ services:
   sense: {}
 
   portainer: {}
+

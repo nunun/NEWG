@@ -1,0 +1,7 @@
+FROM services/node:base
+WORKDIR /app
+ADD . /app
+RUN rm -rf services node_modules
+RUN mv /services /app/services
+RUN npm install
+CMD node ./app.js

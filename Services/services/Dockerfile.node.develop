@@ -1,0 +1,8 @@
+FROM services/node:base
+WORKDIR /app
+ADD . /app
+RUN rm -rf services node_modules
+RUN mv /services /app/services
+RUN npm install
+RUN npm install -g nodemon
+CMD npm install ; nodemon --legacy-watch ./app.js

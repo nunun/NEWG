@@ -4,12 +4,11 @@ services:
     image: ${ENV_REPOSITORY}/test-services-client
     build:
       context: ./test-services-client
-      args:
-        - BUILD_CONFIGURATION=tester
+      dockerfile: ./../../../services/Dockerfile.node.tester
     environment:
       - LOG_LEVEL=debug
     volumes:
-      - ./test-services-client/app:/app
+      - ./test-services-client:/app
       - ./../../services:/app/services
     depends_on:
       - mindlink1
@@ -22,25 +21,23 @@ services:
     image: ${ENV_REPOSITORY}/test-services-server
     build:
       context: ./test-services-server
-      args:
-        - BUILD_CONFIGURATION=develop
+      dockerfile: ./../../../services/Dockerfile.node.develop
     environment:
       - LOG_LEVEL=debug
     volumes:
-      - ./test-services-server/app:/app
+      - ./test-services-server:/app
       - ./../../services:/app/services
 
   mindlink1:
     image: ${ENV_REPOSITORY}/mindlink
     build:
       context: ./../../mindlink
-      args:
-        - BUILD_CONFIGURATION=develop
+      dockerfile: ./../services/Dockerfile.node.develop
     environment:
       - DEBUG_HTTP_CHANNEL_ENABLE=1
       - LOG_LEVEL=debug
     volumes:
-      - ./../../mindlink/app:/app
+      - ./../../mindlink:/app
       - ./../../services:/app/services
     ports:
       - 127.0.0.1:17766:17766
@@ -53,7 +50,7 @@ services:
       - DEBUG_HTTP_CHANNEL_ENABLE=1
       - LOG_LEVEL=debug
     volumes:
-      - ./../../mindlink/app:/app
+      - ./../../mindlink:/app
       - ./../../services:/app/services
     ports:
       - 127.0.0.1:17767:17766
