@@ -1,9 +1,9 @@
 task_up() {
         echo "up stack '${ENV_STACK_NAME}' ..."
         task_init
-        STACK_FILE=".stack${TASK_ENV_NAME_WITH_DOT}.yml"
+        STACK_FILE="${PROJECT_TASK_DIR}/.builds/stack${DOCKER_COMPOSER_ENV_NAME_WITH_DOT}.yml"
         docker stack deploy ${ENV_STACK_NAME} \
-                --with-registry-auth --compose-file ${STACK_FILE}
+                --with-registry-auth --compose-file `ospath ${STACK_FILE}`
 }
 
 task_down() {
@@ -12,50 +12,52 @@ task_down() {
 }
 
 task_build() {
-        echo "building stack file ..."
-        STACK_FILE=".stack${TASK_ENV_NAME_WITH_DOT}.yml"
+        echo "build stack file ..."
+        STACK_FILE="${PROJECT_TASK_DIR}/.builds/stack${DOCKER_COMPOSER_ENV_NAME_WITH_DOT}.yml"
         BUILD_YAMLS="-f docker-compose.yml -f docker-compose.stack.build.yml"
         CONFIG_YAMLS="-f docker-compose.yml -f docker-compose.stack.deploy.yml"
-        (cd ${PROJECT_TASK_DIR}; sh run.sh services build)
-        #(cd ${PROJECT_TASK_DIR}; sh run.sh unity)
+        cd ${PROJECT_TASK_DIR}
+        mkdir -p "`dirname ${STACK_FILE}`"
+        sh run.sh services build
+        #sh run.sh unity
         docker-compose ${BUILD_YAMLS} build --force-rm --no-cache
         docker-compose ${BUILD_YAMLS} push
         docker-compose ${CONFIG_YAMLS} config --resolve-image-digest > ${STACK_FILE}
         echo ""
         echo "successfully build stack file to '${STACK_FILE}'."
         echo "you can up stack locally and push stack file to docker image registry for deploy."
-        echo "> sh run.sh${TASK_ENV_NAME:+" "}${TASK_ENV_NAME} stack up    # up   stack locally"
-        echo "> sh run.sh${TASK_ENV_NAME:+" "}${TASK_ENV_NAME} stack push  # push stack file to '${ENV_STACK_DEPLOY_TAG}' for deploy"
+        echo "> sh run.sh${DOCKER_COMPOSER_ENV_NAME_WITH_SPACE} stack up    # up   stack locally"
+        echo "> sh run.sh${DOCKER_COMPOSER_ENV_NAME_WITH_SPACE} stack push  # push stack file to '${ENV_STACK_DEPLOY_TAG}' for deploy"
 }
 
 task_push() {
         echo "push stack file to ${ENV_STACK_DEPLOY_TAG} ..."
+        STACK_FILE="${PROJECT_TASK_DIR}/.builds/stack${DOCKER_COMPOSER_ENV_NAME_WITH_DOT}.yml"
         BUNDLE_DIR="/tmp/stack"
         DOCKER_FILE="${BUNDLE_DIR}/Dockerfile"
-        STACK_FILE=".stack${TASK_ENV_NAME_WITH_DOT}.yml"
-        mkdir -p ${BUNDLE_DIR}
-        cp ${STACK_FILE}                 ${BUNDLE_DIR}/${STACK_FILE}
-        cp ${TASK_ENV_FILE}              ${BUNDLE_DIR}/.task.env
-        cp ${PROJECT_TASK_DIR}/.task.sh  ${BUNDLE_DIR}/.task.sh
-        cp ${PROJECT_TASK_DIR}/.stack.sh ${BUNDLE_DIR}/.stack.sh
-        echo "FROM alpine"           > "${DOCKER_FILE}"
-        echo "WORKDIR /stack"       >> "${DOCKER_FILE}"
-        echo "ADD ${STACK_FILE} ./" >> "${DOCKER_FILE}"
-        echo "ADD .task.env     ./" >> "${DOCKER_FILE}"
-        echo "ADD .task.sh      ./" >> "${DOCKER_FILE}"
-        echo "ADD .stack.sh     ./" >> "${DOCKER_FILE}"
+        rm -rf ${BUNDLE_DIR}
+        mkdir -p ${BUNDLE_DIR}/.builds
+        mkdir -p ${BUNDLE_DIR}/.docker-composer/environments
+        cp    ${STACK_FILE}                                                                 ${BUNDLE_DIR}/.builds/stack.local.yml
+        cp    ${PROJECT_TASK_DIR}/.docker-composer/environments/${DOCKER_COMPOSER_ENV_NAME} ${BUNDLE_DIR}/.docker-composer/environments/local
+        cp -r ${PROJECT_TASK_DIR}/.docker-composer/scripts                                  ${BUNDLE_DIR}/.docker-composer/scripts
+        cp -r ${PROJECT_TASK_DIR}/.docker-composer/tasks                                    ${BUNDLE_DIR}/.docker-composer/tasks
+        echo "FROM alpine"                              > "${DOCKER_FILE}"
+        echo "WORKDIR /stack"                          >> "${DOCKER_FILE}"
+        echo "ADD .builds          ./.builds"          >> "${DOCKER_FILE}"
+        echo "ADD .docker-composer ./.docker-composer" >> "${DOCKER_FILE}"
         (cd ${BUNDLE_DIR}; \
          docker build --no-cache -t ${ENV_STACK_DEPLOY_TAG} .; \
          docker push ${ENV_STACK_DEPLOY_TAG})
         echo ""
         echo "successfully push stack file to '${ENV_STACK_DEPLOY_TAG}'."
         echo "you can copy 'deploy.sh' to any host and deploy stack on the host."
-        echo "> sh deploy.sh ${ENV_STACK_DEPLOY_TAG} stack up"
-        echo "> sh deploy.sh ${ENV_STACK_DEPLOY_TAG} stack down"
-        echo "> sh deploy.sh ${ENV_STACK_DEPLOY_TAG} stack init"
-        echo "> sh deploy.sh ${ENV_STACK_DEPLOY_TAG} stack setup"
-        echo "> sh deploy.sh ${ENV_STACK_DEPLOY_TAG} stack renew"
-        echo "> sh deploy.sh ${ENV_STACK_DEPLOY_TAG} stack reset"
+        echo "> sh .docker-composer/scripts/deploy.sh ${ENV_STACK_DEPLOY_TAG} stack up"
+        echo "> sh .docker-composer/scripts/deploy.sh ${ENV_STACK_DEPLOY_TAG} stack down"
+        echo "> sh .docker-composer/scripts/deploy.sh ${ENV_STACK_DEPLOY_TAG} stack init"
+        echo "> sh .docker-composer/scripts/deploy.sh ${ENV_STACK_DEPLOY_TAG} stack setup"
+        echo "> sh .docker-composer/scripts/deploy.sh ${ENV_STACK_DEPLOY_TAG} stack renew"
+        echo "> sh .docker-composer/scripts/deploy.sh ${ENV_STACK_DEPLOY_TAG} stack reset"
 }
 
 task_usage() {
@@ -68,12 +70,12 @@ task_usage() {
         echo "sh run.sh <env> stack setup"
         echo "sh run.sh <env> stack renew"
         echo "sh run.sh <env> stack reset"
-        echo "sh deploy.sh <deploy tag> stack up"
-        echo "sh deploy.sh <deploy tag> stack down"
-        echo "sh deploy.sh <deploy tag> stack init"
-        echo "sh deploy.sh <deploy tag> stack setup"
-        echo "sh deploy.sh <deploy tag> stack renew"
-        echo "sh deploy.sh <deploy tag> stack reset"
+        echo "sh .docker-composer/scripts/deploy.sh <deploy tag> stack up"
+        echo "sh .docker-composer/scripts/deploy.sh <deploy tag> stack down"
+        echo "sh .docker-composer/scripts/deploy.sh <deploy tag> stack init"
+        echo "sh .docker-composer/scripts/deploy.sh <deploy tag> stack setup"
+        echo "sh .docker-composer/scripts/deploy.sh <deploy tag> stack renew"
+        echo "sh .docker-composer/scripts/deploy.sh <deploy tag> stack reset"
         echo ""
         echo "ex) to up local stack on local host, write .task.env and do below:"
         echo "  sh run.sh stack build"
@@ -83,8 +85,8 @@ task_usage() {
         echo "ex) to up develop stack on remote host, write .task.env.develop and do below:"
         echo "  sh run.sh develop stack build"
         echo "  sh run.sh develop stack push"
-        echo "  sh deploy.sh registry:5000/myapp/stack stack up"
-        echo "  sh deploy.sh registry:5000/myapp/stack stack down"
+        echo "  sh .docker-composer/scripts/deploy.sh registry:5000/myapp/stack stack up"
+        echo "  sh .docker-composer/scripts/deploy.sh registry:5000/myapp/stack stack down"
         echo ""
 }
 
@@ -145,15 +147,15 @@ task_reset() {
 
 update_certs() {
         remove_certs
-        CACHE_DIR="${PROJECT_TASK_DIR}/.certs"
-        mkdir -p "${CACHE_DIR}"
+        CERTS_DIR="${PROJECT_TASK_DIR}/.certs"
+        mkdir -p "${CERTS_DIR}"
         case "${ENV_SECRET_CERT}" in
         selfsigned)
-                CRT_FILE="${CACHE_DIR}/domain.crt"
-                KEY_FILE="${CACHE_DIR}/domain.key"
-                SUBJ="/C=JP /CN=${ENV_SECRET_CERT_FQDN}"
-                SUBJ="${SUBJECT} /O=${ENV_SECRET_CERT_FQDN}"
-                SUBJ="${SUBJECT} /emailAddress=${ENV_SECRET_CERT_EMAIL}"
+                CRT_FILE="${CERTS_DIR}/domain.crt"
+                KEY_FILE="${CERTS_DIR}/domain.key"
+                SUBJ="C=JP/CN=${ENV_SECRET_CERT_FQDN}"
+                SUBJ="${SUBJECT}/O=${ENV_SECRET_CERT_FQDN}"
+                SUBJ="${SUBJECT}/emailAddress=${ENV_SECRET_CERT_EMAIL}"
                 openssl req -x509 -nodes -days 365 -newkey rsa:2048  \
                         -subj "${SUBJ}" \
                         -out "${CRT_FILE}" -keyout "${KEY_FILE}"
@@ -165,16 +167,16 @@ update_certs() {
         certbot)
                 DRY_RUN="--dry-run" && echo "<<< DRY RUN >>>"
                 docker run --rm -p "80:80" \
-                        -v `ospath ${CACHE_DIR}`:/etc/letsencrypt \
+                        -v `ospath ${CERTS_DIR}`:/etc/letsencrypt \
                         deliverous/certbot certonly ${DRY_RUN} \
                         --standalone --renew-by-default --non-interactive \
                         --agree-tos --preferred-challenges http \
                         -d "${ENV_SECRET_CERT_FQDN}" \
                         --email "${ENV_SECRET_CERT_EMAIL}"
-                CERT_PEM_FILE="${CACHE_DIR}/live/${ENV_FQDN}/cert.pem"
-                CHAIN_PEM_FILE="${CACHE_DIR}/live/${ENV_FQDN}/chain.pem"
-                FULLCHAIN_PEM_FILE="${CACHE_DIR}/live/${ENV_FQDN}/fullchain.pem"
-                PRIVKEY_PEM_FILE="${CACHE_DIR}/live/${ENV_FQDN}/privkey.pem"
+                CERT_PEM_FILE="${CERTS_DIR}/live/${ENV_FQDN}/cert.pem"
+                CHAIN_PEM_FILE="${CERTS_DIR}/live/${ENV_FQDN}/chain.pem"
+                FULLCHAIN_PEM_FILE="${CERTS_DIR}/live/${ENV_FQDN}/fullchain.pem"
+                PRIVKEY_PEM_FILE="${CERTS_DIR}/live/${ENV_FQDN}/privkey.pem"
                 ;;
         external)
                 if [    "`secret_exists ${ENV_SECRET_CERT_PEM}`" \
@@ -202,8 +204,8 @@ remove_certs() {
         secret_rm "${ENV_SECRET_CHAIN_PEM}"
         secret_rm "${ENV_SECRET_FULLCHAIN_PEM}"
         secret_rm "${ENV_SECRET_PRIVKEY_PEM}"
-        CACHE_DIR="${PROJECT_TASK_DIR}/.certs"
-        rm -rf "${CACHE_DIR}"
+        CERTS_DIR="${PROJECT_TASK_DIR}/.certs"
+        rm -rf "${CERTS_DIR}"
 }
 
 update_htpasswd() {
@@ -267,4 +269,4 @@ secret_exists() {
 ###############################################################################
 ###############################################################################
 ###############################################################################
-. "`dirname ${0}`/.task.sh" usage ${*}
+. "`dirname ${0}`/../scripts/task.sh" usage ${*}

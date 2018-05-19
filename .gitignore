@@ -41,8 +41,8 @@ Assets/InitTestScene*.unity
 Assets/InitTestScene*.unity.meta
 
 # Services
-Services/.task.conf
-Services/.stack.yml
+Services/.docker-composer/configs/docker-composer.conf
+Services/.builds
 Services/.certs
 Services/.volumes
 Services/client/Builds

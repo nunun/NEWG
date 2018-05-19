@@ -9,4 +9,4 @@ task_build() {
         docker build --no-cache -f ./Dockerfile.node.base -t services/node:base .
         echo "done."
 }
-. "`dirname ${0}`/../.task.sh" build ${*}
+. "`dirname ${0}`/../.docker-composer/scripts/task.sh" build ${*}
