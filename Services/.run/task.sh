@@ -56,49 +56,48 @@ ospath() {
         [ "${OSTYPE}" = "cygwin" ] && echo `cygpath -w ${1}` || echo "${1}"
 }
 
-# deploy tag
-deploy_tag() {
-        echo "fu-n.net:5000/services/dotrun:${1:-"lastet"}"
-}
-
-task_u() {
-        local deploy_tag=`deploy_tag ${*}`
-        echo "update current .run by '${deploy_tag}' ..."
-        cd ${PROJECT_TASK_DIR}
-        docker pull ${deploy_tag}
-        docker run -v `cygpath -w "${PROJECT_TASK_DIR}/.run"`:/dotrun/run \
-                ${deploy_tag} rsync -ahv --delete .run/* run
-}
-
-task_d() {
-        local deploy_tag=`deploy_tag ${*}`
-        echo "diff between current .run and '${deploy_tag}' ..."
-        cd ${PROJECT_TASK_DIR}
-        docker pull ${deploy_tag}
-        docker run -v `ospath "${PROJECT_TASK_DIR}/.run"`:/dotrun/run \
-                ${deploy_tag} diff -r .run run
-}
-
-task_p() {
-        local deploy_tag=`deploy_tag ${*}`
+# manage dotrun
+dotrun() {
+        local deploy_tag="fu-n.net:5000/services/dotrun:latest"
         local bundle_dir="/tmp/dotrun"
         local dockerfile_path="${bundle_dir}/Dockerfile"
-        echo "push current .run to '${deploy_tag}' ..."
-        rm -rf "${bundle_dir}"
-        mkdir -p "${bundle_dir}"
-        cp -r "${PROJECT_TASK_DIR}/.run" "${bundle_dir}/.run"
-        echo "FROM alpine"                   > "${dockerfile_path}"
-        echo "RUN apk add --no-cache rsync" >> "${dockerfile_path}"
-        echo "WORKDIR /dotrun"              >> "${dockerfile_path}"
-        echo "ADD .run ./.run"              >> "${dockerfile_path}"
-        (cd ${bundle_dir}; \
-                docker build --no-cache -t "${deploy_tag}" .; \
-                docker push "${deploy_tag}")
-        echo "done."
+        case ${1} in
+        update)
+                echo "update current .run by '${deploy_tag}' ..."
+                cd ${PROJECT_TASK_DIR}
+                docker pull ${deploy_tag}
+                docker run -v `ospath "${PROJECT_TASK_DIR}/.run"`:/dotrun/run \
+                ${deploy_tag} rsync -ahv --delete .run/* run
+                ;;
+        diff)
+                echo "diff between current .run and '${deploy_tag}' ..."
+                cd ${PROJECT_TASK_DIR}
+                docker pull ${deploy_tag}
+                docker run -v `ospath "${PROJECT_TASK_DIR}/.run"`:/dotrun/run \
+                        ${deploy_tag} diff -r .run run
+                ;;
+        push)
+                echo "push current .run to '${deploy_tag}' ..."
+                rm -rf "${bundle_dir}"
+                mkdir -p "${bundle_dir}"
+                cp -r "${PROJECT_TASK_DIR}/.run" "${bundle_dir}/.run"
+                echo "FROM alpine"                   > "${dockerfile_path}"
+                echo "RUN apk add --no-cache rsync" >> "${dockerfile_path}"
+                echo "WORKDIR /dotrun"              >> "${dockerfile_path}"
+                echo "ADD .run ./.run"              >> "${dockerfile_path}"
+                (cd ${bundle_dir}; \
+                        docker build --no-cache -t "${deploy_tag}" .; \
+                        docker push "${deploy_tag}")
+                echo "done."
+                ;;
+        *)
+                echo " update, push, or diff"
+                ;;
+        esac
 }
 
-# task help
-task_help() {
+# display help
+help() {
         local tasks=`declare -f | grep "^task_" | sed "s/^task_\(.*\) ()/\1/g"`
         for t in ${tasks}; do
                 [ "${t}" = "${DEFAULT_TASK}" ] \
@@ -108,14 +107,14 @@ task_help() {
         echo ""
 }
 
-# setup environment variables
+# set environment variables
 TASK_DIR=`pwd`
 PROJECT_NAME=`project_name`
 PROJECT_DIR=`project_dir`
 PROJECT_TASK_DIR=`project_task_dir`
 RUN_DIR="${PROJECT_TASK_DIR}/.run"
 
-# setup default task
+# set default task
 DEFAULT_TASK="${1?no default task}"
 shift 1
 
@@ -153,7 +152,7 @@ if [ -f "${RUN_ENV_FILE}" ]; then
         . ${RUN_ENV_FILE}
 fi
 
-# setup execute task
+# set execute task
 TASK="${1}"
 if [ "${TASK}" = "" ]; then
         TASK="${DEFAULT_TASK}"
@@ -162,4 +161,14 @@ else
 fi
 
 # call task
-task_${TASK} ${*}
+case "${TASK}" in
+dotrun)
+        dotrun ${*}
+        ;;
+help)
+        help ${*}
+        ;;
+*)
+        task_${TASK} ${*}
+        ;;
+esac
