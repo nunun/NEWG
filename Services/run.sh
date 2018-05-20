@@ -17,6 +17,6 @@ task_clean() {
         find ${PROJECT_TASK_DIR} -name "package-lock.json" -exec rm -rf '{}' +
 }
 task_services() { sh ./services/services.sh ${*}; }
-task_test() { sh ./test/test.sh ${*}; }
+task_tests() { sh ./tests/tests.sh ${*}; }
 task_stack() { sh ./.run/stack.sh ${*}; }
-. "`dirname ${0}`/.run/task.sh" up ${*}
+. "`dirname ${0}`/.run/task.sh" ${*}

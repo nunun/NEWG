@@ -20,6 +20,6 @@ docker run --rm -v `ospath ${DEPLOY_DIR}`:/deploy "${DEPLOY_TAG}" \
         sh -c "cp -a . /deploy/; chmod -R 777 /deploy"
 
 function task_stack() {
-        sh "${DEPLOY_DIR}/.docker-composer/tasks/stack.sh" ${*}
+        sh "${DEPLOY_DIR}/.run/stack.sh" ${*}
 }
-. "${DEPLOY_DIR}/.docker-composer/scripts/task.sh" help ${*}
+. "${DEPLOY_DIR}/.run/task.sh" ${*}

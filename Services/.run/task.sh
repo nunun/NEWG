@@ -2,32 +2,22 @@
 # task_example() {
 #         echo "this is a task example.";
 # }
-# . "`dirname ${0}`/.docker-composer/scripts/task.sh" example ${*}
+# . "`dirname ${0}`/.docker-composer/scripts/task.sh" ${*}
 set -e
 cd `dirname ${0}`
 
-# project name
-project_name() {
-        local d=`project_dir`
-        d=`basename "${d}"`
-        echo "${d}"
-}
-
-# project dir
-project_dir() {
-        local d=`project_task_dir`
-        [ -d "${d}/../Assets" ] && d=`dirname "${d}"`
-        echo "${d}"
-}
-
 # project task dir
 project_task_dir() {
-        local f=`pwd`
-        local d=`pwd`
-        while [ ! "${d}" = "/" ]; do
-                [ -d "${d}/.run" ] && f="${d}" && break
-                d=`dirname "${d}"`
-        done
+        local f="${RUN_PROJECT_TASK_DIR}"
+        if [ ! "${f}" ]; then
+                local f=`pwd`
+                local d=`pwd`
+                while [ ! "${d}" = "/" ]; do
+                        [ -d "${d}/.run" ] && f="${d}" && break
+                        d=`dirname "${d}"`
+                done
+                export RUN_PROJECT_TASK_DIR="${f}"
+        fi
         echo "${f}"
 }
 
@@ -57,7 +47,7 @@ ospath() {
 }
 
 # manage dotrun
-dotrun() {
+_task_dotrun() {
         local deploy_tag="fu-n.net:5000/services/dotrun:latest"
         local bundle_dir="/tmp/dotrun"
         local dockerfile_path="${bundle_dir}/Dockerfile"
@@ -97,26 +87,31 @@ dotrun() {
 }
 
 # display help
-help() {
+_task_help() {
         local tasks=`declare -f | grep "^task_" | sed "s/^task_\(.*\) ()/\1/g"`
-        for t in ${tasks}; do
-                [ "${t}" = "${DEFAULT_TASK}" ] \
-                        && printf " [${t}]" \
-                        || printf " ${t}"
+        printf ">"
+        for task in ${tasks}; do
+                printf " ${task}"
         done
-        echo ""
+        printf "\n"
+}
+
+# execute task
+task() {
+        local task=`declare -f | grep "^_\?task_${1} ()" | cut -d" " -f1`
+        if [ ! "${task}" ]; then
+                _task_help
+                [ "${1}" ] && echo "unknown task '${1}'."
+                return 0
+        fi
+        shift 1
+        ${task} ${*}
 }
 
 # set environment variables
 TASK_DIR=`pwd`
-PROJECT_NAME=`project_name`
-PROJECT_DIR=`project_dir`
 PROJECT_TASK_DIR=`project_task_dir`
 RUN_DIR="${PROJECT_TASK_DIR}/.run"
-
-# set default task
-DEFAULT_TASK="${1?no default task}"
-shift 1
 
 # load config file
 RUN_CONF_FILE="${PROJECT_TASK_DIR}/.run.conf"
@@ -152,23 +147,5 @@ if [ -f "${RUN_ENV_FILE}" ]; then
         . ${RUN_ENV_FILE}
 fi
 
-# set execute task
-TASK="${1}"
-if [ "${TASK}" = "" ]; then
-        TASK="${DEFAULT_TASK}"
-else
-        shift 1
-fi
-
-# call task
-case "${TASK}" in
-dotrun)
-        dotrun ${*}
-        ;;
-help)
-        help ${*}
-        ;;
-*)
-        task_${TASK} ${*}
-        ;;
-esac
+# execute task
+task ${*}
