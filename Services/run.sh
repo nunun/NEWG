@@ -19,5 +19,4 @@ task_clean() {
 task_services() { sh ./services/services.sh ${*}; }
 task_test() { sh ./test/test.sh ${*}; }
 task_stack() { sh ./.run/stack.sh ${*}; }
-task_dotrun() { sh ./.run/dotrun.sh ${*}; }
 . "`dirname ${0}`/.run/task.sh" up ${*}

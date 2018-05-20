@@ -61,7 +61,7 @@ deploy_tag() {
         echo "fu-n.net:5000/services/dotrun:${1:-"lastet"}"
 }
 
-task_update() {
+task_u() {
         local deploy_tag=`deploy_tag ${*}`
         echo "update current .run by '${deploy_tag}' ..."
         cd ${PROJECT_TASK_DIR}
@@ -70,7 +70,7 @@ task_update() {
                 rsync -ahv --delete .run/* run
 }
 
-task_diff() {
+task_d() {
         local deploy_tag=`deploy_tag ${*}`
         echo "diff between current .run and '${deploy_tag}' ..."
         cd ${PROJECT_TASK_DIR}
@@ -79,7 +79,7 @@ task_diff() {
                 ${deploy_tag} diff -r .run run
 }
 
-task_push() {
+task_p() {
         local deploy_tag=`deploy_tag ${*}`
         local bundle_dir="/tmp/dotrun"
         local dockerfile_path="${bundle_dir}/Dockerfile"
