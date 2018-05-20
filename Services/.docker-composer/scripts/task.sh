@@ -4,7 +4,7 @@
 # }
 # . "`dirname ${0}`/.docker-composer/scripts/task.sh" example ${*}
 set -e
-cd "`dirname ${0}`"
+cd `dirname ${0}`
 
 # project name
 project_name() {
@@ -53,9 +53,7 @@ unity() {
 
 # ospath
 ospath() {
-        [ "${OSTYPE}" = "cygwin" ] \
-                && echo "`cygpath -w ${1}`" \
-                || echo "${1}"
+        [ "${OSTYPE}" = "cygwin" ] && echo `cygpath -w ${1}` || echo "${1}"
 }
 
 # task help

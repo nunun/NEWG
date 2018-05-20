@@ -1,63 +1,74 @@
 task_up() {
-        echo "up stack '${ENV_STACK_NAME}' ..."
+        local stack_name="${ENV_STACK_NAME}"
+        local stack_file=`stack_file`
+        echo "up stack '${stack_name}' ..."
         task_init
-        STACK_FILE="${PROJECT_TASK_DIR}/.builds/stack${DOCKER_COMPOSER_ENV_NAME_WITH_DOT}.yml"
-        docker stack deploy ${ENV_STACK_NAME} \
-                --with-registry-auth --compose-file `ospath ${STACK_FILE}`
+        docker stack deploy "${stack_name}" \
+                --with-registry-auth --compose-file `ospath "${stack_file}"`
 }
 
 task_down() {
-        echo "down stack '${ENV_STACK_NAME}' ..."
-        docker stack rm ${ENV_STACK_NAME}
+        local stack_name="${ENV_STACK_NAME}"
+        echo "down stack '${stack_name}' ..."
+        docker stack rm "${stack_name}"
 }
 
 task_build() {
+        local stack_file=`stack_file`
+        local build_yamls="-f docker-compose.yml -f docker-compose.stack.build.yml"
+        local config_yamls="-f docker-compose.yml -f docker-compose.stack.deploy.yml"
+        local env_name="${DOCKER_COMPOSER_ENV_NAME_WITH_SPACE}"
+        local deploy_tag="${ENV_STACK_DEPLOY_TAG}"
         echo "build stack file ..."
-        STACK_FILE="${PROJECT_TASK_DIR}/.builds/stack${DOCKER_COMPOSER_ENV_NAME_WITH_DOT}.yml"
-        BUILD_YAMLS="-f docker-compose.yml -f docker-compose.stack.build.yml"
-        CONFIG_YAMLS="-f docker-compose.yml -f docker-compose.stack.deploy.yml"
-        cd ${PROJECT_TASK_DIR}
-        mkdir -p "`dirname ${STACK_FILE}`"
+        cd "${PROJECT_TASK_DIR}"
+        mkdir -p `dirname ${stack_file}`
         sh run.sh services build
         #sh run.sh unity
-        docker-compose ${BUILD_YAMLS} build --force-rm --no-cache
-        docker-compose ${BUILD_YAMLS} push
-        docker-compose ${CONFIG_YAMLS} config --resolve-image-digest > ${STACK_FILE}
+        docker-compose ${build_yamls} build --force-rm --no-cache
+        docker-compose ${build_yamls} push
+        docker-compose ${config_yamls} config --resolve-image-digest > "${stack_file}"
         echo ""
-        echo "successfully build stack file to '${STACK_FILE}'."
+        echo "successfully build stack file to '${stack_file}'."
         echo "you can up stack locally and push stack file to docker image registry for deploy."
-        echo "> sh run.sh${DOCKER_COMPOSER_ENV_NAME_WITH_SPACE} stack up    # up   stack locally"
-        echo "> sh run.sh${DOCKER_COMPOSER_ENV_NAME_WITH_SPACE} stack push  # push stack file to '${ENV_STACK_DEPLOY_TAG}' for deploy"
+        echo "> sh run.sh${env_name} stack up    # up   stack locally"
+        echo "> sh run.sh${env_name} stack push  # push stack file to '${deploy_tag}' for deploy"
 }
 
 task_push() {
-        echo "push stack file to ${ENV_STACK_DEPLOY_TAG} ..."
-        STACK_FILE="${PROJECT_TASK_DIR}/.builds/stack${DOCKER_COMPOSER_ENV_NAME_WITH_DOT}.yml"
-        BUNDLE_DIR="/tmp/stack"
-        DOCKER_FILE="${BUNDLE_DIR}/Dockerfile"
-        rm -rf ${BUNDLE_DIR}
-        mkdir -p ${BUNDLE_DIR}/.builds
-        mkdir -p ${BUNDLE_DIR}/.docker-composer/environments
-        cp    ${STACK_FILE}                                                                 ${BUNDLE_DIR}/.builds/stack.local.yml
-        cp    ${PROJECT_TASK_DIR}/.docker-composer/environments/${DOCKER_COMPOSER_ENV_NAME} ${BUNDLE_DIR}/.docker-composer/environments/local
-        cp -r ${PROJECT_TASK_DIR}/.docker-composer/scripts                                  ${BUNDLE_DIR}/.docker-composer/scripts
-        cp -r ${PROJECT_TASK_DIR}/.docker-composer/tasks                                    ${BUNDLE_DIR}/.docker-composer/tasks
-        echo "FROM alpine"                              > "${DOCKER_FILE}"
-        echo "WORKDIR /stack"                          >> "${DOCKER_FILE}"
-        echo "ADD .builds          ./.builds"          >> "${DOCKER_FILE}"
-        echo "ADD .docker-composer ./.docker-composer" >> "${DOCKER_FILE}"
-        (cd ${BUNDLE_DIR}; \
-         docker build --no-cache -t ${ENV_STACK_DEPLOY_TAG} .; \
-         docker push ${ENV_STACK_DEPLOY_TAG})
+        local stack_file=`stack_file`
+        local bundle_dir="/tmp/stack"
+        local dockerfile_path="${bundle_dir}/Dockerfile"
+        local deploy_sh=".docker-composer/scripts/deploy.sh"
+        local deploy_tag="${ENV_STACK_DEPLOY_TAG}"
+        local env_name="${DOCKER_COMPOSER_ENV_NAME}"
+        echo "push stack file to '${deploy_tag}' ..."
+        rm -rf "${bundle_dir}"
+        mkdir -p "${bundle_dir}/.builds"
+        mkdir -p "${bundle_dir}/.docker-composer/environments"
+        cp "${stack_file}" \
+                "${bundle_dir}/.builds/stack.local.yml"
+        cp "${PROJECT_TASK_DIR}/.docker-composer/environments/${env_name}" \
+                "${bundle_dir}/.docker-composer/environments/local"
+        cp -r "${PROJECT_TASK_DIR}/.docker-composer/scripts" \
+                "${bundle_dir}/.docker-composer/scripts"
+        cp -r "${PROJECT_TASK_DIR}/.docker-composer/tasks" \
+                "${bundle_dir}/.docker-composer/tasks"
+        echo "FROM alpine"                              > "${dockerfile_path}"
+        echo "WORKDIR /stack"                          >> "${dockerfile_path}"
+        echo "ADD .builds          ./.builds"          >> "${dockerfile_path}"
+        echo "ADD .docker-composer ./.docker-composer" >> "${dockerfile_path}"
+        (cd ${bundle_dir}; \
+                docker build --no-cache -t "${deploy_tag}" .; \
+                docker push "${deploy_tag}")
         echo ""
-        echo "successfully push stack file to '${ENV_STACK_DEPLOY_TAG}'."
+        echo "successfully push stack file to '${deploy_tag}'."
         echo "you can copy 'deploy.sh' to any host and deploy stack on the host."
-        echo "> sh .docker-composer/scripts/deploy.sh ${ENV_STACK_DEPLOY_TAG} stack up"
-        echo "> sh .docker-composer/scripts/deploy.sh ${ENV_STACK_DEPLOY_TAG} stack down"
-        echo "> sh .docker-composer/scripts/deploy.sh ${ENV_STACK_DEPLOY_TAG} stack init"
-        echo "> sh .docker-composer/scripts/deploy.sh ${ENV_STACK_DEPLOY_TAG} stack setup"
-        echo "> sh .docker-composer/scripts/deploy.sh ${ENV_STACK_DEPLOY_TAG} stack renew"
-        echo "> sh .docker-composer/scripts/deploy.sh ${ENV_STACK_DEPLOY_TAG} stack reset"
+        echo "> sh ${deploy_sh} ${deploy_tag} stack up"
+        echo "> sh ${deploy_sh} ${deploy_tag} stack down"
+        echo "> sh ${deploy_sh} ${deploy_tag} stack init"
+        echo "> sh ${deploy_sh} ${deploy_tag} stack setup"
+        echo "> sh ${deploy_sh} ${deploy_tag} stack renew"
+        echo "> sh ${deploy_sh} ${deploy_tag} stack reset"
 }
 
 task_usage() {
@@ -96,20 +107,20 @@ task_usage() {
 
 task_init() {
         if [ "${ENV_SECRET_CERT}" ]; then
-                if [    ! "`secret_exists ${ENV_SECRET_CERT_PEM}`" \
-                     -o ! "`secret_exists ${ENV_SECRET_CHAIN_PEM}`" \
-                     -o ! "`secret_exists ${ENV_SECRET_FULLCHAIN_PEM}`" \
-                     -o ! "`secret_exists ${ENV_SECRET_PRIVKEY_PEM}`" ]; then
+                if [    ! `secret_exists ${ENV_SECRET_CERT_PEM}` \
+                     -o ! `secret_exists ${ENV_SECRET_CHAIN_PEM}` \
+                     -o ! `secret_exists ${ENV_SECRET_FULLCHAIN_PEM}` \
+                     -o ! `secret_exists ${ENV_SECRET_PRIVKEY_PEM}` ]; then
                         update_certs
                 fi
         fi
         if [ "${ENV_SECRET_HTPASSWD}" ]; then
-                if [ ! "`secret_exists ${ENV_SECRET_HTPASSWD}`" ]; then \
+                if [ ! `secret_exists ${ENV_SECRET_HTPASSWD}` ]; then \
                         update_htpasswd
                 fi
         fi
         if [ "${ENV_SECRET_APIKEY}" ]; then
-                if [ ! "`secret_exists ${ENV_SECRET_APIKEY}`" ]; then \
+                if [ ! `secret_exists ${ENV_SECRET_APIKEY}` ]; then \
                         update_apikey
                 fi
         fi
@@ -147,43 +158,47 @@ task_reset() {
 
 update_certs() {
         remove_certs
-        CERTS_DIR="${PROJECT_TASK_DIR}/.certs"
-        mkdir -p "${CERTS_DIR}"
+        local certs_dir=`certs_dir`
+        local cert_pem_file="cert.pem"
+        local chain_pem_file="chain.pem"
+        local fullchain_pem_file="fullchain.pem"
+        local privkey_pem_file="privkey.pem"
+        mkdir -p "${certs_dir}"
         case "${ENV_SECRET_CERT}" in
         selfsigned)
-                CRT_FILE="${CERTS_DIR}/domain.crt"
-                KEY_FILE="${CERTS_DIR}/domain.key"
-                SUBJ="C=JP/CN=${ENV_SECRET_CERT_FQDN}"
-                SUBJ="${SUBJECT}/O=${ENV_SECRET_CERT_FQDN}"
-                SUBJ="${SUBJECT}/emailAddress=${ENV_SECRET_CERT_EMAIL}"
+                local crt_file="${certs_dir}/domain.crt"
+                local key_file="${certs_dir}/domain.key"
+                local subj="C=JP/CN=${ENV_SECRET_CERT_FQDN}"
+                local subj="${subj}/O=${ENV_SECRET_CERT_FQDN}"
+                local subj="${subj}/emailAddress=${ENV_SECRET_CERT_EMAIL}"
                 openssl req -x509 -nodes -days 365 -newkey rsa:2048  \
-                        -subj "${SUBJ}" \
-                        -out "${CRT_FILE}" -keyout "${KEY_FILE}"
-                CERT_PEM_FILE="${CRT_FILE}"
-                CHAIN_PEM_FILE="${CRT_FILE}"
-                FULLCHAIN_PEM_FILE="${CRT_FILE}"
-                PRIVKEY_PEM_FILE="${KEY_FILE}"
+                        -subj "${subj}" \
+                        -out "${crt_file}" -keyout "${key_file}"
+                cert_pem_file="${crt_file}"
+                chain_pem_file="${crt_file}"
+                fullchain_pem_file="${crt_file}"
+                privkey_pem_file="${key_file}"
                 ;;
         certbot)
                 DRY_RUN="--dry-run" && echo "<<< DRY RUN >>>"
                 docker run --rm -p "80:80" \
-                        -v `ospath ${CERTS_DIR}`:/etc/letsencrypt \
+                        -v `ospath ${certs_dir}`:/etc/letsencrypt \
                         deliverous/certbot certonly ${DRY_RUN} \
                         --standalone --renew-by-default --non-interactive \
                         --agree-tos --preferred-challenges http \
-                        -d "${ENV_SECRET_CERT_FQDN}" \
+                        -certs_dir "${ENV_SECRET_CERT_FQDN}" \
                         --email "${ENV_SECRET_CERT_EMAIL}"
-                CERT_PEM_FILE="${CERTS_DIR}/live/${ENV_FQDN}/cert.pem"
-                CHAIN_PEM_FILE="${CERTS_DIR}/live/${ENV_FQDN}/chain.pem"
-                FULLCHAIN_PEM_FILE="${CERTS_DIR}/live/${ENV_FQDN}/fullchain.pem"
-                PRIVKEY_PEM_FILE="${CERTS_DIR}/live/${ENV_FQDN}/privkey.pem"
+                cert_pem_file="${certs_dir}/live/${ENV_FQDN}/cert.pem"
+                chain_pem_file="${certs_dir}/live/${ENV_FQDN}/chain.pem"
+                fullchain_pem_file="${certs_dir}/live/${ENV_FQDN}/fullchain.pem"
+                privkey_pem_file="${certs_dir}/live/${ENV_FQDN}/privkey.pem"
                 ;;
         external)
-                if [    "`secret_exists ${ENV_SECRET_CERT_PEM}`" \
-                     -a "`secret_exists ${ENV_SECRET_CHAIN_PEM}`" \
-                     -a "`secret_exists ${ENV_SECRET_FULLCHAIN_PEM}`" \
-                     -a "`secret_exists ${ENV_SECRET_PRIVKEY_PEM}`" ]; then
-                        return
+                if [    `secret_exists ${ENV_SECRET_CERT_PEM}` \
+                     -a `secret_exists ${ENV_SECRET_CHAIN_PEM}` \
+                     -a `secret_exists ${ENV_SECRET_FULLCHAIN_PEM}` \
+                     -a `secret_exists ${ENV_SECRET_PRIVKEY_PEM}` ]; then
+                        return # NOTE ok, external certs ready. nothing to do.
                 fi
                 echo "cert does not exist."
                 exit 1
@@ -193,10 +208,10 @@ update_certs() {
                 exit 1
                 ;;
         esac
-        secret_create_from_file "${ENV_SECRET_CERT_PEM}"      "${CERT_PEM_FILE}"
-        secret_create_from_file "${ENV_SECRET_CHAIN_PEM}"     "${CHAIN_PEM_FILE}"
-        secret_create_from_file "${ENV_SECRET_FULLCHAIN_PEM}" "${FULLCHAIN_PEM_FILE}"
-        secret_create_from_file "${ENV_SECRET_PRIVKEY_PEM}"   "${PRIVKEY_PEM_FILE}"
+        secret_create_from_file "${ENV_SECRET_CERT_PEM}"      "${cert_pem_file}"
+        secret_create_from_file "${ENV_SECRET_CHAIN_PEM}"     "${chain_pem_file}"
+        secret_create_from_file "${ENV_SECRET_FULLCHAIN_PEM}" "${fullchain_pem_file}"
+        secret_create_from_file "${ENV_SECRET_PRIVKEY_PEM}"   "${privkey_pem_file}"
 }
 
 remove_certs() {
@@ -204,21 +219,18 @@ remove_certs() {
         secret_rm "${ENV_SECRET_CHAIN_PEM}"
         secret_rm "${ENV_SECRET_FULLCHAIN_PEM}"
         secret_rm "${ENV_SECRET_PRIVKEY_PEM}"
-        CERTS_DIR="${PROJECT_TASK_DIR}/.certs"
-        rm -rf "${CERTS_DIR}"
+        local certs_dir=`certs_dir`
+        rm -rf "${certs_dir}"
 }
 
 update_htpasswd() {
         remove_htpasswd
-        if [ "${1}" -o "${2}" ]; then
-                USERNAME="${1}"
-                PASSWORD="${2}"
-        else
-                USERNAME="`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1`"
-                PASSWORD="`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1`"
-        fi
+        local username="${1}"
+        local password="${2}"
+        [ -z "${username}" ] && username=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1`
+        [ -z "${password}" ] && password=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1`
         secret_create_from_string "${ENV_SECRET_HTPASSWD}" \
-                "`docker run --rm --entrypoint htpasswd registry:2 -Bbn "${USERNAME}" "${PASSWORD}"`"
+                `docker run --rm --entrypoint htpasswd registry:2 -Bbn "${username}" "${password}"`
 }
 
 remove_htpasswd() {
@@ -227,8 +239,8 @@ remove_htpasswd() {
 
 update_apikey() {
         remove_apikey
-        APIKEY="`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 128 | head -n 1`"
-        secret_create_from_string "${ENV_SECRET_APIKEY}" "${APIKEY}"
+        local apikey=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 128 | head -n 1`
+        secret_create_from_string "${ENV_SECRET_APIKEY}" "${apikey}"
 }
 
 remove_apikey() {
@@ -240,21 +252,21 @@ remove_apikey() {
 ###############################################################################
 
 secret_create_from_string() {
-        SECRET_NAME="${1?empty secret name}"
-        SECRET_DATA="${2?empty secret data}"
-        echo "create docker secret '${SECRET_NAME}' ..."
-        echo "${SECRET_DATA}" | docker secret create "${SECRET_NAME}" -
+        local secret_name="${1?empty secret name}"
+        local secret_data="${2?empty secret data}"
+        echo "create docker secret '${secret_name}' ..."
+        echo "${secret_data}" | docker secret create "${secret_name}" -
 }
 
 secret_create_from_file() {
-        SECRET_NAME="${1?empty secret name}"
-        FILE_PATH="${2?empty file path}"
-        echo "create docker secret '${SECRET_NAME}' from '${FILE_PATH}' ..."
-        cat "${FILE_PATH}" | docker secret create "${SECRET_NAME}" -
+        local secret_name="${1?empty secret name}"
+        local secret_file="${2?empty secret file}"
+        echo "create docker secret '${secret_name}' from '${secret_file}' ..."
+        cat "${secret_file}" | docker secret create "${secret_name}" -
 }
 
 secret_rm() {
-        if [ "${1}" -a "`secret_exists ${1}`" ]; then
+        if [ "${1}" -a `secret_exists ${1}` ]; then
                 echo "remove docker secret '${1}' ..."
                 docker secret rm "${1}"
         fi
@@ -262,8 +274,21 @@ secret_rm() {
 
 secret_exists() {
         if [ "${1}" ]; then
-                echo "`docker secret ls -q -f name="${1}"`"
+                echo `docker secret ls -q -f name="${1}"`
         fi
+}
+
+###############################################################################
+###############################################################################
+###############################################################################
+
+stack_file() {
+        local env_name="${DOCKER_COMPOSER_ENV_NAME_WITH_DOT}"
+        echo "${PROJECT_TASK_DIR}/.builds/stack${env_name}.yml"
+}
+
+certs_dir() {
+        echo "${PROJECT_TASK_DIR}/.certs"
 }
 
 ###############################################################################
