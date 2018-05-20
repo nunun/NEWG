@@ -4,7 +4,7 @@ task_update() {
         cd ${PROJECT_TASK_DIR}
         docker pull ${deploy_tag}
         docker run -v `ospath "${PROJECT_TASK_DIR}/.run"`:/dotrun/run \
-                ${deploy_tag} rsync -ahv --delete --dry-run .run/* run
+                ${deploy_tag} rsync -ahv --delete .run/* run
 }
 
 task_diff() {
