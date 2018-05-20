@@ -3,12 +3,12 @@ services:
   client:
     build:
       context: ./client
-      dockerfile: ./../services/Dockerfile.node.release
+      dockerfile: ./../services/Dockerfile.client
 
   server:
     build:
       context: ./server
-      dockerfile: ./../services/Dockerfile.node.release
+      dockerfile: ./../services/Dockerfile.server
 
   matching:
     build:
