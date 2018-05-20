@@ -2,7 +2,7 @@ task_update() {
         local deploy_tag=`deploy_tag ${*}`
         echo "update current .run by '${deploy_tag}' ..."
         cd ${PROJECT_TASK_DIR}
-        sh ../hoge.sh
+        sh ./hoge.sh "${deploy_tag}" "${PROJECT_TASK_DIR}"
 }
 
 task_diff() {
