@@ -25,7 +25,7 @@ project_task_dir() {
         local f=`pwd`
         local d=`pwd`
         while [ ! "${d}" = "/" ]; do
-                [ -d "${d}/.docker-composer" ] && f="${d}" && break
+                [ -d "${d}/.run" ] && f="${d}" && break
                 d=`dirname "${d}"`
         done
         echo "${f}"
@@ -68,46 +68,46 @@ task_help() {
 }
 
 # setup environment variables
+TASK_DIR=`pwd`
 PROJECT_NAME=`project_name`
 PROJECT_DIR=`project_dir`
 PROJECT_TASK_DIR=`project_task_dir`
-TASK_DIR=`pwd`
-DOCKER_COMPOSER_DIR="${PROJECT_TASK_DIR}/.docker-composer"
-DOCKER_COMPOSER_CONFIGS_DIR="${DOCKER_COMPOSER_DIR}/configs"
-DOCKER_COMPOSER_ENVIRONMENTS_DIR="${DOCKER_COMPOSER_DIR}/environments"
-DOCKER_COMPOSER_SCRIPTS_DIR="${DOCKER_COMPOSER_DIR}/scripts"
-DOCKER_COMPOSER_TASKS_DIR="${DOCKER_COMPOSER_DIR}/tasks"
+RUN_DIR="${PROJECT_TASK_DIR}/.run"
+RUN_CONFIGS_DIR="${RUN_DIR}/configs"
+RUN_ENVIRONMENTS_DIR="${RUN_DIR}/environments"
+RUN_SCRIPTS_DIR="${RUN_DIR}/scripts"
+RUN_TASKS_DIR="${RUN_DIR}/tasks"
 
 # setup default task
 DEFAULT_TASK="${1?no default task}"
 shift 1
 
 # load config file
-DOCKER_COMPOSER_CONF_FILE="${DOCKER_COMPOSER_CONFIGS_DIR}/docker-composer.conf"
-DOCKER_COMPOSER_CONF_EXAMPLE_FILE="${DOCKER_COMPOSER_CONFIGS_DIR}/docker-composer.conf.example"
-if [ ! -f "${DOCKER_COMPOSER_CONF_FILE}" -a -f "${DOCKER_COMPOSER_CONF_EXAMPLE_FILE}" ]; then
-        cp "${DOCKER_COMPOSER_CONF_EXAMPLE_FILE}" "${DOCKER_COMPOSER_CONF_FILE}"
+RUN_CONF_FILE="${RUN_CONFIGS_DIR}/run.conf"
+RUN_CONF_EXAMPLE_FILE="${RUN_CONFIGS_DIR}/run.conf.example"
+if [ ! -f "${RUN_CONF_FILE}" -a -f "${RUN_CONF_EXAMPLE_FILE}" ]; then
+        cp "${RUN_CONF_EXAMPLE_FILE}" "${RUN_CONF_FILE}"
 fi
-if [ -f "${DOCKER_COMPOSER_CONF_FILE}" ]; then
-        . ${DOCKER_COMPOSER_CONF_FILE}
+if [ -f "${RUN_CONF_FILE}" ]; then
+        . ${RUN_CONF_FILE}
 fi
 
 # load environment file
-DOCKER_COMPOSER_ENV_NAME="${DOCKER_COMPOSER_ENV_NAME_EXPORTED:-"${1}"}"
-DOCKER_COMPOSER_ENV_NAME_WITH_DOT=".${DOCKER_COMPOSER_ENV_NAME}"
-DOCKER_COMPOSER_ENV_NAME_WITH_SPACE=" ${DOCKER_COMPOSER_ENV_NAME}"
-DOCKER_COMPOSER_ENV_FILE="${DOCKER_COMPOSER_ENVIRONMENTS_DIR}/${DOCKER_COMPOSER_ENV_NAME}"
-if [ ! -f "${DOCKER_COMPOSER_ENV_FILE}" ]; then
-        DOCKER_COMPOSER_ENV_NAME=""
-        DOCKER_COMPOSER_ENV_NAME_WITH_DOT=""
-        DOCKER_COMPOSER_ENV_NAME_WITH_SPACE=""
-        DOCKER_COMPOSER_ENV_FILE="${DOCKER_COMPOSER_ENVIRONMENTS_DIR}/local"
+RUN_ENV_NAME="${RUN_ENV_NAME_EXPORTED:-"${1}"}"
+RUN_ENV_NAME_WITH_DOT=".${RUN_ENV_NAME}"
+RUN_ENV_NAME_WITH_SPACE=" ${RUN_ENV_NAME}"
+RUN_ENV_FILE="${RUN_ENVIRONMENTS_DIR}/${RUN_ENV_NAME}"
+if [ ! -f "${RUN_ENV_FILE}" ]; then
+        RUN_ENV_NAME="local"
+        RUN_ENV_NAME_WITH_DOT=""
+        RUN_ENV_NAME_WITH_SPACE=""
+        RUN_ENV_FILE="${RUN_ENVIRONMENTS_DIR}/${RUN_ENV_NAME}"
 else
-        [ -z "${DOCKER_COMPOSER_ENV_NAME_EXPORTED}" ] && shift 1
-        export DOCKER_COMPOSER_ENV_NAME_EXPORTED="${DOCKER_COMPOSER_ENV_NAME}"
+        [ -z "${RUN_ENV_NAME_EXPORTED}" ] && shift 1
+        export RUN_ENV_NAME_EXPORTED="${RUN_ENV_NAME}"
 fi
-if [ -f "${DOCKER_COMPOSER_ENV_FILE}" ]; then
-        . ${DOCKER_COMPOSER_ENV_FILE}
+if [ -f "${RUN_ENV_FILE}" ]; then
+        . ${RUN_ENV_FILE}
 fi
 
 # setup execute task

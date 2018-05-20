@@ -17,7 +17,7 @@ task_build() {
         local stack_file=`stack_file`
         local build_yamls="-f docker-compose.yml -f docker-compose.stack.build.yml"
         local config_yamls="-f docker-compose.yml -f docker-compose.stack.deploy.yml"
-        local env_name="${DOCKER_COMPOSER_ENV_NAME_WITH_SPACE}"
+        local env_name="${RUN_ENV_NAME_WITH_SPACE}"
         local deploy_tag="${ENV_STACK_DEPLOY_TAG}"
         echo "build stack file ..."
         cd "${PROJECT_TASK_DIR}"
@@ -38,25 +38,21 @@ task_push() {
         local stack_file=`stack_file`
         local bundle_dir="/tmp/stack"
         local dockerfile_path="${bundle_dir}/Dockerfile"
-        local deploy_sh=".docker-composer/scripts/deploy.sh"
+        local deploy_sh=".run/scripts/deploy.sh"
         local deploy_tag="${ENV_STACK_DEPLOY_TAG}"
-        local env_name="${DOCKER_COMPOSER_ENV_NAME}"
+        local env_file="${RUN_ENV_FILE}"
         echo "push stack file to '${deploy_tag}' ..."
         rm -rf "${bundle_dir}"
         mkdir -p "${bundle_dir}/.builds"
-        mkdir -p "${bundle_dir}/.docker-composer/environments"
-        cp "${stack_file}" \
-                "${bundle_dir}/.builds/stack.local.yml"
-        cp "${PROJECT_TASK_DIR}/.docker-composer/environments/${env_name}" \
-                "${bundle_dir}/.docker-composer/environments/local"
-        cp -r "${PROJECT_TASK_DIR}/.docker-composer/scripts" \
-                "${bundle_dir}/.docker-composer/scripts"
-        cp -r "${PROJECT_TASK_DIR}/.docker-composer/tasks" \
-                "${bundle_dir}/.docker-composer/tasks"
-        echo "FROM alpine"                              > "${dockerfile_path}"
-        echo "WORKDIR /stack"                          >> "${dockerfile_path}"
-        echo "ADD .builds          ./.builds"          >> "${dockerfile_path}"
-        echo "ADD .docker-composer ./.docker-composer" >> "${dockerfile_path}"
+        mkdir -p "${bundle_dir}/.run/environments"
+        cp "${stack_file}"                       "${bundle_dir}/.builds/stack.local.yml"
+        cp "${env_file}"                         "${bundle_dir}/.run/environments/local"
+        cp -r "${PROJECT_TASK_DIR}/.run/scripts" "${bundle_dir}/.run/scripts"
+        cp -r "${PROJECT_TASK_DIR}/.run/tasks"   "${bundle_dir}/.run/tasks"
+        echo "FROM alpine"            > "${dockerfile_path}"
+        echo "WORKDIR /stack"        >> "${dockerfile_path}"
+        echo "ADD .builds ./.builds" >> "${dockerfile_path}"
+        echo "ADD .run    ./.run"    >> "${dockerfile_path}"
         (cd ${bundle_dir}; \
                 docker build --no-cache -t "${deploy_tag}" .; \
                 docker push "${deploy_tag}")
@@ -81,24 +77,29 @@ task_usage() {
         echo "sh run.sh <env> stack setup"
         echo "sh run.sh <env> stack renew"
         echo "sh run.sh <env> stack reset"
-        echo "sh .docker-composer/scripts/deploy.sh <deploy tag> stack up"
-        echo "sh .docker-composer/scripts/deploy.sh <deploy tag> stack down"
-        echo "sh .docker-composer/scripts/deploy.sh <deploy tag> stack init"
-        echo "sh .docker-composer/scripts/deploy.sh <deploy tag> stack setup"
-        echo "sh .docker-composer/scripts/deploy.sh <deploy tag> stack renew"
-        echo "sh .docker-composer/scripts/deploy.sh <deploy tag> stack reset"
+        echo "sh .run/scripts/deploy.sh <deploy tag> stack up"
+        echo "sh .run/scripts/deploy.sh <deploy tag> stack down"
+        echo "sh .run/scripts/deploy.sh <deploy tag> stack init"
+        echo "sh .run/scripts/deploy.sh <deploy tag> stack setup"
+        echo "sh .run/scripts/deploy.sh <deploy tag> stack renew"
+        echo "sh .run/scripts/deploy.sh <deploy tag> stack reset"
         echo ""
-        echo "ex) to up local stack on local host, write .task.env and do below:"
+        echo "ex) to up local stack on local host, write '.run/environments/local' and do below:"
         echo "  sh run.sh stack build"
         echo "  sh run.sh stack up"
         echo "  sh run.sh stack down"
         echo ""
-        echo "ex) to up develop stack on remote host, write .task.env.develop and do below:"
+        echo "ex) to up develop stack on remote host, write '.run/environments/develop' and do below:"
         echo "  sh run.sh develop stack build"
         echo "  sh run.sh develop stack push"
-        echo "  sh .docker-composer/scripts/deploy.sh registry:5000/myapp/stack stack up"
-        echo "  sh .docker-composer/scripts/deploy.sh registry:5000/myapp/stack stack down"
+        echo "  sh .run/scripts/deploy.sh registry:5000/myapp/stack stack up"
+        echo "  sh .run/scripts/deploy.sh registry:5000/myapp/stack stack down"
         echo ""
+        echo "run environment name: ${RUN_ENV_NAME}"
+        echo "run environment file: ${RUN_ENV_FILE}"
+        echo "-------------------------"
+        cat ${RUN_ENV_FILE}
+        echo "-------------------------"
 }
 
 ###############################################################################
@@ -283,7 +284,7 @@ secret_exists() {
 ###############################################################################
 
 stack_file() {
-        local env_name="${DOCKER_COMPOSER_ENV_NAME_WITH_DOT}"
+        local env_name="${RUN_ENV_NAME_WITH_DOT}"
         echo "${PROJECT_TASK_DIR}/.builds/stack${env_name}.yml"
 }
 

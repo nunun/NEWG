@@ -23,7 +23,7 @@ sh run.sh <env> stack up
 sh run.sh <env> stack down
 sh run.sh <env> stack push
 sh run.sh <env> stack [usage]
-<env> = env name referrence env file named '.task.env[.<env>]'.
+<env> = see '.run/environments' directory.
 
 sh run.sh services protocols
 
