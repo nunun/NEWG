@@ -2,9 +2,7 @@ task_update() {
         local deploy_tag=`deploy_tag ${*}`
         echo "update current .run by '${deploy_tag}' ..."
         cd ${PROJECT_TASK_DIR}
-        docker pull ${deploy_tag}
-        docker run -v `ospath "${PROJECT_TASK_DIR}/.run"`:/dotrun/run \
-                ${deploy_tag} rsync -ahv --delete .run/* run
+        sh ../hoge.sh
 }
 
 task_diff() {
