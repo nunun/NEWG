@@ -66,8 +66,8 @@ task_u() {
         echo "update current .run by '${deploy_tag}' ..."
         cd ${PROJECT_TASK_DIR}
         docker pull ${deploy_tag}
-        docker run -v `cygpath -w "${PROJECT_TASK_DIR}/.run"`:/dotrun/run ${1} \
-                rsync -ahv --delete .run/* run
+        docker run -v `cygpath -w "${PROJECT_TASK_DIR}/.run"`:/dotrun/run \
+                ${deploy_tag} rsync -ahv --delete .run/* run
 }
 
 task_d() {
