@@ -38,21 +38,20 @@ task_push() {
         local stack_file=`stack_file`
         local bundle_dir="/tmp/stack"
         local dockerfile_path="${bundle_dir}/Dockerfile"
-        local deploy_sh=".run/scripts/deploy.sh"
+        local deploy_sh=".run/deploy.sh"
         local deploy_tag="${ENV_STACK_DEPLOY_TAG}"
         local env_file="${RUN_ENV_FILE}"
         echo "push stack file to '${deploy_tag}' ..."
         rm -rf "${bundle_dir}"
         mkdir -p "${bundle_dir}/.builds"
-        mkdir -p "${bundle_dir}/.run/environments"
-        cp "${stack_file}"                       "${bundle_dir}/.builds/stack.local.yml"
-        cp "${env_file}"                         "${bundle_dir}/.run/environments/local"
-        cp -r "${PROJECT_TASK_DIR}/.run/scripts" "${bundle_dir}/.run/scripts"
-        cp -r "${PROJECT_TASK_DIR}/.run/tasks"   "${bundle_dir}/.run/tasks"
-        echo "FROM alpine"            > "${dockerfile_path}"
-        echo "WORKDIR /stack"        >> "${dockerfile_path}"
-        echo "ADD .builds ./.builds" >> "${dockerfile_path}"
-        echo "ADD .run    ./.run"    >> "${dockerfile_path}"
+        cp    "${stack_file}"            "${bundle_dir}/.builds/stack.yml"
+        cp    "${env_file}"              "${bundle_dir}/.run.env"
+        cp -r "${PROJECT_TASK_DIR}/.run" "${bundle_dir}/.run"
+        echo "FROM alpine"              > "${dockerfile_path}"
+        echo "WORKDIR /stack"          >> "${dockerfile_path}"
+        echo "ADD .builds  ./.builds"  >> "${dockerfile_path}"
+        echo "ADD .run.env ./.run.env" >> "${dockerfile_path}"
+        echo "ADD .run     ./.run"     >> "${dockerfile_path}"
         (cd ${bundle_dir}; \
                 docker build --no-cache -t "${deploy_tag}" .; \
                 docker push "${deploy_tag}")
@@ -94,6 +93,11 @@ task_usage() {
         echo "  sh run.sh develop stack push"
         echo "  sh .run/scripts/deploy.sh registry:5000/myapp/stack stack up"
         echo "  sh .run/scripts/deploy.sh registry:5000/myapp/stack stack down"
+        echo ""
+        echo "run config file: ${RUN_CONF_FILE}"
+        echo "-------------------------"
+        cat ${RUN_CONF_FILE}
+        echo "-------------------------"
         echo ""
         echo "run environment name: ${RUN_ENV_NAME}"
         echo "run environment file: ${RUN_ENV_FILE}"
@@ -295,4 +299,4 @@ certs_dir() {
 ###############################################################################
 ###############################################################################
 ###############################################################################
-. "`dirname ${0}`/../scripts/task.sh" usage ${*}
+. "`dirname ${0}`/task.sh" usage ${*}

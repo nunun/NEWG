@@ -41,7 +41,7 @@ Assets/InitTestScene*.unity
 Assets/InitTestScene*.unity.meta
 
 # Services
-Services/.run/configs/run.conf
+Services/.run.conf
 Services/.builds
 Services/.certs
 Services/.volumes

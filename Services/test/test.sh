@@ -6,4 +6,4 @@ done
 task_down() { for s in `ls ./*/test.sh`; do sh ${s} down; done; }
 task_test() { task_down; for s in `ls ./*/test.sh`; do sh ${s} test; sh ${s} down; done; }
 task_build() { task_down; for s in `ls ./*/test.sh`; do sh ${s} build; done; }
-. "`dirname ${0}`/../.run/scripts/task.sh" test ${*}
+. "`dirname ${0}`/../.run/task.sh" test ${*}

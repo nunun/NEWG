@@ -73,18 +73,14 @@ PROJECT_NAME=`project_name`
 PROJECT_DIR=`project_dir`
 PROJECT_TASK_DIR=`project_task_dir`
 RUN_DIR="${PROJECT_TASK_DIR}/.run"
-RUN_CONFIGS_DIR="${RUN_DIR}/configs"
-RUN_ENVIRONMENTS_DIR="${RUN_DIR}/environments"
-RUN_SCRIPTS_DIR="${RUN_DIR}/scripts"
-RUN_TASKS_DIR="${RUN_DIR}/tasks"
 
 # setup default task
 DEFAULT_TASK="${1?no default task}"
 shift 1
 
 # load config file
-RUN_CONF_FILE="${RUN_CONFIGS_DIR}/run.conf"
-RUN_CONF_EXAMPLE_FILE="${RUN_CONFIGS_DIR}/run.conf.example"
+RUN_CONF_FILE="${PROJECT_TASK_DIR}/.run.conf"
+RUN_CONF_EXAMPLE_FILE="${RUN_DIR}/run.conf.example"
 if [ ! -f "${RUN_CONF_FILE}" -a -f "${RUN_CONF_EXAMPLE_FILE}" ]; then
         cp "${RUN_CONF_EXAMPLE_FILE}" "${RUN_CONF_FILE}"
 fi
@@ -96,15 +92,21 @@ fi
 RUN_ENV_NAME="${RUN_ENV_NAME_EXPORTED:-"${1}"}"
 RUN_ENV_NAME_WITH_DOT=".${RUN_ENV_NAME}"
 RUN_ENV_NAME_WITH_SPACE=" ${RUN_ENV_NAME}"
-RUN_ENV_FILE="${RUN_ENVIRONMENTS_DIR}/${RUN_ENV_NAME}"
-if [ ! -f "${RUN_ENV_FILE}" ]; then
+RUN_ENV_FILE="${PROJECT_TASK_DIR}/.run.env${RUN_ENV_NAME_WITH_DOT}"
+RUN_ENV_EXAMPLE_FILE="${RUN_DIR}/run.env.example"
+if [ -f "${RUN_ENV_FILE}" ]; then
+        if [ -z "${RUN_ENV_NAME_EXPORTED}" ]; then
+                shift 1
+                export RUN_ENV_NAME_EXPORTED="${RUN_ENV_NAME}"
+        fi
+else
         RUN_ENV_NAME="local"
         RUN_ENV_NAME_WITH_DOT=""
         RUN_ENV_NAME_WITH_SPACE=""
-        RUN_ENV_FILE="${RUN_ENVIRONMENTS_DIR}/${RUN_ENV_NAME}"
-else
-        [ -z "${RUN_ENV_NAME_EXPORTED}" ] && shift 1
-        export RUN_ENV_NAME_EXPORTED="${RUN_ENV_NAME}"
+        RUN_ENV_FILE="${PROJECT_TASK_DIR}/.run.env${RUN_ENV_NAME_WITH_DOT}"
+        if [ ! -f "${RUN_ENV_FILE}" -a -f "${RUN_ENV_EXAMPLE_FILE}" ]; then
+                cp "${RUN_ENV_EXAMPLE_FILE}" "${RUN_ENV_FILE}"
+        fi
 fi
 if [ -f "${RUN_ENV_FILE}" ]; then
         . ${RUN_ENV_FILE}
