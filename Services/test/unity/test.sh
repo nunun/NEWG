@@ -8,8 +8,8 @@ task_try() {
                 && xml=`cygpath -w "${xml}"`
         docker-compose up -d
         unity -runTests -testPlatform playmode -testResults "${xml}" \
-                && echo "tests for services with unity are succeeded." \
-                || echo "tests for services with unity are failed."
+                && echo_info "tests for services with unity are succeeded." \
+                || echo_info "tests for services with unity are failed."
 }
 task_build() {
         task_down

@@ -1,7 +1,7 @@
 task_up() {
         local stack_name="${ENV_STACK_NAME}"
         local stack_file=`stack_file`
-        echo "up stack '${stack_name}' ..."
+        echo_info "up stack '${stack_name}' ..."
         task_init
         docker stack deploy "${stack_name}" \
                 --with-registry-auth --compose-file `ospath "${stack_file}"`
@@ -9,7 +9,7 @@ task_up() {
 
 task_down() {
         local stack_name="${ENV_STACK_NAME}"
-        echo "down stack '${stack_name}' ..."
+        echo_info "down stack '${stack_name}' ..."
         docker stack rm "${stack_name}"
 }
 
@@ -34,7 +34,7 @@ task_push() {
         local deploy_sh=".run/deploy.sh"
         local deploy_tag="${ENV_STACK_DEPLOY_TAG}"
         local env_file="${RUN_ENV_FILE}"
-        echo "push stack file to '${deploy_tag}' ..."
+        echo_info "push stack file to '${deploy_tag}' ..."
         rm -rf "${bundle_dir}"
         mkdir -p "${bundle_dir}/.builds"
         cp    "${stack_file}"            "${bundle_dir}/.builds/stack.yml"
@@ -168,7 +168,7 @@ update_certs() {
                 privkey_pem_file="${key_file}"
                 ;;
         certbot)
-                DRY_RUN="--dry-run" && echo "<<< DRY RUN >>>"
+                DRY_RUN="--dry-run" && echo_info "<<< DRY RUN >>>"
                 docker run --rm -p "80:80" \
                         -v `ospath ${certs_dir}`:/etc/letsencrypt \
                         deliverous/certbot certonly ${DRY_RUN} \
@@ -188,12 +188,10 @@ update_certs() {
                      -a `secret_exists ${ENV_SECRET_PRIVKEY_PEM}` ]; then
                         return # NOTE ok, external certs ready. nothing to do.
                 fi
-                echo "cert does not exist."
-                exit 1
+                abort "cert does not exist."
                 ;;
         *)
-                echo "'${ENV_SECRET_CERT}' is not supported."
-                exit 1
+                abort "'${ENV_SECRET_CERT}' is not supported."
                 ;;
         esac
         secret_create_from_file "${ENV_SECRET_CERT_PEM}"      "${cert_pem_file}"
@@ -242,20 +240,20 @@ remove_apikey() {
 secret_create_from_string() {
         local secret_name="${1?empty secret name}"
         local secret_data="${2?empty secret data}"
-        echo "create docker secret '${secret_name}' ..."
+        echo_info "create docker secret '${secret_name}' ..."
         echo "${secret_data}" | docker secret create "${secret_name}" -
 }
 
 secret_create_from_file() {
         local secret_name="${1?empty secret name}"
         local secret_file="${2?empty secret file}"
-        echo "create docker secret '${secret_name}' from '${secret_file}' ..."
+        echo_info "create docker secret '${secret_name}' from '${secret_file}' ..."
         cat "${secret_file}" | docker secret create "${secret_name}" -
 }
 
 secret_rm() {
         if [ "${1}" -a `secret_exists ${1}` ]; then
-                echo "remove docker secret '${1}' ..."
+                echo_info "remove docker secret '${1}' ..."
                 docker secret rm "${1}"
         fi
 }

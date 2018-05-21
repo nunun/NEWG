@@ -13,7 +13,7 @@ run_root_dir() {
                 root_dir=`pwd`
                 while :; do
                         [ "${root_dir}" = "/" ] && \
-                                echo "no run root directory." && exit 1
+                                abort "no run root directory."
                         [ -d "${root_dir}/.run" ] && \
                                 break
                         root_dir=`dirname "${root_dir}"`
@@ -23,60 +23,14 @@ run_root_dir() {
         echo "${root_dir}"
 }
 
-# unity execute shorthand
-unity() {
-        local project_dir=`pwd`
-        while :; do
-                [ "${project_dir}" = "/" ] && \
-                        echo "no unity project directory" && exit 1
-                [ -d "${project_dir}/Assets" ] && \
-                        break
-                project_dir=`dirname "${project_dir}"`
-        done
-        local log_file="/dev/stdout"
-        [ "${project_dir}" = "" -o ! -d "${project_dir}/Assets" ] \
-                && "Unity ProjectPath could not detected." && exit 1
-        [ "${OSTYPE}" = "cygwin" ] \
-                && project_dir=`cygpath -w ${project_dir}` \
-                && log_file=`cygpath -w "/tmp/unity.log"`
-        [ ! -x ${UNITY_PATH?} ] && \
-                echo "'${UNITY_PATH}' is not executable." && exit 1
-        ${UNITY_PATH} \
-                -logFile ${log_file} -projectPath ${project_dir} \
-                ${*} & PID="${!}"
-        [ "${OSTYPE}" = "cygwin" ] \
-                && sleep 2 \
-                && tail -n 1000 -F /tmp/unity.log --pid="${PID}" & wait ${PID}
-        return ${?}
-}
-
-# ospath
-ospath() {
-        [ "${OSTYPE}" = "cygwin" ] && echo `cygpath -w ${1}` || echo "${1}"
-}
-
 # manage .run
 _task_dotrun() {
         local deploy_tag="fu-n.net:5000/services/dotrun:latest"
         local bundle_dir="/tmp/dotrun"
         local dockerfile_path="${bundle_dir}/Dockerfile"
         case ${1} in
-        update)
-                echo "update current .run by '${deploy_tag}' ..."
-                cd ${RUN_ROOT_DIR}
-                docker pull ${deploy_tag}
-                docker run -v `ospath "${RUN_ROOT_DIR}/.run"`:/dotrun/run \
-                ${deploy_tag} rsync -ahv --delete .run/* run
-                ;;
-        diff)
-                echo "diff between current .run and '${deploy_tag}' ..."
-                cd ${RUN_ROOT_DIR}
-                docker pull ${deploy_tag}
-                docker run -v `ospath "${RUN_ROOT_DIR}/.run"`:/dotrun/run \
-                        ${deploy_tag} diff -r .run run
-                ;;
         push)
-                echo "push current .run to '${deploy_tag}' ..."
+                echo_info "push current .run to '${deploy_tag}' ..."
                 rm -rf "${bundle_dir}"
                 mkdir -p "${bundle_dir}"
                 cp -r "${RUN_ROOT_DIR}/.run" "${bundle_dir}/.run"
@@ -87,10 +41,24 @@ _task_dotrun() {
                 (cd ${bundle_dir}; \
                         docker build --no-cache -t "${deploy_tag}" .; \
                         docker push "${deploy_tag}")
-                echo "done."
+                echo_info "done."
+                ;;
+        pull)
+                echo_info "pull current .run from '${deploy_tag}' ..."
+                cd ${RUN_ROOT_DIR}
+                docker pull ${deploy_tag}
+                docker run -v `ospath "${RUN_ROOT_DIR}/.run"`:/dotrun/run \
+                ${deploy_tag} rsync -ahv --delete .run/* run
+                ;;
+        diff)
+                echo_info "diff between current .run and '${deploy_tag}' ..."
+                cd ${RUN_ROOT_DIR}
+                docker pull ${deploy_tag}
+                docker run -v `ospath "${RUN_ROOT_DIR}/.run"`:/dotrun/run \
+                        ${deploy_tag} diff -r .run run
                 ;;
         *)
-                echo " update, push, or diff"
+                echo " push, pull, or diff"
                 ;;
         esac
 }
@@ -114,11 +82,13 @@ _task_env() {
 # display help
 _task_help() {
         local tasks=`declare -f | grep "^task_" | sed "s/^task_\(.*\) ()/\1/g"`
-        printf ">"
-        for task in ${tasks}; do
-                printf " ${task}"
-        done
-        printf "\n"
+        local line=">"; for task in ${tasks}; do line="${line} ${task}"; done
+        echo "${line}"
+        if [ `is_debug` ]; then
+                tasks=`declare -f | grep "^_task_" | sed "s/^_task_\(.*\) ()/\1/g"`
+                line=">"; for task in ${tasks}; do line="${line} ${task}"; done
+                echo_debug "${line}"
+        fi
 }
 
 # execute task
@@ -126,17 +96,109 @@ task() {
         local task=`declare -f | grep "^_\?task_${1} ()" | cut -d" " -f1`
         if [ ! "${task}" ]; then
                 _task_help
-                [ "${1}" ] && echo "unknown task '${1}'." && exit 1
+                [ "${1}" ] && abort "unknown task '${1}'."
                 return 0
         fi
         shift 1
         ${task} ${*}
 }
 
+# unity execute shorthand
+unity() {
+        local project_dir=`pwd`
+        while :; do
+                [ "${project_dir}" = "/" ] && \
+                        abort "no unity project directory"
+                [ -d "${project_dir}/Assets" ] && \
+                        break
+                project_dir=`dirname "${project_dir}"`
+        done
+        local log_file="/dev/stdout"
+        [ "${project_dir}" = "" -o ! -d "${project_dir}/Assets" ] \
+                && abort "Unity ProjectPath could not detected."
+        [ "${OSTYPE}" = "cygwin" ] \
+                && project_dir=`cygpath -w ${project_dir}` \
+                && log_file=`cygpath -w "/tmp/unity.log"`
+        [ ! -x ${UNITY_PATH?} ] && \
+                abort "'${UNITY_PATH}' is not executable."
+        ${UNITY_PATH} \
+                -logFile ${log_file} -projectPath ${project_dir} \
+                ${*} & PID="${!}"
+        [ "${OSTYPE}" = "cygwin" ] \
+                && sleep 2 \
+                && tail -n 1000 -F /tmp/unity.log --pid="${PID}" & wait ${PID}
+        return ${?}
+}
+
+# ospath
+ospath() {
+        [ "${OSTYPE}" = "cygwin" ] && echo `cygpath -w ${1}` || echo "${1}"
+}
+
+# echo fatal output
+echo_fatal() {
+        if [ ${RUN_OUTPUT_LEVEL} -ge 0 ]; then echo_err "fatal: ${*}"; exit 1; fi
+}
+
+# echo error output
+echo_err() {
+        if [ ${RUN_OUTPUT_LEVEL} -ge 1 ]; then echo_output 1 ${*}; fi
+}
+
+# echo warning output
+echo_warn() {
+        if [ ${RUN_OUTPUT_LEVEL} -ge 2 ]; then echo_output 3 ${*}; fi
+}
+
+# echo info output
+echo_info() {
+        if [ ${RUN_OUTPUT_LEVEL} -ge 3 ]; then echo_output 2 ${*}; fi
+}
+
+# echo debug output
+echo_debug() {
+        if [ ${RUN_OUTPUT_LEVEL} -ge 4 ]; then echo_output 4 ${*}; fi
+}
+
+# echo develop output
+echo_dev() {
+        if [ ${RUN_OUTPUT_LEVEL} -ge 5 ]; then echo_output 4 ${*}; fi
+}
+
+# echo output
+echo_output() {
+        local color="${1}"
+        shift 1
+        tput setaf "${color}"
+        echo ${*}
+        tput sgr0
+}
+
+# check debug level
+is_debug() {
+        if [ ${RUN_OUTPUT_LEVEL} -ge 4 ]; then echo "yes"; fi
+}
+
+# error abort
+abort() {
+        echo_err "abort: ${1}"
+        exit ${2:-1} # exit immediately
+}
+
 # set environment variables
 RUN_DIR=`pwd`
 RUN_ROOT_DIR=`run_root_dir`
 RUN_DOTRUN_DIR="${RUN_ROOT_DIR}/.run"
+RUN_OUTPUT_LEVEL=3 # fatal=0, error=1, warn=2, info=3, debug=4, develop=5
+
+# parse options
+while getopts "vqb" OPT; do
+        case $OPT in
+        v) RUN_OUTPUT_LEVEL=`expr ${RUN_OUTPUT_LEVEL} + 1`;;
+        q) RUN_OUTPUT_LEVEL=`expr ${RUN_OUTPUT_LEVEL} - 1`;;
+        esac
+done
+shift `expr ${OPTIND} - 1`
 
 # load config file
 RUN_CONF_FILE="${RUN_ROOT_DIR}/.run.conf"
