@@ -129,8 +129,8 @@ public partial class GameMenuItems {
         Debug.Log("セーブデータをクリアしました。");
     }
 
-    //-------------------------------------------------------------------------- デバッグ
-    [MenuItem("Game/編集/uGUI/アンカーを現在位置にセット &]", false, 104)]
+    //-------------------------------------------------------------------------- シーン編集
+    [MenuItem("Game/シーン編集/uGUI/アンカーを現在位置にセット &]", false, 104)]
     public static void SetAnchorToCurrentPosition() {
         var o = Selection.activeGameObject;
         if (o != null && o.GetComponent<RectTransform>() != null) {
@@ -156,7 +156,7 @@ public partial class GameMenuItems {
         }
     }
 
-    [MenuItem("Game/編集/uGUI/アンカーを中心にセット &^", false, 105)]
+    [MenuItem("Game/シーン編集/uGUI/アンカーを中心にセット &^", false, 105)]
     public static void SetAnchorToCenterPosition() {
         var o = Selection.activeGameObject;
         if (o != null && o.GetComponent<RectTransform>() != null) {
