@@ -94,16 +94,6 @@ task_usage() {
         echo "  sh .run/scripts/deploy.sh registry:5000/myapp/stack stack up"
         echo "  sh .run/scripts/deploy.sh registry:5000/myapp/stack stack down"
         echo ""
-        echo "run config file: ${RUN_CONF_FILE}"
-        echo "-------------------------"
-        cat ${RUN_CONF_FILE}
-        echo "-------------------------"
-        echo ""
-        echo "run environment name: ${RUN_ENV_NAME}"
-        echo "run environment file: ${RUN_ENV_FILE}"
-        echo "-------------------------"
-        cat ${RUN_ENV_FILE}
-        echo "-------------------------"
 }
 
 ###############################################################################

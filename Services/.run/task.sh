@@ -86,6 +86,22 @@ _task_dotrun() {
         esac
 }
 
+# display env
+_task_env() {
+        echo ""
+        echo "run config file: ${RUN_CONF_FILE}"
+        echo "-------------------------"
+        cat ${RUN_CONF_FILE}
+        echo "-------------------------"
+        echo ""
+        echo "run environment name: ${RUN_ENV_NAME}"
+        echo "run environment file: ${RUN_ENV_FILE}"
+        echo "-------------------------"
+        cat ${RUN_ENV_FILE}
+        echo "-------------------------"
+        echo ""
+}
+
 # display help
 _task_help() {
         local tasks=`declare -f | grep "^task_" | sed "s/^task_\(.*\) ()/\1/g"`
