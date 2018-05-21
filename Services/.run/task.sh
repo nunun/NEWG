@@ -6,24 +6,33 @@
 set -e
 cd `dirname ${0}`
 
-# project task dir
-project_task_dir() {
-        local f="${RUN_PROJECT_TASK_DIR}"
-        if [ ! "${f}" ]; then
-                local f=`pwd`
-                local d=`pwd`
-                while [ ! "${d}" = "/" ]; do
-                        [ -d "${d}/.run" ] && f="${d}" && break
-                        d=`dirname "${d}"`
+# run_root_dir
+run_root_dir() {
+        local root_dir="${RUN_ROOT_DIR_EXPORTED}"
+        if [ ! "${root_dir}" ]; then
+                root_dir=`pwd`
+                while :; do
+                        [ "${root_dir}" = "/" ] && \
+                                echo "no run root directory." && exit 1
+                        [ -d "${root_dir}/.run" ] && \
+                                break
+                        root_dir=`dirname "${root_dir}"`
                 done
-                export RUN_PROJECT_TASK_DIR="${f}"
+                export RUN_ROOT_DIR_EXPORTED="${root_dir}"
         fi
-        echo "${f}"
+        echo "${root_dir}"
 }
 
 # unity execute shorthand
 unity() {
-        local project_dir=`project_dir`
+        local project_dir=`pwd`
+        while :; do
+                [ "${project_dir}" = "/" ] && \
+                        echo "no unity project directory" && exit 1
+                [ -d "${project_dir}/Assets" ] && \
+                        break
+                project_dir=`dirname "${project_dir}"`
+        done
         local log_file="/dev/stdout"
         [ "${project_dir}" = "" -o ! -d "${project_dir}/Assets" ] \
                 && "Unity ProjectPath could not detected." && exit 1
@@ -46,7 +55,7 @@ ospath() {
         [ "${OSTYPE}" = "cygwin" ] && echo `cygpath -w ${1}` || echo "${1}"
 }
 
-# manage dotrun
+# manage .run
 _task_dotrun() {
         local deploy_tag="fu-n.net:5000/services/dotrun:latest"
         local bundle_dir="/tmp/dotrun"
@@ -54,23 +63,23 @@ _task_dotrun() {
         case ${1} in
         update)
                 echo "update current .run by '${deploy_tag}' ..."
-                cd ${PROJECT_TASK_DIR}
+                cd ${RUN_ROOT_DIR}
                 docker pull ${deploy_tag}
-                docker run -v `ospath "${PROJECT_TASK_DIR}/.run"`:/dotrun/run \
+                docker run -v `ospath "${RUN_ROOT_DIR}/.run"`:/dotrun/run \
                 ${deploy_tag} rsync -ahv --delete .run/* run
                 ;;
         diff)
                 echo "diff between current .run and '${deploy_tag}' ..."
-                cd ${PROJECT_TASK_DIR}
+                cd ${RUN_ROOT_DIR}
                 docker pull ${deploy_tag}
-                docker run -v `ospath "${PROJECT_TASK_DIR}/.run"`:/dotrun/run \
+                docker run -v `ospath "${RUN_ROOT_DIR}/.run"`:/dotrun/run \
                         ${deploy_tag} diff -r .run run
                 ;;
         push)
                 echo "push current .run to '${deploy_tag}' ..."
                 rm -rf "${bundle_dir}"
                 mkdir -p "${bundle_dir}"
-                cp -r "${PROJECT_TASK_DIR}/.run" "${bundle_dir}/.run"
+                cp -r "${RUN_ROOT_DIR}/.run" "${bundle_dir}/.run"
                 echo "FROM alpine"                   > "${dockerfile_path}"
                 echo "RUN apk add --no-cache rsync" >> "${dockerfile_path}"
                 echo "WORKDIR /dotrun"              >> "${dockerfile_path}"
@@ -117,7 +126,7 @@ task() {
         local task=`declare -f | grep "^_\?task_${1} ()" | cut -d" " -f1`
         if [ ! "${task}" ]; then
                 _task_help
-                [ "${1}" ] && echo "unknown task '${1}'."
+                [ "${1}" ] && echo "unknown task '${1}'." && exit 1
                 return 0
         fi
         shift 1
@@ -125,13 +134,13 @@ task() {
 }
 
 # set environment variables
-TASK_DIR=`pwd`
-PROJECT_TASK_DIR=`project_task_dir`
-RUN_DIR="${PROJECT_TASK_DIR}/.run"
+RUN_DIR=`pwd`
+RUN_ROOT_DIR=`run_root_dir`
+RUN_DOTRUN_DIR="${RUN_ROOT_DIR}/.run"
 
 # load config file
-RUN_CONF_FILE="${PROJECT_TASK_DIR}/.run.conf"
-RUN_CONF_EXAMPLE_FILE="${RUN_DIR}/run.conf.example"
+RUN_CONF_FILE="${RUN_ROOT_DIR}/.run.conf"
+RUN_CONF_EXAMPLE_FILE="${RUN_DOTRUN_DIR}/run.conf.example"
 if [ ! -f "${RUN_CONF_FILE}" -a -f "${RUN_CONF_EXAMPLE_FILE}" ]; then
         cp "${RUN_CONF_EXAMPLE_FILE}" "${RUN_CONF_FILE}"
 fi
@@ -143,8 +152,8 @@ fi
 RUN_ENV_NAME="${RUN_ENV_NAME_EXPORTED:-"${1}"}"
 RUN_ENV_NAME_WITH_DOT=".${RUN_ENV_NAME}"
 RUN_ENV_NAME_WITH_SPACE=" ${RUN_ENV_NAME}"
-RUN_ENV_FILE="${PROJECT_TASK_DIR}/.run.env${RUN_ENV_NAME_WITH_DOT}"
-RUN_ENV_EXAMPLE_FILE="${RUN_DIR}/run.env.example"
+RUN_ENV_FILE="${RUN_ROOT_DIR}/.run.env${RUN_ENV_NAME_WITH_DOT}"
+RUN_ENV_EXAMPLE_FILE="${RUN_DOTRUN_DIR}/run.env.example"
 if [ -f "${RUN_ENV_FILE}" ]; then
         if [ -z "${RUN_ENV_NAME_EXPORTED}" ]; then
                 shift 1
@@ -154,7 +163,7 @@ else
         RUN_ENV_NAME="local"
         RUN_ENV_NAME_WITH_DOT=""
         RUN_ENV_NAME_WITH_SPACE=""
-        RUN_ENV_FILE="${PROJECT_TASK_DIR}/.run.env${RUN_ENV_NAME_WITH_DOT}"
+        RUN_ENV_FILE="${RUN_ROOT_DIR}/.run.env${RUN_ENV_NAME_WITH_DOT}"
         if [ ! -f "${RUN_ENV_FILE}" -a -f "${RUN_ENV_EXAMPLE_FILE}" ]; then
                 cp "${RUN_ENV_EXAMPLE_FILE}" "${RUN_ENV_FILE}"
         fi

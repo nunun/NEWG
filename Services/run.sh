@@ -1,22 +1,33 @@
 task_up() { task_down; docker-compose up; }
 task_down() { docker-compose down; }
-task_services() { sh ./services/services.sh ${*}; }
-task_test() { sh ./test/test.sh ${*}; }
-task_unity() {
-        echo "building unity projects ..."
+task_build() {
+        echo "build docker images ..."
+        task_down
+        (cd ${RUN_ROOT_DIR}; sh run.sh services build)
+        docker-compose build --force-rm
+}
+task_build_unity_project() {
+        echo "build unity project ..."
         unity -batchmode -quit -executeMethod GameBuildMenuItems.BuildReleaseClientWebGL
         unity -batchmode -quit -executeMethod GameBuildMenuItems.BuildReleaseServerLinuxHeadless
 }
-task_build() {
-        echo "building docker images ..."
-        task_down
-        (cd ${PROJECT_TASK_DIR}; sh run.sh services build)
-        docker-compose build --force-rm
+task_build_stack_file() {
+        echo "build stack file ..."
+        local stack_file="${1}"
+        local build_yamls="-f docker-compose.yml -f docker-compose.stack.build.yml"
+        local config_yamls="-f docker-compose.yml -f docker-compose.stack.deploy.yml"
+        sh ./services/services.sh build
+        #task_build_unity_project
+        docker-compose ${build_yamls} build --force-rm --no-cache
+        docker-compose ${build_yamls} push
+        docker-compose ${config_yamls} config --resolve-image-digest > "${stack_file}"
 }
 task_clean() {
-        echo "cleaning build caches ..."
-        find ${PROJECT_TASK_DIR} -name "node_modules"      -exec rm -rf '{}' +
-        find ${PROJECT_TASK_DIR} -name "package-lock.json" -exec rm -rf '{}' +
+        echo "clean build caches ..."
+        find ${RUN_ROOT_DIR} -name "node_modules"      -exec rm -rf '{}' +
+        find ${RUN_ROOT_DIR} -name "package-lock.json" -exec rm -rf '{}' +
 }
+task_services() { sh ./services/services.sh ${*}; }
+task_test() { sh ./test/test.sh ${*}; }
 task_stack() { sh ./.run/stack.sh ${*}; }
 . "`dirname ${0}`/.run/task.sh" ${*}

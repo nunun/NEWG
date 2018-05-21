@@ -15,18 +15,11 @@ task_down() {
 
 task_build() {
         local stack_file=`stack_file`
-        local build_yamls="-f docker-compose.yml -f docker-compose.stack.build.yml"
-        local config_yamls="-f docker-compose.yml -f docker-compose.stack.deploy.yml"
         local env_name="${RUN_ENV_NAME_WITH_SPACE}"
         local deploy_tag="${ENV_STACK_DEPLOY_TAG}"
-        echo "build stack file ..."
-        cd "${PROJECT_TASK_DIR}"
+        cd "${RUN_ROOT_DIR}"
         mkdir -p `dirname ${stack_file}`
-        sh run.sh services build
-        #sh run.sh unity
-        docker-compose ${build_yamls} build --force-rm --no-cache
-        docker-compose ${build_yamls} push
-        docker-compose ${config_yamls} config --resolve-image-digest > "${stack_file}"
+        sh run.sh build_stack_file "${stack_file}"
         echo ""
         echo "successfully build stack file to '${stack_file}'."
         echo "you can up stack locally and push stack file to docker image registry for deploy."
@@ -46,7 +39,7 @@ task_push() {
         mkdir -p "${bundle_dir}/.builds"
         cp    "${stack_file}"            "${bundle_dir}/.builds/stack.yml"
         cp    "${env_file}"              "${bundle_dir}/.run.env"
-        cp -r "${PROJECT_TASK_DIR}/.run" "${bundle_dir}/.run"
+        cp -r "${RUN_ROOT_DIR}/.run" "${bundle_dir}/.run"
         echo "FROM alpine"              > "${dockerfile_path}"
         echo "WORKDIR /stack"          >> "${dockerfile_path}"
         echo "ADD .builds  ./.builds"  >> "${dockerfile_path}"
@@ -279,11 +272,11 @@ secret_exists() {
 
 stack_file() {
         local env_name="${RUN_ENV_NAME_WITH_DOT}"
-        echo "${PROJECT_TASK_DIR}/.builds/stack${env_name}.yml"
+        echo "${RUN_ROOT_DIR}/.builds/stack${env_name}.yml"
 }
 
 certs_dir() {
-        echo "${PROJECT_TASK_DIR}/.certs"
+        echo "${RUN_ROOT_DIR}/.certs"
 }
 
 ###############################################################################
