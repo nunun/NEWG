@@ -1,6 +1,6 @@
 task_up() { task_down; docker-compose up; }
 task_down() { docker-compose down; }
-task_all() {
+task_try() {
         docker-compose run --rm test-services-client mocha test.js
 }
 task_build() {
