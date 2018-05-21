@@ -1,5 +1,7 @@
 task_up() { task_down; docker-compose up; }
 task_down() { docker-compose down; }
+task_services() { sh ./services/services.sh ${*}; }
+task_test() { sh ./test/test.sh ${*}; }
 task_unity() {
         echo "building unity projects ..."
         unity -batchmode -quit -executeMethod GameBuildMenuItems.BuildReleaseClientWebGL
@@ -16,7 +18,5 @@ task_clean() {
         find ${PROJECT_TASK_DIR} -name "node_modules"      -exec rm -rf '{}' +
         find ${PROJECT_TASK_DIR} -name "package-lock.json" -exec rm -rf '{}' +
 }
-task_services() { sh ./services/services.sh ${*}; }
-task_tests() { sh ./tests/tests.sh ${*}; }
 task_stack() { sh ./.run/stack.sh ${*}; }
 . "`dirname ${0}`/.run/task.sh" ${*}

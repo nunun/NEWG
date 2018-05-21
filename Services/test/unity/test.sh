@@ -1,6 +1,6 @@
 task_up() { task_down; docker-compose up; }
 task_down() { docker-compose down; }
-task_test() {
+task_all() {
         local platform="StandaloneOSX"
         local xml="/tmp/result.xml"
         [ "${OSTYPE}" = "cygwin" ] \
