@@ -49,13 +49,15 @@ _task_dotrun() {
                 docker pull ${deploy_tag}
                 docker run -v `ospath "${RUN_ROOT_DIR}/.run"`:/dotrun/run \
                 ${deploy_tag} rsync -ahv --delete .run/* run
+                echo_info "done."
                 ;;
         diff)
                 echo_info "diff between current .run and '${deploy_tag}' ..."
                 cd ${RUN_ROOT_DIR}
                 docker pull ${deploy_tag}
                 docker run -v `ospath "${RUN_ROOT_DIR}/.run"`:/dotrun/run \
-                        ${deploy_tag} diff -r .run run
+                        ${deploy_tag} diff -r .run run || :
+                echo_info "done."
                 ;;
         *)
                 echo " push, pull, or diff"
