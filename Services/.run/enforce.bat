@@ -1,5 +1,4 @@
-REM cd `dirname ${0}`/../
-REM docker run --rm -w /work -e TERM=xterm \
-REM         -v /var/run/docker.sock:/var/run/docker.sock \
-REM         -v `pwd`:/work \
-REM         nunun/runner sh ./run.sh ${*}
+docker run --privileged --rm -w /work -e TERM=xterm ^
+        -v /var/run/docker.sock:/var/run/docker.sock ^
+        -v %cd%:/work ^
+        nunun/enforce %1 %2 %3 %4 %5 %6 %7 %8 %9
