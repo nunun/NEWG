@@ -65,26 +65,6 @@ _task_dotrun() {
         esac
 }
 
-# manage docker image nunun/enforce
-_task_enforce() {
-        local deploy_tag="nunun/enforce:latest"
-        local dockerfile_path="${RUN_DOTRUN_DIR}/Dockerfile.enforce"
-        case ${1} in
-        build|push)
-                echo_info "build docker image 'nunun/enforce' ..."
-                cat "${dockerfile_path}" | docker build -t nunun/enforce -
-                if [ "${1}" = "push" ]; then
-                        echo_info "push image to '${deploy_tag}' ..."
-                        docker push "${deploy_tag}"
-                fi
-                echo_info "done."
-                ;;
-        *)
-                echo " build, or push"
-                ;;
-        esac
-}
-
 # display env
 _task_env() {
         echo ""
