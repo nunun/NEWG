@@ -65,17 +65,22 @@ _task_dotrun() {
         esac
 }
 
-# manage docker image nunun/runner
-_task_runner() {
-        local deploy_tag="nunun/runner:latest"
-        local dockerfile_path="${RUN_DOTRUN_DIR}/Dockerfile.runner"
+# manage docker image nunun/enforce
+_task_enforce() {
+        local deploy_tag="nunun/enforce:latest"
+        local dockerfile_path="${RUN_DOTRUN_DIR}/Dockerfile.enforce"
         case ${1} in
-        push)
-                cat "${dockerfile_path}" | docker build -t nunun/runner -
-                docker push "${deploy_tag}"
+        build|push)
+                echo_info "build docker image 'nunun/enforce' ..."
+                cat "${dockerfile_path}" | docker build -t nunun/enforce -
+                if [ "${1}" = "push" ]; then
+                        echo_info "push image to '${deploy_tag}' ..."
+                        docker push "${deploy_tag}"
+                fi
+                echo_info "done."
                 ;;
         *)
-                echo " push"
+                echo " build, or push"
                 ;;
         esac
 }
