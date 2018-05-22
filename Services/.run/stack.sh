@@ -37,13 +37,13 @@ task_push() {
         echo_info "push stack file to '${deploy_tag}' ..."
         rm -rf "${bundle_dir}"
         mkdir -p "${bundle_dir}/.builds"
-        cp    "${stack_file}"            "${bundle_dir}/.builds/stack.yml"
-        cp    "${env_file}"              "${bundle_dir}/.run.env"
+        cp    "${stack_file}"        "${bundle_dir}/.builds/stack.yml"
+        cp    "${env_file}"          "${bundle_dir}/.env"
         cp -r "${RUN_ROOT_DIR}/.run" "${bundle_dir}/.run"
         echo "FROM alpine"              > "${dockerfile_path}"
         echo "WORKDIR /stack"          >> "${dockerfile_path}"
         echo "ADD .builds  ./.builds"  >> "${dockerfile_path}"
-        echo "ADD .run.env ./.run.env" >> "${dockerfile_path}"
+        echo "ADD .env     ./.env"     >> "${dockerfile_path}"
         echo "ADD .run     ./.run"     >> "${dockerfile_path}"
         (cd ${bundle_dir}; \
                 docker build --no-cache -t "${deploy_tag}" .; \

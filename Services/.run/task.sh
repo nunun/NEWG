@@ -216,8 +216,8 @@ fi
 RUN_ENV_NAME="${RUN_ENV_NAME_EXPORTED:-"${1}"}"
 RUN_ENV_NAME_WITH_DOT=".${RUN_ENV_NAME}"
 RUN_ENV_NAME_WITH_SPACE=" ${RUN_ENV_NAME}"
-RUN_ENV_FILE="${RUN_ROOT_DIR}/.run.env${RUN_ENV_NAME_WITH_DOT}"
-RUN_ENV_EXAMPLE_FILE="${RUN_DOTRUN_DIR}/run.env.example"
+RUN_ENV_FILE="${RUN_ROOT_DIR}/.env${RUN_ENV_NAME_WITH_DOT}"
+RUN_ENV_EXAMPLE_FILE="${RUN_DOTRUN_DIR}/env.example"
 if [ -f "${RUN_ENV_FILE}" ]; then
         if [ -z "${RUN_ENV_NAME_EXPORTED}" ]; then
                 shift 1
@@ -227,13 +227,13 @@ else
         RUN_ENV_NAME="local"
         RUN_ENV_NAME_WITH_DOT=""
         RUN_ENV_NAME_WITH_SPACE=""
-        RUN_ENV_FILE="${RUN_ROOT_DIR}/.run.env${RUN_ENV_NAME_WITH_DOT}"
+        RUN_ENV_FILE="${RUN_ROOT_DIR}/.env${RUN_ENV_NAME_WITH_DOT}"
         if [ ! -f "${RUN_ENV_FILE}" -a -f "${RUN_ENV_EXAMPLE_FILE}" ]; then
                 cp "${RUN_ENV_EXAMPLE_FILE}" "${RUN_ENV_FILE}"
         fi
 fi
 if [ -f "${RUN_ENV_FILE}" ]; then
-        . ${RUN_ENV_FILE}
+        set -a && . ${RUN_ENV_FILE} && set +a
 fi
 
 # execute task
