@@ -65,6 +65,21 @@ _task_dotrun() {
         esac
 }
 
+# manage docker image nunun/runner
+_task_runner() {
+        local deploy_tag="nunun/runner:latest"
+        local dockerfile_path="${RUN_DOTRUN_DIR}/Dockerfile.runner"
+        case ${1} in
+        push)
+                cat "${dockerfile_path}" | docker build -t nunun/runner -
+                docker push "${deploy_tag}"
+                ;;
+        *)
+                echo " push"
+                ;;
+        esac
+}
+
 # display env
 _task_env() {
         echo ""
