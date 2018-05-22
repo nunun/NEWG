@@ -92,31 +92,39 @@ public partial class GameMenuItems {
     }
 
     //-------------------------------------------------------------------------- サービス構成
-    [MenuItem("Game/サービス構成/ローカルサービスを起動", false, 102)]
+    [MenuItem("Game/サービス構成/ローカルサービス/起動", false, 102)]
     public static void ServicesUp() {
-        // TODO
+        var commandProcess = new CommandProcess();
+        commandProcess.Start("docker-compose", "up", "Services");
     }
 
-    [MenuItem("Game/サービス構成/ローカルサービスを停止", false, 103)]
+    [MenuItem("Game/サービス構成/ローカルサービス/停止", false, 103)]
     public static void ServicesDown() {
-        // TODO
+        var commandProcess = new CommandProcess();
+        commandProcess.Start("docker-compose", "down", "Services");
     }
 
-    [MenuItem("Game/サービス構成/プロトコルコード生成/C# のみ", false, 200)]
+    [MenuItem("Game/サービス構成/ローカルサービス/ビルド", false, 200)]
+    public static void ServicesBuild() {
+        var commandProcess = new CommandProcess();
+        commandProcess.Start("docker-compose", "build", "Services");
+    }
+
+    [MenuItem("Game/サービス構成/プロトコルコード生成/C# のみ", false, 300)]
     public static void GenerateProtocolsCs() {
         var commandProcess = new CommandProcess();
         commandProcess.Start("docker-compose", "run --rm generator ruby /generate.rb -c /output/cs", "Services/services");
         AssetsUtility.PingDirectory("Assets/Game/Scripts/Services/Protocols");
     }
 
-    [MenuItem("Game/サービス構成/プロトコルコード生成/すべて", false, 201)]
+    [MenuItem("Game/サービス構成/プロトコルコード生成/すべて", false, 301)]
     public static void GenerateProtocolsAll() {
         var commandProcess = new CommandProcess();
         commandProcess.Start("docker-compose", "run --rm generator ruby /generate.rb -c", "Services/services");
         AssetsUtility.PingDirectory("Assets/Game/Scripts/Services/Protocols");
     }
 
-    [MenuItem("Game/サービス構成/プロトコル定義書を編集", false, 202)]
+    [MenuItem("Game/サービス構成/プロトコル定義書を編集", false, 302)]
     public static void EditProtocols() {
         AssetsUtility.EditFile("Services/services/specs.yml");
     }
