@@ -71,8 +71,21 @@ public partial class NetworkProvingGround {
     // ネットワークサービスの開始
     void StartService() {
         var networkManager = GameNetworkManager.singleton;
-        networkManager.networkAddress = GameManager.ServerAddress;
-        networkManager.networkPort    = GameManager.ServerPort;
+        var serverAddress  = GameManager.ServerAddress;
+        var serverPort     = GameManager.ServerPort;
+
+        // TODO
+        // ここで serverAddress と serverPort を決定する。
+        // serverPort が 0 の場合は、自動的にポート番号を決める。
+        // サーバまたはホストの場合は、決まったポートも含めて
+        // サーバ状態 ready をマインドリンクで送信。
+        // さらにシーンの初期化が終わったら、ServerSetupDoneMessage を送信。
+
+        // アドレスとポート確定
+        networkManager.networkAddress = serverAddress;
+        networkManager.networkPort    = serverPort;
+
+        // サービス開始
         switch (GameManager.RuntimeServiceMode) {
         case GameManager.ServiceMode.Client:
             Debug.Log("Start Client ...");
@@ -93,6 +106,8 @@ public partial class NetworkProvingGround {
     // ネットワークサービスの停止
     void StopService() {
         var networkManager = GameNetworkManager.singleton;
+
+        // サービス停止
         switch (GameManager.RuntimeServiceMode) {
         case GameManager.ServiceMode.Client:
             Debug.Log("Stop Client ...");

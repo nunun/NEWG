@@ -73,9 +73,5 @@ public class BootServer : GameScene {
         // シーン切り替え
         Debug.Log("シーンを切り替え (" + serverSetupRequestMessage.sceneName + ") ...");
         GameSceneManager.ChangeSceneImmediately(serverSetupRequestMessage.sceneName);
-
-        // TODO
-        // 先のシーンでネットワークマネージャを起動して、
-        // ポート番号が判明次第 ServerSetupDoneMessage を API サーバに送信。
     }
 }

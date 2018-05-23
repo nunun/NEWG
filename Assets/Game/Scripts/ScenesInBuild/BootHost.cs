@@ -9,6 +9,9 @@ using Services.Protocols;
 public class BootHost : GameScene {
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     IEnumerator Start() {
+        // TODO
+        // マインドリンクに接続して、自分のサーバアドレスとポートを
+        // ready で広報し、クライアントがホストに接続できるようにする。
         yield return new WaitForSeconds(0.5f);
         GameSceneManager.ChangeScene("Logo");
     }
