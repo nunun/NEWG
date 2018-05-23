@@ -41,8 +41,9 @@ public class BootServer : GameScene {
         });
 
         // マインドリンクへ接続
-        Debug.Log("マインドリンクへ接続 ...");
-        connector.url = "ws://localhost:7766";
+        var serverMindlinkUrl = GameManager.ServerMindlinkUrl;
+        Debug.Log("マインドリンクへ接続 ... (" + serverMindlinkUrl + ")");
+        connector.url = serverMindlinkUrl;
         connector.Connect();
 
         // 接続を待つ

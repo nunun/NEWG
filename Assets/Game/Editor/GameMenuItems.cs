@@ -95,13 +95,15 @@ public partial class GameMenuItems {
     [MenuItem("Game/サービス構成/ローカルサービス/起動", false, 102)]
     public static void ServicesUp() {
         var commandProcess = new CommandProcess();
-        commandProcess.Start("docker-compose", "up", "Services");
+        var env = new Dictionary<string,string>() {{"&NONBLOCK", "1"}};
+        commandProcess.Start("docker-compose", "up", "Services", env);
     }
 
     [MenuItem("Game/サービス構成/ローカルサービス/停止", false, 103)]
     public static void ServicesDown() {
         var commandProcess = new CommandProcess();
-        commandProcess.Start("docker-compose", "down", "Services");
+        var env = new Dictionary<string,string>() {{"&NONBLOCK", "1"}};
+        commandProcess.Start("docker-compose", "down", "Services", env);
     }
 
     [MenuItem("Game/サービス構成/ローカルサービス/ビルド", false, 200)]

@@ -61,6 +61,7 @@ services:
       - ./mindlink:/app
       - ./services:/app/services
     ports:
+      - 7766:7766
       - 127.0.0.1:17766:17766
 
   rabbitmq:

@@ -45,7 +45,7 @@ public partial class WebSocketConnector : MonoBehaviour {
     // 設定値
     public string   url           = "ws://localhost:7766"; // 接続先URL
     public string[] queries       = null;                  // 標準クエリパラメータ
-    public int      retryCount    = 10;                    // 接続リトライ回数
+    public int      retryCount    = 20;                    // 接続リトライ回数
     public float    retryInterval = 3.0f;                  // 接続リトライ間隔
     public string[] connectorName = null;                  // コネクタ名
     public string   cryptSetting  = null;                  // 暗号化装置設定
@@ -65,8 +65,8 @@ public partial class WebSocketConnector : MonoBehaviour {
     //-------------------------------------------------------------------------- 実装ポイント
     // 初期化
     protected virtual void Init() {
-        this.uuid        = Guid.NewGuid().ToString(); // UUID
-        this.connectQueries = null;
+        this.uuid           = Guid.NewGuid().ToString(); // UUID
+        this.connectQueries = null;                      // 接続クエリ
         Clear();
     }
 
@@ -80,10 +80,9 @@ public partial class WebSocketConnector : MonoBehaviour {
         }
 
         // インスタンスメンバ
-        state             = State.Init;
-        ws                = null;
-        connector         = null;
-        currentRetryCount = 0;
+        state     = State.Init;
+        ws        = null;
+        connector = null;
 
         // リクエストコンテキスト
         requestContext = new RequestContext();
@@ -99,26 +98,30 @@ public partial class WebSocketConnector : MonoBehaviour {
     //-------------------------------------------------------------------------- 接続と切断
     // 接続
     public void Connect(params string[] connectQueries) {
-        this.connectQueries           = connectQueries;
+        this.connectQueries    = connectQueries;
         this.currentRetryCount = 0;
         Reconnect();
     }
 
     // 切断
     public void Disconnect(string error = null) {
-        // NOTE
+        // 現在状態保存
+        var currentState  = state;
+        var eventListener = disconnectEventListener;
+
+        // クリア
+        Clear();
+
         // 接続中にエラーになった場合は再接続
-        if (state == State.Connecting && !string.IsNullOrEmpty(error)) {
-            Debug.LogError(error);
+        if (currentState == State.Connecting && !string.IsNullOrEmpty(error)) {
+            Debug.LogError("接続失敗: " + error);
             if (currentRetryCount++ < retryCount) {
                 Invoke("Reconnect", retryInterval);
                 return;
             }
         }
 
-        // クリアして切断
-        var eventListener = disconnectEventListener;
-        Clear();
+        // 切断
         if (eventListener != null) {
             eventListener(error);
         }
@@ -131,7 +134,7 @@ public partial class WebSocketConnector : MonoBehaviour {
             Disconnect();
         }
 
-        // セットアップ
+        // クリア
         Clear();
 
         // URL 作成

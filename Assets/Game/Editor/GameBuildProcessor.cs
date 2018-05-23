@@ -74,30 +74,21 @@ public partial class GameBuildProcessor {
     // ゲーム設定の適用
     static void Apply(GameManager.ServiceMode binaryServiceMode, bool isDebugBinary) {
         // ゲームメイン
-        // 動作モードとデバッグフラグを変更。
         var gameManager = FindObjectOfType<GameManager>();
         if (gameManager != null) {
+            // ランタイムサービスモード
             gameManager.runtimeServiceMode = binaryServiceMode;
+
+            // マインドリンク接続先
+            if (!isDebugBinary) {
+                gameManager.serverMindlinkUrl = "ws://mindlink:7766"; // NOTE リリースバイナリはサービス構成内から接続
+            } else {
+                gameManager.serverMindlinkUrl = "ws://localhost:7766"; // NOTE デバッグバイナリはサービス構成外から接続
+            }
+
+            // スタンドアローンシミュレータ
             if (!isDebugBinary) {
                 gameManager.standaloneSimulator = null; // NOTE リリース版は絶対にスタンドアローンシミュレータを許さない
-            }
-        }
-
-        // ゲームネットワークマネージャ
-        // ログレベルとサービスポートを調整。
-        var gameNetworkManager = FindObjectOfType<GameNetworkManager>();
-        if (gameNetworkManager != null) {
-            gameNetworkManager.logLevel    = (isDebugBinary)? LogFilter.FilterLevel.Debug : LogFilter.FilterLevel.Error;
-            gameNetworkManager.networkPort = (isDebugBinary)? DEBUG_PORT : RELEASE_PORT;
-        }
-
-        // マインドリンクコネクタ
-        // サーバでない場合はマインドリンクにサーバ状態を
-        // 伝える必要がないのでオブジェクトごと削除。
-        var mindlinkConnector = FindObjectOfType<MindlinkConnector>();
-        if (mindlinkConnector != null) {
-            if (binaryServiceMode != GameManager.ServiceMode.Server) {
-                GameObject.Destroy(mindlinkConnector.gameObject);
             }
         }
     }
@@ -117,3 +108,20 @@ public partial class GameBuildProcessor {
         return null;
     }
 }
+
+// ゲームネットワークマネージャ
+// ログレベルとサービスポートを調整。
+//var gameNetworkManager = FindObjectOfType<GameNetworkManager>();
+//if (gameNetworkManager != null) {
+//    gameNetworkManager.logLevel    = (isDebugBinary)? LogFilter.FilterLevel.Debug : LogFilter.FilterLevel.Error;
+//    gameNetworkManager.networkPort = (isDebugBinary)? DEBUG_PORT : RELEASE_PORT;
+//}
+// マインドリンクコネクタ
+// サーバでない場合はマインドリンクにサーバ状態を
+// 伝える必要がないのでオブジェクトごと削除。
+//var mindlinkConnector = FindObjectOfType<MindlinkConnector>();
+//if (mindlinkConnector != null) {
+//    if (binaryServiceMode != GameManager.ServiceMode.Server) {
+//        GameObject.Destroy(mindlinkConnector.gameObject);
+//    }
+//}

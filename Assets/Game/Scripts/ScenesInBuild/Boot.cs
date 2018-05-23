@@ -9,14 +9,19 @@ public class Boot : MonoBehaviour {
     void Start() {
         switch (GameManager.RuntimeServiceMode) {
         case GameManager.ServiceMode.Server:
-            // サーバ起動画面へ
+            // サーバ起動シーンへ
             GameSceneManager.ChangeSceneImmediately("BootServer");
             break;
         case GameManager.ServiceMode.Client:
-        case GameManager.ServiceMode.Host:
-        default:
-            // クライアント起動画面へ
+            // クライアント起動シーンへ
             GameSceneManager.ChangeSceneImmediately("BootClient");
+            break;
+        case GameManager.ServiceMode.Host:
+            // ホスト起動シーンへ
+            GameSceneManager.ChangeSceneImmediately("BootHost");
+            break;
+        default:
+            Debug.LogError("不明なモード (" + GameManager.RuntimeServiceMode + ")");
             break;
         }
     }
