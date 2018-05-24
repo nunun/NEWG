@@ -9,10 +9,32 @@ using Services.Protocols;
 public class BootHost : GameScene {
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     IEnumerator Start() {
-        // TODO
-        // マインドリンクに接続して、自分のサーバアドレスとポートを
-        // ready で広報し、クライアントがホストに接続できるようにする。
-        yield return new WaitForSeconds(0.5f);
-        GameSceneManager.ChangeScene("Logo");
+        var sceneName = "Logo";
+
+        #if STANDALONE_MODE
+        // ネットワークエミュレーションモード時
+        if (GameManager.IsStandaloneMode) {
+            GameSceneManager.ChangeSceneImmediately(sceneName);
+            yield break;
+        }
+        #endif
+
+        // マインドリンク接続開始
+        GameMindlinkManager.Connect();
+        while (!GameMindlinkManager.IsStandby) {
+            yield return null;
+        }
+
+        // NOTE
+        // ホストモードではセットアップリクエストに従わないので
+        // ここでは待たない。
+        //while (GameMindlinkManager.SetupRequest != null) {
+        //    yield return null;
+        //}
+        //sceneName = GameSceneManager.SetupRequest.sceneName;
+
+        // シーン切り替え
+        Debug.Log("シーンを切り替え (" + sceneName + ") ...");
+        GameSceneManager.ChangeScene(sceneName);
     }
 }

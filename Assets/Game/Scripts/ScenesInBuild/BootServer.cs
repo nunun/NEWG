@@ -7,71 +7,34 @@ using Services.Protocols.Models;
 
 // サーバ起動
 public class BootServer : GameScene {
-    //-------------------------------------------------------------------------- 変数
-    ServerSetupRequestMessage serverSetupRequestMessage = null; // サーバセットアップリクエストメッセージ
-
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     IEnumerator Start() {
+        var sceneName = GameManager.ServerSceneName;
+
         #if STANDALONE_MODE
         // ネットワークエミュレーションモード時
         if (GameManager.IsStandaloneMode) {
-            GameSceneManager.ChangeSceneImmediately(GameManager.ServerSceneName);
+            GameSceneManager.ChangeSceneImmediately(sceneName);
             yield break;
         }
         #endif
 
-        // マインドリンクコネクタ取得
-        var connector = MindlinkConnector.GetConnector();
-
-        // イベント設定
-        connector.AddConnectEventListner(() => {
-            Debug.Log("マインドリンク接続完了");
-        });
-        connector.AddDisconnectEventListner((error) => {
-            Debug.Log("マインドリンク切断");
-            Debug.LogError(error);
-            GameManager.Quit(); // NOTE マインドリンク切断でサーバ強制終了
-        });
-        connector.SetDataFromRemoteEventListener<ServerSetupRequestMessage,ServerSetupResponseMessage>(0, (req,res) => {
-            Debug.Log("サーバ セットアップ リクエスト メッセージ受信");
-            serverSetupRequestMessage = req; // NOTE リクエストを記録
-            var serverSetupResponseMessage = new ServerSetupResponseMessage();
-            serverSetupResponseMessage.matchId = req.matchId;
-            res.Send(serverSetupResponseMessage);
-        });
-
-        // マインドリンクへ接続
-        var serverMindlinkUrl = GameManager.ServerMindlinkUrl;
-        Debug.Log("マインドリンクへ接続 ... (" + serverMindlinkUrl + ")");
-        connector.url = serverMindlinkUrl;
-        connector.Connect();
-
-        // 接続を待つ
-        Debug.Log("マインドリンクへの接続をまっています ...");
-        while (!connector.IsConnected) {
+        // マインドリンク接続開始
+        GameMindlinkManager.Connect();
+        while (!GameMindlinkManager.IsStandby) {
             yield return null;
         }
 
-        // サーバ状態を送信
-        Debug.Log("サーバ ステータス データを送信 (standby) ...");
-        var serverStatusData = new ServerStatusData();
-        serverStatusData.serverState = "standby";
-        connector.SendStatus(serverStatusData, (error) => {
-            Debug.Log("サーバ ステータス データ送信完了");
-            if (error != null) {
-                Debug.LogError(error);
-                GameManager.Quit();
-            }
-        });
-
-        // 起動パラメータを受け付けるまで待つ
-        Debug.Log("サーバセットアップリクエストを待っています ...");
-        while (serverSetupRequestMessage == null) {
+        // NOTE
+        // 外部からセットアップリクエストがあるまで眠る。
+        // 何もないシーンで停滞することによりサーバリソースを節約する。
+        while (GameMindlinkManager.SetupRequest != null) {
             yield return null;
         }
+        sceneName = GameSceneManager.SetupRequest.sceneName;
 
         // シーン切り替え
-        Debug.Log("シーンを切り替え (" + serverSetupRequestMessage.sceneName + ") ...");
-        GameSceneManager.ChangeSceneImmediately(serverSetupRequestMessage.sceneName);
+        Debug.Log("シーンを切り替え (" + sceneName + ") ...");
+        GameSceneManager.ChangeSceneImmediately(sceneName);
     }
 }
