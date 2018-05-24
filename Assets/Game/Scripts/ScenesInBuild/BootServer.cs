@@ -31,7 +31,7 @@ public class BootServer : GameScene {
         while (GameMindlinkManager.SetupRequest != null) {
             yield return null;
         }
-        sceneName = GameSceneManager.SetupRequest.sceneName;
+        sceneName = GameMindlinkManager.SetupRequest.sceneName;
 
         // シーン切り替え
         Debug.Log("シーンを切り替え (" + sceneName + ") ...");

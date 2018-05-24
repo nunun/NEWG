@@ -1,6 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Services.Protocols.Models;
 
 // ゲームマインドリンクマネージャ
 // ゲームと他のサービスとのクラスタ内情報交換を管理します。
@@ -25,7 +27,7 @@ public partial class GameMindlinkManager {
     ServerSetupRequestMessage setupRequest = null;       // 受信したセットアップリクエスト
 
     // スタンバイ状態かどうか
-    public static bool IsStandby { get { return (instance.currentState == State.Standby); }
+    public static bool IsStandby { get { return (instance.currentState == State.Standby); }}
 
     // 受信したセットアップリクエストの取得
     public static ServerSetupRequestMessage SetupRequest { get { return instance.setupRequest; }}
@@ -33,15 +35,15 @@ public partial class GameMindlinkManager {
     //-------------------------------------------------------------------------- 操作
     // 接続
     public static void Connect() {
-        Debug.Assert(instance     != null,       "GameMindlinkManager がいない");
-        Debug.Assert(currentState != State.Init, "既に接続を開始した");
+        Debug.Assert(instance              != null,       "GameMindlinkManager がいない");
+        Debug.Assert(instance.currentState != State.Init, "既に接続を開始した");
         instance.StartCoroutine("StartConnect");
     }
 
     //-------------------------------------------------------------------------- 内部処理
     // 接続開始
     IEnumerator StartConnect() {
-        Debug.Asset(currentState == State.Init, "既に接続を開始した");
+        Debug.Assert(currentState == State.Init, "既に接続を開始した");
         currentState = State.Connecting;//接続中!
 
         // マインドリンクコネクタ取得
@@ -79,14 +81,9 @@ public partial class GameMindlinkManager {
 
         // サーバ状態を送信
         Debug.Log("サーバ状態を送信 (standby) ...");
-        var serverStatusData = new ServerStatusData();
-        serverStatusData.serverState = "standby";
-        connector.SendStatus(serverStatusData, (error) => {
+        ServerStatusData.serverState = "standby";
+        SendServerStatusData(() => {
             Debug.Log("サーバ状態送信完了");
-            if (error != null) {
-                Debug.LogError(error);
-                GameManager.Quit();
-            }
             currentState = State.Standby;//スタンバイ!
         });
     }
@@ -106,8 +103,18 @@ public partial class GameMindlinkManager {
     public static ServerStatusData ServerStatusData { get { return instance.serverStatusData; }}
 
     //-------------------------------------------------------------------------- 操作
-    public static void SendStatus() {
-        // TODO
+    public static void SendServerStatusData(Action callback = null) {
+        Debug.Assert(instance != null, "GameMindlinkManager なし");
+        var connector = MindlinkConnector.GetConnector();
+        connector.SendStatus(instance.serverStatusData, (error) => {
+            if (error != null) {
+                GameManager.Abort(error);
+                return;
+            }
+            if (callback != null) {
+                callback();
+            }
+        });
     }
 }
 

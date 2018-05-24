@@ -52,6 +52,11 @@ public partial class NetworkProvingGround {
         // ここでサービス開始
         StartService();
 
+        // レディ待ち
+        while (!isReady) {
+            yield return null;
+        }
+
         // TODO
         // ロード処理
         yield return new WaitForSeconds(3.0f);
@@ -89,7 +94,6 @@ public partial class NetworkProvingGround {
         networkManager.networkAddress = GameManager.ServerAddress;
         networkManager.networkPort    = GameManager.ServerPort;
 
-        // NOTE
         // ポート番号にゼロを指定した場合はランダムポート
         if (networkManager.networkPort == 0) {
             networkManager.networkPort = UnityEngine.Random.Range(LISTEN_PORT_LOW, LISTEN_PORT_HIGH);
@@ -122,17 +126,25 @@ public partial class NetworkProvingGround {
             // ポート確保失敗
             if (!success) {
                 if (retryCount > 0) {
-                    TryStartService(retryCount - 1);
+                    TryStartService(retryCount - 1); // NOTE リトライ
                     return;
                 }
                 GameManager.Abort("空きポートなし");
                 return;
             }
+
+            // サーバ状態を送信
+            Debug.Log("サーバ状態を送信 (ready) ...");
+            GameMindlinkManager.ServerStatusData.serverState = "ready";
+            GameMindlinkManager.SendServerStatusData(() => {
+                Debug.Log("サーバ状態送信完了");
+                isReady = true; // NOTE サーバレディ
+            });
             return;
         }
 
         // クライアントの場合
-        isReady = true;
+        isReady = true; // NOTE サーバレディ
     }
 
     // ネットワークサービスの停止
