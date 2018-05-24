@@ -17,7 +17,7 @@ public partial class GameMindlinkManager : MonoBehaviour {
 // 接続初期化関連
 // シーンに存在する MindlinkConnector を使って接続を開始します。
 public partial class GameMindlinkManager {
-    //-------------------------------------------------------------------------- 状態
+    //-------------------------------------------------------------------------- 定義
     public enum State { Init, Connecting, Connected, Standby };
 
     //-------------------------------------------------------------------------- 変数
@@ -89,6 +89,25 @@ public partial class GameMindlinkManager {
             }
             currentState = State.Standby;//スタンバイ!
         });
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+// 接続初期化関連
+// シーンに存在する MindlinkConnector を使って接続を開始します。
+public partial class GameMindlinkManager {
+    //-------------------------------------------------------------------------- 状態
+    ServerStatusData serverStatusData = new ServerStatusData(); // サーバ状態データ
+
+    // サーバ状態データの取得
+    public static ServerStatusData ServerStatusData { get { return instance.serverStatusData; }}
+
+    //-------------------------------------------------------------------------- 操作
+    public static void SendStatus() {
+        // TODO
     }
 }
 

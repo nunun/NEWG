@@ -67,40 +67,72 @@ public partial class NetworkProvingGround {
 
 // ネットワークサービス処理
 public partial class NetworkProvingGround {
+    //-------------------------------------------------------------------------- 定義
+    static readonly int LISTEN_PORT_MAX_RETRY = 5;
+    static readonly int LISTEN_PORT_LOW       = 8000;
+    static readonly int LISTEN_PORT_HIGH      = 9999;
+
+    //-------------------------------------------------------------------------- 変数
+    bool isReady = false; // サービスが開始したかどうか
+
     //-------------------------------------------------------------------------- ネットワークサービスの開始と停止
     // ネットワークサービスの開始
     void StartService() {
-        var networkManager = GameNetworkManager.singleton;
-        var serverAddress  = GameManager.ServerAddress;
-        var serverPort     = GameManager.ServerPort;
+        isReady = false;
+        TryStartService(LISTEN_PORT_MAX_RETRY);
+    }
 
-        // TODO
-        // ここで serverAddress と serverPort を決定する。
-        // serverPort が 0 の場合は、自動的にポート番号を決める。
-        // サーバまたはホストの場合は、決まったポートも含めて
-        // サーバ状態 ready をマインドリンクで送信。
-        // さらにシーンの初期化が終わったら、ServerSetupDoneMessage を送信。
+    void TryStartService(int retryCount) {
+        var networkManager = GameNetworkManager.singleton;
 
         // アドレスとポート確定
-        networkManager.networkAddress = serverAddress;
-        networkManager.networkPort    = serverPort;
+        networkManager.networkAddress = GameManager.ServerAddress;
+        networkManager.networkPort    = GameManager.ServerPort;
+
+        // NOTE
+        // ポート番号にゼロを指定した場合はランダムポート
+        if (networkManager.networkPort == 0) {
+            networkManager.networkPort = UnityEngine.Random.Range(LISTEN_PORT_LOW, LISTEN_PORT_HIGH);
+        }
 
         // サービス開始
+        var server  = false;
+        var success = true;
         switch (GameManager.RuntimeServiceMode) {
         case GameManager.ServiceMode.Client:
             Debug.Log("Start Client ...");
-            networkManager.StartClient();
+            server  = false;
+            success = (networkManager.StartClient() != null);
             break;
         case GameManager.ServiceMode.Server:
             Debug.Log("Start Server ...");
-            networkManager.StartServer();
+            server  = true;
+            success = networkManager.StartServer();
             break;
         case GameManager.ServiceMode.Host:
         default:
             Debug.Log("Start Host ...");
-            networkManager.StartHost();
+            server  = true;
+            success = (networkManager.StartHost() != null);
             break;
         }
+
+        // サーバの場合
+        if (server) {
+            // ポート確保失敗
+            if (!success) {
+                if (retryCount > 0) {
+                    TryStartService(retryCount - 1);
+                    return;
+                }
+                GameManager.Abort("空きポートなし");
+                return;
+            }
+            return;
+        }
+
+        // クライアントの場合
+        isReady = true;
     }
 
     // ネットワークサービスの停止
