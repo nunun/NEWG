@@ -20,8 +20,8 @@ public class BootServer : GameScene {
         #endif
 
         // マインドリンク接続開始
-        GameMindlinkManager.Connect();
-        while (!GameMindlinkManager.IsStandby) {
+        GameMindlinkManager.StartConnect();
+        while (!GameMindlinkManager.IsDone) {
             yield return null;
         }
 

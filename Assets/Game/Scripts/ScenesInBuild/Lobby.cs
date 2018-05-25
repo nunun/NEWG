@@ -164,33 +164,32 @@ public partial class Lobby {
         }
         #endif
 
-        // TODO
         // マッチングサーバに接続
-        Debug.Log(error);
-        Debug.Log(matchingResponse.matchingServerUrl);
+        GameManager.SetMatchingServerInformation(matchingResponse.matchingServerUrl);
+        GameMatchingManager.StartMatching();
 
-        // TODO
-        // ウェブソケットに接続する。
-        // 切断前にイベント 0 が送信されるので、
-        // 0 を受け取ったら処理して次のシーンへ。
-        // 0 のメッセージがエラーか、0 を受け取る前に切断されたら前のシーンへ。
-        // 0 で受け取れるのは MatchConnectData である。
-        // MatchConnectData に含まれる serverToken は redis で作成する。
-        // matchId to MatchConnectData (マッチ毎),
-        // userId to matchId (ユーザ毎),
-        // serverToken to userId (ユーザ毎) を作っておく。
-        // サーバはマッチが終わったら matchId to MatchConnectData を消す。
-        // ユーザは再参加時、userId から matchId を引いて、matchId から MatchConnectData を取得する。
-        // この時 matchId が存在しないのであれば、再参加は行われない。
+        // 完了待ち
+        while (!GameMatchingManager.IsDone) {
+            yield return null;
+        }
 
-        // TODO
-        //GameManager.SetServerInformation(address, port, token, sceneName);
-        //matchingUI.ChangeScene(GameManager.ServerSceneName);
+        // エラー発生
+        if (GameMatchingManager.Error != null) {
+            using (var wait = UIWait.RentFromPool()) {
+                OkPopup.Open(error, wait.Callback);
+                yield return wait;
+            }
+            matchingUI.Change(lobbyUI);
+            yield break;
+        }
 
-        // TODO
-        // マッチングサーバへの接続とシーン切り替え
-        yield return new WaitForSeconds(1.0f);
-        matchingUI.ChangeScene("Logo");
+        // 接続情報を設定してシーン切り替え
+        var address   = GameMatchingManager.MatchConnectData.serverAddress;
+        var port      = GameMatchingManager.MatchConnectData.serverPort;
+        var token     = default(string);        // TODO GameMatchingManager.MatchConnectData.serverToken;
+        var sceneName = "NetworkProvingGround"; // TODO GameMatchingManager.MatchConnectData.serverSceneName;
+        GameManager.SetServerInformation(address, port, 0, token, sceneName);
+        matchingUI.ChangeScene(sceneName);
     }
 }
 
