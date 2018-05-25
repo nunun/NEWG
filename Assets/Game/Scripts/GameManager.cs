@@ -157,6 +157,94 @@ public partial class GameManager {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
+// 起動引数のインポート
+public partial class GameManager {
+    //-------------------------------------------------------------------------- 操作
+    // 起動引数のインポート
+    public static void ImportLaunchArguments() {
+        ImportCommandLineLaunchArguments();
+        #if UNITY_WEBGL
+        ImportWebBrowserLaunchArguments();
+        #endif
+    }
+
+    //-------------------------------------------------------------------------- インポート処理
+    // コマンドライン起動引数を取得
+    void ImportCommandLineLaunchArguments() {
+        ImportCommandLineStringArgument(serverAddress,         "-serverAddress",         null);
+        ImportCommandLineIntegerArgument(serverPort,           "-serverPort",            null);
+        ImportCommandLineStringArgument(mindlinkServerAddress, "-mindlinkServerAddress", null);
+        ImportCommandLineIntegerArgument(mindlinkServerPort,   "-mindlinkServerPort",    null);
+    }
+
+    #if UNITY_WEBGL
+    // ウェブブラウザクエリ起動引数を取得
+    void ImportWebBrowserLaunchArguments() {
+        // NOTE
+        // 今のところ何もなし
+    }
+    #endif
+
+    //-------------------------------------------------------------------------- コマンドライン引数
+    static void ImportCommandLineStringArgument(ref string v, string key, string defval = null) {
+        var val = GetCommandLineArgument(key, defval);
+        if (val != null) {
+            v = val;
+        }
+    }
+
+    static void ImportCommandLineIntegerArgument(ref int v, string key, string defval = null) {
+        var val = GetCommandLineArgument(key, defval);
+        if (val != null) {
+            v = int.Parse(val);
+        }
+    }
+
+    static string GetCommandLineArgument(string key, string defval = null) {
+        string[] args = System.Environment.GetCommandLineArgs();
+        int index = System.Array.IndexOf(args, key);
+        if (index < 0 || (index + 1) >= args.Length) {
+            return defval;
+        }
+        return args[index + 1];
+    }
+
+    //-------------------------------------------------------------------------- ウェブブラウザクエリ引数
+    #if UNITY_WEBGL
+    static void ImportWebBrowserQueryStringArgument(ref string v, string key, string defval = null) {
+        var val = GetWebBrowserQueryArgument(key, defval);
+        if (val != null) {
+            v = val;
+        }
+    }
+
+    static void ImportWebBrowserQueryIntegerArgument(ref int v, string key, string defval = null) {
+        var val = GetWebBrowserQueryArgument(key, defval);
+        if (val != null) {
+            v = int.Parse(val);
+        }
+    }
+
+    static string GetWebBrowserQueryArgument(string key, string defval = null) {
+        return WebBrowser.GetLocationQuery(key) ?? defval;
+    }
+    #endif
+    //-------------------------------------------------------------------------- ウェブブラウザホスト名
+    #if UNITY_WEBGL
+    static void ImportWebBrowserHostName(ref v) {
+        v = GetWebBrowserHostName();
+    }
+
+    static string GetWebBrowserHostName() {
+        return WebBrowser.GetLocationHostName();
+    }
+    #endif
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
 // MonoBehaviour 実装
 public partial class GameManager {
     //-------------------------------------------------------------------------- 変数

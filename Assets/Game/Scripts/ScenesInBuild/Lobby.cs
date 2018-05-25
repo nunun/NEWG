@@ -170,6 +170,20 @@ public partial class Lobby {
         Debug.Log(matchingResponse.matchingServerUrl);
 
         // TODO
+        // ウェブソケットに接続する。
+        // 切断前にイベント 0 が送信されるので、
+        // 0 を受け取ったら処理して次のシーンへ。
+        // 0 のメッセージがエラーか、0 を受け取る前に切断されたら前のシーンへ。
+        // 0 で受け取れるのは MatchConnectData である。
+        // MatchConnectData に含まれる serverToken は redis で作成する。
+        // matchId to MatchConnectData (マッチ毎),
+        // userId to matchId (ユーザ毎),
+        // serverToken to userId (ユーザ毎) を作っておく。
+        // サーバはマッチが終わったら matchId to MatchConnectData を消す。
+        // ユーザは再参加時、userId から matchId を引いて、matchId から MatchConnectData を取得する。
+        // この時 matchId が存在しないのであれば、再参加は行われない。
+
+        // TODO
         //GameManager.SetServerInformation(address, port, token, sceneName);
         //matchingUI.ChangeScene(GameManager.ServerSceneName);
 
