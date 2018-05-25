@@ -74,8 +74,6 @@ public partial class NetworkProvingGround {
 public partial class NetworkProvingGround {
     //-------------------------------------------------------------------------- 定義
     static readonly int LISTEN_PORT_MAX_RETRY = 5;
-    static readonly int LISTEN_PORT_LOW       = 8000;
-    static readonly int LISTEN_PORT_HIGH      = 9999;
 
     //-------------------------------------------------------------------------- 変数
     bool isReady = false; // サービスが開始したかどうか
@@ -88,63 +86,71 @@ public partial class NetworkProvingGround {
     }
 
     void TryStartService(int retryCount) {
-        var networkManager = GameNetworkManager.singleton;
-
-        // アドレスとポート確定
-        networkManager.networkAddress = GameManager.ServerAddress;
-        networkManager.networkPort    = GameManager.ServerPort;
+        var networkManager        = GameNetworkManager.singleton;
+        var serverAddress         = GameManager.ServerAddress;
+        var serverPort            = GameManager.ServerPort;
+        var serverPortRandomRange = GameManager.ServerPortRandomRange;
+        var mindlinkServerAddress = GameManager.MindlinkServerAddress;
+        var mindlinkServerPort    = GameManager.MindlinkServerPort;
 
         // ポート番号にゼロを指定した場合はランダムポート
-        if (networkManager.networkPort == 0) {
-            networkManager.networkPort = UnityEngine.Random.Range(LISTEN_PORT_LOW, LISTEN_PORT_HIGH);
+        if (serverPortRandomRange > 0) {
+            var randomPort = UnityEngine.Random.Range(0, serverPortRandomRange);
+            serverPort         += randomPort;
+            mindlinkServerPort += randomPort;
         }
 
+        // アドレスとポート確定
+        networkManager.networkAddress = serverAddress;
+        networkManager.networkPort    = serverPort;
+
         // サービス開始
-        var server  = false;
-        var success = true;
+        var success = false;
         switch (GameManager.RuntimeServiceMode) {
         case GameManager.ServiceMode.Client:
-            Debug.Log("Start Client ...");
-            server  = false;
+            Debug.Log("クライアント開始 ...");
             success = (networkManager.StartClient() != null);
             break;
         case GameManager.ServiceMode.Server:
-            Debug.Log("Start Server ...");
-            server  = true;
+            Debug.Log("サーバ開始 ...");
             success = networkManager.StartServer();
             break;
         case GameManager.ServiceMode.Host:
         default:
-            Debug.Log("Start Host ...");
-            server  = true;
+            Debug.Log("ホスト開始 ...");
             success = (networkManager.StartHost() != null);
             break;
         }
 
-        // サーバの場合
-        if (server) {
-            // ポート確保失敗
+        // クライアントの場合
+        if (GameManager.RuntimeServiceMode == GameManager.ServiceMode.Client) {
             if (!success) {
-                if (retryCount > 0) {
-                    TryStartService(retryCount - 1); // NOTE リトライ
-                    return;
-                }
-                GameManager.Abort("空きポートなし");
+                GameManager.Abort("サービス開始失敗");
                 return;
             }
-
-            // サーバ状態を送信
-            Debug.Log("サーバ状態を送信 (ready) ...");
-            GameMindlinkManager.ServerStatusData.serverState = "ready";
-            GameMindlinkManager.SendServerStatusData(() => {
-                Debug.Log("サーバ状態送信完了");
-                isReady = true; // NOTE サーバレディ
-            });
+            isReady = true;//レディ
             return;
         }
 
-        // クライアントの場合
-        isReady = true; // NOTE サーバレディ
+        // サーバまたはホストの場合
+        if (!success) {
+            if (retryCount <= 0) {
+                GameManager.Abort("空きポートなし");
+                return;
+            }
+            TryStartService(retryCount - 1);//リトライ
+            return;
+        }
+
+        // サーバ状態を送信
+        Debug.Log("サーバ状態を送信 (ready) ...");
+        GameMindlinkManager.ServerStatusData.serverState = "ready";
+        GameMindlinkManager.ServerStatusData.serverAddress = mindlinkServerAddress;
+        GameMindlinkManager.ServerStatusData.serverPort    = mindlinkServerPort;
+        GameMindlinkManager.SendServerStatusData(() => {
+            Debug.Log("サーバ状態送信完了");
+            isReady = true;//レディ
+        });
     }
 
     // ネットワークサービスの停止
@@ -154,16 +160,16 @@ public partial class NetworkProvingGround {
         // サービス停止
         switch (GameManager.RuntimeServiceMode) {
         case GameManager.ServiceMode.Client:
-            Debug.Log("Stop Client ...");
+            Debug.Log("クライアント停止 ...");
             networkManager.StopClient();
             break;
         case GameManager.ServiceMode.Server:
-            Debug.Log("Stop Server ...");
+            Debug.Log("サーバ停止 ...");
             networkManager.StopServer();
             break;
         case GameManager.ServiceMode.Host:
         default:
-            Debug.Log("Stop Host ...");
+            Debug.Log("ホスト停止 ...");
             networkManager.StopHost();
             break;
         }

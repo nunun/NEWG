@@ -17,10 +17,6 @@ public partial class GameBuildProcessor : IPreprocessBuild, IProcessScene, IPost
     public const string BINARY_NAME_VARIANT_HOST   = "Host";
     public const string BINARY_NAME_VARIANT_DEBUG  = "Debug";
 
-    // 使用するポート
-    public const int DEBUG_PORT   = 7777;
-    public const int RELEASE_PORT = 17777;
-
     //---------------------------------------------------------------------- 変数
     static GameManager.ServiceMode binaryServiceMode = GameManager.ServiceMode.Client;
     static bool                    isDebugBinary     = false;
@@ -79,16 +75,22 @@ public partial class GameBuildProcessor {
             // ランタイムサービスモード
             gameManager.runtimeServiceMode = binaryServiceMode;
 
-            // マインドリンク接続先
+            // リリースビルド時
             if (!isDebugBinary) {
-                gameManager.serverMindlinkUrl = "ws://mindlink:7766"; // NOTE リリースバイナリはサービス構成内から接続
-            } else {
-                gameManager.serverMindlinkUrl = "ws://localhost:7766"; // NOTE デバッグバイナリはサービス構成外から接続
-            }
+                // サーバ情報
+                gameManager.serverAddress         = "localhost"; // 引数で指定
+                gameManager.serverPort            = 7777;        // 引数で指定
+                gameManager.serverPortRandomRange = 0;           // 引数で指定
+                gameManager.serverToken           = null;        // 無効に設定
+                gameManager.serverSceneName       = null;        // 無効に設定
 
-            // スタンドアローンシミュレータ
-            if (!isDebugBinary) {
-                gameManager.standaloneSimulator = null; // NOTE リリース版は絶対にスタンドアローンシミュレータを許さない
+                // マインドリンク情報
+                gameManager.mindlinkUrl           = "ws://mindlink:7766"; // サービス構成内から接続
+                gameManager.mindlinkServerAddress = "localhost";          // バイナリ引数で指定
+                gameManager.mindlinkServerPort    = 7777;                 // バイナリ引数で指定
+
+                // スタンドアローンシミュレータ
+                gameManager.standaloneSimulator = null; // リリース環境で有効にしない
             }
         }
     }

@@ -114,7 +114,7 @@ public partial class WebSocketConnector : MonoBehaviour {
 
         // 接続中にエラーになった場合は再接続
         if (currentState == State.Connecting && !string.IsNullOrEmpty(error)) {
-            Debug.LogError("接続失敗: " + error);
+            Debug.LogErrorFormat("接続失敗 ({0})", error);
             if (currentRetryCount++ < retryCount) {
                 Invoke("Reconnect", retryInterval);
                 return;

@@ -35,7 +35,7 @@ public partial class StandaloneSimulator {
     //-------------------------------------------------------------------------- WebAPI エミュレーション
     public bool SimulateWebAPI(WebAPIClient.Request request, float deltaTime) {
         if (debugRequest == null) {
-            Debug.LogWarningFormat("StandaloneSimulator: WebAPI リクエストを処理 ({0})", request.ToString());
+            Debug.LogFormat("StandaloneSimulator: WebAPI リクエストを処理 ({0})", request.ToString());
             debugRequest = request;
             debugDelay   = DEBUG_DELAY;
         }

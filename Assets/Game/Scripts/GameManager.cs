@@ -34,26 +34,29 @@ public partial class GameManager {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-// サーバ接続先情報
+// サーバ情報
 // マッチングで決定したサーバ接続先の一時的な情報です。
 public partial class GameManager {
     //-------------------------------------------------------------------------- 変数
-    public string serverAddress   = "localhost";            // サーバアドレス
-    public int    serverPort      = 7777;                   // サーバポート
-    public string serverToken     = null;                   // サーバトークン
-    public string serverSceneName = "NetworkProvingGround"; // サーバシーン名
+    public string serverAddress         = "localhost";            // サーバアドレス
+    public int    serverPort            = 7777;                   // サーバポート
+    public int    serverPortRandomRange = 0;                      // サーバポート ランダム幅
+    public string serverToken           = null;                   // サーバトークン
+    public string serverSceneName       = "NetworkProvingGround"; // サーバシーン名
 
-    public static string ServerAddress   { get { return instance.serverAddress;   }}
-    public static int    ServerPort      { get { return instance.serverPort;      }}
-    public static string ServerToken     { get { return instance.serverToken;     }}
-    public static string ServerSceneName { get { return instance.serverSceneName; }}
+    public static string ServerAddress         { get { return instance.serverAddress;         }}
+    public static int    ServerPort            { get { return instance.serverPort;            }}
+    public static int    ServerPortRandomRange { get { return instance.serverPortRandomRange; }}
+    public static string ServerToken           { get { return instance.serverToken;           }}
+    public static string ServerSceneName       { get { return instance.serverSceneName;       }}
 
     //-------------------------------------------------------------------------- 設定
-    public static void SetServerInformation(string address, int port, string token, string sceneName) {
-        instance.serverAddress   = address;
-        instance.serverPort      = port;
-        instance.serverToken     = token;
-        instance.serverSceneName = sceneName;
+    public static void SetServerInformation(string address, int port, int portRandomRange, string token, string sceneName) {
+        instance.serverAddress         = address;
+        instance.serverPort            = port;
+        instance.serverPortRandomRange = portRandomRange;
+        instance.serverToken           = token;
+        instance.serverSceneName       = sceneName;
     }
 }
 
@@ -61,13 +64,22 @@ public partial class GameManager {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-// マインドリンク接続先情報
+// マインドリンク情報
 public partial class GameManager {
     //-------------------------------------------------------------------------- 変数
-    public string serverMindlinkUrl = "ws://localhost:7766"; // マインドリンク接続先
+    public string mindlinkUrl           = "ws://localhost:7766"; // マインドリンク接続先
+    public string mindlinkServerAddress = "localhost";           // マインドリンク上の広報サーバアドレス
+    public int    mindlinkServerPort    = 7777;                  // マインドリンク上の広報サーバポート
 
-    // マインドリンク接続先の取得
-    public static string ServerMindlinkUrl { get { return instance.serverMindlinkUrl; }}
+    public static string MindlinkUrl           { get { return instance.mindlinkUrl;           }}
+    public static string MindlinkServerAddress { get { return instance.mindlinkServerAddress; }}
+    public static int    MindlinkServerPort    { get { return instance.mindlinkServerPort;    }}
+
+    //-------------------------------------------------------------------------- 設定
+    public static void SetMindlinkInformation(string mindlinkServerAddress, int mindlinkServerPort) {
+        instance.mindlinkServerAddress = mindlinkServerAddress;
+        instance.mindlinkServerPort    = mindlinkServerPort;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
