@@ -48,7 +48,7 @@ public class WebBrowser {
     }
 
     // クエリ一覧を取得
-    static Uri GetLocationQueries() {
+    static Dictionary<string,string> GetLocationQueries() {
         if (locationQueries == null) {
             locationQueries = new Dictionary<string,string>();
             var u = GetLocationURI();
@@ -58,7 +58,7 @@ public class WebBrowser {
                 foreach (var i in q.Split('&')) {
                     var kv = i.Split('=');
                     if (kv.Length == 2) {
-                        p.Add(kv[0], kv[1]);
+                        locationQueries.Add(kv[0], kv[1]);
                     }
                 }
             }

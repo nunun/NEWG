@@ -162,19 +162,19 @@ public partial class GameManager {
     //-------------------------------------------------------------------------- 操作
     // 起動引数のインポート
     public static void ImportLaunchArguments() {
-        ImportCommandLineLaunchArguments();
+        instance.ImportCommandLineLaunchArguments();
         #if UNITY_WEBGL
-        ImportWebBrowserLaunchArguments();
+        instance.ImportWebBrowserLaunchArguments();
         #endif
     }
 
     //-------------------------------------------------------------------------- インポート処理
     // コマンドライン起動引数を取得
     void ImportCommandLineLaunchArguments() {
-        ImportCommandLineStringArgument(serverAddress,         "-serverAddress",         null);
-        ImportCommandLineIntegerArgument(serverPort,           "-serverPort",            null);
-        ImportCommandLineStringArgument(mindlinkServerAddress, "-mindlinkServerAddress", null);
-        ImportCommandLineIntegerArgument(mindlinkServerPort,   "-mindlinkServerPort",    null);
+        ImportCommandLineStringArgument(ref serverAddress,         "-serverAddress",         null);
+        ImportCommandLineIntegerArgument(ref serverPort,           "-serverPort",            null);
+        ImportCommandLineStringArgument(ref mindlinkServerAddress, "-mindlinkServerAddress", null);
+        ImportCommandLineIntegerArgument(ref mindlinkServerPort,   "-mindlinkServerPort",    null);
     }
 
     #if UNITY_WEBGL
