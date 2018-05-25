@@ -7,21 +7,22 @@ using UnityEngine;
 public class Boot : MonoBehaviour {
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     void Start() {
+        // 起動引数のインポート
+        GameManager.ImportLaunchArguments();
+
+        // 各種起動シーンへ
         switch (GameManager.RuntimeServiceMode) {
         case GameManager.ServiceMode.Server:
-            // サーバ起動シーンへ
             GameSceneManager.ChangeSceneImmediately("BootServer");
             break;
         case GameManager.ServiceMode.Client:
-            // クライアント起動シーンへ
             GameSceneManager.ChangeSceneImmediately("BootClient");
             break;
         case GameManager.ServiceMode.Host:
-            // ホスト起動シーンへ
             GameSceneManager.ChangeSceneImmediately("BootHost");
             break;
         default:
-            Debug.LogError("不明なモード (" + GameManager.RuntimeServiceMode + ")");
+            GameManager.Abort(string.Format("不明なモード ({0})", GameManager.RuntimeServiceMode));
             break;
         }
     }
