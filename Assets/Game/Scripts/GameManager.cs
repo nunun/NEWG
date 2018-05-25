@@ -152,7 +152,7 @@ public partial class GameManager {
     public static void ImportLaunchArguments() {
         ImportCommandLineLaunchArguments();
         #if UNITY_WEBGL
-        ImportWebBrowserQueryLaunchArguments();
+        ImportWebBrowserLaunchArguments();
         #endif
     }
 
@@ -167,7 +167,7 @@ public partial class GameManager {
 
     #if UNITY_WEBGL
     // ウェブブラウザクエリ起動引数を取得
-    void ImportWebBrowserQueryLaunchArguments() {
+    void ImportWebBrowserLaunchArguments() {
         // NOTE
         // 今のところ何もなし
     }
@@ -214,14 +214,10 @@ public partial class GameManager {
     }
 
     static string GetWebBrowserQueryArgument(string key, string defval = null) {
-        var queries = WebBrowser.GetLocationQueryParameters();
-        if (!queries.ContainsKey(key)) {
-            return defval;
-        }
-        return queries[key];
+        return WebBrowser.GetLocationQuery(key) ?? defval;
     }
     #endif
-    //-------------------------------------------------------------------------- ウェブブラウザクエリ引数
+    //-------------------------------------------------------------------------- ウェブブラウザホスト名
     #if UNITY_WEBGL
     static void ImportWebBrowserHostName(ref v) {
         v = GetWebBrowserHostName();
