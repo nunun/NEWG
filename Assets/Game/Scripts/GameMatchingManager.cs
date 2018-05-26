@@ -16,43 +16,43 @@ public partial class GameMatchingManager : MonoBehaviour {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-// マッチング関連
-// シーンに存在する WebSocketConnector を使ってマッチングを開始します。
+// 接続と切断
 public partial class GameMatchingManager {
     //-------------------------------------------------------------------------- 定義
-    public enum State { Init, Busy, Done };
+    public enum ConnectState { Disconnected, Connecting, Connected };
 
     //-------------------------------------------------------------------------- 変数
-    State            currentState     = State.Init; // 現在の状態
-    string           currentError     = null;       // エラー
-    MatchConnectData matchConnectData = null;       // 受信したセットアップリクエスト
+    ConnectState     connectState     = ConnectState.Disconnected; // 接続状態
+    string           connectError     = null;                      // 接続エラー
+    MatchConnectData matchConnectData = null;                      // 受信したセットアップリクエスト
 
-    public static bool             IsDone           { get { return (instance.currentState == State.Done); }}
-    public static string           Error            { get { return instance.currentError; }}
+    // TODO
+    // IsConnecting
+    // IsConnected
+
+    public static string           ConnectError     { get { return instance.connectError;     }}
     public static MatchConnectData MatchConnectData { get { return instance.matchConnectData; }}
 
-    //-------------------------------------------------------------------------- マッチング開始
-    // マッチング開始
-    public static void StartMatching() {
-        Debug.Assert(instance              != null,       "GameMatchingManager がいない");
-        Debug.Assert(instance.currentState != State.Busy, "既にマッチング中");
-        instance.currentState     = State.Busy;
-        instance.currentError     = null;
+    //-------------------------------------------------------------------------- 接続と切断
+    // 接続
+    public static void Connect() {
+        Debug.Assert(instance              != null,                      "GameMatchingManager がいない");
+        Debug.Assert(instance.connectState == ConnectState.Disconnected, "既に接続中");
+        instance.connectState     = ConnectState.Connecting;
+        instance.connectError     = null;
         instance.matchConnectData = null;
-        instance.StartCoroutine("Matching");
+        instance.StartCoroutine("StartConnecting");
     }
 
-    // マッチング停止
-    void StopMatching(string error) {
-        Debug.LogError(error);
-        StopCoroutine("Matching");
-        currentState = State.Done;
-        currentError = error;
-        //instance.matchConnectData = matchConnectData;
+    // 切断
+    public static void Disconnect(string error = "") {
+        var connector = WebSocketConnector.GetConnector();
+        connector.Disconnect(error);
     }
 
-    // マッチング処理
-    IEnumerator Matching() {
+    //-------------------------------------------------------------------------- 接続の開始と停止
+    // 接続開始
+    IEnumerator StartConnecting() {
         // コネクタ取得
         var connector = WebSocketConnector.GetConnector();
 
@@ -68,20 +68,19 @@ public partial class GameMatchingManager {
             yield return null;
         }
 
-        // 接続データを待つ
-        while (matchConnectData == null ){
-            yield return null;
-        }
-
-        // 完了
-        Debug.Log("マッチ接続データ受信完了");
-        currentState = State.Done;
+        // 接続終了
+        StopConnecting();
     }
 
-    //-------------------------------------------------------------------------- マッチング中止
-    public static void CancelMatching(string error = null) {
-        var connector = WebSocketConnector.GetConnector();
-        connector.Disconnect(error);
+    // 接続停止
+    void StopConnecting(string error = "") {
+        if (error != null) {
+            Debug.LogError(error);
+        }
+        StopCoroutine("StartConnecting");
+        connectState       = ConnectState.Disconnected;
+        connectError       = error;
+        //matchConnectData = null;
     }
 
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
@@ -92,7 +91,7 @@ public partial class GameMatchingManager {
         });
         connector.AddDisconnectEventListner((error) => {
             Debug.Log("マッチングサーバ切断");
-            StopMatching(error);
+            StopConnecting(error);
         });
         connector.SetDataEventListener<MatchConnectData>(0, (data) => {
             Debug.Log("マッチ接続データ受信");
