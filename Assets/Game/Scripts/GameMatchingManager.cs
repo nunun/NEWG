@@ -26,10 +26,9 @@ public partial class GameMatchingManager {
     string           connectError     = null;                      // 接続エラー
     MatchConnectData matchConnectData = null;                      // 受信したセットアップリクエスト
 
-    // TODO
-    // IsConnecting
-    // IsConnected
-
+    public static bool             IsDisconnected   { get { return (instance.connectState == ConnectState.Disconnected); }}
+    public static bool             IsConnecting     { get { return (instance.connectState == ConnectState.Connecting);   }}
+    public static bool             IsConnected      { get { return (instance.connectState == ConnectState.Connected);    }}
     public static string           ConnectError     { get { return instance.connectError;     }}
     public static MatchConnectData MatchConnectData { get { return instance.matchConnectData; }}
 
@@ -45,7 +44,7 @@ public partial class GameMatchingManager {
     }
 
     // 切断
-    public static void Disconnect(string error = "") {
+    public static void Disconnect(string error = null) {
         var connector = WebSocketConnector.GetConnector();
         connector.Disconnect(error);
     }
@@ -73,7 +72,7 @@ public partial class GameMatchingManager {
     }
 
     // 接続停止
-    void StopConnecting(string error = "") {
+    void StopConnecting(string error = null) {
         if (error != null) {
             Debug.LogError(error);
         }

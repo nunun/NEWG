@@ -20,18 +20,10 @@ public class BootHost : GameScene {
         #endif
 
         // マインドリンク接続開始
-        GameMindlinkManager.StartConnect();
-        while (!GameMindlinkManager.IsDone) {
+        GameMindlinkManager.Connect();
+        while (!GameMindlinkManager.IsConnected) {
             yield return null;
         }
-
-        // NOTE
-        // ホストモードではセットアップリクエストに従わないので
-        // ここでは待たない。
-        //while (GameMindlinkManager.SetupRequest != null) {
-        //    yield return null;
-        //}
-        //sceneName = GameSceneManager.SetupRequest.sceneName;
 
         // シーン切り替え
         Debug.Log("シーンを切り替え (" + sceneName + ") ...");

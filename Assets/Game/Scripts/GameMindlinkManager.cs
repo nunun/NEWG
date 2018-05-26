@@ -22,40 +22,39 @@ public partial class GameMindlinkManager : MonoBehaviour {
 // 切断はアプリの強制終了を意味します。
 public partial class GameMindlinkManager {
     //-------------------------------------------------------------------------- 定義
-    public enum State { Init, Busy, Done };
+    public enum ConnectState { Disconnected, Connecting, Connected };
 
     //-------------------------------------------------------------------------- 変数
-    State                     currentState = State.Init; // 現在の状態
-    string                    currentError = null;       // エラー
-    ServerSetupRequestMessage setupRequest = null;       // 受信したセットアップリクエスト
+    ConnectState              connectState = ConnectState.Disconnected; // 現在の状態
+    string                    connectError = null;                      // エラー
+    ServerSetupRequestMessage setupRequest = null;                      // 受信したセットアップリクエスト
 
-    public static bool                      IsDone       { get { return (instance.currentState == State.Done); }}
-    public static string                    Error        { get { return instance.currentError; }}
-    public static ServerSetupRequestMessage SetupRequest { get { return instance.setupRequest; }}
+    public static bool                      IsDisconnected { get { return (instance.connectState == ConnectState.Disconnected); }}
+    public static bool                      IsConnecting   { get { return (instance.connectState == ConnectState.Connecting);   }}
+    public static bool                      IsConnected    { get { return (instance.connectState == ConnectState.Connected);    }}
+    public static string                    ConnectError   { get { return instance.connectError; }}
+    public static ServerSetupRequestMessage SetupRequest   { get { return instance.setupRequest; }}
 
-    //-------------------------------------------------------------------------- 接続
+    //-------------------------------------------------------------------------- 接続と切断
     // 接続開始
-    public static void StartConnect() {
-        Debug.Assert(instance              != null,       "GameMindlinkManager がいない");
-        Debug.Assert(instance.currentState != State.Busy, "既に接続中");
-        instance.currentState = State.Busy;
-        instance.currentError = null;
+    public static void Connect() {
+        Debug.Assert(instance              != null,                      "GameMindlinkManager がいない");
+        Debug.Assert(instance.connectState != ConnectState.Disconnected, "既に接続中");
+        instance.connectState = ConnectState.Connecting;
+        instance.connectError = null;
         instance.setupRequest = null;
-        instance.StartCoroutine("Connect");
+        instance.StartCoroutine("StartConnecting");
     }
 
-    // 接続停止
-    void StopConnect(string error) {
-        Debug.LogError(error);
-        //StopCoroutine("Connect");
-        //currentState = State.Done;
-        //currentError = error;
-        //setupRequest = null;
-        GameManager.Quit(); // NOTE マインドリンク切断で有無を言わさず強制終了
+    // 切断
+    public static void Disconnect(string error = null) {
+        var connector = WebSocketConnector.GetConnector();
+        connector.Disconnect(error);
     }
 
-    // 接続
-    IEnumerator Connect() {
+    //-------------------------------------------------------------------------- 接続と切断
+    // 接続開始
+    IEnumerator StartConnecting() {
         // コネクタ取得
         var connector = MindlinkConnector.GetConnector();
 
@@ -78,8 +77,23 @@ public partial class GameMindlinkManager {
         ServerStatusData.serverPort    = 0;
         SendServerStatusData(() => {
             Debug.Log("サーバ状態送信完了");
-            currentState = State.Done;
+            connectState = ConnectState.Connected;
         });
+    }
+
+    // 接続停止
+    void StopConnect(string error = null) {
+        if (error != null) {
+            Debug.LogError(error);
+        }
+        StopCoroutine("StartConnecting");
+        connectState   = ConnectState.Disconnected;
+        connectError   = error;
+        //setupRequest = null;
+
+        // NOTE
+        // マインドリンクからの切断は強制終了
+        GameManager.Quit();
     }
 
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)

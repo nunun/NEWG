@@ -167,22 +167,23 @@ public partial class Lobby {
         // マッチングサーバ接続
         GameManager.SetMatchingServerInformation(matchingResponse.matchingServerUrl);
         GameMatchingManager.Connect();
-        while (GameMatchingManager.ConnectError == null) {
+        while (!GameMatchingManager.IsDisconnected && GameMatchingManager.MatchConnectData == null) {
             yield return null;
         }
 
-        // エラー発生
-        if (!string.IsNullOrEmpty(GameMatchingManager.ConnectError)) {
-            using (var wait = UIWait.RentFromPool()) {
-                OkPopup.Open(error, wait.Callback);
-                yield return wait;
+        // データが無い場合はエラー
+        var matchConnectData = GameMatchingManager.MatchConnectData;
+        if (matchConnectData == null) {
+            var connectError = GameMatchingManager.ConnectError;
+            if (connectError != null) {
+                using (var wait = UIWait.RentFromPool()) {
+                    OkPopup.Open(connectError, wait.Callback);
+                    yield return wait;
+                }
             }
             matchingUI.Change(lobbyUI);
             yield break;
         }
-
-        // マッチ接続データを受け取る
-        // TODO 切断または、データを待つ
 
         // 接続情報を設定してシーン切り替え
         var address   = GameMatchingManager.MatchConnectData.serverAddress;

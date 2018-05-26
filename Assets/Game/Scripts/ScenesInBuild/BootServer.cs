@@ -20,15 +20,8 @@ public class BootServer : GameScene {
         #endif
 
         // マインドリンク接続開始
-        GameMindlinkManager.StartConnect();
-        while (!GameMindlinkManager.IsDone) {
-            yield return null;
-        }
-
-        // NOTE
-        // 外部からセットアップリクエストがあるまで眠る。
-        // 何もないシーンで停滞することによりサーバリソースを節約する。
-        while (GameMindlinkManager.SetupRequest != null) {
+        GameMindlinkManager.Connect();
+        while (GameMindlinkManager.SetupRequest == null) {
             yield return null;
         }
         sceneName = GameMindlinkManager.SetupRequest.sceneName;
