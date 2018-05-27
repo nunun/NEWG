@@ -7,10 +7,13 @@ class TaskQueue {
         this.config   = config;
         this.logger   = logger;
         this.queue    = [];
+        this.limit    = config.limit    || -1;
         this.parallel = config.parallel || 3;
 
         // 各種イベントハンドラ
-        this.abortEventListener = null;
+        this.addEventListener          = null;
+        this.abortEventListener        = null;
+        this.customUpdateEventListener = null;
 
         // 念のための更新タイマー
         setTimeout(() => {
@@ -24,20 +27,45 @@ class TaskQueue {
     }
 
     //-------------------------------------------------------------------------- 各種イベントリスナ
+    // 追加イベントリスナの設定
+    setAbortEventListener(eventListener) {
+        this.addEventListener = eventListener;
+    }
+
     // 中断イベントリスナの設定
     setAbortEventListener(eventListener) {
         this.abortEventListener = eventListener;
     }
 
-    //-------------------------------------------------------------------------- データの追加と削除と中断
-    // 追加
-    add(action, key, data) {
-        var task = {action:action, data:data, key:key, busy:false};
-        this.queue.push(task);
-        this.update();
+    // カスタム更新イベントリスナの設定
+    setCustomUpdateEventListener(eventListener) {
+        this.customUpdateEventListener = eventListener;
     }
 
-    // 削除
+    //-------------------------------------------------------------------------- データの追加と削除と中断
+    // タスクを追加
+    add(task) {
+        if (this.limit >= 0 && this.queue.length >= this.limit) {
+            return false;
+        }
+        this.queue.push(task);
+        this.update();
+        return true;
+    }
+
+    // タスクをキーから追加
+    addKey(key) {
+        if (this.limit >= 0 && this.queue.length >= this.limit) {
+            return false;
+        }
+        var task = {action:null, key:key, busy:false};
+        if (this.addEventListener) {
+            task.action = this.addEventListener(task);
+        }
+        return this.add(task);
+    }
+
+    // タスクを削除
     remove(task) {
         var i = this.indexOf(task);
         if (i >= 0) {
@@ -46,7 +74,7 @@ class TaskQueue {
         }
     }
 
-    // キーから削除
+    // タスクをキーから削除
     removeKey(key) {
         var i = this.indexOfKey(key);
         if (i >= 0) {
@@ -55,12 +83,14 @@ class TaskQueue {
         }
     }
 
-    // 中断
+    // タスクを中断
     abort(err, task) {
-        this.abortEventListener(err, task);
+        if (this.abortEventListener != null) {
+            this.abortEventListener(err, task);
+        }
     }
 
-    // キーから中断
+    // タスクをキーから中断
     abortKey(err, key) {
         var i = this.indexOfKey(key);
         if (i >= 0) {
@@ -95,6 +125,14 @@ class TaskQueue {
     //-------------------------------------------------------------------------- 更新と処理
     // 更新
     update() {
+        // NOTE
+        // カスタムアップデートリスナがあったら
+        // そっちを呼び出して終了
+        if (this.updateEventListener) {
+            this.updateEventListener(queue);
+            return;
+        }
+
         // キューが空
         if (this.queue.length <= 0) {
             return;
@@ -104,16 +142,17 @@ class TaskQueue {
         for (var i = 0; i < this.parallel; i++) {
             var task = this.queue[i];
             if (!task.busy) {
-                exec(task);
+                this.action(task);
             }
         }
     }
 
     // タスクの実行
-    async exec(task) {
+    async action(task) {
+        // タスクを処理
         task.busy = true;
         try {
-            nextAction = await task.action(this, task);
+            nextAction = await task.action(task);
             task.busy = false;
             if (!nextAction) {
                 this.remove(task);

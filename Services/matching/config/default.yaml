@@ -18,6 +18,31 @@ matchingServer:
   port:    [7755,        "${PORT}"]
   timeout: [300000,      "${TIMEOUT}"]
 
+# join queue
+joinQueue:
+  limit:    32
+  parallel: [1, "${JOIN_QUEUE_PARALLEL}"]
+
+# matching queue
+matchingQueue:
+  limit:    256
+  parallel: [1, "${MATCHING_QUEUE_PARALLEL}"]
+
+# setup queue
+setupQueue:
+  limit:    1
+  parallel: [1, "${SETUP_QUEUE_PARALLEL}"]
+
+# error queue
+errorQueue:
+  limit:    -1
+  parallel: [16, "${ERROR_QUEUE_PARALLEL}"]
+
+# setup error queue
+setupErrorQueue:
+  limit:    -1
+  parallel: [16, "${SETUP_ERROR_QUEUE_PARALLEL}"]
+
 # log4js
 log4js:
   appenders:
@@ -37,6 +62,21 @@ log4js:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
     matchingServer:
+      appenders: [console]
+      level: [info, "${LOG_LEVEL}"]
+    joinQueue:
+      appenders: [console]
+      level: [info, "${LOG_LEVEL}"]
+    matchingQueue:
+      appenders: [console]
+      level: [info, "${LOG_LEVEL}"]
+    setupQueue:
+      appenders: [console]
+      level: [info, "${LOG_LEVEL}"]
+    errorQueue:
+      appenders: [console]
+      level: [info, "${LOG_LEVEL}"]
+    setupErrorQueue:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
 
