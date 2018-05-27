@@ -46,7 +46,14 @@ mindlinkClient.setConnectEventListener(function() {
     });
 });
 mindlinkClient.setDataFromRemoteEventListener(0, (data,res) => {
-    serverSetupResponse(res.to, data.matchId);
+    var task = setupQueue.indexOfKey(data.matchId);
+    if (!task) {
+        var errorMessage = 'matchId not found? (' + matchId + ')';
+        logger.matchingServer.debug(errorMessage);
+        mindlinkClient.sendToRemote(res.to, 0, {err:new Error(errorMessage)});
+        return;
+    }
+    task.serverSetupDoneMessage = data;
 });
 
 // matching server
@@ -65,9 +72,12 @@ matchingServer.setAcceptEventListener(function(req) {
     return {matchingId:location.query.matchingId};
 });
 matchingServer.setConnectEventListener(function(matchingClient) {
-    if (!joinQueue.addKey(matchingClient)) {
-        matchingClient.stop(); // NOTE キューフルは即切断
+    if (joinQueue.isFull()) {
+        matchingClient.stop();
+        return;
     }
+    var task = TaskQueue.createTaskFromKey(matchingClient);
+    joinQueue.add(task);
 });
 matchingServer.setDisconnectEventListener(function(matchingClient) {
     joinQueue.removeKey(matchingClient);
@@ -83,23 +93,54 @@ matchingServer.setDisconnectEventListener(function(matchingClient) {
 // ユーザを識別し、マッチングキューに引継ぎます。
 var joinQueue = TaskQueue(config.joinQueue, logger.joinQueue);
 joinQueue.setAddEventListener((task) => {
-    return userIdneitfy;
+    return identifyUser;
 });
 joinQueue.setAbortEventListener((err, task) => {
-    task.data.err = err;
+    task.err = err;
     joinQueue.remove(task);
     errorQueue.add(task);
 });
 
 // ユーザ識別
-async function userIdentify(task) {
-    // TODO
+async function identifyUser(task) {
+    // 次のキューがフルなら待ち
+    if (matchingQueue.isFull()) {
+        return 1000;
+    }
+
+    // 初期化
+    task.matchingId = task.key.acceptData.matchingId;
+    task.userId     = null;
+    task.userData   = null;
+
+    // マッチングデータ取得
+    joinQueue.logger.debug('matchingId = ' + task.matchingId);
+    var matchingData = await MatchingData.promiseGetCache(task.matchingId);
+    if (!matchingData) {
+        throw new Erorr("invalid matchingId");
+    }
+    task.userId = matchingData.users[0];
+
+    // ユーザ取得
+    joinQueue.logger.debug('userId = ' + task.userId);
+    var userData = await UserData.promiseGet(matchingClient.userId);
+    if (!userData) {
+        throw new Error("invalid userId");
+    }
+
+    // ユーザ確認
+    joinQueue.logger.debug('user found!');
+    joinQueue.remove(task);
+    matchingQueue.add(task);
     return null;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
+
+// マッチングID作成用
+var matchIdCounter = 0;
 
 // マッチングキュー
 // ユーザ一覧を走査し、ちょうど良い人数になったら
@@ -114,7 +155,40 @@ matchingQueue.setAbortEventListener((err, task) => {
     errorQueue.add(task);
 });
 matchingQueue.setCustomUpdateEventListener((queue) => {
+    //TODO
+    // 次のキューがフルならしばらく待ち
+    //if (setupQueue.isFull()) {
+    //    return 1000;
+    //}
+
     // TODO
+    // セットアップキューに入れる前に
+    // 空きサーバをチェックしないといけない気がする...
+    var matchingKeys    = [];
+    var matchingClients = [];
+    var matchingUsers   = [];
+
+    // NOTE
+    // 今は上から順にマッチング
+    // そのうち上等なマッチングのロジックに治す。
+    var task = queue[0];
+    matchingKeys.push(task.key);
+    matchingClients.push(task.key);
+    matchingUsers.push(task.userId);
+    matchingQueue.remove(task);
+
+    // サーバ セットアップ リクエストメッセージ
+    var serverSetupRequestMessage = new ServerSetupRequestMessage();
+    serverSetupRequestMessage.matchId       = matchIdCounter++;
+    serverSetupRequestMessage.sceneName     = "NetworkProvingGround";
+    serverSetupRequestMessage.matchingUsers = matchingUsers;
+    matchingKeys.push(matchId);
+
+    // セットアップタスクを作成して投入
+    var setupTask = TaskQueue.createTaskFromKey(matchingKeys);
+    setupTask.matchingClients           = matchingClients;
+    setupTask.serverSetupRequestMessage = serverSetupRequestMessage;
+    setupQueue.add(setupTask);
 });
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -126,14 +200,92 @@ matchingQueue.setCustomUpdateEventListener((queue) => {
 // ユーザにマッチング結果を通知します。
 var setupQueue = TaskQueue(config.setupQueue, logger.setupQueue);
 setupQueue.setAddEventListener((task) => {
-    // TODO
-    return null;
+    return findServer;
 });
 setupQueue.setAbortEventListener((err, task) => {
     task.data.err = err;
     setupQueue.remove(task);
     setupErrorQueue.add(task);
 });
+
+// マッチ情報を初期化
+async function initMatch(task) {
+    task.matchId = matchIdCounter++;
+    return findServer;
+}
+
+// 参加できそうなサービスを探す
+function findServer(task) {
+    return new Promise((resolved) => {
+        var cond = ".*{.alias == \"server\" && .serverState == \"standby\" && .load < 1.0}";
+        mindlinkClient.sendQuery(cond, function(err,services) {
+            if (err) {
+                throw err;
+            }
+            if (!services || services.length <= 0) {
+                resolved(500);
+                return;
+            }
+            task.service = services[0];
+            setupQueue.logger.debug('server found: service[' + util.inspect(task.service, {depth:null,breakLength:Infinity}) + ']');
+            resolved(setupRequest);
+        });
+    });
+}
+
+// セットアップリクエストを飛ばす
+async function setupRequest(task) {
+    mindlinkClient.sendToRemote(task.service.clientUuid, 0, task.serverSetupRequestMessage);
+    return waitForSetupResponse;
+}
+
+// セットアップレスポンス待ち...
+async function waitForSetupResponse(task) {
+    // 初期化
+    if (task._count == 0) {
+        task.waitCount = 0;
+    }
+
+    // メッセージ来た？
+    if (!task.serverSetupDoneMessage) {
+        if (task.waitCount++ < 30) {
+            return 1000;
+        }
+        return findServer;
+    }
+
+    // メッセージ到来
+    var matchConnectData = new MatchConnectData();
+    matchConnectData.serverAddress = serverAddress;
+    matchConnectData.serverPort    = serverPort;
+    matchConnectData.matchId       = matchData.matchId;
+    task.matchConnectData = matchConnectData;
+    return sendMatchConnectData;
+}
+
+// ブロードキャスト
+async function sendMatchConnectData(task) {
+    var matchingClients = task.matchingClients;
+    for (var i in matchingClients) {
+        var matchingClient = matchingClients[i];
+        matchingClient.send(0, task.matchConnectData);
+    }
+    return waitForSetupDisconnect;
+}
+
+// 数秒待って全て閉じる
+async function waitForSetupDisconnect(task) {
+    if (task._count == 0) {
+        return 3000;
+    }
+    var matchingClients = task.matchingClients;
+    for (var i in matchingClients) {
+        var matchingClient = matchingClients[i];
+        matchingClient.stop();
+    }
+    setupQueue.remove(task);
+    return null;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -150,24 +302,21 @@ errorQueue.setAbortEventListener((err, task) => {
 });
 
 // エラー送信
-function sendError(task) {
-    return new Promise((resolve) => {
-        var matchingClient = task.key;
-        matchingClient.send(1, task.err, () => {
-            resolve(waitForDisconnect);
-        });
-    });
+async function sendError(task) {
+    var matchingClient = task.key;
+    matchingClient.send(1, task.err);
+    return waitForErrorDisconnect;
 }
 
 // 数秒まってキューから消す
-function waitForDisconnect(task) {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            var matchingClient = task.key;
-            matchingClient.stop();
-            resolve(null);
-        }, 3000);
-    });
+async function waitForErrorDisconnect(task) {
+    if (task._count == 0) {
+        return 3000;
+    }
+    var matchingClient = task.key;
+    matchingClient.stop();
+    errorQueue.remove(task);
+    return null;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -179,12 +328,35 @@ function waitForDisconnect(task) {
 // ユーザにマッチング失敗を通知します。
 var setupErrorQueue = TaskQueue(config.setupErrorQueue, logger.setupErrorQueue);
 setupErrorQueue.setAddEventListener((task) => {
-    // TODO
-    return null;
+    return sendSetupError;
 });
 setupErrorQueue.setAbortEventListener((err, task) => {
     setupErrorQueue.remove(task);
 });
+
+// セットアップエラー送信
+async function sendSetupError(task) {
+    var matchingClients = task.matchingClients;
+    for (var i in matchingClients) {
+        var matchingClient = matchingClients[i];
+        matchingClient.send(1, task.err);
+    }
+    return waitForSetupErrorDisconnect;
+}
+
+// 数秒まってキューから消す
+async function waitForSetupErrorDisconnect(task) {
+    if (task._count == 0) {
+        return 3000;
+    }
+    var matchingClients = task.matchingClients;
+    for (var i in matchingClients) {
+        var matchingClient = matchingClients[i];
+        matchingClient.stop();
+    }
+    setupQueue.remove(task);
+    return null;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -359,6 +531,7 @@ couchClient.start();
 //    joinSearch(matchData);
 //}
 //
+
 //// 参加できそうなサービスを検索
 //function joinSearch(matchData) {
 //    var cond = ".*{.alias == \"server\" && .serverState == \"standby\" && .load < 1.0}";

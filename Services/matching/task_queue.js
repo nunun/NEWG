@@ -42,27 +42,29 @@ class TaskQueue {
         this.customUpdateEventListener = eventListener;
     }
 
-    //-------------------------------------------------------------------------- データの追加と削除と中断
+    //-------------------------------------------------------------------------- タスクの作成, 追加, 削除, 中断
+    // キーからタスクを作成
+    static createTaskFromKey(key) {
+        return {_action:null, _key:key, _busy:false, _count:0};
+    }
+
+    // 満杯チェック
+    isFull() {
+        return (this.limit >= 0 && this.queue.length >= this.limit);
+    }
+
     // タスクを追加
     add(task) {
-        if (this.limit >= 0 && this.queue.length >= this.limit) {
+        if (this.isFull()) {
             return false;
+        }
+        if (this.addEventListener) {
+            task._action = this.addEventListener(task);
+            task._count  = 0;
         }
         this.queue.push(task);
         this.update();
         return true;
-    }
-
-    // タスクをキーから追加
-    addKey(key) {
-        if (this.limit >= 0 && this.queue.length >= this.limit) {
-            return false;
-        }
-        var task = {action:null, key:key, busy:false};
-        if (this.addEventListener) {
-            task.action = this.addEventListener(task);
-        }
-        return this.add(task);
     }
 
     // タスクを削除
@@ -114,8 +116,8 @@ class TaskQueue {
     indexOfKey(key) {
         for (i = this.queue.length - 1; i >= 0; i--) {
             var queuedTask = this.queue[i];
-            if ((queuedTask.key instanceof Array && queuedTask.key.indexOf(key) >= 0)
-                || (queuedTask.key == key)) {
+            if ((queuedTask._key instanceof Array && queuedTask._key.indexOf(key) >= 0)
+                || (queuedTask._key == key)) {
                 return i;
             }
         }
@@ -141,8 +143,8 @@ class TaskQueue {
         // 処理中でないタスクを処理
         for (var i = 0; i < this.parallel; i++) {
             var task = this.queue[i];
-            if (!task.busy) {
-                this.action(task);
+            if (!task._busy) {
+                this._action(task);
             }
         }
     }
@@ -150,21 +152,35 @@ class TaskQueue {
     // タスクの実行
     async action(task) {
         // タスクを処理
-        task.busy = true;
+        task._busy = true;
         try {
-            nextAction = await task.action(task);
-            task.busy = false;
-            if (!nextAction) {
-                this.remove(task);
-                return;
+            var next = null;
+            if(task._action) {
+                next = await task._action(task);
+                task._count++;
             }
-            task.action = nextAction;
+            if (next) {
+                if (next typeof integer) {
+                    await this.sleep(next);
+                } else {
+                    task._action = next;
+                    task._count  = 0;
+                }
+            }
+            task._busy = false;
         } catch (err) {
-            task.busy = false;
+            task._busy = false;
             this.abort(err, task);
         } finally {
             this.update();
         }
+    }
+
+    // スリープ
+    sleep(mtime) {
+        return new Promise((resolved) => {
+            setTimeout(resolved, mtime);
+        });
     }
 }
 module.exports = TaskQueue;
