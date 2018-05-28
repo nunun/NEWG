@@ -27,7 +27,7 @@ class TaskQueue {
 
     //-------------------------------------------------------------------------- 各種イベントリスナ
     // 追加イベントリスナの設定
-    setAbortEventListener(eventListener) {
+    setAddEventListener(eventListener) {
         this.addEventListener = eventListener;
     }
 
@@ -97,7 +97,7 @@ class TaskQueue {
 
     // タスクを中断
     abort(err, task) {
-        if (this.abortEventListener != null) {
+        if (this.abortEventListener) {
             this.abortEventListener(err, task);
         }
     }
@@ -113,7 +113,7 @@ class TaskQueue {
 
     // タスクを探す
     indexOf(task) {
-        for (i = this.queue.length - 1; i >= 0; i--) {
+        for (var i = this.queue.length - 1; i >= 0; i--) {
             var queuedTask = this.queue[i];
             if (queuedTask == task) {
                 return i;
@@ -124,7 +124,7 @@ class TaskQueue {
 
     // タスクをキーから探す
     indexOfKey(key) {
-        for (i = this.queue.length - 1; i >= 0; i--) {
+        for (var i = this.queue.length - 1; i >= 0; i--) {
             var queuedTask = this.queue[i];
             if ((queuedTask._key instanceof Array && queuedTask._key.indexOf(key) >= 0)
                 || (queuedTask._key == key)) {
@@ -146,7 +146,7 @@ class TaskQueue {
         for (var i = 0; i < this.parallel; i++) {
             var task = this.queue[i];
             if (!task._busy) {
-                this._action(task);
+                this.action(task);
             }
         }
     }
@@ -162,7 +162,7 @@ class TaskQueue {
                 task._count++;
             }
             if (next) {
-                if (next typeof integer) {
+                if (typeof next == "number") {
                     await this.sleep(next);
                 } else {
                     task._action = next;

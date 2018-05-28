@@ -75,7 +75,7 @@ log4js:
     matchingQueue:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
-    brainQueue:
+    matchingBrainQueue:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
     setupQueue:

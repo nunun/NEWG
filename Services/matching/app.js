@@ -72,7 +72,9 @@ matchingServer.setAcceptEventListener(function(req) {
     return {matchingId:location.query.matchingId};
 });
 matchingServer.setConnectEventListener(function(matchingClient) {
+    logger.matchingServer.debug("matchingClient connected.");
     if (joinQueue.isFull()) {
+        logger.matchingServer.debug("joinQueue is full. refuse matchingClient.");
         matchingClient.stop();
         return;
     }
@@ -80,6 +82,7 @@ matchingServer.setConnectEventListener(function(matchingClient) {
     joinQueue.add(task);
 });
 matchingServer.setDisconnectEventListener(function(matchingClient) {
+    logger.matchingServer.debug("matchingClient disconnected.");
     joinQueue.removeKey(matchingClient);
     matchingQueue.removeKey(matchingClient);
     errorQueue.removeKey(matchingClient);
@@ -91,11 +94,13 @@ matchingServer.setDisconnectEventListener(function(matchingClient) {
 
 // 参加キュー
 // ユーザを識別し、マッチングキューに引継ぎます。
-var joinQueue = TaskQueue(config.joinQueue, logger.joinQueue);
+var joinQueue = new TaskQueue(config.joinQueue, logger.joinQueue);
 joinQueue.setAddEventListener((task) => {
+    joinQueue.logger.debug("task added.");
     return identifyUser;
 });
 joinQueue.setAbortEventListener((err, task) => {
+    joinQueue.logger.debug("task aborted (" + err + ").");
     task.err = err;
     joinQueue.remove(task);
     errorQueue.add(task);
@@ -103,6 +108,8 @@ joinQueue.setAbortEventListener((err, task) => {
 
 // ユーザ識別
 async function identifyUser(task) {
+    joinQueue.logger.debug("identify user.");
+
     // 次のキューがフルなら待ち
     if (matchingQueue.isFull()) {
         return 1000;
@@ -129,7 +136,7 @@ async function identifyUser(task) {
     }
 
     // ユーザ確認完了
-    joinQueue.logger.debug('user found!');
+    joinQueue.logger.debug('user found.');
     joinQueue.remove(task);
     matchingQueue.add(task);
     return null;
@@ -141,12 +148,14 @@ async function identifyUser(task) {
 
 // マッチングキュー
 // マッチング待ちのユーザのキューです。
-var matchingQueue = TaskQueue(config.matchingQueue, logger.matchingQueue);
+var matchingQueue = new TaskQueue(config.matchingQueue, logger.matchingQueue);
 matchingQueue.setAddEventListener((task) => {
+    matchingQueue.logger.debug("task added.");
     return null;
 });
 matchingQueue.setAbortEventListener((err, task) => {
-    task.data.err = err;
+    joinQueue.logger.debug("task aborted (" + err + ").");
+    task.err = err;
     matchingQueue.remove(task);
     errorQueue.add(task);
 });
@@ -164,30 +173,35 @@ var matchIdCounter = 0;
 // マッチングブレインキュー
 // マッチングキューを監視して、
 // ユーザにマッチング結果を通知します。
-var matchingBrainQueue = TaskQueue(config.matchingBrainQueue, logger.matchingBrainQueue);
+var matchingBrainQueue = new TaskQueue(config.matchingBrainQueue, logger.matchingBrainQueue);
 matchingBrainQueue.setAddEventListener((task) => {
+    matchingBrainQueue.logger.debug("task added.");
     return findServer;
 });
 matchingBrainQueue.setAbortEventListener((err, task) => {
-    task.data.err = err;
+    matchingBrainQueue.logger.debug("task aborted (" + err + ").");
+    task.err = err;
     matchingBrainQueue.remove(task);
     setupErrorQueue.add(task);
 });
 
+// TODO
+// 一時中断中
 // NOTE
 // マッチングブレイン強制注入
 // 足りなくなったら一定時間おきに注入する。
-setTimeout(() => {
-    if (!matchingBrainQueue.isFull()) {
-        var matchingBrainTask = TaskQueue.createTaskFromKey(++matchingBrainIdCounter);
-        matchingBrainQueue.add(matchingBrainTask);
-    }
-}, 1000);
+//setTimeout(() => {
+//    if (!matchingBrainQueue.isFull()) {
+//        var matchingBrainTask = TaskQueue.createTaskFromKey(++matchingBrainIdCounter);
+//        matchingBrainQueue.add(matchingBrainTask);
+//    }
+//}, 1000);
 
 // NOTE
 // 参加できそうなサービスを探す
 // あらかじめセットアップリクエストを飛ばす実装にしておいても良いかも？
 function findServer(task) {
+    matchingBrainQueue.logger.debug("find server.");
     return new Promise((resolved) => {
         var cond = ".*{.alias == \"server\" && .serverState == \"standby\" && .load < 1.0}";
         mindlinkClient.sendQuery(cond, function(err,services) {
@@ -207,6 +221,8 @@ function findServer(task) {
 
 // マッチングする
 async function makeMatching(task) {
+    matchingBrainQueue.logger.debug("make matching.");
+
     // 次のキューがフルならしばらく待ち
     if (setupQueue.isFull()) {
         return 1000;
@@ -242,7 +258,7 @@ async function makeMatching(task) {
     setupTask.serverSetupRequestMessage = serverSetupRequestMessage;
     matchingBrainQueue.remove(task);
     setupQueue.add(setupTask);
-});
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -251,32 +267,36 @@ async function makeMatching(task) {
 // セットアップキュー
 // サーバを起動したりデータベースに書き込んだりした後
 // ユーザにマッチング結果を通知します。
-var setupQueue = TaskQueue(config.setupQueue, logger.setupQueue);
+var setupQueue = new TaskQueue(config.setupQueue, logger.setupQueue);
 setupQueue.setAddEventListener((task) => {
+    setupQueue.logger.debug("task added.");
     return setupRequest;
 });
 setupQueue.setAbortEventListener((err, task) => {
-    task.data.err = err;
+    setupQueue.logger.debug("task aborted (" + err + ").");
+    task.err = err;
     setupQueue.remove(task);
     setupErrorQueue.add(task);
 });
 
 // マッチ情報を初期化
 async function initMatch(task) {
+    setupQueue.logger.debug("init matching.");
     task.matchId = matchIdCounter++;
     return findServer;
 }
 
 // セットアップリクエストを飛ばす
 async function setupRequest(task) {
+    setupQueue.logger.debug("setup request.");
     mindlinkClient.sendToRemote(task.service.clientUuid, 0, task.serverSetupRequestMessage);
     return waitForSetupResponse;
 }
 
 // セットアップレスポンス待ち...
 async function waitForSetupResponse(task) {
-    // 初期化
     if (task._count == 0) {
+        setupQueue.logger.debug("wait for setup response.");
         task.waitCount = 0;
     }
 
@@ -300,6 +320,7 @@ async function waitForSetupResponse(task) {
 
 // マッチ完了を通知
 async function sendMatchConnectData(task) {
+    setupQueue.logger.debug("send match connect data.");
     var matchingClients = task.matchingClients;
     for (var i in matchingClients) {
         var matchingClient = matchingClients[i];
@@ -311,6 +332,7 @@ async function sendMatchConnectData(task) {
 // 数秒待って全て閉じる
 async function waitForSetupDisconnect(task) {
     if (task._count == 0) {
+        setupQueue.logger.debug("wait for setup disconnect.");
         return 3000;
     }
     var matchingClients = task.matchingClients;
@@ -328,16 +350,19 @@ async function waitForSetupDisconnect(task) {
 
 // エラーキュー
 // エラーを送信して数秒後に切断します。
-var errorQueue = TaskQueue(config.errorQueue, logger.errorQueue);
+var errorQueue = new TaskQueue(config.errorQueue, logger.errorQueue);
 errorQueue.setAddEventListener((task) => {
+    errorQueue.logger.debug("task added.");
     return sendError;
 });
 errorQueue.setAbortEventListener((err, task) => {
+    errorQueue.logger.debug("task aborted (" + err + ").");
     errorQueue.remove(task);
 });
 
 // エラー送信
 async function sendError(task) {
+    errorQueue.logger.debug("send error.");
     var matchingClient = task.key;
     matchingClient.send(1, task.err);
     return waitForErrorDisconnect;
@@ -346,6 +371,7 @@ async function sendError(task) {
 // 数秒まってキューから消す
 async function waitForErrorDisconnect(task) {
     if (task._count == 0) {
+        errorQueue.logger.debug("wait for error disconnect.");
         return 3000;
     }
     var matchingClient = task.key;
@@ -361,16 +387,19 @@ async function waitForErrorDisconnect(task) {
 // セットアップエラーキュー
 // データベースにエラーを書き込んだりした後、
 // ユーザにマッチング失敗を通知します。
-var setupErrorQueue = TaskQueue(config.setupErrorQueue, logger.setupErrorQueue);
+var setupErrorQueue = new TaskQueue(config.setupErrorQueue, logger.setupErrorQueue);
 setupErrorQueue.setAddEventListener((task) => {
+    setupErrorQueue.logger.debug("task added.");
     return sendSetupError;
 });
 setupErrorQueue.setAbortEventListener((err, task) => {
+    setupErrorQueue.logger.debug("task aborted (" + err + ").");
     setupErrorQueue.remove(task);
 });
 
 // セットアップエラー送信
 async function sendSetupError(task) {
+    setupErrorQueue.logger.debug("send setup error.");
     var matchingClients = task.matchingClients;
     for (var i in matchingClients) {
         var matchingClient = matchingClients[i];
@@ -382,6 +411,7 @@ async function sendSetupError(task) {
 // 数秒まってキューから消す
 async function waitForSetupErrorDisconnect(task) {
     if (task._count == 0) {
+        setupErrorQueue.logger.debug("wait for setup error disconnect.");
         return 3000;
     }
     var matchingClients = task.matchingClients;
