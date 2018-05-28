@@ -128,7 +128,7 @@ async function identifyUser(task) {
         throw new Error("invalid userId");
     }
 
-    // ユーザ確認
+    // ユーザ確認完了
     joinQueue.logger.debug('user found!');
     joinQueue.remove(task);
     matchingQueue.add(task);
@@ -139,12 +139,8 @@ async function identifyUser(task) {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-// マッチングID作成用
-var matchIdCounter = 0;
-
 // マッチングキュー
-// ユーザ一覧を走査し、ちょうど良い人数になったら
-// ユーザをまとめてセットアップキューに引き継ぎます。
+// マッチング待ちのユーザのキューです。
 var matchingQueue = TaskQueue(config.matchingQueue, logger.matchingQueue);
 matchingQueue.setAddEventListener((task) => {
     return null;
@@ -154,16 +150,71 @@ matchingQueue.setAbortEventListener((err, task) => {
     matchingQueue.remove(task);
     errorQueue.add(task);
 });
-matchingQueue.setCustomUpdateEventListener((queue) => {
-    //TODO
-    // 次のキューがフルならしばらく待ち
-    //if (setupQueue.isFull()) {
-    //    return 1000;
-    //}
 
-    // TODO
-    // セットアップキューに入れる前に
-    // 空きサーバをチェックしないといけない気がする...
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+// マッチングブレインID生成用
+var matchingBrainIdCounter = 0;
+
+// マッチングID生成用
+var matchIdCounter = 0;
+
+// マッチングブレインキュー
+// マッチングキューを監視して、
+// ユーザにマッチング結果を通知します。
+var matchingBrainQueue = TaskQueue(config.matchingBrainQueue, logger.matchingBrainQueue);
+matchingBrainQueue.setAddEventListener((task) => {
+    return findServer;
+});
+matchingBrainQueue.setAbortEventListener((err, task) => {
+    task.data.err = err;
+    matchingBrainQueue.remove(task);
+    setupErrorQueue.add(task);
+});
+
+// NOTE
+// マッチングブレイン強制注入
+// 足りなくなったら一定時間おきに注入する。
+setTimeout(() => {
+    if (!matchingBrainQueue.isFull()) {
+        var matchingBrainTask = TaskQueue.createTaskFromKey(++matchingBrainIdCounter);
+        matchingBrainQueue.add(matchingBrainTask);
+    }
+}, 1000);
+
+// NOTE
+// 参加できそうなサービスを探す
+// あらかじめセットアップリクエストを飛ばす実装にしておいても良いかも？
+function findServer(task) {
+    return new Promise((resolved) => {
+        var cond = ".*{.alias == \"server\" && .serverState == \"standby\" && .load < 1.0}";
+        mindlinkClient.sendQuery(cond, function(err,services) {
+            if (err) {
+                throw err;
+            }
+            if (!services || services.length <= 0) {
+                resolved(1000);//サービスが無し
+                return;
+            }
+            task.service = services[0];
+            matchingBrainQueue.logger.debug('server found: service[' + util.inspect(task.service, {depth:null,breakLength:Infinity}) + ']');
+            resolved(makeMatching);
+        });
+    });
+}
+
+// マッチングする
+async function makeMatching(task) {
+    // 次のキューがフルならしばらく待ち
+    if (setupQueue.isFull()) {
+        return 1000;
+    }
+    // マッチングが成立するためのユーザいない
+    if (matchingQueue.getLength() <= 0) {
+        return 1000;
+    }
     var matchingKeys    = [];
     var matchingClients = [];
     var matchingUsers   = [];
@@ -171,11 +222,11 @@ matchingQueue.setCustomUpdateEventListener((queue) => {
     // NOTE
     // 今は上から順にマッチング
     // そのうち上等なマッチングのロジックに治す。
-    var task = queue[0];
-    matchingKeys.push(task.key);
-    matchingClients.push(task.key);
-    matchingUsers.push(task.userId);
-    matchingQueue.remove(task);
+    var matchingTask = matchingQueue.at(0);
+    matchingKeys.push(matchingTask.key);
+    matchingClients.push(matchingTask.key);
+    matchingUsers.push(matchingTask.userId);
+    matchingQueue.remove(matchingTask);
 
     // サーバ セットアップ リクエストメッセージ
     var serverSetupRequestMessage = new ServerSetupRequestMessage();
@@ -186,8 +237,10 @@ matchingQueue.setCustomUpdateEventListener((queue) => {
 
     // セットアップタスクを作成して投入
     var setupTask = TaskQueue.createTaskFromKey(matchingKeys);
+    setupTask.service                   = task.service;
     setupTask.matchingClients           = matchingClients;
     setupTask.serverSetupRequestMessage = serverSetupRequestMessage;
+    matchingBrainQueue.remove(task);
     setupQueue.add(setupTask);
 });
 
@@ -200,7 +253,7 @@ matchingQueue.setCustomUpdateEventListener((queue) => {
 // ユーザにマッチング結果を通知します。
 var setupQueue = TaskQueue(config.setupQueue, logger.setupQueue);
 setupQueue.setAddEventListener((task) => {
-    return findServer;
+    return setupRequest;
 });
 setupQueue.setAbortEventListener((err, task) => {
     task.data.err = err;
@@ -212,25 +265,6 @@ setupQueue.setAbortEventListener((err, task) => {
 async function initMatch(task) {
     task.matchId = matchIdCounter++;
     return findServer;
-}
-
-// 参加できそうなサービスを探す
-function findServer(task) {
-    return new Promise((resolved) => {
-        var cond = ".*{.alias == \"server\" && .serverState == \"standby\" && .load < 1.0}";
-        mindlinkClient.sendQuery(cond, function(err,services) {
-            if (err) {
-                throw err;
-            }
-            if (!services || services.length <= 0) {
-                resolved(500);
-                return;
-            }
-            task.service = services[0];
-            setupQueue.logger.debug('server found: service[' + util.inspect(task.service, {depth:null,breakLength:Infinity}) + ']');
-            resolved(setupRequest);
-        });
-    });
 }
 
 // セットアップリクエストを飛ばす
@@ -248,13 +282,14 @@ async function waitForSetupResponse(task) {
 
     // メッセージ来た？
     if (!task.serverSetupDoneMessage) {
-        if (task.waitCount++ < 30) {
-            return 1000;
+        if (task.waitCount++ >= 30) {
+            throw new Error('setup wait count exceeded.');
         }
-        return findServer;
+        return 1000;
     }
 
-    // メッセージ到来
+    // セットアップが完了したらしいので
+    // マッチ完了を通知
     var matchConnectData = new MatchConnectData();
     matchConnectData.serverAddress = serverAddress;
     matchConnectData.serverPort    = serverPort;
@@ -263,7 +298,7 @@ async function waitForSetupResponse(task) {
     return sendMatchConnectData;
 }
 
-// ブロードキャスト
+// マッチ完了を通知
 async function sendMatchConnectData(task) {
     var matchingClients = task.matchingClients;
     for (var i in matchingClients) {
@@ -364,300 +399,3 @@ async function waitForSetupErrorDisconnect(task) {
 
 // start app ...
 couchClient.start();
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-//
-//// マッチングキュー
-//var matchingQueue = [];
-//
-//// マッチング更新タイマーID
-//var matchingQueueUpdateTimerId = null;
-//
-//// マッチング開始
-//function matchingStart(matchingClient) {
-//    // マッチングクライアント初期化
-//    matchingClient.matchingId = matchingClient.acceptData.matchingId;
-//    matchingClient.userId     = null;
-//    matchingClient.userData   = null;
-//
-//    // 情報表示
-//    logger.matchingServer.debug('start matching with matchingId "' + matchingClient.matchingId + '".');
-//
-//    // キューに追加
-//    matchingQueue.push(matchingClient);
-//    if (!matchingQueueUpdateTimerId) {
-//        setInterval(matchingUpdate, 500);//500ms更新
-//    }
-//
-//    // ユーザ特定
-//    matchingIdentifyParameter(matchingClient);
-//}
-//
-//// マッチングパラメータ確認
-//function matchingIdentifyParameter(matchingClient) {
-//    MatchingData.getCache(matchingClient.matchingId, (err,data) => {
-//        if (err) {
-//            matchingAbort(matchingClient, new Error("cache error."));
-//            return;
-//        }
-//        if (!data) {
-//            matchingAbort(matchingClient, new Error("invalid matchingId."));
-//            return;
-//        }
-//        matchingClient.userId = data.users[0];
-//        matchingIdentifyUser(matchingClient);
-//    });
-//}
-//
-//// ユーザを識別
-//function matchingIdentifyUser(matchingClient) {
-//    UserData.get(matchingClient.userId, (err,userData) => {
-//        if (err) {
-//            matchingAbort(matchingClient, err);
-//            return;
-//        }
-//        if (!userData) {
-//            matchingAbort(matchingClient, new Error("invalid user."));
-//            return;
-//        }
-//        matchingClient.userData = userData;
-//    });
-//}
-//
-//// マッチング更新処理
-//function matchingUpdate() {
-//    // マッチングキューが空なら何もしない
-//    if (matchingQueue.length <= 0) {
-//        return;
-//    }
-//
-//    // NOTE
-//    // ここにマッチング処理を書きこむ。
-//    // 現在はシンプルマッチングなので、
-//    // キューの先頭からマッチが成立して
-//    // 空きサーバに順次接続するようになっている。
-//
-//    // 最初のユーザを取得する
-//    var matchingClient = matchingQueue[0];
-//    if (!matchingClient.userData) {
-//        return; // ユーザデータ取得中の場合は無視
-//    }
-//
-//    // マッチングからは除外 (後戻りできない)
-//    matchingCancel(matchingClient);
-//
-//    // 参加開始
-//    var sceneName = "NetworkProvingGround";//NOTE 仮マップ
-//    joinStart([matchingClient], sceneName);
-//}
-//
-//// マッチング終了
-//function matchingClose(matchingClient, data) {
-//    // 即キャンセル
-//    matchingCancel(matchingClient);
-//
-//    // メッセージ送信
-//    matchingClient.send(0, data);
-//
-//    // 返却後 2 秒で切断
-//    setTimeout(() => {
-//        matchingClient.stop();
-//    }, 2000);
-//}
-//
-//// マッチング中断
-//function matchingAbort(matchingClient, err) {
-//    matchingClose(matchingClient, {err:err});
-//}
-//
-//// マッチングキャンセル
-//function matchingCancel(matchingClient) {
-//    for (i = matchingQueue.length - 1; i >= 0; i--) {
-//        if (matchingQueue[i] == matchingClient) {
-//            matchingQueue.splice(i, 1);
-//        }
-//    }
-//}
-//
-//////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////
-//
-//// 参加キュー
-//var joinQueue = [];
-//
-//// 参加キュー更新タイマー
-//var joinQueueUpdateTimerId = null;
-//
-//// マッチ番号自動生成用
-//var matchIdCounter = 0;
-//
-//// 参加開始
-//function joinStart(matchingClients, sceneName) {
-//    // マッチID生成
-//    var matchId = ++matchIdCounter;
-//
-//    // マッチングユーザ一覧生成
-//    var matchingUsers = [];
-//    for (var i in matchingClients) {
-//        var matchingClient = matchingClients[i];
-//        matchingUsers.push(matchingClient.userId);
-//    }
-//
-//    // サーバ セットアップ リクエストメッセージ
-//    var serverSetupRequestMessage = new ServerSetupRequestMessage();
-//    serverSetupRequestMessage.matchId       = matchId;
-//    serverSetupRequestMessage.sceneName     = sceneName;
-//    serverSetupRequestMessage.matchingUsers = matchingUsers;
-//
-//    // マッチデータ初期化
-//    var matchData = {};
-//    matchData.matchId                   = matchId;
-//    matchData.matchingClients           = matchingClients;
-//    matchData.serverSetupRequestMessage = serverSetupRequestMessage;
-//    matchData.service                   = null;
-//    matchData.waitCount                 = 0;
-//    matchData.requestCount              = 0;
-//
-//    // 参加キューに追加
-//    joinQueue.push(matchData);
-//    if (!joinQueueUpdateTimerId) {
-//        setInterval(joinUpdate, 500);//500ms更新
-//    }
-//
-//    // サービス検索
-//    joinSearch(matchData);
-//}
-//
-
-//// 参加できそうなサービスを検索
-//function joinSearch(matchData) {
-//    var cond = ".*{.alias == \"server\" && .serverState == \"standby\" && .load < 1.0}";
-//    mindlinkClient.sendQuery(cond, function(err,services) {
-//        if (err) {
-//            joinAbort(matchData, err);
-//            return;
-//        }
-//        if (!services || services.length <= 0) {
-//            joinAbort(matchData, new Error('no server found.'));
-//            return;
-//        }
-//        var service = services[0];
-//        logger.matchingServer.debug('server found: service[' + util.inspect(service, {depth:null,breakLength:Infinity}) + ']');
-//        matchData.service = service;
-//    });
-//}
-//
-//// 参加更新
-//function joinUpdate() {
-//    // 参加キューが空なら何もしない
-//    if (joinQueue.length <= 0) {
-//        return;
-//    }
-//
-//    // 参加キューを処理
-//    var abortList = [];
-//    for (var i in joinQueue) {
-//        var matchData = joinQueue[i];
-//
-//        // サービスが確定していない場合は無視
-//        if (!matchData.service) {
-//            continue;
-//        }
-//
-//        // サーバ セットアップ リクエスト送信
-//        matchData.waitCount--;
-//        if (matchData.waitCount <= 0) {
-//            // 待ちカウンタリセット
-//            matchData.waitCount = 6;
-//
-//            // 送信しすぎの場合は中断予約
-//            matchData.sendCount++;
-//            if (matchData.sendCount > 3) {
-//                abortList.push(matchData);
-//                continue;
-//            }
-//
-//            // 送信
-//            serverSetupRequest(matchData);
-//        }
-//    }
-//
-//    // 中断してるものを処理
-//    for (var i in abortList) {
-//        var matchData = abortList[i];
-//        joinAbort(matchData, new Error('send limit exceeded.'));
-//    }
-//}
-//
-//// サービス参加リクエスト
-//function serverSetupRequest(matchData) {
-//    mindlinkClient.sendToRemote(matchData.service.clientUuid, 0, matchData.serverSetupRequestMessage);
-//}
-//
-//// サービス参加レスポンス
-//function serverSetupResponse(from, matchId) {
-//    // サーバがセットアップされたが根拠となるデータが既に無い
-//    // その場合はサーバ側に通知して、サーバを終了する。
-//    var foundMatchData = null;
-//    for (var i in joinQueue) {
-//        var matchData = joinQueue[i];
-//        if (matchData.matchId == matchId) {
-//            foundMatchData = matchData;
-//            break;
-//        }
-//    }
-//    if (!foundMatchData) {
-//        var errorMessage = 'matchId not found? (' + matchId + ')';
-//        logger.matchingServer.debug(errorMessage);
-//        mindlinkClient.sendToRemote(from, 0, {err:new Error(errorMessage)});
-//        return;
-//    }
-//
-//    // 参加成功！
-//    joinReady(foundMatchData, foundMatchData.service.serverAddress, foundMatchData.service.serverPort);
-//}
-//
-//// 参加可能
-//function joinReady(matchData, serverAddress, serverPort) {
-//    var matchConnectData = new MatchConnectData();
-//    matchConnectData.serverAddress = serverAddress;
-//    matchConnectData.serverPort    = serverPort;
-//    matchConnectData.matchId       = matchData.matchId;
-//    joinClose(matchData, matchConnectData);
-//}
-//
-//// 参加終了
-//function joinClose(matchData, data) {
-//    // 即キャンセル
-//    joinCancel(matchData);
-//
-//    // メッセージ送信
-//    var matchingClients = matchData.matchingClients;
-//    for (var i in matchingClients) {
-//        var matchingClient = matchingClients[i];
-//        matchingClose(matchingClient, data);
-//    }
-//    matchingClients.splice(0, matchingClients.length);
-//}
-//
-//// 参加中断
-//function joinAbort(matchData, err) {
-//    joinClose(matchData, {err:err});
-//}
-//
-//// 参加キャンセル
-//function joinCancel(matchData) {
-//    for (i = joinQueue.length - 1; i >= 0; i--) {
-//        if (joinQueue[i] == matchData) {
-//            joinQueue.splice(i, 1);
-//        }
-//    }
-//}
-//
-//////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////
-//

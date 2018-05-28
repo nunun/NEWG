@@ -7,13 +7,12 @@ class TaskQueue {
         this.config   = config;
         this.logger   = logger;
         this.queue    = [];
-        this.limit    = config.limit    || -1;
-        this.parallel = config.parallel || 3;
+        this.capacity = config.capacity || -1;
+        this.parallel = (config.parallel === null)? 1 : config.parallel;
 
         // 各種イベントハンドラ
-        this.addEventListener          = null;
-        this.abortEventListener        = null;
-        this.customUpdateEventListener = null;
+        this.addEventListener   = null;
+        this.abortEventListener = null;
 
         // 念のための更新タイマー
         setTimeout(() => {
@@ -37,20 +36,31 @@ class TaskQueue {
         this.abortEventListener = eventListener;
     }
 
-    // カスタム更新イベントリスナの設定
-    setCustomUpdateEventListener(eventListener) {
-        this.customUpdateEventListener = eventListener;
+    //-------------------------------------------------------------------------- キュー操作
+    // タスクを取得
+    getTaskAt(index) {
+        return this.queue[index];
     }
 
-    //-------------------------------------------------------------------------- タスクの作成, 追加, 削除, 中断
-    // キーからタスクを作成
-    static createTaskFromKey(key) {
-        return {_action:null, _key:key, _busy:false, _count:0};
+    // キャパシティの取得
+    getLength() {
+        return this.queue.length;
+    }
+
+    // キャパシティの取得
+    getCapacity() {
+        return this.capacity;
     }
 
     // 満杯チェック
     isFull() {
-        return (this.limit >= 0 && this.queue.length >= this.limit);
+        return (this.capacity >= 0 && this.queue.length >= this.capacity);
+    }
+
+    //-------------------------------------------------------------------------- タスク操作
+    // キーからタスクを作成
+    static createTaskFromKey(key) {
+        return {_action:null, _key:key, _busy:false, _count:0};
     }
 
     // タスクを追加
@@ -124,17 +134,9 @@ class TaskQueue {
         return -1;
     }
 
-    //-------------------------------------------------------------------------- 更新と処理
+    //-------------------------------------------------------------------------- タスクの更新
     // 更新
     update() {
-        // NOTE
-        // カスタムアップデートリスナがあったら
-        // そっちを呼び出して終了
-        if (this.updateEventListener) {
-            this.updateEventListener(queue);
-            return;
-        }
-
         // キューが空
         if (this.queue.length <= 0) {
             return;

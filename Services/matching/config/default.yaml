@@ -20,27 +20,32 @@ matchingServer:
 
 # join queue
 joinQueue:
-  limit:    32
-  parallel: [1, "${JOIN_QUEUE_PARALLEL}"]
+  capacity: [32, "${JOIN_QUEUE_CAPACITY}"]
+  parallel: [1,  "${JOIN_QUEUE_PARALLEL}"]
 
 # matching queue
 matchingQueue:
-  limit:    256
-  parallel: [1, "${MATCHING_QUEUE_PARALLEL}"]
+  capacity: [256, "${MATCHING_QUEUE_CAPACITY}"]
+  parallel: [0,   "${MATCHING_QUEUE_PARALLEL}"]
+
+# matching brain queue
+matchingBrainQueue:
+  capacity: [1, "${MATCHING_BRAIN_QUEUE_CAPACITY}"]
+  parallel: [1, "${MATCHING_BRAIN_QUEUE_PARALLEL}"]
 
 # setup queue
 setupQueue:
-  limit:    1
+  capacity: [1, "${SETUP_QUEUE_CAPACITY}"]
   parallel: [1, "${SETUP_QUEUE_PARALLEL}"]
 
 # error queue
 errorQueue:
-  limit:    -1
+  capacity: [-1, "${ERROR_QUEUE_CAPACITY}"]
   parallel: [16, "${ERROR_QUEUE_PARALLEL}"]
 
 # setup error queue
 setupErrorQueue:
-  limit:    -1
+  capacity: [-1, "${SETUP_ERROR_QUEUE_CAPACITY}"]
   parallel: [16, "${SETUP_ERROR_QUEUE_PARALLEL}"]
 
 # log4js
@@ -68,6 +73,9 @@ log4js:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
     matchingQueue:
+      appenders: [console]
+      level: [info, "${LOG_LEVEL}"]
+    brainQueue:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
     setupQueue:
