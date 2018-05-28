@@ -363,7 +363,7 @@ errorQueue.setAbortEventListener((err, task) => {
 // エラー送信
 async function sendError(task) {
     errorQueue.logger.debug("send error.");
-    var matchingClient = task.key;
+    var matchingClient = task._key;
     matchingClient.send(1, task.err);
     return waitForErrorDisconnect;
 }
@@ -374,7 +374,7 @@ async function waitForErrorDisconnect(task) {
         errorQueue.logger.debug("wait for error disconnect.");
         return 3000;
     }
-    var matchingClient = task.key;
+    var matchingClient = task._key;
     matchingClient.stop();
     errorQueue.remove(task);
     return null;

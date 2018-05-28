@@ -143,7 +143,7 @@ class TaskQueue {
         }
 
         // 処理中でないタスクを処理
-        for (var i = 0; i < this.parallel; i++) {
+        for (var i = 0; i < this.parallel && i < this.queue.length; i++) {
             var task = this.queue[i];
             if (!task._busy) {
                 this.action(task);
