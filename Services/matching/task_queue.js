@@ -37,11 +37,6 @@ class TaskQueue {
     }
 
     //-------------------------------------------------------------------------- キュー操作
-    // タスクを取得
-    getTaskAt(index) {
-        return this.queue[index];
-    }
-
     // キャパシティの取得
     getLength() {
         return this.queue.length;
@@ -132,6 +127,20 @@ class TaskQueue {
             }
         }
         return -1;
+    }
+
+    // タスクを取得
+    getTaskAt(index) {
+        return this.queue[index];
+    }
+
+    // キーを持つタスクを取得します
+    getTaskAtKey(key) {
+        var i = this.indexOfKey(key);
+        if (i >= 0) {
+            return this.getTaskAt(i);
+        }
+        return null;
     }
 
     //-------------------------------------------------------------------------- タスクの更新

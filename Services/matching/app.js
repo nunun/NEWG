@@ -46,9 +46,9 @@ mindlinkClient.setConnectEventListener(function() {
     });
 });
 mindlinkClient.setDataFromRemoteEventListener(0, (data,res) => {
-    var task = setupQueue.indexOfKey(data.matchId);
+    var task = setupQueue.getTaskAtKey(data.matchId);
     if (!task) {
-        var errorMessage = 'matchId not found? (' + matchId + ')';
+        var errorMessage = 'matchId not found? (' + data.matchId + ')';
         logger.matchingServer.debug(errorMessage);
         mindlinkClient.sendToRemote(res.to, 0, {err:new Error(errorMessage)});
         return;
@@ -116,7 +116,8 @@ async function identifyUser(task) {
     }
 
     // 初期化
-    task.matchingId = task.key.acceptData.matchingId;
+    var matchingClient = task._key;
+    task.matchingId = matchingClient.acceptData.matchingId;
     task.userId     = null;
     task.userData   = null;
 
@@ -185,17 +186,15 @@ matchingBrainQueue.setAbortEventListener((err, task) => {
     setupErrorQueue.add(task);
 });
 
-// TODO
-// 一時中断中
 // NOTE
 // マッチングブレイン強制注入
 // 足りなくなったら一定時間おきに注入する。
-//setTimeout(() => {
-//    if (!matchingBrainQueue.isFull()) {
-//        var matchingBrainTask = TaskQueue.createTaskFromKey(++matchingBrainIdCounter);
-//        matchingBrainQueue.add(matchingBrainTask);
-//    }
-//}, 1000);
+setTimeout(() => {
+    if (!matchingBrainQueue.isFull()) {
+        var matchingBrainTask = TaskQueue.createTaskFromKey(++matchingBrainIdCounter);
+        matchingBrainQueue.add(matchingBrainTask);
+    }
+}, 1000);
 
 // NOTE
 // 参加できそうなサービスを探す
@@ -209,7 +208,7 @@ function findServer(task) {
                 throw err;
             }
             if (!services || services.length <= 0) {
-                resolved(1000);//サービスが無し
+                resolved(1000);//サービス無し
                 return;
             }
             task.service = services[0];
@@ -238,9 +237,9 @@ async function makeMatching(task) {
     // NOTE
     // 今は上から順にマッチング
     // そのうち上等なマッチングのロジックに治す。
-    var matchingTask = matchingQueue.at(0);
-    matchingKeys.push(matchingTask.key);
-    matchingClients.push(matchingTask.key);
+    var matchingTask = matchingQueue.getTaskAt(0);
+    matchingKeys.push(matchingTask._key);
+    matchingClients.push(matchingTask._key);
     matchingUsers.push(matchingTask.userId);
     matchingQueue.remove(matchingTask);
 
@@ -249,7 +248,7 @@ async function makeMatching(task) {
     serverSetupRequestMessage.matchId       = matchIdCounter++;
     serverSetupRequestMessage.sceneName     = "NetworkProvingGround";
     serverSetupRequestMessage.matchingUsers = matchingUsers;
-    matchingKeys.push(matchId);
+    matchingKeys.push(serverSetupRequestMessage.matchId);
 
     // セットアップタスクを作成して投入
     var setupTask = TaskQueue.createTaskFromKey(matchingKeys);
@@ -311,9 +310,9 @@ async function waitForSetupResponse(task) {
     // セットアップが完了したらしいので
     // マッチ完了を通知
     var matchConnectData = new MatchConnectData();
-    matchConnectData.serverAddress = serverAddress;
-    matchConnectData.serverPort    = serverPort;
-    matchConnectData.matchId       = matchData.matchId;
+    matchConnectData.serverAddress = task.service.serverAddress;
+    matchConnectData.serverPort    = task.service.serverPort;
+    matchConnectData.matchId       = task.serverSetupDoneMessage.matchId;
     task.matchConnectData = matchConnectData;
     return sendMatchConnectData;
 }
