@@ -6,6 +6,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
+using Services.Protocols.Models;
+using ErrorData = Services.Protocols.Models.ErrorData;
 
 // WebAPI クライアント
 public partial class WebAPIClient : MonoBehaviour {
@@ -171,6 +173,16 @@ public partial class WebAPIClient {
             requestList.RemoveAt(0);
             request.SetResponse(error, null);
             request.ReturnToPool();
+        } else if (unityWebRequest.isDone && unityWebRequest.responseCode >= 400) {
+            var message   = crypter.Decrypt(unityWebRequest.downloadHandler.text);
+            var errorData = default(ErrorData);
+            try {
+                errorData = JsonUtility.FromJson<ErrorData>(message);
+                message   = errorData.err.message;
+            } catch {}
+            requestList.RemoveAt(0);
+            request.SetResponse(message, null);
+            request.ReturnToPool();
         } else if (unityWebRequest.isDone) {
             var message = crypter.Decrypt(unityWebRequest.downloadHandler.text);
             requestList.RemoveAt(0);
@@ -301,14 +313,20 @@ public partial class WebAPIClient {
             Debug.LogFormat("WebAPIClient.Request<{0}>.SetResponse: error[{1}] message[{2}]", typeof(TRes), error, message);
             var req = request as Request<TRes>;
             Debug.Assert(req != null);
+            var callback = default(Action<string,TRes>);
+            if (req.callback != null) {
+                callback = req.callback;
+                req.callback = null;
+            }
             try {
                 if (!string.IsNullOrEmpty(error)) {
-                    throw new Exception(error);
+                    if (callback != null) {
+                        callback(error, default(TRes));
+                    }
+                    return;
                 }
-                if (req.callback != null) {
+                if (callback != null) {
                     var data = JsonUtility.FromJson<TRes>(message);
-                    var callback = req.callback;
-                    req.callback = null;
                     callback(null, data);
                 }
                 // NOTE
@@ -318,9 +336,7 @@ public partial class WebAPIClient {
                 // 一旦ここにおいておく。
                 GameDataManager.Import(message);
             } catch (Exception e) {
-                if (req.callback != null) {
-                    var callback = req.callback;
-                    req.callback = null;
+                if (callback != null) {
                     callback(e.ToString(), default(TRes));
                 }
             }

@@ -103,6 +103,18 @@ public partial class GameManager {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
+// WebAPI 情報
+public partial class GameManager {
+    //-------------------------------------------------------------------------- 変数
+    public string webapiUrl = "http://localhost:7780"; // WebAPI URL
+
+    public static string WebAPIURL { get { return instance.webapiUrl; }}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
 // スタンドアローンモード情報
 public partial class GameManager {
     //-------------------------------------------------------------------------- 変数
@@ -188,17 +200,18 @@ public partial class GameManager {
     //-------------------------------------------------------------------------- インポート処理
     // コマンドライン起動引数を取得
     void ImportCommandLineLaunchArguments() {
-        ImportCommandLineStringArgument(ref serverAddress,         "-serverAddress",         null);
-        ImportCommandLineIntegerArgument(ref serverPort,           "-serverPort",            null);
-        ImportCommandLineStringArgument(ref mindlinkServerAddress, "-mindlinkServerAddress", null);
-        ImportCommandLineIntegerArgument(ref mindlinkServerPort,   "-mindlinkServerPort",    null);
+        ImportCommandLineStringArgument(ref  serverAddress,         "-serverAddress",         null);
+        ImportCommandLineIntegerArgument(ref serverPort,            "-serverPort",            null);
+        ImportCommandLineStringArgument(ref  mindlinkServerAddress, "-mindlinkServerAddress", null);
+        ImportCommandLineStringArgument(ref  webapiUrl,             "-webapiUrl",             null);
     }
 
     #if UNITY_WEBGL
     // ウェブブラウザクエリ起動引数を取得
     void ImportWebBrowserLaunchArguments() {
-        // NOTE
-        // 今のところ何もなし
+        var hostName = "localhost";
+        ImportWebBrowserHostName(ref hostName);
+        this.webapiUrl = string.Format("http://{0}:7780", hostName);
     }
     #endif
 

@@ -147,13 +147,23 @@ public partial class Lobby {
         GameAudio.SetBGMVolume("Abandoned", 0.3f, 5.0f);
 
         // 接続情報を取得
-        var error            = default(string);
+        var matchingError    = default(string);
         var matchingResponse = default(WebAPI.MatchingResponse);
         using (var wait = UIWait<WebAPI.MatchingResponse>.RentFromPool()) {
             WebAPI.Matching(wait.Callback);
             yield return wait;
-            error            = wait.error;
+            matchingError    = wait.error;
             matchingResponse = wait.Value1;
+        }
+
+        // エラー？
+        if (!string.IsNullOrEmpty(matchingError)) {
+            using (var wait = UIWait.RentFromPool()) {
+                OkPopup.Open(matchingError, wait.Callback);
+                yield return wait;
+            }
+            matchingUI.Change(lobbyUI);
+            yield break;
         }
 
         #if STANDALONE_MODE

@@ -219,6 +219,30 @@ specs:
               type:  string
               value: server
 
+        - name: ErrorData
+          desc: エラーデータ。WebAPI やメッセージングでエラーになった場合のレスポンスデータ。
+          properties:
+            - name:  err
+              desc:  エラー詳細情報
+              type:  ErrorDescriptionData
+              value: (null)
+
+        - name: ErrorDescriptionData
+          desc: エラー詳細データ。実際のエラー情報。
+          properties:
+            - name:  code
+              desc:  エラーコード
+              type:  int
+              value: 0
+            - name:  message
+              desc:  エラーメッセージ
+              type:  string
+              value: (null)
+            - name:  stack
+              desc:  スタックトレース
+              type:  string
+              value: (null)
+
         - name: ServerSetupRequestMessage
           desc: サーバセットアップリクエストメッセージ。API サーバが Unity サーバに対してサーバインスタンスをセットアップしたいときに送信。
           properties:
@@ -246,6 +270,9 @@ specs:
               desc:  サーバ起動をリクエストしたマッチID
               type:  string
               value: (null)
+
+
+
 
         - name: UniqueKeyData
           desc: 固有キー生成用データ。CouchDB のキー重複制限を使って固有キーを生成するために使用。

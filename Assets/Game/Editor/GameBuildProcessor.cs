@@ -93,6 +93,20 @@ public partial class GameBuildProcessor {
                 gameManager.standaloneSimulator = null; // リリース環境で有効にしない
             }
         }
+
+        // WebAPI クライアント
+        var webAPIClient = FindObjectOfType<WebAPIClient>();
+        if (webAPIClient != null) {
+
+            // リリースビルド時
+            if (!isDebugBinary) {
+                if (binaryServiceMode == GameManager.ServiceMode.Server) {
+                    webAPIClient.url = "http://api"; // コマンドラインで指定
+                } else {
+                    webAPIClient.url = "http://localhost:7780"; // ブラウザ URL またはコマンドラインで指定
+                }
+            }
+        }
     }
 
     //-------------------------------------------------------------------------- ビルド

@@ -162,6 +162,36 @@ ServerStatusData.prototype.clear = function() {
     this.alias = "server"; // サーバエイリアス
 }
 models.ServerStatusData = ServerStatusData;
+// ErrorData
+// エラーデータ。WebAPI やメッセージングでエラーになった場合のレスポンスデータ。
+function ErrorData() {
+    this.init();
+}
+util.inherits(ErrorData, ModelData);
+ModelData.setupType(ErrorData, 'ErrorData', 'db_error_data');
+ErrorData.prototype.init = function() {
+    ErrorData.super_.prototype.init.call(this);
+};
+ErrorData.prototype.clear = function() {
+    this.err = null; // エラー詳細情報
+}
+models.ErrorData = ErrorData;
+// ErrorDescriptionData
+// エラー詳細データ。実際のエラー情報。
+function ErrorDescriptionData() {
+    this.init();
+}
+util.inherits(ErrorDescriptionData, ModelData);
+ModelData.setupType(ErrorDescriptionData, 'ErrorDescriptionData', 'db_error_description_data');
+ErrorDescriptionData.prototype.init = function() {
+    ErrorDescriptionData.super_.prototype.init.call(this);
+};
+ErrorDescriptionData.prototype.clear = function() {
+    this.code = 0; // エラーコード
+    this.message = null; // エラーメッセージ
+    this.stack = null; // スタックトレース
+}
+models.ErrorDescriptionData = ErrorDescriptionData;
 // ServerSetupRequestMessage
 // サーバセットアップリクエストメッセージ。API サーバが Unity サーバに対してサーバインスタンスをセットアップしたいときに送信。
 function ServerSetupRequestMessage() {

@@ -276,13 +276,13 @@ class WebAPIController {
     //-------------------------------------------------------------------------- マインドリンク
     // サービス情報の検索
     sendQuery(cond) {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             mindlinkClient.sendQuery(cond, (err,services) => {
                 if (err) {
                     throw err;
                 }
                 if (!services || services.length <= 0) {
-                    throw new Error('no matching server found.');
+                    reject(new Error('no matching server found.'));
                 }
                 resolve(services[0]);
             });

@@ -134,6 +134,28 @@ namespace Services.Protocols.Models {
             alias = "server"; // サーバエイリアス
         }
     }
+    // ErrorData
+    // エラーデータ。WebAPI やメッセージングでエラーになった場合のレスポンスデータ。
+    [Serializable]
+    public class ErrorData : ModelData {
+        public ErrorDescriptionData err; // エラー詳細情報
+        protected override void Clear() {
+            err = null; // エラー詳細情報
+        }
+    }
+    // ErrorDescriptionData
+    // エラー詳細データ。実際のエラー情報。
+    [Serializable]
+    public class ErrorDescriptionData : ModelData {
+        public int code; // エラーコード
+        public string message; // エラーメッセージ
+        public string stack; // スタックトレース
+        protected override void Clear() {
+            code = 0; // エラーコード
+            message = null; // エラーメッセージ
+            stack = null; // スタックトレース
+        }
+    }
     // ServerSetupRequestMessage
     // サーバセットアップリクエストメッセージ。API サーバが Unity サーバに対してサーバインスタンスをセットアップしたいときに送信。
     [Serializable]

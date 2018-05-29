@@ -39,7 +39,7 @@ public partial class GameMindlinkManager {
     // 接続開始
     public static void Connect() {
         Debug.Assert(instance              != null,                      "GameMindlinkManager がいない");
-        Debug.Assert(instance.connectState != ConnectState.Disconnected, "既に接続中");
+        Debug.Assert(instance.connectState == ConnectState.Disconnected, "既に接続中");
         instance.connectState = ConnectState.Connecting;
         instance.connectError = null;
         instance.setupRequest = null;
