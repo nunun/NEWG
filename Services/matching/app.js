@@ -201,11 +201,12 @@ setTimeout(() => {
 // あらかじめセットアップリクエストを飛ばす実装にしておいても良いかも？
 function findServer(task) {
     matchingBrainQueue.logger.debug("find server.");
-    return new Promise((resolved) => {
+    return new Promise((resolved, reject) => {
         var cond = ".*{.alias == \"server\" && .serverState == \"standby\" && .load < 1.0}";
         mindlinkClient.sendQuery(cond, function(err,services) {
             if (err) {
-                throw err;
+                reject(err);
+                return;
             }
             if (!services || services.length <= 0) {
                 resolved(1000);//サービス無し
