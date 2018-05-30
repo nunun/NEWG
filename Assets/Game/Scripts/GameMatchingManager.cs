@@ -68,7 +68,7 @@ public partial class GameMatchingManager {
         }
 
         // 接続終了
-        StopConnecting();
+        connectState = ConnectState.Connected;
     }
 
     // 接続停止

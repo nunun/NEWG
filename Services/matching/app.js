@@ -279,7 +279,7 @@ async function makeMatching(task) {
 
     // サーバ セットアップ リクエストメッセージ
     var serverSetupRequestMessage = new ServerSetupRequestMessage();
-    serverSetupRequestMessage.matchId       = matchIdCounter++;
+    serverSetupRequestMessage.matchId       = (++matchIdCounter).toString();
     serverSetupRequestMessage.sceneName     = "NetworkProvingGround";
     serverSetupRequestMessage.matchingUsers = matchingUsers;
     matchingKeys.push(serverSetupRequestMessage.matchId);
@@ -311,13 +311,6 @@ setupQueue.setAbortEventListener((err, task) => {
     setupQueue.remove(task);
     setupErrorQueue.add(task);
 });
-
-// マッチ情報を初期化
-async function initMatch(task) {
-    setupQueue.logger.debug("init matching.");
-    task.matchId = matchIdCounter++;
-    return findServer;
-}
 
 // セットアップリクエストを飛ばす
 async function setupRequest(task) {
