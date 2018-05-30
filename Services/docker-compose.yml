@@ -33,6 +33,8 @@ services:
     image: ${ENV_REPOSITORY}/matching
     depends_on:
       - mindlink
+      - couchdb
+      - redis
 
   api:
     image: ${ENV_REPOSITORY}/api

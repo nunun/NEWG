@@ -43,7 +43,16 @@ mindlinkClient.setConnectEventListener(function() {
         logger.mindlinkClient.info('mindlink client initialized.');
         logger.mindlinkClient.info('starting matching server ...');
         matchingServer.start();
+
+        // NOTE
+        // マッチングブレイン供給を開始
+        startMatchingBrainSupply();
     });
+});
+mindlinkClient.setDisconnectEventListener(function() {
+    // NOTE
+    // マッチングブレイン供給を停止
+    stopMatchingBrainSupply();
 });
 mindlinkClient.setDataFromRemoteEventListener(0, (data,res) => {
     var task = setupQueue.getTaskAtKey(data.matchId);
@@ -171,6 +180,9 @@ var matchingBrainIdCounter = 0;
 // マッチングID生成用
 var matchIdCounter = 0;
 
+// マッチングブレイン供給タイマー
+var matchingBrainSupplyTimer = null;
+
 // マッチングブレインキュー
 // マッチングキューを監視して、
 // ユーザにマッチング結果を通知します。
@@ -186,15 +198,36 @@ matchingBrainQueue.setAbortEventListener((err, task) => {
     setupErrorQueue.add(task);
 });
 
-// NOTE
-// マッチングブレイン強制注入
-// 足りなくなったら一定時間おきに注入する。
-setTimeout(() => {
-    if (!matchingBrainQueue.isFull()) {
-        var matchingBrainTask = TaskQueue.createTaskFromKey(++matchingBrainIdCounter);
-        matchingBrainQueue.add(matchingBrainTask);
+// マッチングブレイン供給開始
+function startMatchingBrainSupply() {
+    if (matchingBrainSupplyTimer) {
+        matchingBrainQueue.logger.error("matchingBrainSupplyTimer is already started.");
+        return;
     }
-}, 1000);
+    matchingBrainQueue.logger.debug("start matchingBrainSupplyTimer ...");
+    matchingBrainSupplyTimer = setInterval(() => {
+        if (!matchingBrainQueue.isFull()) {
+            matchingBrainQueue.logger.debug("supplying new matchingBrain ...");
+            var matchingBrainTask = TaskQueue.createTaskFromKey(++matchingBrainIdCounter);
+            matchingBrainQueue.add(matchingBrainTask);
+        }
+    }, 1000);
+}
+
+// マッチングブレイン供給停止
+function stopMatchingBrainSupply() {
+    if (!matchingBrainSupplyTimer) {
+        matchingBrainQueue.logger.error("matchingBrainSupplyTimer does not started yet.");
+        return;
+    }
+    matchingBrainQueue.logger.debug("stop matchingBrainSupplyTimer ...");
+    stopInterval(matchingBrainSupplyTimer);
+    matchingBrainQueue.logger.debug("remove all matchingBrain ...");
+    var matchingBrainTask = null;
+    while (matchingBrainTask = matchingBrainQueue.getTaskAt(0)) {
+        matchingBrainQueue.remove(matchingBrainTask);
+    }
+}
 
 // NOTE
 // 参加できそうなサービスを探す
@@ -205,11 +238,11 @@ function findServer(task) {
         var cond = ".*{.alias == \"server\" && .serverState == \"standby\" && .load < 1.0}";
         mindlinkClient.sendQuery(cond, function(err,services) {
             if (err) {
-                reject(err);
+                resolved(10000);//送信エラー(10秒待ってリトライ)
                 return;
             }
             if (!services || services.length <= 0) {
-                resolved(1000);//サービス無し
+                resolved(3000);//サービス無し(3秒待ってリトライ)
                 return;
             }
             task.service = services[0];
