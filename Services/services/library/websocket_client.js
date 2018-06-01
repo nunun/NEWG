@@ -108,6 +108,10 @@ WebSocketClient.prototype.start = function(url, queries) {
             self.requestContext.setResponse(recvData.requestId, recvData.error, recvData.data);
             return;
         }
+        if (recvData.error) { // NOTE 'request' can handle error response but logging and discard for 'send'.
+            self.logger.error(recvData.error);
+            return;
+        }
         if (self.dataEventListener[recvData.type]) {
             var res = new Response(self, recvData.type, recvData.requestId, self.logger);
             self.dataEventListener[recvData.type](recvData, res);

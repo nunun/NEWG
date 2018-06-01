@@ -68,11 +68,26 @@ PublicChannel.prototype.start = function() {
                 responseData = null;
             }
             var sendData = {};
-            sendData.type      = data.type;
-            sendData.data      = responseData;
-            sendData.requestId = data.requestId;
-            sendData.response  = true;
-            sendData.error     = error;
+            if (!data.remote) {
+                sendData.type      = data.type;
+                sendData.data      = responseData;
+                sendData.requestId = data.requestId;
+                sendData.response  = true;
+                sendData.error     = error;
+            } else {
+                sendData.type             = PublicChannel.DATA_TYPE.M;
+                sendData.data             = responseData;
+                sendData.requestId        = 0;
+                sendData.response         = false;
+                sendData.error            = null;
+                sendData.remote           = {};
+                sendData.remote.from      = data.remote.to;
+                sendData.remote.to        = data.remote.from;
+                sendData.remote.type      = data.remote.type;
+                sendData.remote.requestId = data.remote.requestId;
+                sendData.remote.response  = true;
+                sendData.remote.error     = error;
+            }
             mindlinkClient.send(sendData);
         }
 

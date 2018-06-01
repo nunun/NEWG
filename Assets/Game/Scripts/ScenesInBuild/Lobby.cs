@@ -140,7 +140,10 @@ public partial class Lobby {
         Debug.Assert(cancelButton != null, "cancelButton がない");
         matchingUI.onOpen.AddListener(() => { StartCoroutine("UpdateMatching"); });
         matchingUI.onClose.AddListener(() => { StopCoroutine("UpdateMatching"); });
-        cancelButton.onClick.AddListener(() => { matchingUI.Change(lobbyUI); });
+        cancelButton.onClick.AddListener(() => {
+            GameMatchingManager.Disconnect();
+            matchingUI.Change(lobbyUI);
+        });
     }
 
     IEnumerator UpdateMatching() {

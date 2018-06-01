@@ -35,6 +35,10 @@ MindlinkClient.prototype.init = function(config, logger) {
             self.requestContext.setResponse(recvData.remote.requestId, recvData.remote.error, recvData.data);
             return;
         }
+        if (recvData.remote.error) { // NOTE 'request' can handle error response but logging and discard for 'send'.
+            self.logger.error(recvData.remote.error);
+            return;
+        }
         if (self.dataFromRemoteEventListener[recvData.remote.type]) {
             var res = new ResponseToRemote(self, recvData.remote.from, recvData.remote.type, recvData.remote.requestId, self.logger);
             self.dataFromRemoteEventListener[recvData.remote.type](recvData, res);

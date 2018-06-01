@@ -138,13 +138,14 @@ public partial class NetworkProvingGround {
                 GameManager.Abort("空きポートなし");
                 return;
             }
+            Debug.Log("サービス開始リトライ ...");
             TryStartService(retryCount - 1);//リトライ
             return;
         }
 
         // サーバ状態を送信
         Debug.Log("サーバ状態を送信 (ready) ...");
-        GameMindlinkManager.ServerStatusData.serverState = "ready";
+        GameMindlinkManager.ServerStatusData.serverState = "standby";
         GameMindlinkManager.ServerStatusData.serverAddress = mindlinkServerAddress;
         GameMindlinkManager.ServerStatusData.serverPort    = mindlinkServerPort;
         GameMindlinkManager.SendServerStatusData(() => {
