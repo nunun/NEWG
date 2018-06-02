@@ -78,19 +78,22 @@ public partial class GameBuildProcessor {
             // リリースビルド時
             if (!isDebugBinary) {
                 // サーバ情報
-                gameManager.serverAddress         = "localhost"; // 引数で指定
-                gameManager.serverPort            = 7777;        // 引数で指定
-                gameManager.serverPortRandomRange = 0;           // 引数で指定
-                gameManager.serverToken           = null;        // 無効に設定
-                gameManager.serverSceneName       = null;        // 無効に設定
+                gameManager.serverAddress          = "localhost"; // 引数で指定
+                gameManager.serverPort             = 7777;        // 引数で指定
+                gameManager.serverPortRandomRange  = 0;           // 引数で指定
+                gameManager.serverToken            = null;        // 無効に設定
+                gameManager.serverSceneName        = null;        // 無効に設定
+                gameManager.serverDiscoveryAddress = "localhost"; // 引数で指定
+                gameManager.serverDiscoveryPort    = 7777;        // 引数で指定
+
+                // マッチングサーバ情報
+                gameManager.matchingServerUrl = null; // 無効に設定
 
                 // マインドリンク情報
-                gameManager.mindlinkUrl           = "ws://mindlink:7766"; // サービス構成内から接続
-                gameManager.mindlinkServerAddress = "localhost";          // バイナリ引数で指定
-                gameManager.mindlinkServerPort    = 7777;                 // バイナリ引数で指定
+                gameManager.mindlinkUrl = "ws://mindlink:7766"; // サービス構成内から接続
 
                 // スタンドアローンシミュレータ
-                gameManager.standaloneSimulator = null; // リリース環境で有効にしない
+                gameManager.standaloneSimulator = null; // 無効に設定 (リリース環境で有効にしない)
             }
         }
 

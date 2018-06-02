@@ -9,7 +9,7 @@ public class GameNetworkManager : NetworkManager {
     //-------------------------------------------------------------------------- 実装 (UnityEngine.Networking.NetworkManager)
     public override void OnStartServer() {
         // TODO
-        Debug.Log("OnStartServer");
+        Debug.Log("GameNetworkManager: OnStartServer(): サーバ開始");
         base.OnStartServer();
     }
 }

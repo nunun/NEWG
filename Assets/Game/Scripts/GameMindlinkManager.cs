@@ -60,23 +60,21 @@ public partial class GameMindlinkManager {
 
         // 接続
         var mindlinkUrl = GameManager.MindlinkUrl;
-        Debug.LogFormat("マインドリンクへ接続 ({0}) ...", mindlinkUrl);
+        Debug.LogFormat("GameMindlinkManager: StartConnecting(): マインドリンクへ接続 ({0}) ...", mindlinkUrl);
         connector.url = mindlinkUrl;
         connector.Connect();
 
         // 接続を待つ
-        Debug.Log("マインドリンクへの接続をまっています ...");
+        Debug.Log("GameMindlinkManager:  StartConnecting(): マインドリンクへの接続をまっています ...");
         while (!connector.IsConnected) {
             yield return null;
         }
 
         // サーバ状態を送信
-        Debug.Log("サーバ状態を送信 (standby) ...");
         ServerStatusData.serverState   = "standby";
-        ServerStatusData.serverAddress = GameManager.MindlinkServerAddress;
-        ServerStatusData.serverPort    = 0;
+        ServerStatusData.serverAddress = GameManager.ServerDiscoveryAddress;
+        ServerStatusData.serverPort    = GameManager.ServerDiscoveryPort;
         SendServerStatusData(() => {
-            Debug.Log("サーバ状態送信完了");
             connectState = ConnectState.Connected;
         });
     }
@@ -100,14 +98,14 @@ public partial class GameMindlinkManager {
     void Start() {
         var connector = MindlinkConnector.GetConnector();
         connector.AddConnectEventListner(() => {
-            Debug.Log("マインドリンク接続完了");
+            Debug.Log("GameMindlinkManager: マインドリンク接続完了");
         });
         connector.AddDisconnectEventListner((error) => {
-            Debug.Log("マインドリンク切断");
+            Debug.Log("GameMindlinkManager: マインドリンク切断");
             StopConnect(error);
         });
         connector.SetDataFromRemoteEventListener<ServerSetupRequestMessage,ServerSetupResponseMessage>(0, (req,res) => {
-            Debug.Log("サーバセットアップリクエストメッセージ受信");
+            Debug.Log("GameMindlinkManager: サーバセットアップリクエストメッセージ受信");
             setupRequest = req; // NOTE リクエストを記録
             var serverSetupResponseMessage = new ServerSetupResponseMessage();
             serverSetupResponseMessage.matchId = req.matchId;
@@ -132,16 +130,18 @@ public partial class GameMindlinkManager {
     //-------------------------------------------------------------------------- 操作
     public static void SendServerStatusData(Action callback = null) {
         Debug.Assert(instance != null, "GameMindlinkManager なし");
+        Debug.LogFormat("GameMindlinkManager: SendServerStatusData(): サーバ状態送信 (serverState = '{0}', serverAddress = '{1}', serverPort = {2}) ...", ServerStatusData.serverState, ServerStatusData.serverAddress, ServerStatusData.serverPort);
         var connector = MindlinkConnector.GetConnector();
         connector.SendStatus(instance.serverStatusData, (error) => {
             if (error != null) {
                 #if DEBUG
-                Debug.Log("サーバ状態送信失敗を無視 (" + error + ")");
+                Debug.Log("GameMindlinkManager: SendServerStatusData(): サーバ状態送信失敗を無視 (" + error + ")");
                 #else
                 Debug.LogError(error);
                 return;
                 #endif
             }
+            Debug.Log("GameMindlinkManager: SendServerStatusData(): サーバ状態送信完了");
             if (callback != null) {
                 callback();
             }

@@ -38,17 +38,21 @@ public partial class GameManager {
 // マッチングで決定したサーバ接続先の一時的な情報です。
 public partial class GameManager {
     //-------------------------------------------------------------------------- 変数
-    public string serverAddress         = "localhost";            // サーバアドレス
-    public int    serverPort            = 7777;                   // サーバポート
-    public int    serverPortRandomRange = 0;                      // サーバポート ランダム幅
-    public string serverToken           = null;                   // サーバトークン
-    public string serverSceneName       = "NetworkProvingGround"; // サーバシーン名
+    public string serverAddress          = "localhost";            // サーバアドレス
+    public int    serverPort             = 7777;                   // サーバポート
+    public int    serverPortRandomRange  = 0;                      // サーバポート               ランダム幅
+    public string serverToken            = null;                   // サーバトークン
+    public string serverSceneName        = "NetworkProvingGround"; // サーバシーン名
+    public string serverDiscoveryAddress = "localhost";            // サーバディスカバリアドレス (サービスディスカバリ公開用)
+    public int    serverDiscoveryPort    = 7777;                   // サーバディスカバリポート   (サービスディスカバリ公開用)
 
-    public static string ServerAddress         { get { return instance.serverAddress;         }}
-    public static int    ServerPort            { get { return instance.serverPort;            }}
-    public static int    ServerPortRandomRange { get { return instance.serverPortRandomRange; }}
-    public static string ServerToken           { get { return instance.serverToken;           }}
-    public static string ServerSceneName       { get { return instance.serverSceneName;       }}
+    public static string ServerAddress          { get { return instance.serverAddress;          }}
+    public static int    ServerPort             { get { return instance.serverPort;             }}
+    public static int    ServerPortRandomRange  { get { return instance.serverPortRandomRange;  }}
+    public static string ServerToken            { get { return instance.serverToken;            }}
+    public static string ServerSceneName        { get { return instance.serverSceneName;        }}
+    public static string ServerDiscoveryAddress { get { return instance.serverDiscoveryAddress; }}
+    public static int    ServerDiscoveryPort    { get { return instance.serverDiscoveryPort;    }}
 
     //-------------------------------------------------------------------------- 設定
     public static void SetServerInformation(string address, int port, int portRandomRange, string token, string sceneName) {
@@ -57,6 +61,11 @@ public partial class GameManager {
         instance.serverPortRandomRange = portRandomRange;
         instance.serverToken           = token;
         instance.serverSceneName       = sceneName;
+    }
+
+    public static void SetServerDiscoveryInformation(string address, int port) {
+        instance.serverDiscoveryAddress = address;
+        instance.serverDiscoveryPort    = port;
     }
 }
 
@@ -84,19 +93,9 @@ public partial class GameManager {
 // マインドリンク情報
 public partial class GameManager {
     //-------------------------------------------------------------------------- 変数
-    public string mindlinkUrl           = "ws://localhost:7766"; // マインドリンク接続先
-    public string mindlinkServerAddress = "localhost";           // マインドリンク上の広報サーバアドレス
-    public int    mindlinkServerPort    = 7777;                  // マインドリンク上の広報サーバポート
+    public string mindlinkUrl = "ws://localhost:7766"; // マインドリンク接続先
 
-    public static string MindlinkUrl           { get { return instance.mindlinkUrl;           }}
-    public static string MindlinkServerAddress { get { return instance.mindlinkServerAddress; }}
-    public static int    MindlinkServerPort    { get { return instance.mindlinkServerPort;    }}
-
-    //-------------------------------------------------------------------------- 設定
-    public static void SetMindlinkInformation(string mindlinkServerAddress, int mindlinkServerPort) {
-        instance.mindlinkServerAddress = mindlinkServerAddress;
-        instance.mindlinkServerPort    = mindlinkServerPort;
-    }
+    public static string MindlinkUrl { get { return instance.mindlinkUrl; }}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -200,10 +199,12 @@ public partial class GameManager {
     //-------------------------------------------------------------------------- インポート処理
     // コマンドライン起動引数を取得
     void ImportCommandLineLaunchArguments() {
-        ImportCommandLineStringArgument(ref  serverAddress,         "-serverAddress",         null);
-        ImportCommandLineIntegerArgument(ref serverPort,            "-serverPort",            null);
-        ImportCommandLineStringArgument(ref  mindlinkServerAddress, "-mindlinkServerAddress", null);
-        ImportCommandLineStringArgument(ref  webapiUrl,             "-webapiUrl",             null);
+        ImportCommandLineStringArgument(ref  serverAddress,          "-serverAddress",          null);
+        ImportCommandLineIntegerArgument(ref serverPort,             "-serverPort",             null);
+        ImportCommandLineIntegerArgument(ref serverPortRandomRange,  "-serverPortRandomRange",  null);
+        ImportCommandLineStringArgument(ref  serverDiscoveryAddress, "-serverDiscoveryAddress", null);
+        ImportCommandLineIntegerArgument(ref serverDiscoveryPort,    "-serverDiscoveryPort",    null);
+        ImportCommandLineStringArgument(ref  webapiUrl,              "-webapiUrl",              null);
     }
 
     #if UNITY_WEBGL

@@ -28,8 +28,8 @@ public partial class GameDataManager : MonoBehaviour {
         GameDataManager.CredentialData.Load();
 
         #if DEBUG
-        Debug.LogFormat("sessionToken = {0}", GameDataManager.SessionData.sessionToken);
-        Debug.LogFormat("signinToken = {0}",  GameDataManager.CredentialData.signinToken);
+        Debug.LogFormat("GameDataManager: InitializeGameData(): sessionToken = {0}", GameDataManager.SessionData.sessionToken);
+        Debug.LogFormat("GameDataManager: InitializeGameData(): signinToken = {0}",  GameDataManager.CredentialData.signinToken);
         #endif
     }
 }
@@ -87,7 +87,7 @@ public partial class GameDataManager {
         // NOTE 自動インポートするデータを増やす場合はここに追記。
         GameDataManager.SessionDataImporter.AddImportEventListener(() => {
             #if DEBUG
-            Debug.LogFormat("[import] sessionToken = {0}", GameDataManager.SessionData.sessionToken);
+            Debug.LogFormat("GameDataManager: InitializeImportData(): [import] sessionToken = {0}", GameDataManager.SessionData.sessionToken);
             #endif
 
             // WebAPI アクセスのセッショントークン更新
@@ -99,7 +99,7 @@ public partial class GameDataManager {
         });
         GameDataManager.CredentialDataImporter.AddImportEventListener(() => {
             #if DEBUG
-            Debug.LogFormat("[import] signinToken = {0}", GameDataManager.CredentialData.signinToken);
+            Debug.LogFormat("GameDataManager: InitializeImportData(): [import] signinToken = {0}", GameDataManager.CredentialData.signinToken);
             #endif
 
             // セーブ

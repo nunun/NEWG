@@ -242,7 +242,7 @@ public partial class WebAPIClient {
         //---------------------------------------------------------------------- 操作
         // 送信
         public void Send() {
-            Debug.LogFormat("WebAPIClient.Request.Send: method[{0}] url[{1}] apiPath[{2}] parameters[{3}]", method, url, apiPath, parameters);
+            Debug.LogFormat("WebAPIClient: Request: Send(): method[{0}] url[{1}] apiPath[{2}] parameters[{3}]", method, url, apiPath, parameters);
             this.unityWebRequest = parameters.CreateUnityWebRequest(client, method, url, apiPath);
             this.unityWebRequest.Send();
         }
@@ -271,7 +271,7 @@ public partial class WebAPIClient {
 
         //---------------------------------------------------------------------- 実装 (ToString)
         public override string ToString() {
-            return string.Format("WebAPIClient.Request.Send: method[{0}] url[{1}] apiPath[{2}] parameters[{3}]", method, url, apiPath, parameters);
+            return string.Format("WebAPIClient: Request: ToString(): method[{0}] url[{1}] apiPath[{2}] parameters[{3}]", method, url, apiPath, parameters);
         }
     }
 }
@@ -310,7 +310,7 @@ public partial class WebAPIClient {
         //---------------------------------------------------------------------- 内部コールバック用
         // レスポンスデータを設定
         protected static void SetResponse(Request request, string error, string message) {
-            Debug.LogFormat("WebAPIClient.Request<{0}>.SetResponse: error[{1}] message[{2}]", typeof(TRes), error, message);
+            Debug.LogFormat("WebAPIClient: Request<{0}>: SetResponse(): error[{1}] message[{2}]", typeof(TRes), error, message);
             var req = request as Request<TRes>;
             Debug.Assert(req != null);
             var callback = default(Action<string,TRes>);

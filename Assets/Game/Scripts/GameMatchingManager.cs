@@ -57,12 +57,12 @@ public partial class GameMatchingManager {
 
         // 接続
         var matchingServerUrl = GameManager.MatchingServerUrl;
-        Debug.LogFormat("マッチングサーバへ接続 ({0}) ...", matchingServerUrl);
+        Debug.LogFormat("GameMatchingManager: マッチングサーバへ接続 ({0}) ...", matchingServerUrl);
         connector.url = matchingServerUrl;
         connector.Connect();
 
         // 接続を待つ
-        Debug.Log("マッチングサーバへの接続をまっています ...");
+        Debug.Log("GameMatchingManager: マッチングサーバへの接続をまっています ...");
         while (!connector.IsConnected) {
             yield return null;
         }
@@ -86,14 +86,14 @@ public partial class GameMatchingManager {
     void Start() {
         var connector = WebSocketConnector.GetConnector();
         connector.AddConnectEventListner(() => {
-            Debug.Log("マッチングサーバ接続完了");
+            Debug.Log("GameMatchingManager: マッチングサーバ接続完了");
         });
         connector.AddDisconnectEventListner((error) => {
-            Debug.Log("マッチングサーバ切断");
+            Debug.Log("GameMatchingManager: マッチングサーバ切断");
             StopConnecting(error);
         });
         connector.SetDataEventListener<MatchConnectData>(0, (data) => {
-            Debug.Log("マッチ接続データ受信");
+            Debug.Log("GameMatchingManager: マッチ接続データ受信");
             matchConnectData = data;
         });
     }
