@@ -21,6 +21,23 @@ public class BootServer : GameScene {
 
         // マインドリンク接続開始
         GameMindlinkManager.Connect();
+        while (!GameMindlinkManager.IsConnected) {
+            yield return null;
+        }
+
+        // サーバ状態を送信
+        var isSentServerStatusData = false;
+        GameMindlinkManager.ServerStatusData.serverState   = "standby";
+        GameMindlinkManager.ServerStatusData.serverAddress = GameManager.ServerDiscoveryAddress;
+        GameMindlinkManager.ServerStatusData.serverPort    = GameManager.ServerDiscoveryPort;
+        GameMindlinkManager.SendServerStatusData(() => {
+            isSentServerStatusData = true;
+        });
+        while (!isSentServerStatusData) {
+            yield return null;
+        }
+
+        // セットアップリクエスト待ち
         while (GameMindlinkManager.SetupRequest == null) {
             yield return null;
         }

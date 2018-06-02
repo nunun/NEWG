@@ -25,6 +25,18 @@ public class BootHost : GameScene {
             yield return null;
         }
 
+        // サーバ状態を送信
+        var isSentServerStatusData = false;
+        GameMindlinkManager.ServerStatusData.serverState   = "standby";
+        GameMindlinkManager.ServerStatusData.serverAddress = GameManager.ServerDiscoveryAddress;
+        GameMindlinkManager.ServerStatusData.serverPort    = GameManager.ServerDiscoveryPort;
+        GameMindlinkManager.SendServerStatusData(() => {
+            isSentServerStatusData = true;
+        });
+        while (!isSentServerStatusData) {
+            yield return null;
+        }
+
         // シーン切り替え
         Debug.Log("シーンを切り替え (" + sceneName + ") ...");
         GameSceneManager.ChangeScene(sceneName);

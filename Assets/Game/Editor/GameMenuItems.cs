@@ -91,8 +91,16 @@ public partial class GameMenuItems {
         BuildReleaseServerLinuxHeadless();
     }
 
+    //-------------------------------------------------------------------------- セーブデータ
+    [MenuItem("Game/セーブデータ/セーブデータをクリア", false, 102)]
+    public static void ClearSaveData() {
+        PlayerPrefs.DeleteAll();
+        PlayerPrefs.Save();
+        Debug.Log("セーブデータをクリアしました。");
+    }
+
     //-------------------------------------------------------------------------- サービス構成
-    [MenuItem("Game/サービス構成/ローカルサービス/起動", false, 102)]
+    [MenuItem("Game/サービス構成/ローカルサービス/起動", false, 103)]
     public static void ServicesUp() {
         var commandProcess = new CommandProcess();
         var env = new Dictionary<string,string>() {{"&NONBLOCK", "1"}};
@@ -131,16 +139,8 @@ public partial class GameMenuItems {
         AssetsUtility.EditFile("Services/services/specs.yml");
     }
 
-    //-------------------------------------------------------------------------- セーブデータ
-    [MenuItem("Game/セーブデータ/セーブデータをクリア", false, 103)]
-    public static void ClearSaveData() {
-        PlayerPrefs.DeleteAll();
-        PlayerPrefs.Save();
-        Debug.Log("セーブデータをクリアしました。");
-    }
-
     //-------------------------------------------------------------------------- シーン編集
-    [MenuItem("Game/シーン編集/uGUI/アンカーを現在位置にセット &]", false, 104)]
+    [MenuItem("Game/シーン編集/uGUI/アンカーを現在位置にセット &]", false, 200)]
     public static void SetAnchorToCurrentPosition() {
         var o = Selection.activeGameObject;
         if (o != null && o.GetComponent<RectTransform>() != null) {
@@ -166,7 +166,7 @@ public partial class GameMenuItems {
         }
     }
 
-    [MenuItem("Game/シーン編集/uGUI/アンカーを中心にセット &^", false, 105)]
+    [MenuItem("Game/シーン編集/uGUI/アンカーを中心にセット &^", false, 201)]
     public static void SetAnchorToCenterPosition() {
         var o = Selection.activeGameObject;
         if (o != null && o.GetComponent<RectTransform>() != null) {

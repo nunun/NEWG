@@ -70,13 +70,8 @@ public partial class GameMindlinkManager {
             yield return null;
         }
 
-        // サーバ状態を送信
-        ServerStatusData.serverState   = "standby";
-        ServerStatusData.serverAddress = GameManager.ServerDiscoveryAddress;
-        ServerStatusData.serverPort    = GameManager.ServerDiscoveryPort;
-        SendServerStatusData(() => {
-            connectState = ConnectState.Connected;
-        });
+        // 接続済にする
+        connectState = ConnectState.Connected;
     }
 
     // 接続停止
