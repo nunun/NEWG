@@ -183,22 +183,10 @@ var matchIdCounter = 0;
 // マッチングブレイン供給タイマー
 var matchingBrainSupplyTimer = null;
 
-// マッチングブレインキュー
-// マッチングキューを監視して、
-// ユーザにマッチング結果を通知します。
-var matchingBrainQueue = new TaskQueue(config.matchingBrainQueue, logger.matchingBrainQueue);
-matchingBrainQueue.setAddEventListener((task) => {
-    matchingBrainQueue.logger.debug("task added.");
-    return findServer;
-});
-matchingBrainQueue.setAbortEventListener((err, task) => {
-    matchingBrainQueue.logger.debug("task aborted (" + err + ").");
-    task.err = err;
-    matchingBrainQueue.remove(task);
-    setupErrorQueue.add(task);
-});
-
+// NOTE
 // マッチングブレイン供給開始
+// マインドリンクに接続した時点で開始。
+// 定期的にマッチングブレインを供給し続ける。
 function startMatchingBrainSupply() {
     if (matchingBrainSupplyTimer) {
         matchingBrainQueue.logger.error("matchingBrainSupplyTimer is already started.");
@@ -214,7 +202,9 @@ function startMatchingBrainSupply() {
     }, 1000);
 }
 
+// NOTE
 // マッチングブレイン供給停止
+// マインドリンクに接続した時点で停止。
 function stopMatchingBrainSupply() {
     if (!matchingBrainSupplyTimer) {
         matchingBrainQueue.logger.error("matchingBrainSupplyTimer does not started yet.");
@@ -229,13 +219,35 @@ function stopMatchingBrainSupply() {
     }
 }
 
-// NOTE
-// 参加できそうなサービスを探す
-// あらかじめセットアップリクエストを飛ばす実装にしておいても良いかも？
+// マッチングブレインキュー
+// マッチングキューを監視して、
+// ユーザにマッチング結果を通知します。
+var matchingBrainQueue = new TaskQueue(config.matchingBrainQueue, logger.matchingBrainQueue);
+matchingBrainQueue.setAddEventListener((task) => {
+    matchingBrainQueue.logger.debug("task added.");
+    return findServer; // NOTE サーバ探しから始める
+});
+matchingBrainQueue.setAbortEventListener((err, task) => {
+    matchingBrainQueue.logger.debug("task aborted (" + err + ").");
+    task.err = err;
+    matchingBrainQueue.remove(task);
+    setupErrorQueue.add(task);
+});
+
+// 参加できそうなサーバを探す
 function findServer(task) {
     matchingBrainQueue.logger.debug("find server.");
     return new Promise((resolved, reject) => {
-        var cond = ".*{.alias == \"server\" && .serverState == \"standby\" && .load < 1.0}";
+        // NOTE
+        // 現在は立ち上がっているサーバには入れるようにしておく。
+        // 空きサーバに所定のメンバーを入れる場合は、
+        // サーバ参加確認と参加応答のプロトコルを組み込む必要がある。
+        // これはデータベース経由で実現することも可能なので、どの実装が良いかは今後検討する。
+        //
+        // NOTE
+        // 現在の実装では、マッチングブレインがセットアップキューに送り出されると
+        // 次のマッチングブレインが "stanby" サーバを掴むので、マッチングが成立してしまう点に注意。
+        var cond = ".*{.alias == \"server\" && (.serverState == \"standby\" || .serverState == \"ready\") && .load < 1.0}";
         mindlinkClient.sendQuery(cond, function(err,services) {
             if (err) {
                 resolved(10000);//送信エラー(10秒待ってリトライ)
