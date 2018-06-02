@@ -292,7 +292,7 @@ async function makeMatching(task) {
     // サーバ セットアップ リクエストメッセージ
     var serverSetupRequestMessage = new ServerSetupRequestMessage();
     serverSetupRequestMessage.matchId       = (++matchIdCounter).toString();
-    serverSetupRequestMessage.sceneName     = "NetworkProvingGround";
+    serverSetupRequestMessage.sceneName     = "MapProvingGround"; // TODO
     serverSetupRequestMessage.matchingUsers = matchingUsers;
     matchingKeys.push(serverSetupRequestMessage.matchId);
 

@@ -5,8 +5,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using Services.Protocols;
 
-// ネットワーク試験場
-public partial class NetworkProvingGround : GameScene {
+// マップ 試験場
+public partial class MapProvingGround : GameScene {
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     void Awake() {
         InitStandby();
@@ -28,7 +28,7 @@ public partial class NetworkProvingGround : GameScene {
 ///////////////////////////////////////////////////////////////////////////////
 
 // スタンバイ処理
-public partial class NetworkProvingGround {
+public partial class MapProvingGround {
     //-------------------------------------------------------------------------- 変数
     [SerializeField] SceneUI standbyUI  = null;
     [SerializeField] SceneUI exitUI     = null;
@@ -71,7 +71,7 @@ public partial class NetworkProvingGround {
 ///////////////////////////////////////////////////////////////////////////////
 
 // ネットワークサービス処理
-public partial class NetworkProvingGround {
+public partial class MapProvingGround {
     //-------------------------------------------------------------------------- 定義
     static readonly int LISTEN_PORT_MAX_RETRY = 5;
 
