@@ -6,7 +6,7 @@ using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 
-// ゲーム起動
+// ゲーム開始
 [InitializeOnLoad]
 public class GamePlay {
     //------------------------------------------------------------------------- コンストラクタ
@@ -14,8 +14,8 @@ public class GamePlay {
         EditorApplication.playmodeStateChanged += HandleOnPlayModeChanged;
     }
 
-    //------------------------------------------------------------------------- プレイ開始と停止時
-    // プレイ開始
+    //------------------------------------------------------------------------- ゲーム開始と停止時
+    // ゲーム開始
     public static void Play() {
         var editorScenes = EditorBuildSettings.scenes;
         for (int i = 0; i < editorScenes.Length; i++) {
@@ -28,7 +28,7 @@ public class GamePlay {
         Debug.LogError("BuildSettings に何もシーンが登録されていません。");
     }
 
-    // プレイ開始
+    // シーン開始
     public static void Play(string scenePath) {
         // ■ 注意
         // 再生中なら止める

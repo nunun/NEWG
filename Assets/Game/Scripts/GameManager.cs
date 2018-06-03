@@ -38,13 +38,13 @@ public partial class GameManager {
 // マッチングで決定したサーバ接続先の一時的な情報です。
 public partial class GameManager {
     //-------------------------------------------------------------------------- 変数
-    public string serverAddress          = "localhost";            // サーバアドレス
-    public int    serverPort             = 7777;                   // サーバポート
-    public int    serverPortRandomRange  = 0;                      // サーバポート               ランダム幅
-    public string serverToken            = null;                   // サーバトークン
-    public string serverSceneName        = "NetworkProvingGround"; // サーバシーン名
-    public string serverDiscoveryAddress = "localhost";            // サーバディスカバリアドレス (サービスディスカバリ公開用)
-    public int    serverDiscoveryPort    = 7777;                   // サーバディスカバリポート   (サービスディスカバリ公開用)
+    public string serverAddress          = "localhost";        // サーバアドレス
+    public int    serverPort             = 7777;               // サーバポート
+    public int    serverPortRandomRange  = 0;                  // サーバポート ランダム幅
+    public string serverToken            = null;               // サーバトークン
+    public string serverSceneName        = "MapProvingGround"; // サーバシーン名
+    public string serverDiscoveryAddress = "localhost";        // サーバディスカバリアドレス (サービスディスカバリ公開用)
+    public int    serverDiscoveryPort    = 7777;               // サーバディスカバリポート   (サービスディスカバリ公開用)
 
     public static string ServerAddress          { get { return instance.serverAddress;          }}
     public static int    ServerPort             { get { return instance.serverPort;             }}
@@ -90,18 +90,6 @@ public partial class GameManager {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-// マインドリンク情報
-public partial class GameManager {
-    //-------------------------------------------------------------------------- 変数
-    public string mindlinkUrl = "ws://localhost:7766"; // マインドリンク接続先
-
-    public static string MindlinkUrl { get { return instance.mindlinkUrl; }}
-}
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
 // WebAPI 情報
 public partial class GameManager {
     //-------------------------------------------------------------------------- 変数
@@ -114,13 +102,25 @@ public partial class GameManager {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
+// マインドリンク情報
+public partial class GameManager {
+    //-------------------------------------------------------------------------- 変数
+    public string mindlinkUrl = "ws://localhost:7766"; // マインドリンク接続先
+
+    public static string MindlinkUrl { get { return instance.mindlinkUrl; }}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
 // スタンドアローンモード情報
 public partial class GameManager {
     //-------------------------------------------------------------------------- 変数
-    public StandaloneSimulator standaloneSimulator = null; // スタンドアローンシミュレータ
+    public StandaloneSimulatorProfile standaloneSimulatorProfile = null; // スタンドアローンシミュレータ プロファイル
 
     // スタンドアローンシミュレータの取得
-    public static StandaloneSimulator StandaloneSimulator { get { return instance.standaloneSimulator; }}
+    public static StandaloneSimulatorProfile StandaloneSimulatorProfile { get { return instance.standaloneSimulatorProfile; }}
 
     // スタンドアローンモードかどうか
     // このフラグの if 文を置くことによって Unreachable コードの警告を回避

@@ -92,8 +92,8 @@ public partial class GameBuildProcessor {
                 // マインドリンク情報
                 gameManager.mindlinkUrl = "ws://mindlink:7766"; // サービス構成内から接続
 
-                // スタンドアローンシミュレータ
-                gameManager.standaloneSimulator = null; // 無効に設定 (リリース環境で有効にしない)
+                // スタンドアローンシミュレータ情報
+                gameManager.standaloneSimulatorProfile = null; // 無効に設定 (リリース環境で有効にしない)
             }
         }
 

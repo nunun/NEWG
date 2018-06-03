@@ -10,12 +10,23 @@ using Services.Protocols.Consts;
 using Services.Protocols.Models;
 #endif
 
-// スタンドアローンシミュレータ
-[CreateAssetMenu(fileName = "StandaloneSimulator", menuName = "ScriptableObject/StandaloneSimulator", order = 1000)]
-public partial class StandaloneSimulator : ScriptableObject {
+// スタンドアローンシミュレータプロファイル
+[CreateAssetMenu(fileName = "StandaloneSimulatorProfile", menuName = "ScriptableObject/StandaloneSimulatorProfile", order = 1001)]
+public partial class StandaloneSimulatorProfile : ScriptableObject {
+    // NOTE
+    // パーシャルクラスを参照
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+public partial class StandaloneSimulatorProfile {
     //-------------------------------------------------------------------------- 変数
-    // プレイヤー名
-    public string playerName = "StandaloneSimulator";
+    public string playerName = "StandaloneSimulatedPlayer"; // プレイヤー名
+
+    // プレイヤー名の取得
+    public static string PlayerName { get { return instance.playerName; }}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -24,7 +35,7 @@ public partial class StandaloneSimulator : ScriptableObject {
 #if STANDALONE_MODE
 
 // WebAPI の処理
-public partial class StandaloneSimulator {
+public partial class StandaloneSimulatorProfile {
     //-------------------------------------------------------------------------- 変数
     static readonly float DEBUG_DELAY = 0.5f; // デバッグディレイ
 
@@ -35,7 +46,7 @@ public partial class StandaloneSimulator {
     //-------------------------------------------------------------------------- WebAPI エミュレーション
     public bool SimulateWebAPI(WebAPIClient.Request request, float deltaTime) {
         if (debugRequest == null) {
-            Debug.LogFormat("StandaloneSimulator: WebAPI リクエストを処理 ({0})", request.ToString());
+            Debug.LogFormat("StandaloneSimulatorProfile: WebAPI リクエストを処理 ({0})", request.ToString());
             debugRequest = request;
             debugDelay   = DEBUG_DELAY;
         }
@@ -108,3 +119,28 @@ public partial class StandaloneSimulator {
     }
 }
 #endif
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+// StandaloneSimulatorProfile 実装
+public partial class StandaloneSimulatorProfile {
+    //-------------------------------------------------------------------------- 変数
+    // プロファイル インスタンス
+    static StandaloneSimulatorProfile instance = null;
+
+    //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
+    void OnEnable() {
+        if (instance != null) {
+            return;
+        }
+        instance = this;
+    }
+
+    void OnDisable() {
+        if (instance != this) {
+            return;
+        }
+        instance = null;
+    }
+}

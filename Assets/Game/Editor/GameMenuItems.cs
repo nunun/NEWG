@@ -11,19 +11,19 @@ using UnityEditorInternal;
 
 // ゲームメニューアイテム
 public partial class GameMenuItems {
-    //-------------------------------------------------------------------------- ビルド (デバッグ)
+    //-------------------------------------------------------------------------- ゲーム開始
     [MenuItem("Game/ゲーム開始", false, 0)]
     public static void PlayGame() {
         GamePlay.Play();
     }
 
-    //-------------------------------------------------------------------------- コンパイル設定
-    [MenuItem("Game/コンパイル設定", false, 100)]
-    public static void CompileSetings() {
+    //-------------------------------------------------------------------------- ゲーム設定
+    [MenuItem("Game/ゲーム設定", false, 100)]
+    public static void CompileSettings() {
         CompileSettingsWindow.Open();
     }
 
-    //-------------------------------------------------------------------------- ビルド (デバッグ)
+    //-------------------------------------------------------------------------- ビルド
     [MenuItem("Game/ビルド/デバッグ クライアント (WebGL)", false, 101)]
     public static void BuildDebugClientWebGL() {
         GameBuilder.Build(new GameBuilder.GameBuildSettings() {
@@ -60,8 +60,7 @@ public partial class GameMenuItems {
         });
     }
 
-    //-------------------------------------------------------------------------- ビルド (公開用)
-    [MenuItem("Game/ビルド/公開用クライアント (WebGL)", false, 201)]
+    [MenuItem("Game/ビルド/公開用クライアント (WebGL)", false, 200)]
     public static void BuildReleaseClientWebGL() {
         GameBuilder.Build(new GameBuilder.GameBuildSettings() {
             outputPath      = "Services/client/Builds/Client",
@@ -73,7 +72,7 @@ public partial class GameMenuItems {
         });
     }
 
-    [MenuItem("Game/ビルド/公開用サーバ (Linux ヘッドレス)", false, 202)]
+    [MenuItem("Game/ビルド/公開用サーバ (Linux ヘッドレス)", false, 201)]
     public static void BuildReleaseServerLinuxHeadless() {
         GameBuilder.Build(new GameBuilder.GameBuildSettings() {
             outputPath      = "Services/server/Builds/Server",
@@ -85,7 +84,7 @@ public partial class GameMenuItems {
         });
     }
 
-    [MenuItem("Game/ビルド/公開用バイナリを全てビルド", false, 203)]
+    [MenuItem("Game/ビルド/公開用バイナリを全てビルド", false, 202)]
     public static void BuildReleaseAll() {
         BuildReleaseClientWebGL();
         BuildReleaseServerLinuxHeadless();
@@ -107,7 +106,7 @@ public partial class GameMenuItems {
         commandProcess.Start("docker-compose", "up", "Services", env);
     }
 
-    [MenuItem("Game/サービス構成/ローカルサービス/停止", false, 103)]
+    [MenuItem("Game/サービス構成/ローカルサービス/停止", false, 104)]
     public static void ServicesDown() {
         var commandProcess = new CommandProcess();
         var env = new Dictionary<string,string>() {{"&NONBLOCK", "1"}};

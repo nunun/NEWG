@@ -164,8 +164,8 @@ public partial class WebAPIClient {
             var error = unityWebRequest.error;
             if (error.IndexOf("Cannot connect to destination host") >= 0) {
                 if (--request.retryCount >= 0) {
-                    Debug.LogWarningFormat("WebAPIClient: CheckRequestList: network error ({0}, {1})",     unityWebRequest.url, error);
-                    Debug.LogWarningFormat("WebAPIClient: CheckRequestList: retry: {0} times remaining.", request.retryCount);
+                    Debug.LogFormat("WebAPIClient: CheckRequestList: network error ({0}, {1})",     unityWebRequest.url, error);
+                    Debug.LogFormat("WebAPIClient: CheckRequestList: retry: {0} times remaining.", request.retryCount);
                     request.retryTime = request.retryInterval;
                     return;
                 }
