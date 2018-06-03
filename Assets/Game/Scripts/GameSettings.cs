@@ -86,7 +86,7 @@ public partial class GameSettings {
 
     // シンボル一覧の定義
     // NOTE 追加のシンボルをここに定義してください。
-    public static readonly Dictionary<string,string[]> ScriptDefineSymbols = new Dictionary<string,string[]>() {
+    public static readonly Dictionary<string,string[]> ScriptingDefineSymbols = new Dictionary<string,string[]>() {
         { "DEBUG",           null }, // デバッグコードをバイナリに含めるかどうか
         { "SERVER_CODE",     null }, // サーバコードをバイナリに含めるかどうか
         { "STANDALONE_MODE", null }, // スタンドアローンモード

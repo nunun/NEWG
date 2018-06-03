@@ -71,17 +71,20 @@ public partial class GameBuilder {
         PlayerSettings.runInBackground         = true;
         PlayerSettings.SplashScreen.show       = false;
 
+        // TODO
         // コンパイル設定のバックアップ
-        CompileSettings.Backup();
+        //CompileSettings.Backup();
 
+        // TODO
         // コンパイル設定の適用
-        CompileSettings.Apply(gameBuildSettings.compileSettings);
+        //CompileSettings.Apply(gameBuildSettings.compileSettings);
 
         // ビルド
         var result = BuildPipeline.BuildPlayer(levels, outputPath, gameBuildSettings.buildTarget, options);
 
+        // TODO
         // コンパイル設定の復元
-        CompileSettings.Restore();
+        //CompileSettings.Restore();
 
         // シーン設定を復元
         if (sceneSetup.Length > 0) {

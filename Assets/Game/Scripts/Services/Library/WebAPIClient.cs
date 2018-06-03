@@ -135,7 +135,7 @@ public partial class WebAPIClient {
         #if STANDALONE_MODE
         // スタンドアローンモード時
         if (GameManager.IsStandaloneMode) {
-            if (!GameManager.StandaloneSimulator.SimulateWebAPI(request, deltaTime)) {
+            if (!GameManager.StandaloneSimulatorProfile.SimulateWebAPI(request, deltaTime)) {
                 requestList.RemoveAt(0);
                 request.ReturnToPool();
             }
