@@ -275,6 +275,25 @@ public partial class GameManager {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
+#if UNITY_EDITOR
+
+// ゲーム設定のインポート
+public partial class GameManager {
+    //-------------------------------------------------------------------------- 操作
+    // 起動引数のインポート
+    public void ImportGameSettings() {
+        var gameSettings = GameSettings.Load(false);
+        if (gameSettings != null) {
+            Debug.LogFormat("GameManager: ゲーム設定を適用しました ({0})", gameSettings.schemeName);
+            gameSettings.Overwrite(this);
+        }
+    }
+}
+
+#endif
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 // MonoBehaviour 実装
 public partial class GameManager {
@@ -289,6 +308,10 @@ public partial class GameManager {
             return;
         }
         instance = this;
+
+        #if UNITY_EDITOR
+        ImportGameSettings();
+        #endif
     }
 
     void OnDestroy() {

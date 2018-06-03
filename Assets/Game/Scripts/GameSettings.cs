@@ -1,6 +1,9 @@
-﻿using UnityEngine;
+﻿#if UNITY_EDITOR
+using UnityEngine;
 using UnityEditor;
 using System;
+using System.IO;
+using System.Text;
 using System.Linq;
 using System.Collections.Generic;
 
@@ -154,42 +157,145 @@ public partial class GameSettings {
     //-------------------------------------------------------------------------- 定義
     // ゲーム設定ファイルパス
     public static readonly string GAME_SETTINGS_JSON_PATH = "Assets/GameSettings.json";
-    // gmcs.rsp ファイルパス
-    public static readonly string GMCS_RSP_PATH = "Assets/gmcs.rsp";
-    // smcs.rsp ファイルパス
+    // smcs.rsp ファイルパス (C# 用)
     public static readonly string SMCS_RSP_PATH = "Assets/smcs.rsp";
+    // gmcs.rsp ファイルパス (C# Editor用)
+    public static readonly string GMCS_RSP_PATH = "Assets/gmcs.rsp";
 
     //-------------------------------------------------------------------------- 操作
     // ロード
     public static GameSettings Load(bool createDefaultGameSettings = false) {
-        // TODO
-        // デフォルトのゲーム設定を作成する場合は
-        // 最初のひとつめのスキームで作成するのが良いかもしれない。
-        return null;
+        var gameSettings = ReadJsonFile(GAME_SETTINGS_JSON_PATH);
+        var gmcsSymbols  = ReadRspFile(GMCS_RSP_PATH);
+        var smcsSymbols  = ReadRspFile(SMCS_RSP_PATH);
+        if (gameSettings == null || gmcsSymbols == null || smcsSymbols == null) {
+            if (!createDefaultGameSettings) {
+                return null;
+            }
+            if (gameSettings == null) {
+                gameSettings = new GameSettings();
+                if (Schemes.Count > 0) {
+                    gameSettings.Assign(Schemes[0]);
+                }
+            }
+            gameSettings.Save();
+        }
+        return gameSettings;
     }
 
     // セーブ
-    public void Save() {
-        // TODO
-        // 書き出しとスクリプトのリビルド
+    public void Save(bool recompile = false) {
+        WriteJsonFile(GAME_SETTINGS_JSON_PATH, this);
+        WriteRspFile(SMCS_RSP_PATH, this.buildScriptingDefineSymbols);
+        WriteRspFile(GMCS_RSP_PATH, this.buildScriptingDefineSymbols);
+
+        // 再コンパイルあり？
+        if (recompile) {
+            // NOTE
+            // 強制的に再コンパイルを走らせる。
+            // EditorAPI から再コンパイルできた気がするが
+            // 忘れたのでひとまずこれで対応。
+            var buildTargetGroup = EditorUserBuildSettings.selectedBuildTargetGroup;
+            var scriptingDefineSymbols = PlayerSettings.GetScriptingDefineSymbolsForGroup(buildTargetGroup);
+            PlayerSettings.SetScriptingDefineSymbolsForGroup(buildTargetGroup, scriptingDefineSymbols + ";REBUILD");
+            PlayerSettings.SetScriptingDefineSymbolsForGroup(buildTargetGroup, scriptingDefineSymbols);
+        }
     }
 
     // 別のゲーム設定をアサイン
     public void Assign(GameSettings gameSettings) {
-        // TODO
+        var jsonText = JsonUtility.ToJson(gameSettings);
+        JsonUtility.FromJsonOverwrite(jsonText, this);
     }
 
     // スキーム設定をアサイン
     public void Assign(string schemeName) {
-        // TODO
+        var gameSettings = GetScheme(schemeName);
+        if (gameSettings == null) {
+            Debug.LogErrorFormat("GameSettings: スキームなし ({0})", schemeName);
+            return;
+        }
+        Assign(gameSettings);
+    }
+
+    // オブジェクトにオーバーライド
+    public void Overwrite(object obj) {
+        var jsonText = JsonUtility.ToJson(this);
+        JsonUtility.FromJsonOverwrite(jsonText, obj);
     }
 
     // スキーム設定を取得する
     public static GameSettings GetScheme(string schemeName) {
-        // TODO
+        foreach (var gameSettings in Schemes) {
+            if (gameSettings.schemeName == schemeName) {
+                return gameSettings;
+            }
+        }
         return null;
     }
+
+    //-------------------------------------------------------------------------- ファイルの読み書き
+    // json ファイルの読み込み
+    static GameSettings ReadJsonFile(string path) {
+        var text = ReadFile(path);
+        if (text == null) {
+            return null;
+        }
+        try {
+            return JsonUtility.FromJson<GameSettings>(text);
+        } catch {}
+        return null;
+    }
+
+    // json ファイルの書き込み
+    static void WriteJsonFile(string path, GameSettings gameSettings) {
+        WriteFile(path, JsonUtility.ToJson(gameSettings, true));
+    }
+
+    // rsp ファイルの読み込み
+    static List<string> ReadRspFile(string path) {
+        var text = ReadFile(path);
+        if (text == null) {
+            return null;
+        }
+        var symbols = new List<string>();
+        var lines   = text.Split('\n');//new string[] {Environment.NewLine}, StringSplitOptions.None);
+        foreach (var line in lines) {
+            var str = line.Trim();
+            if (str.StartsWith("-define:")) {
+                symbols.Add(str.Substring("-define:".Length));
+            }
+        }
+        return symbols;
+    }
+
+    // rsp ファイルの書き込み
+    static void WriteRspFile(string path, List<string> symbols) {
+        var text = "";
+        foreach (var symbol in symbols) {
+            text = text + "-define:" + symbol + "\n";//Environment.NewLine;
+        }
+        WriteFile(path, text);
+    }
+
+    // ファイルの読み込み
+    static string ReadFile(string path) {
+        try {
+            using (var sr = new StreamReader(path, Encoding.UTF8)) {
+                return sr.ReadToEnd();
+            }
+        } catch {}
+        return null;
+    }
+
+    // ファイルの書き込み
+    static void WriteFile(string path, string text) {
+        using (var sw = new StreamWriter(path, false, Encoding.UTF8)) {
+            sw.Write(text);
+        }
+    }
 }
+#endif
 
 //// コンパイル設定
 //[Serializable]
