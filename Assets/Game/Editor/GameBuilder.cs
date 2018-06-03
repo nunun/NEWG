@@ -9,30 +9,36 @@ using UnityEditor.SceneManagement;
 
 // ゲームビルダー
 public partial class GameBuilder {
-    //-------------------------------------------------------------------------- 定義
-    public struct GameBuildSettings {
-        public string      outputPath;
-        public BuildTarget buildTarget;
-        public bool        headless;
-        public bool        autoRun;
-        public bool        openFolder;
-        public string      compileSettings;
-    }
-
-    //-------------------------------------------------------------------------- ビルド処理
-    public static void Build(GameBuildSettings gameBuildSettings) {
+    //-------------------------------------------------------------------------- ビルド
+    public static void Build(string schemeName = null) {
         if (!EditorApplication.isPlaying && !EditorApplication.isPlayingOrWillChangePlaymode) {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) {
                 return;
             }
         }
 
+        // スキーム名をコマンドライン引数から確認
+        // 引数で指定されている場合は、そちらを優先的に使用する。
+        var schemeNameArgument = GetStringArgument("-schemeName");
+        if (schemeNameArgument != null) {
+            schemeName = schemeNameArgument;
+        }
+
+        // ゲーム設定の適用
+        var gameSettingsOld = GameSettings.Load(false);
+        var gameSettings    = (schemeName != null)? GameSettings.GetScheme(schemeName) : gameSettingsOld;
+        if (gameSettings == null) {
+            Debug.LogErrorFormat("ゲーム設定が不明または未適用 ({0})", schemeName);
+            return;
+        }
+        gameSettings.Save(false);
+
         // 現在のシーン設定を保存
         var sceneSetup = EditorSceneManager.GetSceneManagerSetup();
 
         // ビルド環境
         var appext = "";
-        switch (gameBuildSettings.buildTarget) {
+        switch (gameSettings.buildTarget) {
         case BuildTarget.StandaloneWindows:
         case BuildTarget.StandaloneWindows64:
             appext = ".exe";
@@ -54,12 +60,12 @@ public partial class GameBuilder {
 
         // まとめ
         var levels     = scenes.ToArray();
-        var outputPath = gameBuildSettings.outputPath + appext;
+        var outputPath = gameSettings.buildOutputPath + appext;
         var options    = BuildOptions.None;
-        if (gameBuildSettings.headless) {
+        if (gameSettings.buildHeadless) {
             options |= BuildOptions.EnableHeadlessMode;
         }
-        if (gameBuildSettings.autoRun) {
+        if (gameSettings.buildAutoRun) {
             options |= BuildOptions.AutoRunPlayer;
         }
 
@@ -71,20 +77,16 @@ public partial class GameBuilder {
         PlayerSettings.runInBackground         = true;
         PlayerSettings.SplashScreen.show       = false;
 
-        // TODO
-        // コンパイル設定のバックアップ
-        //CompileSettings.Backup();
-
-        // TODO
-        // コンパイル設定の適用
-        //CompileSettings.Apply(gameBuildSettings.compileSettings);
-
         // ビルド
-        var result = BuildPipeline.BuildPlayer(levels, outputPath, gameBuildSettings.buildTarget, options);
+        var result = BuildPipeline.BuildPlayer(levels, outputPath, gameSettings.buildTarget, options);
 
-        // TODO
-        // コンパイル設定の復元
-        //CompileSettings.Restore();
+        // ゲーム設定を元に戻す
+        // 元々無かった場合は消す
+        if (gameSettingsOld != null) {
+            gameSettingsOld.Save(false);
+        } else {
+            GameSettings.Remove();
+        }
 
         // シーン設定を復元
         if (sceneSetup.Length > 0) {
@@ -97,13 +99,23 @@ public partial class GameBuilder {
         }
 
         // 成功ならフォルダを開く
-        if (gameBuildSettings.openFolder) {
-            OpenFolder(gameBuildSettings.outputPath);
+        if (gameSettings.buildOpenFolder) {
+            OpenFolder(gameSettings.buildOutputPath);
         }
         return;
     }
 
     //-------------------------------------------------------------------------- ユーティリティ
+    /// 文字列の引数を取得
+    public static string GetStringArgument(string key, string def = null) {
+        string[] args = System.Environment.GetCommandLineArgs();
+        int index = System.Array.IndexOf(args, key);
+        if (index < 0 || (index + 1) >= args.Length) {
+            return def;
+        }
+        return args[index + 1];
+    }
+
     // フォルダを開く
     static void OpenFolder(string path) {
         if (Application.platform == RuntimePlatform.WindowsEditor) {

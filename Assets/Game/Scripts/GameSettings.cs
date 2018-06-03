@@ -195,6 +195,11 @@ public partial class GameSettings {
         return null;
     }
 
+    // ゲーム設定の削除
+    public static void Remove() {
+        RemoveGameSettingsFiles();
+    }
+
     //-------------------------------------------------------------------------- ファイルの読み書き
     // json ファイルの読み込み
     static GameSettings ReadJsonFile(string path) {
@@ -239,6 +244,13 @@ public partial class GameSettings {
         WriteFile(path, text);
     }
 
+    // ゲーム設定の削除
+    static void RemoveGameSettingsFiles() {
+        RemoveFile(GAME_SETTINGS_JSON_PATH);
+        RemoveFile(MCS_RSP_PATH);
+        AssetDatabase.Refresh();
+    }
+
     // ファイルの読み込み
     static string ReadFile(string path) {
         try {
@@ -253,6 +265,13 @@ public partial class GameSettings {
     static void WriteFile(string path, string text) {
         using (var sw = new StreamWriter(path, false, Encoding.UTF8)) {
             sw.Write(text);
+        }
+    }
+
+    // ファイルの削除
+    static void RemoveFile(string path) {
+        if (File.Exists(path)) {
+            File.Delete(path);
         }
     }
 }

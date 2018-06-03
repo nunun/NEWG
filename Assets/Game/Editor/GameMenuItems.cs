@@ -20,69 +20,33 @@ public partial class GameMenuItems {
     //-------------------------------------------------------------------------- ゲーム設定
     [MenuItem("Game/ゲーム設定", false, 100)]
     public static void CompileSettings() {
-        //CompileSettingsWindow.Open();
         GameSettingsWindow.Open();
     }
 
     //-------------------------------------------------------------------------- ビルド
     [MenuItem("Game/ビルド/デバッグ クライアント (WebGL)", false, 101)]
     public static void BuildDebugClientWebGL() {
-        GameBuilder.Build(new GameBuilder.GameBuildSettings() {
-            outputPath      = "Builds/Debug/Client.Debug.WebGL",
-            buildTarget     = BuildTarget.WebGL,
-            headless        = false,
-            autoRun         = false,
-            openFolder      = true,
-            compileSettings = "DEBUG_CLIENT",
-        });
+        GameBuilder.Build("DEBUG_CLIENT"); // TODO ゲーム設定調整
     }
 
     [MenuItem("Game/ビルド/デバッグ クライアント (スタンドアローン)", false, 102)]
     public static void BuildDebugClientStandalone() {
-        GameBuilder.Build(new GameBuilder.GameBuildSettings() {
-            outputPath      = "Builds/Debug/Client.Debug.Standalone",
-            buildTarget     = (Application.platform == RuntimePlatform.WindowsEditor)? BuildTarget.StandaloneWindows64 : BuildTarget.StandaloneOSXUniversal,
-            headless        = false,
-            autoRun         = true,
-            openFolder      = false,
-            compileSettings = "DEBUG_CLIENT",
-        });
+        GameBuilder.Build("DEBUG_CLIENT"); // TODO ゲーム設定調整
     }
 
     [MenuItem("Game/ビルド/デバッグ サーバ (スタンドアローン)", false, 103)]
     public static void BuildDebugServerStandalone() {
-        GameBuilder.Build(new GameBuilder.GameBuildSettings() {
-            outputPath      = "Builds/Debug/Server.Debug.Standalone",
-            buildTarget     = (Application.platform == RuntimePlatform.WindowsEditor)? BuildTarget.StandaloneWindows64 : BuildTarget.StandaloneOSXUniversal,
-            headless        = false,
-            autoRun         = true,
-            openFolder      = false,
-            compileSettings = "DEBUG_SERVER",
-        });
+        GameBuilder.Build("DEBUG_SERVER"); // TODO ゲーム設定調整
     }
 
     [MenuItem("Game/ビルド/公開用クライアント (WebGL)", false, 200)]
     public static void BuildReleaseClientWebGL() {
-        GameBuilder.Build(new GameBuilder.GameBuildSettings() {
-            outputPath      = "Services/client/Builds/Client",
-            buildTarget     = BuildTarget.WebGL,
-            headless        = false,
-            autoRun         = false,
-            openFolder      = false,
-            compileSettings = "RELEASE_CLIENT",
-        });
+        GameBuilder.Build("RELEASE_CLIENT"); // TODO ゲーム設定調整
     }
 
     [MenuItem("Game/ビルド/公開用サーバ (Linux ヘッドレス)", false, 201)]
     public static void BuildReleaseServerLinuxHeadless() {
-        GameBuilder.Build(new GameBuilder.GameBuildSettings() {
-            outputPath      = "Services/server/Builds/Server",
-            buildTarget     = BuildTarget.StandaloneLinux64,
-            headless        = true,
-            autoRun         = false,
-            openFolder      = false,
-            compileSettings = "RELEASE_SERVER",
-        });
+        GameBuilder.Build("RELEASE_SERVER"); // TODO ゲーム設定調整
     }
 
     [MenuItem("Game/ビルド/公開用バイナリを全てビルド", false, 202)]
