@@ -20,7 +20,8 @@ public partial class GameMenuItems {
     //-------------------------------------------------------------------------- ゲーム設定
     [MenuItem("Game/ゲーム設定", false, 100)]
     public static void CompileSettings() {
-        CompileSettingsWindow.Open();
+        //CompileSettingsWindow.Open();
+        GameSettingsWindow.Open();
     }
 
     //-------------------------------------------------------------------------- ビルド

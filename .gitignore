@@ -35,6 +35,10 @@ sysinfo.txt
 *.unitypackage
 
 # Assets
+Assets/GameSettings.json
+Assets/GameSettings.json.meta
+Assets/mcs.rsp
+Assets/mcs.rsp.meta
 Assets/tags
 Assets/tags.meta
 Assets/InitTestScene*.unity

@@ -109,44 +109,6 @@ public partial class GameSettings {
     public bool         buildAutoRun                = true;
     public bool         buildOpenFolder             = false;
     public List<string> buildScriptingDefineSymbols = new List<string>();
-
-    //-------------------------------------------------------------------------- OnGUI
-    public void DrawGUI(bool editable = false) {
-        // TODO
-        //if (caches == null) {
-        //    caches = new Dictionary<string,string[]>();
-        //    foreach (var s in ScriptDefineSymbols) {
-        //        caches.Add(s.Key, (s.Value == null)? null : s.Value.Select((v) => s.Key + "_" + v).ToArray());
-        //    }
-        //}
-        //GUILayout.Label("Scripting Define Symbols", "BoldLabel");
-        //GUILayout.BeginVertical("box");
-        //{
-        //    foreach (var s in ScriptDefineSymbols) {
-        //        if (s.Value == null) {
-        //            var oldValue = symbols.Contains(s.Key);
-        //            var newValue = Toggle(editable, s.Key, oldValue);
-        //            if (newValue != oldValue) {
-        //                if (newValue) {
-        //                    symbols.Add(s.Key);
-        //                } else {
-        //                    symbols.Remove(s.Key);
-        //                }
-        //            }
-        //        } else {
-        //            var oldValue = Mathf.Max(Array.FindIndex(caches[s.Key], (v) => symbols.Contains(v)), 0);
-        //            var newValue = Popup(editable, s.Key, s.Value, oldValue);
-        //            if (newValue != oldValue) {
-        //                foreach (var v in caches[s.Key]) {
-        //                    symbols.Remove(v);
-        //                }
-        //                symbols.Add(caches[s.Key][newValue]);
-        //            }
-        //        }
-        //    }
-        //}
-        //GUILayout.EndVertical();
-    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -157,18 +119,15 @@ public partial class GameSettings {
     //-------------------------------------------------------------------------- 定義
     // ゲーム設定ファイルパス
     public static readonly string GAME_SETTINGS_JSON_PATH = "Assets/GameSettings.json";
-    // smcs.rsp ファイルパス (C# 用)
-    public static readonly string SMCS_RSP_PATH = "Assets/smcs.rsp";
-    // gmcs.rsp ファイルパス (C# Editor用)
-    public static readonly string GMCS_RSP_PATH = "Assets/gmcs.rsp";
+    // mcs.rsp ファイルパス
+    public static readonly string MCS_RSP_PATH = "Assets/mcs.rsp";
 
     //-------------------------------------------------------------------------- 操作
     // ロード
     public static GameSettings Load(bool createDefaultGameSettings = false) {
         var gameSettings = ReadJsonFile(GAME_SETTINGS_JSON_PATH);
-        var gmcsSymbols  = ReadRspFile(GMCS_RSP_PATH);
-        var smcsSymbols  = ReadRspFile(SMCS_RSP_PATH);
-        if (gameSettings == null || gmcsSymbols == null || smcsSymbols == null) {
+        var mcsSymbols   = ReadRspFile(MCS_RSP_PATH);
+        if (gameSettings == null || mcsSymbols == null) {
             if (!createDefaultGameSettings) {
                 return null;
             }
@@ -186,8 +145,7 @@ public partial class GameSettings {
     // セーブ
     public void Save(bool recompile = false) {
         WriteJsonFile(GAME_SETTINGS_JSON_PATH, this);
-        WriteRspFile(SMCS_RSP_PATH, this.buildScriptingDefineSymbols);
-        WriteRspFile(GMCS_RSP_PATH, this.buildScriptingDefineSymbols);
+        WriteRspFile(MCS_RSP_PATH, this.buildScriptingDefineSymbols);
 
         // 再コンパイルあり？
         if (recompile) {
@@ -200,6 +158,9 @@ public partial class GameSettings {
             PlayerSettings.SetScriptingDefineSymbolsForGroup(buildTargetGroup, scriptingDefineSymbols + ";REBUILD");
             PlayerSettings.SetScriptingDefineSymbolsForGroup(buildTargetGroup, scriptingDefineSymbols);
         }
+
+        // アセットをリフレッシュ
+        AssetDatabase.Refresh();
     }
 
     // 別のゲーム設定をアサイン
