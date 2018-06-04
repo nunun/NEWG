@@ -188,33 +188,6 @@ public partial class GameManager {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-// 起動引数のインポート
-public partial class GameManager {
-    //-------------------------------------------------------------------------- 起動引数
-    static void ImportArguments() {
-        #if UNITY_EDITOR
-        instance.ImportGameSettings();
-        #endif
-        instance.ImportCommandLineArguments();
-        #if UNITY_WEBGL
-        instance.ImportWebBrowserArguments();
-        #endif
-
-        // WebAPI 宛先設定
-        var webAPIClient = WebAPIClient.GetClient();
-        webAPIClient.url = GameManager.WebAPIURL;
-    }
-
-    //-------------------------------------------------------------------------- MonoBehaviour 実装
-    void Start() {
-        ImportArguments();
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
 // コマンドライン引数のインポート
 public partial class GameManager {
     //-------------------------------------------------------------------------- インポート処理
@@ -309,7 +282,7 @@ public partial class GameManager {
     public static readonly string GAME_SETTINGS_JSON_PATH = "Assets/GameSettings.json";
 
     //-------------------------------------------------------------------------- ゲーム設定
-    public void ImportGameSettings() {
+    void ImportGameSettings() {
         var path = GAME_SETTINGS_JSON_PATH;
         if (File.Exists(path)) {
             try {
@@ -329,6 +302,29 @@ public partial class GameManager {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
+// ゲーム引数のインポート
+public partial class GameManager {
+    //-------------------------------------------------------------------------- ゲーム引数
+    void ImportGameArguments() {
+        #if UNITY_EDITOR
+        // ゲーム設定
+        ImportGameSettings();
+        #endif
+
+        // コマンドライン引数
+        ImportCommandLineArguments();
+
+        #if UNITY_WEBGL
+        // ウェブブラウザ引数
+        ImportWebBrowserArguments();
+        #endif
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
 // MonoBehaviour 実装
 public partial class GameManager {
     //-------------------------------------------------------------------------- 変数
@@ -342,6 +338,10 @@ public partial class GameManager {
             return;
         }
         instance = this;
+
+        // NOTE
+        // ゲーム引数のインポート
+        ImportGameArguments();
     }
 
     void OnDestroy() {
