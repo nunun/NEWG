@@ -178,7 +178,7 @@ public partial class Lobby {
         #endif
 
         // マッチングサーバ接続
-        GameManager.SetMatchingServerInformation(matchingResponse.matchingServerUrl);
+        GameSettingsManager.SetMatchingServerInformation(matchingResponse.matchingServerUrl);
         GameMatchingManager.Connect();
         while (!GameMatchingManager.IsDisconnected && GameMatchingManager.MatchConnectData == null) {
             yield return null;
@@ -203,7 +203,7 @@ public partial class Lobby {
         var port      = GameMatchingManager.MatchConnectData.serverPort;
         var token     = default(string);    // TODO GameMatchingManager.MatchConnectData.serverToken;
         var sceneName = "MapProvingGround"; // TODO GameMatchingManager.MatchConnectData.serverSceneName;
-        GameManager.SetServerInformation(address, port, 0, token, sceneName);
+        GameSettingsManager.SetServerInformation(address, port, 0, token, sceneName);
         matchingUI.ChangeScene(sceneName);
     }
 }

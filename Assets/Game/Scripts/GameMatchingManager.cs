@@ -56,7 +56,7 @@ public partial class GameMatchingManager {
         var connector = WebSocketConnector.GetConnector();
 
         // 接続
-        var matchingServerUrl = GameManager.MatchingServerUrl;
+        var matchingServerUrl = GameSettingsManager.MatchingServerUrl;
         Debug.LogFormat("GameMatchingManager: マッチングサーバへ接続 ({0}) ...", matchingServerUrl);
         connector.url = matchingServerUrl;
         connector.Connect();

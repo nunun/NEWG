@@ -20,16 +20,27 @@ public partial class GameSettingsApply : MonoBehaviour {
     // ゲーム設定の適用
     public void Apply() {
         var runtimeGameSettings = GameSettingsManager.GetRuntimeGameSettings();
+        var applied = false;
         if (targetComponent is WebAPIClient) {
             var webapiClient = (WebAPIClient)targetComponent;
             webapiClient.url = runtimeGameSettings.webapiUrl;
+            applied = true;
         } else if (targetComponent is MindlinkConnector) {
             var mindlinkConnector = (MindlinkConnector)targetComponent;
             mindlinkConnector.url = runtimeGameSettings.mindlinkUrl;
+            applied = true;
         } else if (targetComponent is GameNetworkManager) {
             var gameNetworkManager = (GameNetworkManager)targetComponent;
             gameNetworkManager.networkAddress = runtimeGameSettings.serverAddress;
             gameNetworkManager.networkPort    = runtimeGameSettings.serverPort;
+            applied = true;
+        } else if (targetComponent is WebSocketConnector) {
+            var webSocketConnector = (WebSocketConnector)targetComponent;
+            webSocketConnector.url = runtimeGameSettings.matchingServerUrl;
+            applied = true;
+        }
+        if (applied) {
+            Debug.LogFormat("GameSettingsApply: コンポーネント '{0}' にゲーム設定を適用しました", targetComponent);
         }
     }
 }

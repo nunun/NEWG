@@ -41,9 +41,9 @@ public partial class GameBuildProcessor : IPreprocessBuild, IProcessScene, IPost
 public partial class GameBuildProcessor {
     //-------------------------------------------------------------------------- 内部処理
     static void Apply() {
-        var gameManager = FindObjectOfType<GameManager>();
-        Debug.Assert(gameManager != null);
-        gameManager.ImportGameArguments();
+        var gameSettingsManager = FindObjectOfType<GameSettingsManager>();
+        Debug.Assert(gameSettingsManager != null);
+        gameSettingsManager.ImportRuntimeGameSettings();
     }
 
     //-------------------------------------------------------------------------- ユーティリティ

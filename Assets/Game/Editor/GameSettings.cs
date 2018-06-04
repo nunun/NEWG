@@ -169,7 +169,7 @@ public partial class GameSettings : GameSettingsManager.RuntimeGameSettings {
 public partial class GameSettings {
     //-------------------------------------------------------------------------- 定義
     // ゲーム設定ファイルパス
-    public static readonly string GAME_SETTINGS_JSON_PATH = GameManager.GAME_SETTINGS_JSON_PATH;
+    public static readonly string GAME_SETTINGS_JSON_PATH = GameSettingsManager.GAME_SETTINGS_JSON_PATH;
     // mcs.rsp ファイルパス
     public static readonly string MCS_RSP_PATH = "Assets/mcs.rsp";
 

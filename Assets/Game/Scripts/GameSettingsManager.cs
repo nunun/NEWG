@@ -81,6 +81,27 @@ public partial class GameSettingsManager {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
+// マッチングサーバ設定
+public partial class GameSettingsManager {
+    //-------------------------------------------------------------------------- 定義
+    public partial class RuntimeGameSettings {
+        public string matchingServerUrl = "ws://localhost:7755";
+    }
+
+    //-------------------------------------------------------------------------- 変数
+    public static string MatchingServerUrl { get { return instance.runtimeGameSettings.matchingServerUrl; }}
+
+    //-------------------------------------------------------------------------- 設定
+    public static void SetMatchingServerInformation(string matchingServerUrl) {
+        instance.runtimeGameSettings.matchingServerUrl = matchingServerUrl;
+        instance.InvokeUpdateEvent();
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
 // WebAPI 設定
 public partial class GameSettingsManager {
     //-------------------------------------------------------------------------- 定義

@@ -9,7 +9,7 @@ using Services.Protocols.Models;
 public class BootServer : GameScene {
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     IEnumerator Start() {
-        var sceneName = GameManager.ServerSceneName;
+        var sceneName = GameSettingsManager.ServerSceneName;
 
         #if STANDALONE_MODE
         // ネットワークエミュレーションモード時
@@ -28,8 +28,8 @@ public class BootServer : GameScene {
         // サーバ状態を送信
         var isSentServerStatusData = false;
         GameMindlinkManager.ServerStatusData.serverState   = "standby";
-        GameMindlinkManager.ServerStatusData.serverAddress = GameManager.ServerDiscoveryAddress;
-        GameMindlinkManager.ServerStatusData.serverPort    = GameManager.ServerDiscoveryPort;
+        GameMindlinkManager.ServerStatusData.serverAddress = GameSettingsManager.ServerDiscoveryAddress;
+        GameMindlinkManager.ServerStatusData.serverPort    = GameSettingsManager.ServerDiscoveryPort;
         GameMindlinkManager.SendServerStatusData(() => {
             isSentServerStatusData = true;
         });

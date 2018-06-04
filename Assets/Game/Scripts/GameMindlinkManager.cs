@@ -59,7 +59,7 @@ public partial class GameMindlinkManager {
         var connector = MindlinkConnector.GetConnector();
 
         // 接続
-        var mindlinkUrl = GameManager.MindlinkUrl;
+        var mindlinkUrl = GameSettingsManager.MindlinkURL;
         Debug.LogFormat("GameMindlinkManager: StartConnecting(): マインドリンクへ接続 ({0}) ...", mindlinkUrl);
         connector.url = mindlinkUrl;
         connector.Connect();

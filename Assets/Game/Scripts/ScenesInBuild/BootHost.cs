@@ -28,8 +28,8 @@ public class BootHost : GameScene {
         // サーバ状態を送信
         var isSentServerStatusData = false;
         GameMindlinkManager.ServerStatusData.serverState   = "standby";
-        GameMindlinkManager.ServerStatusData.serverAddress = GameManager.ServerDiscoveryAddress;
-        GameMindlinkManager.ServerStatusData.serverPort    = GameManager.ServerDiscoveryPort;
+        GameMindlinkManager.ServerStatusData.serverAddress = GameSettingsManager.ServerDiscoveryAddress;
+        GameMindlinkManager.ServerStatusData.serverPort    = GameSettingsManager.ServerDiscoveryPort;
         GameMindlinkManager.SendServerStatusData(() => {
             isSentServerStatusData = true;
         });
