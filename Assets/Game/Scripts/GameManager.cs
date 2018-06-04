@@ -1,10 +1,12 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 #if UNITY_EDITOR
 using UnityEditor;
 using System.IO;
+using System.Text;
 #endif
 
 // ゲームマネージャ
@@ -287,16 +289,15 @@ public partial class GameManager {
     //-------------------------------------------------------------------------- 操作
     // 起動引数のインポート
     public void ImportGameSettings() {
-            var path = GAME_SETTINGS_JSON_PATH;
-            if (File.Exists(path)) {
-                try {
-                    using (var sr = new StreamReader(path, Encoding.UTF8)) {
-                        JsonUtility.FromJsonOverwrite(sr.ReadToEnd(), this);
-                    }
-                    Debug.LogFormat("GameManager: ゲーム設定を適用しました ({0})", gameSettings.gameSettingsName);
-                } catch (Exception e) {
-                    Debug.LogFormat("GameManager: ゲーム設定が不正 ({0}, {1})", gameSettings.gameSettingsName, e.ToString());
+        var path = GAME_SETTINGS_JSON_PATH;
+        if (File.Exists(path)) {
+            try {
+                using (var sr = new StreamReader(path, Encoding.UTF8)) {
+                    JsonUtility.FromJsonOverwrite(sr.ReadToEnd(), this);
                 }
+                Debug.LogFormat("GameManager: ゲーム設定を適用しました ({0})", path);
+            } catch (Exception e) {
+                Debug.LogFormat("GameManager: ゲーム設定が不正 ({0}, {1})", path, e.ToString());
             }
         }
     }

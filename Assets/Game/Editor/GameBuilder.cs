@@ -26,7 +26,7 @@ public partial class GameBuilder {
 
         // ゲーム設定を取得
         // ゲーム設定名を指定しない場合は、現在の設定。
-        var gameSettings = (gameSettingsName != null)? GameSettings.GetScheme(gameSettingsName) : GameSettings.Load(false);
+        var gameSettings = (gameSettingsName != null)? GameSettings.Find(gameSettingsName) : GameSettings.Load(false);
         if (gameSettings == null) {
             Debug.LogErrorFormat("ゲーム設定なしまたは未適用 ({0})", gameSettingsName);
             return;

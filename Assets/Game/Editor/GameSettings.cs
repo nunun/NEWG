@@ -29,7 +29,7 @@ public partial class GameSettings {
             buildHeadless                = false,
             buildAutoRun                 = true,
             buildOpenFolder              = false,
-            buildResolutionDialogSetting = ResolutionDialogSetting.Disabled;
+            buildResolutionDialogSetting = ResolutionDialogSetting.Disabled,
             buildScreenWidth             = 1280,
             buildScreenHeight            = 720,
             buildIsFullScreen            = false,
@@ -53,7 +53,7 @@ public partial class GameSettings {
             buildHeadless                = false,
             buildAutoRun                 = true,
             buildOpenFolder              = false,
-            buildResolutionDialogSetting = ResolutionDialogSetting.Disabled;
+            buildResolutionDialogSetting = ResolutionDialogSetting.Disabled,
             buildScreenWidth             = 1280,
             buildScreenHeight            = 720,
             buildIsFullScreen            = false,
@@ -77,7 +77,7 @@ public partial class GameSettings {
             buildHeadless                = false,
             buildAutoRun                 = true,
             buildOpenFolder              = false,
-            buildResolutionDialogSetting = ResolutionDialogSetting.Disabled;
+            buildResolutionDialogSetting = ResolutionDialogSetting.Disabled,
             buildScreenWidth             = 1280,
             buildScreenHeight            = 720,
             buildIsFullScreen            = false,
@@ -101,7 +101,7 @@ public partial class GameSettings {
             buildHeadless                = false,
             buildAutoRun                 = false,
             buildOpenFolder              = true,
-            buildResolutionDialogSetting = ResolutionDialogSetting.Disabled;
+            buildResolutionDialogSetting = ResolutionDialogSetting.Disabled,
             buildScreenWidth             = 1280,
             buildScreenHeight            = 720,
             buildIsFullScreen            = false,
@@ -125,7 +125,7 @@ public partial class GameSettings {
             buildHeadless                = true,
             buildAutoRun                 = false,
             buildOpenFolder              = true,
-            buildResolutionDialogSetting = ResolutionDialogSetting.Disabled;
+            buildResolutionDialogSetting = ResolutionDialogSetting.Disabled,
             buildScreenWidth             = 1280,
             buildScreenHeight            = 720,
             buildIsFullScreen            = false,
@@ -348,7 +348,7 @@ public partial class GameSettings {
         var gameSettings = gameSettingsBackup;
         gameSettingsBackup = null;
         if (gameSettings == null) {
-            GameSettings.Remove(); // NOTE 元々無かった場合は消す
+            GameSettings.CleanUp(); // NOTE 元々無かった場合は消す
             return;
         }
         gameSettings.Save(false);

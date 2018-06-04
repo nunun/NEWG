@@ -10,10 +10,10 @@ task_build() {
         docker-compose run --rm --no-deps mindlink npm install
         echo_info "done."
 }
-task_build_unity_project() {
-        echo_info "build unity project ..."
-        unity -batchmode -quit -executeMethod GameBuildMenuItems.BuildReleaseClientWebGL
-        unity -batchmode -quit -executeMethod GameBuildMenuItems.BuildReleaseServerLinuxHeadless
+task_build_game() {
+        echo_info "build game ..."
+        unity -batchmode -quit -executeMethod GameBuilder.Build -gameSettingsName ${ENV_BUILD_GAME_CLIENT}
+        unity -batchmode -quit -executeMethod GameBuilder.Build -gameSettingsName ${ENV_BUILD_GAME_SERVER}
         echo_info "done."
 }
 task_build_stack_file() {
