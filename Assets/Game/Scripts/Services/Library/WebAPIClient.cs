@@ -160,7 +160,7 @@ public partial class WebAPIClient {
 
         // レスポンスチェック
         var unityWebRequest = request.UnityWebRequest;
-        if (unityWebRequest.isNetworkError) {
+        if (unityWebRequest.isError) {
             var error = unityWebRequest.error;
             if (error.IndexOf("Cannot connect to destination host") >= 0) {
                 if (--request.retryCount >= 0) {

@@ -104,7 +104,7 @@ public partial class GameSettingsWindow {
 
     // 無視するプロパティ
     static readonly string[] ignoreProperties = new string[] {
-        "gameSettingsName", "gameSettingsDescription", "buildScriptingDefineSymbols",
+        "gameSettingsName", "gameSettingsDescription", "scriptingDefineSymbols",
     };
 
     //-------------------------------------------------------------------------- ゲーム設定 GUI
@@ -112,7 +112,7 @@ public partial class GameSettingsWindow {
         //GUILayout.Label("Scheme", "BoldLabel");
         GUILayout.BeginVertical("box");
         {
-            GUILayout.Label(gameSettings.gameSettingsName);
+            //GUILayout.Label(gameSettings.gameSettingsName);
             GUILayout.Label(gameSettings.gameSettingsDescription);
         }
         GUILayout.EndVertical();
@@ -143,7 +143,7 @@ public partial class GameSettingsWindow {
         GUILayout.Label("Scripting Define Symbols", "BoldLabel");
         GUILayout.BeginVertical("box");
         {
-            DrawScriptingDefineSymbolsGUI(gameSettings.buildScriptingDefineSymbols);
+            DrawScriptingDefineSymbolsGUI(gameSettings.scriptingDefineSymbols);
         }
         GUILayout.EndVertical();
     }

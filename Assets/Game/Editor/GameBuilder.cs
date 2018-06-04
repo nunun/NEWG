@@ -59,22 +59,22 @@ public partial class GameBuilder {
 
         // まとめ
         var levels     = scenes.ToArray();
-        var outputPath = gameSettings.buildOutputPath + appext;
+        var outputPath = gameSettings.outputPath + appext;
         var options    = BuildOptions.None;
-        if (gameSettings.buildHeadless) {
+        if (gameSettings.headless) {
             options |= BuildOptions.EnableHeadlessMode;
         }
-        if (gameSettings.buildAutoRun) {
+        if (gameSettings.autoRun) {
             options |= BuildOptions.AutoRunPlayer;
         }
 
         // ビルド設定
-        PlayerSettings.displayResolutionDialog = gameSettings.buildResolutionDialogSetting;
-        PlayerSettings.defaultScreenWidth      = gameSettings.buildScreenWidth;
-        PlayerSettings.defaultScreenHeight     = gameSettings.buildScreenHeight;
-        PlayerSettings.defaultIsFullScreen     = gameSettings.buildIsFullScreen;
-        PlayerSettings.runInBackground         = gameSettings.buildRunInBackground;
-        PlayerSettings.SplashScreen.show       = gameSettings.buildShowSplashScreen;
+        PlayerSettings.displayResolutionDialog = gameSettings.resolutionDialogSetting;
+        PlayerSettings.defaultScreenWidth      = gameSettings.screenWidth;
+        PlayerSettings.defaultScreenHeight     = gameSettings.screenHeight;
+        PlayerSettings.defaultIsFullScreen     = gameSettings.isFullScreen;
+        PlayerSettings.runInBackground         = gameSettings.runInBackground;
+        PlayerSettings.SplashScreen.show       = gameSettings.showSplashScreen;
 
         // ゲーム設定をバックアップ
         GameSettings.Backup();
@@ -99,8 +99,8 @@ public partial class GameBuilder {
         }
 
         // 成功ならフォルダを開く
-        if (gameSettings.buildOpenFolder) {
-            OpenFolder(gameSettings.buildOutputPath);
+        if (gameSettings.openFolder) {
+            OpenFolder(gameSettings.outputPath);
         }
         return;
     }

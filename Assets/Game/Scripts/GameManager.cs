@@ -305,7 +305,7 @@ public partial class GameManager {
 // ゲーム引数のインポート
 public partial class GameManager {
     //-------------------------------------------------------------------------- ゲーム引数
-    void ImportGameArguments() {
+    public void ImportGameArguments() {
         #if UNITY_EDITOR
         // ゲーム設定
         ImportGameSettings();

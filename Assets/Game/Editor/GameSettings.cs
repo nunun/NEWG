@@ -8,130 +8,130 @@ using System.Collections.Generic;
 
 // ゲーム設定
 [Serializable]
-public partial class GameSettings {
+public partial class GameSettings : GameSettingsManager.RuntimeGameSettings {
     //-------------------------------------------------------------------------- 定義
     // ゲーム設定一覧の定義
     // NOTE 追加のゲーム設定をここに定義して下さい。
     public static readonly List<GameSettings> GameSettingsList = new List<GameSettings>() {
         new GameSettings() {
-            gameSettingsName             = "DEFAULT",
-            gameSettingsDescription      = "開発用デフォルト設定",
-            runtimeServiceMode           = GameManager.ServiceMode.Host,
-            serverAddress                = "localhost",
-            serverPort                   = 7778,
-            serverPortRandomRange        = 0,
-            serverDiscoveryAddress       = "localhost",
-            serverDiscoveryPort          = 7778,
-            webapiUrl                    = "http://localhost:7780",
-            mindlinkUrl                  = "http://localhost:7766",
-            buildOutputPath              = "Builds/DebugHost",
-            buildTarget                  = BuildTarget.StandaloneWindows64,
-            buildHeadless                = false,
-            buildAutoRun                 = true,
-            buildOpenFolder              = false,
-            buildResolutionDialogSetting = ResolutionDialogSetting.Disabled,
-            buildScreenWidth             = 1280,
-            buildScreenHeight            = 720,
-            buildIsFullScreen            = false,
-            buildRunInBackground         = true,
-            buildShowSplashScreen        = false,
-            buildScriptingDefineSymbols  = new List<string>() {"DEBUG", "SERVER_CODE"},
+            gameSettingsName        = "DEFAULT",
+            gameSettingsDescription = "開発用デフォルト設定",
+            runtimeServiceMode      = GameSettingsManager.ServiceMode.Host,
+            serverAddress           = "localhost",
+            serverPort              = 7778,
+            serverPortRandomRange   = 0,
+            serverDiscoveryAddress  = "localhost",
+            serverDiscoveryPort     = 7778,
+            webapiUrl               = "http://localhost:7780",
+            mindlinkUrl             = "http://localhost:7766",
+            outputPath              = "Builds/DebugHost",
+            buildTarget             = BuildTarget.StandaloneWindows64,
+            headless                = false,
+            autoRun                 = true,
+            openFolder              = false,
+            resolutionDialogSetting = ResolutionDialogSetting.Disabled,
+            screenWidth             = 1280,
+            screenHeight            = 720,
+            isFullScreen            = false,
+            runInBackground         = true,
+            showSplashScreen        = false,
+            scriptingDefineSymbols  = new List<string>() {"DEBUG", "SERVER_CODE"},
         },
         new GameSettings() {
-            gameSettingsName             = "DEBUG_CLIENT",
-            gameSettingsDescription      = "デバッグ用クライアント",
-            runtimeServiceMode           = GameManager.ServiceMode.Client,
-            serverAddress                = null,
-            serverPort                   = 0,
-            serverPortRandomRange        = 0,
-            serverDiscoveryAddress       = null,
-            serverDiscoveryPort          = 0,
-            webapiUrl                    = "http://localhost:7780",
-            mindlinkUrl                  = null,
-            buildOutputPath              = "Builds/DebugClient",
-            buildTarget                  = BuildTarget.WebGL,
-            buildHeadless                = false,
-            buildAutoRun                 = true,
-            buildOpenFolder              = false,
-            buildResolutionDialogSetting = ResolutionDialogSetting.Disabled,
-            buildScreenWidth             = 1280,
-            buildScreenHeight            = 720,
-            buildIsFullScreen            = false,
-            buildRunInBackground         = true,
-            buildShowSplashScreen        = false,
-            buildScriptingDefineSymbols  = new List<string>() {"DEBUG"},
+            gameSettingsName        = "DEBUG_CLIENT",
+            gameSettingsDescription = "デバッグ用クライアント",
+            runtimeServiceMode      = GameSettingsManager.ServiceMode.Client,
+            serverAddress           = null,
+            serverPort              = 0,
+            serverPortRandomRange   = 0,
+            serverDiscoveryAddress  = null,
+            serverDiscoveryPort     = 0,
+            webapiUrl               = "http://localhost:7780",
+            mindlinkUrl             = null,
+            outputPath              = "Builds/DebugClient",
+            buildTarget             = BuildTarget.WebGL,
+            headless                = false,
+            autoRun                 = true,
+            openFolder              = false,
+            resolutionDialogSetting = ResolutionDialogSetting.Disabled,
+            screenWidth             = 1280,
+            screenHeight            = 720,
+            isFullScreen            = false,
+            runInBackground         = true,
+            showSplashScreen        = false,
+            scriptingDefineSymbols  = new List<string>() {"DEBUG"},
         },
         new GameSettings() {
-            gameSettingsName             = "DEBUG_SERVER",
-            gameSettingsDescription      = "デバッグ用サーバ",
-            runtimeServiceMode           = GameManager.ServiceMode.Server,
-            serverAddress                = "0.0.0.0",
-            serverPort                   = 7777,
-            serverPortRandomRange        = 0,
-            serverDiscoveryAddress       = "localhost",
-            serverDiscoveryPort          = 7777,
-            webapiUrl                    = "http://api:7780",
-            mindlinkUrl                  = "http://mindlink:7766",
-            buildOutputPath              = "Builds/DebugServer",
-            buildTarget                  = BuildTarget.StandaloneWindows64,
-            buildHeadless                = false,
-            buildAutoRun                 = true,
-            buildOpenFolder              = false,
-            buildResolutionDialogSetting = ResolutionDialogSetting.Disabled,
-            buildScreenWidth             = 1280,
-            buildScreenHeight            = 720,
-            buildIsFullScreen            = false,
-            buildRunInBackground         = true,
-            buildShowSplashScreen        = false,
-            buildScriptingDefineSymbols  = new List<string>() {"DEBUG", "SERVER_CODE"},
+            gameSettingsName        = "DEBUG_SERVER",
+            gameSettingsDescription = "デバッグ用サーバ",
+            runtimeServiceMode      = GameSettingsManager.ServiceMode.Server,
+            serverAddress           = "0.0.0.0",
+            serverPort              = 7777,
+            serverPortRandomRange   = 0,
+            serverDiscoveryAddress  = "localhost",
+            serverDiscoveryPort     = 7777,
+            webapiUrl               = "http://api:7780",
+            mindlinkUrl             = "http://mindlink:7766",
+            outputPath              = "Builds/DebugServer",
+            buildTarget             = BuildTarget.StandaloneWindows64,
+            headless                = false,
+            autoRun                 = true,
+            openFolder              = false,
+            resolutionDialogSetting = ResolutionDialogSetting.Disabled,
+            screenWidth             = 1280,
+            screenHeight            = 720,
+            isFullScreen            = false,
+            runInBackground         = true,
+            showSplashScreen        = false,
+            scriptingDefineSymbols  = new List<string>() {"DEBUG", "SERVER_CODE"},
         },
         new GameSettings() {
-            gameSettingsName             = "RELEASE_CLIENT",
-            gameSettingsDescription      = "リリース用クライアント",
-            runtimeServiceMode           = GameManager.ServiceMode.Client,
-            serverAddress                = null,
-            serverPort                   = 0,
-            serverPortRandomRange        = 0,
-            serverDiscoveryAddress       = null,
-            serverDiscoveryPort          = 0,
-            webapiUrl                    = "http://fu-n.net:7780",
-            mindlinkUrl                  = null,
-            buildOutputPath              = "Builds/ReleaseClient",
-            buildTarget                  = BuildTarget.WebGL,
-            buildHeadless                = false,
-            buildAutoRun                 = false,
-            buildOpenFolder              = true,
-            buildResolutionDialogSetting = ResolutionDialogSetting.Disabled,
-            buildScreenWidth             = 1280,
-            buildScreenHeight            = 720,
-            buildIsFullScreen            = false,
-            buildRunInBackground         = true,
-            buildShowSplashScreen        = false,
-            buildScriptingDefineSymbols  = new List<string>(),
+            gameSettingsName        = "RELEASE_CLIENT",
+            gameSettingsDescription = "リリース用クライアント",
+            runtimeServiceMode      = GameSettingsManager.ServiceMode.Client,
+            serverAddress           = null,
+            serverPort              = 0,
+            serverPortRandomRange   = 0,
+            serverDiscoveryAddress  = null,
+            serverDiscoveryPort     = 0,
+            webapiUrl               = "http://fu-n.net:7780",
+            mindlinkUrl             = null,
+            outputPath              = "Builds/ReleaseClient",
+            buildTarget             = BuildTarget.WebGL,
+            headless                = false,
+            autoRun                 = false,
+            openFolder              = true,
+            resolutionDialogSetting = ResolutionDialogSetting.Disabled,
+            screenWidth             = 1280,
+            screenHeight            = 720,
+            isFullScreen            = false,
+            runInBackground         = true,
+            showSplashScreen        = false,
+            scriptingDefineSymbols  = new List<string>(),
         },
         new GameSettings() {
-            gameSettingsName             = "RELEASE_SERVER",
-            gameSettingsDescription      = "リリース用サーバ",
-            runtimeServiceMode           = GameManager.ServiceMode.Client,
-            serverAddress                = "0.0.0.0",
-            serverPort                   = 8000,
-            serverPortRandomRange        = 1000,
-            serverDiscoveryAddress       = "fu-n.net",
-            serverDiscoveryPort          = 8000,
-            webapiUrl                    = "http://localhost:7780",
-            mindlinkUrl                  = "http://localhost:7766",
-            buildOutputPath              = "Builds/ReleaseClient",
-            buildTarget                  = BuildTarget.StandaloneLinuxUniversal,
-            buildHeadless                = true,
-            buildAutoRun                 = false,
-            buildOpenFolder              = true,
-            buildResolutionDialogSetting = ResolutionDialogSetting.Disabled,
-            buildScreenWidth             = 1280,
-            buildScreenHeight            = 720,
-            buildIsFullScreen            = false,
-            buildRunInBackground         = true,
-            buildShowSplashScreen        = false,
-            buildScriptingDefineSymbols  = new List<string>() {"SERVER_CODE"},
+            gameSettingsName        = "RELEASE_SERVER",
+            gameSettingsDescription = "リリース用サーバ",
+            runtimeServiceMode      = GameSettingsManager.ServiceMode.Client,
+            serverAddress           = "0.0.0.0",
+            serverPort              = 8000,
+            serverPortRandomRange   = 1000,
+            serverDiscoveryAddress  = "fu-n.net",
+            serverDiscoveryPort     = 8000,
+            webapiUrl               = "http://localhost:7780",
+            mindlinkUrl             = "http://localhost:7766",
+            outputPath              = "Builds/ReleaseClient",
+            buildTarget             = BuildTarget.StandaloneLinuxUniversal,
+            headless                = true,
+            autoRun                 = false,
+            openFolder              = true,
+            resolutionDialogSetting = ResolutionDialogSetting.Disabled,
+            screenWidth             = 1280,
+            screenHeight            = 720,
+            isFullScreen            = false,
+            runInBackground         = true,
+            showSplashScreen        = false,
+            scriptingDefineSymbols  = new List<string>() {"SERVER_CODE"},
         },
     };
 
@@ -145,28 +145,20 @@ public partial class GameSettings {
     };
 
     //-------------------------------------------------------------------------- 変数
-    public string                  gameSettingsName             = "Game Settings Name";
-    public string                  gameSettingsDescription      = "Game Settings Description";
-    public GameManager.ServiceMode runtimeServiceMode           = GameManager.ServiceMode.Host;
-    public string                  serverAddress                = "localhost";
-    public int                     serverPort                   = 7777;
-    public int                     serverPortRandomRange        = 0;
-    public string                  serverDiscoveryAddress       = "localhost";
-    public int                     serverDiscoveryPort          = 7777;
-    public string                  webapiUrl                    = "http://localhost:7780";
-    public string                  mindlinkUrl                  = "http://localhost:7766";
-    public string                  buildOutputPath              = "Builds/DebugLocal";
-    public BuildTarget             buildTarget                  = BuildTarget.StandaloneWindows64;
-    public bool                    buildHeadless                = false;
-    public bool                    buildAutoRun                 = true;
-    public bool                    buildOpenFolder              = false;
-    public ResolutionDialogSetting buildResolutionDialogSetting = ResolutionDialogSetting.Disabled;
-    public int                     buildScreenWidth             = 1280;
-    public int                     buildScreenHeight            = 720;
-    public bool                    buildIsFullScreen            = false;
-    public bool                    buildRunInBackground         = true;
-    public bool                    buildShowSplashScreen        = false;
-    public List<string>            buildScriptingDefineSymbols  = new List<string>();
+    public string                  gameSettingsName        = "Game Settings Name";
+    public string                  gameSettingsDescription = "Game Settings Description";
+    public string                  outputPath              = "Builds/DebugLocal";
+    public BuildTarget             buildTarget             = BuildTarget.StandaloneWindows64;
+    public bool                    headless                = false;
+    public bool                    autoRun                 = true;
+    public bool                    openFolder              = false;
+    public ResolutionDialogSetting resolutionDialogSetting = ResolutionDialogSetting.Disabled;
+    public int                     screenWidth             = 1280;
+    public int                     screenHeight            = 720;
+    public bool                    isFullScreen            = false;
+    public bool                    runInBackground         = true;
+    public bool                    showSplashScreen        = false;
+    public List<string>            scriptingDefineSymbols  = new List<string>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -204,7 +196,7 @@ public partial class GameSettings {
     // セーブ
     public void Save(bool recompile = false) {
         WriteJsonFile(GAME_SETTINGS_JSON_PATH, this);
-        WriteRspFile(MCS_RSP_PATH, this.buildScriptingDefineSymbols);
+        WriteRspFile(MCS_RSP_PATH, this.scriptingDefineSymbols);
         if (recompile) {
             // NOTE
             // 強制的に再コンパイルを走らせる。

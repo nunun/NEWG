@@ -43,7 +43,7 @@ public partial class GameBuildProcessor {
     static void Apply() {
         var gameManager = FindObjectOfType<GameManager>();
         Debug.Assert(gameManager != null);
-        gameManager.ImportGameSettings();
+        gameManager.ImportGameArguments();
     }
 
     //-------------------------------------------------------------------------- ユーティリティ
