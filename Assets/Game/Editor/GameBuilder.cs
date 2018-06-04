@@ -10,25 +10,26 @@ using UnityEditor.SceneManagement;
 // ゲームビルダー
 public partial class GameBuilder {
     //-------------------------------------------------------------------------- ビルド
-    public static void Build(string schemeName = null) {
+    public static void Build(string gameSettingsName = null) {
         if (!EditorApplication.isPlaying && !EditorApplication.isPlayingOrWillChangePlaymode) {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) {
                 return;
             }
         }
 
-        // スキーム名をコマンドライン引数から確認
+        // ゲーム設定名をコマンドライン引数から確認
         // 引数で指定されている場合は、そちらを優先的に使用する。
-        var schemeNameArgument = GetStringArgument("-schemeName");
-        if (schemeNameArgument != null) {
-            schemeName = schemeNameArgument;
+        var gameSettingsNameArgument = GetStringArgument("-gameSettingsName");
+        if (gameSettingsNameArgument != null) {
+            gameSettingsName = gameSettingsNameArgument;
         }
 
         // ゲーム設定の適用
+        // ゲーム設定名を指定しない場合は、現在の設定。
         var gameSettingsOld = GameSettings.Load(false);
-        var gameSettings    = (schemeName != null)? GameSettings.GetScheme(schemeName) : gameSettingsOld;
+        var gameSettings    = (gameSettingsName != null)? GameSettings.GetScheme(gameSettingsName) : gameSettingsOld;
         if (gameSettings == null) {
-            Debug.LogErrorFormat("ゲーム設定が不明または未適用 ({0})", schemeName);
+            Debug.LogErrorFormat("ゲーム設定なしまたは未適用 ({0})", gameSettingsName);
             return;
         }
         gameSettings.Save(false);
@@ -70,12 +71,12 @@ public partial class GameBuilder {
         }
 
         // ビルド設定
-        PlayerSettings.displayResolutionDialog = ResolutionDialogSetting.Disabled;
-        PlayerSettings.defaultScreenWidth      = 1280;
-        PlayerSettings.defaultScreenHeight     = 720;
-        PlayerSettings.defaultIsFullScreen     = false;
-        PlayerSettings.runInBackground         = true;
-        PlayerSettings.SplashScreen.show       = false;
+        PlayerSettings.displayResolutionDialog = gameSettings.buildResolutionDialogSetting;
+        PlayerSettings.defaultScreenWidth      = gameSettings.buildScreenWidth;
+        PlayerSettings.defaultScreenHeight     = gameSettings.buildScreenHeight;
+        PlayerSettings.defaultIsFullScreen     = gameSettings.buildIsFullScreen;
+        PlayerSettings.runInBackground         = gameSettings.buildRunInBackground;
+        PlayerSettings.SplashScreen.show       = gameSettings.buildShowSplashScreen;
 
         // ビルド
         var result = BuildPipeline.BuildPlayer(levels, outputPath, gameSettings.buildTarget, options);

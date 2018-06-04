@@ -15,8 +15,8 @@ public partial class GameSettingsWindow : EditorWindow {
     // ゲーム設定
     [SerializeField] GameSettings gameSettings = null;
 
-    // スキーム名一覧
-    string[] schemeNames = null;
+    // ゲーム設定名一覧
+    string[] gameSettingsNames = null;
 
     // スクロール座標
     Vector2 scrollPos = Vector2.zero;
@@ -30,9 +30,9 @@ public partial class GameSettingsWindow : EditorWindow {
     //-------------------------------------------------------------------------- 実装 (EditorWindow)
     // GUI 表示
     void OnGUI() {
-        // スキーム名初期化
-        if (schemeNames == null) {
-            schemeNames = GameSettings.Schemes.Select((item) => item.schemeName).ToArray();
+        // ゲーム設定名一覧
+        if (gameSettingsNames == null) {
+            gameSettingsNames = GameSettings.GameSettingsList.Select((item) => item.gameSettingsName).ToArray();
         }
 
         // ゲーム設定初期化
@@ -48,16 +48,16 @@ public partial class GameSettingsWindow : EditorWindow {
             // コントロールボタン
             EditorGUILayout.BeginHorizontal();
             {
-                // プリセット選択ボタン
-                var oldIndex = Array.IndexOf(schemeNames, gameSettings.schemeName);
-                var newIndex = EditorGUILayout.Popup(Mathf.Max(0, oldIndex), schemeNames);
+                // ゲーム設定選択ボタン
+                var oldIndex = Array.IndexOf(gameSettingsNames, gameSettings.gameSettingsName);
+                var newIndex = EditorGUILayout.Popup(Mathf.Max(0, oldIndex), gameSettingsNames);
                 if (newIndex != oldIndex) {
-                    var schemeName         = schemeNames[newIndex];
-                    var schemeGameSettings = GameSettings.GetScheme(schemeName);
-                    if (schemeGameSettings != null) {
-                        EditorApplication.delayCall += () => gameSettings.Assign(GameSettings.GetScheme(schemeNames[newIndex]));
+                    var gameSettingsName   = gameSettingsNames[newIndex];
+                    var foundGameSettings = GameSettings.Find(gameSettingsName);
+                    if (foundGameSettings != null) {
+                        EditorApplication.delayCall += () => gameSettings.Assign(foundGameSettings);
                     } else {
-                        Debug.LogErrorFormat("GameSettingsWindow: スキームなし？ ({0})", schemeName);
+                        Debug.LogErrorFormat("GameSettingsWindow: ゲーム設定なし？ ({0})", gameSettingsName);
                     }
                 }
 
@@ -104,7 +104,7 @@ public partial class GameSettingsWindow {
 
     // 無視するプロパティ
     static readonly string[] ignoreProperties = new string[] {
-        "schemeName", "schemeDescription", "buildScriptingDefineSymbols",
+        "gameSettingsName", "gameSettingsDescription", "buildScriptingDefineSymbols",
     };
 
     //-------------------------------------------------------------------------- ゲーム設定 GUI
@@ -112,8 +112,8 @@ public partial class GameSettingsWindow {
         //GUILayout.Label("Scheme", "BoldLabel");
         GUILayout.BeginVertical("box");
         {
-            EditorGUILayout.LabelField("Scheme Name",        gameSettings.schemeName);
-            EditorGUILayout.LabelField("Scheme Description", gameSettings.schemeDescription);
+            GUILayout.Label(gameSettings.gameSettingsName);
+            GUILayout.Label(gameSettings.gameSettingsDescription);
         }
         GUILayout.EndVertical();
 
