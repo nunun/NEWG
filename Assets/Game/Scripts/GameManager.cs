@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 #if UNITY_EDITOR
-using UnityEditor;
 using System.IO;
 using System.Text;
+using UnityEditor;
 #endif
 
 // ゲームマネージャ
@@ -323,7 +323,7 @@ public partial class GameManager {
         instance = this;
 
         #if UNITY_EDITOR
-        ImportGameSettings();
+        ImportGameSettings(); // NOTE ゲーム設定を適用
         #endif
     }
 
