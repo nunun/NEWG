@@ -111,36 +111,29 @@ public partial class GameSettingsManager {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-// ランタイムゲーム設定の適用
+// ランタイムゲーム設定の取得
 public partial class GameSettingsManager {
+    //-------------------------------------------------------------------------- 定義
+    [Serializable]
+    public partial class RuntimeGameSettings {}
+
     //-------------------------------------------------------------------------- 変数
     // ランタイムゲーム設定
-    [SerializeField] RuntimeGameSettings runtimeGameSettings = new RuntimeGameSettings();
+    [SerializeField, HideInInspector] RuntimeGameSettings runtimeGameSettings = new RuntimeGameSettings();
 
     // インポートフラグ
     bool isImported = false;
 
     //-------------------------------------------------------------------------- 操作
     // 実行時ゲーム設定の適用
-    public static void ApplyRuntimeGameSettings(UnityEngine.Object obj) {
+    public static RuntimeGameSettings GetRuntimeGameSettings() {
         var instance = GameSettingsManager.instance ?? GameObject.FindObjectOfType<GameSettingsManager>();
         Debug.Assert(instance != null, "GameSettingsManager がいない");
-
-        // 一度もインポートしていないならインポート
         if (!instance.isImported) {
             instance.isImported = true;
             instance.ImportRuntimeGameSettings();
         }
-
-        // 設定を適用
-        // NOTE 適用できる型を増やしたい場合はここに追記します。
-        if (obj is WebAPIClient) {
-            var webapiClient = (WebAPIClient)obj;
-            webapiClient.url = instance.runtimeGameSettings.webapiUrl;
-        } else if (obj is MindlinkConnector) {
-            var mindlinkConnector = (MindlinkConnector)obj;
-            mindlinkConnector.url = instance.runtimeGameSettings.mindlinkUrl;
-        }
+        return instance.runtimeGameSettings;
     }
 }
 
@@ -302,9 +295,9 @@ public partial class GameSettingsManager {
                 using (var sr = new StreamReader(path, Encoding.UTF8)) {
                     JsonUtility.FromJsonOverwrite(sr.ReadToEnd(), this.runtimeGameSettings);
                 }
-                Debug.LogFormat("GameSettingsManager: ランタイムゲーム設定を適用しました ({0})", path);
+                Debug.LogFormat("GameSettingsManager: ゲーム設定を適用しました ({0})", path);
             } catch (Exception e) {
-                Debug.LogFormat("GameSettingsManager: ランタイムゲーム設定が不正 ({0}, {1})", path, e.ToString());
+                Debug.LogFormat("GameSettingsManager: ゲーム設定が不正 ({0}, {1})", path, e.ToString());
             }
         }
     }
