@@ -190,18 +190,36 @@ public partial class GameManager {
 
 // 起動引数のインポート
 public partial class GameManager {
-    //-------------------------------------------------------------------------- 操作
-    // 起動引数のインポート
-    public static void ImportLaunchArguments() {
-        instance.ImportCommandLineLaunchArguments();
-        #if UNITY_WEBGL
-        instance.ImportWebBrowserLaunchArguments();
+    //-------------------------------------------------------------------------- 起動引数
+    static void ImportArguments() {
+        #if UNITY_EDITOR
+        instance.ImportGameSettings();
         #endif
+        instance.ImportCommandLineArguments();
+        #if UNITY_WEBGL
+        instance.ImportWebBrowserArguments();
+        #endif
+
+        // WebAPI 宛先設定
+        var webAPIClient = WebAPIClient.GetClient();
+        webAPIClient.url = GameManager.WebAPIURL;
     }
 
+    //-------------------------------------------------------------------------- MonoBehaviour 実装
+    void Start() {
+        ImportArguments();
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+// コマンドライン引数のインポート
+public partial class GameManager {
     //-------------------------------------------------------------------------- インポート処理
     // コマンドライン起動引数を取得
-    void ImportCommandLineLaunchArguments() {
+    void ImportCommandLineArguments() {
         ImportCommandLineStringArgument(ref  serverAddress,          "-serverAddress",          null);
         ImportCommandLineIntegerArgument(ref serverPort,             "-serverPort",             null);
         ImportCommandLineIntegerArgument(ref serverPortRandomRange,  "-serverPortRandomRange",  null);
@@ -209,15 +227,6 @@ public partial class GameManager {
         ImportCommandLineIntegerArgument(ref serverDiscoveryPort,    "-serverDiscoveryPort",    null);
         ImportCommandLineStringArgument(ref  webapiUrl,              "-webapiUrl",              null);
     }
-
-    #if UNITY_WEBGL
-    // ウェブブラウザクエリ起動引数を取得
-    void ImportWebBrowserLaunchArguments() {
-        var hostName = "localhost";
-        ImportWebBrowserHostName(ref hostName);
-        this.webapiUrl = string.Format("http://{0}:7780", hostName);
-    }
-    #endif
 
     //-------------------------------------------------------------------------- コマンドライン引数
     static void ImportCommandLineStringArgument(ref string v, string key, string defval = null) {
@@ -242,9 +251,23 @@ public partial class GameManager {
         }
         return args[index + 1];
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+#if UNITY_WEBGL
+
+// ウェブブラウザ引数のインポート
+public partial class GameManager {
+    //-------------------------------------------------------------------------- ウェブブラウザ引数
+    void ImportWebBrowserArguments() {
+        var hostName = "localhost";
+        ImportWebBrowserHostName(ref hostName);
+        this.webapiUrl = string.Format("http://{0}:7780", hostName);
+    }
 
     //-------------------------------------------------------------------------- ウェブブラウザクエリ引数
-    #if UNITY_WEBGL
     static void ImportWebBrowserQueryStringArgument(ref string v, string key, string defval = null) {
         var val = GetWebBrowserQueryArgument(key, defval);
         if (val != null) {
@@ -262,9 +285,8 @@ public partial class GameManager {
     static string GetWebBrowserQueryArgument(string key, string defval = null) {
         return WebBrowser.GetLocationQuery(key) ?? defval;
     }
-    #endif
+
     //-------------------------------------------------------------------------- ウェブブラウザホスト名
-    #if UNITY_WEBGL
     static void ImportWebBrowserHostName(ref v) {
         v = GetWebBrowserHostName();
     }
@@ -272,9 +294,9 @@ public partial class GameManager {
     static string GetWebBrowserHostName() {
         return WebBrowser.GetLocationHostName();
     }
-    #endif
 }
 
+#endif
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -286,8 +308,7 @@ public partial class GameManager {
     // ゲーム設定へのパス
     public static readonly string GAME_SETTINGS_JSON_PATH = "Assets/GameSettings.json";
 
-    //-------------------------------------------------------------------------- 操作
-    // 起動引数のインポート
+    //-------------------------------------------------------------------------- ゲーム設定
     public void ImportGameSettings() {
         var path = GAME_SETTINGS_JSON_PATH;
         if (File.Exists(path)) {
@@ -321,10 +342,6 @@ public partial class GameManager {
             return;
         }
         instance = this;
-
-        #if UNITY_EDITOR
-        ImportGameSettings(); // NOTE ゲーム設定を適用
-        #endif
     }
 
     void OnDestroy() {

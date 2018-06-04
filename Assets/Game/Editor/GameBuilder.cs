@@ -76,8 +76,10 @@ public partial class GameBuilder {
         PlayerSettings.runInBackground         = gameSettings.buildRunInBackground;
         PlayerSettings.SplashScreen.show       = gameSettings.buildShowSplashScreen;
 
-        // ゲーム設定をバックアップして適用
+        // ゲーム設定をバックアップ
         GameSettings.Backup();
+
+        // ゲーム設定を作成
         gameSettings.Save(false);
 
         // ビルド

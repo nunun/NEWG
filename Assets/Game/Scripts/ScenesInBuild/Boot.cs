@@ -7,20 +7,12 @@ using UnityEngine;
 public class Boot : MonoBehaviour {
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     void Start() {
-        // 起動引数のインポート
-        GameManager.ImportLaunchArguments();
-
-        // WebAPI 宛先設定
-        var webAPIClient = WebAPIClient.GetClient();
-        webAPIClient.url = GameManager.WebAPIURL;
-
-        // 各種起動シーンへ
         switch (GameManager.RuntimeServiceMode) {
-        case GameManager.ServiceMode.Server:
-            GameSceneManager.ChangeSceneImmediately("BootServer");
-            break;
         case GameManager.ServiceMode.Client:
             GameSceneManager.ChangeSceneImmediately("BootClient");
+            break;
+        case GameManager.ServiceMode.Server:
+            GameSceneManager.ChangeSceneImmediately("BootServer");
             break;
         case GameManager.ServiceMode.Host:
             GameSceneManager.ChangeSceneImmediately("BootHost");

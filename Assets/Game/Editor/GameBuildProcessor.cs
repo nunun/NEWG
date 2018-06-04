@@ -41,9 +41,6 @@ public partial class GameBuildProcessor : IPreprocessBuild, IProcessScene, IPost
 public partial class GameBuildProcessor {
     //-------------------------------------------------------------------------- 内部処理
     static void Apply() {
-        // NOTE
-        // GameBuilder.Build() で用意された
-        // GameSettings.json と mcs.rsp をインポート。
         var gameManager = FindObjectOfType<GameManager>();
         Debug.Assert(gameManager != null);
         gameManager.ImportGameSettings();
