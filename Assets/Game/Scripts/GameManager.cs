@@ -4,6 +4,7 @@ using UnityEngine;
 
 #if UNITY_EDITOR
 using UnityEditor;
+using System.IO;
 #endif
 
 // ゲームマネージャ
@@ -279,13 +280,24 @@ public partial class GameManager {
 
 // ゲーム設定のインポート
 public partial class GameManager {
+    //-------------------------------------------------------------------------- 定義
+    // ゲーム設定へのパス
+    public static readonly string GAME_SETTINGS_JSON_PATH = "Assets/GameSettings.json";
+
     //-------------------------------------------------------------------------- 操作
     // 起動引数のインポート
     public void ImportGameSettings() {
-        var gameSettings = GameSettings.Load(false);
-        if (gameSettings != null) {
-            Debug.LogFormat("GameManager: ゲーム設定を適用しました ({0})", gameSettings.schemeName);
-            gameSettings.Overwrite(this);
+            var path = GAME_SETTINGS_JSON_PATH;
+            if (File.Exists(path)) {
+                try {
+                    using (var sr = new StreamReader(path, Encoding.UTF8)) {
+                        JsonUtility.FromJsonOverwrite(sr.ReadToEnd(), this);
+                    }
+                    Debug.LogFormat("GameManager: ゲーム設定を適用しました ({0})", gameSettings.gameSettingsName);
+                } catch (Exception e) {
+                    Debug.LogFormat("GameManager: ゲーム設定が不正 ({0}, {1})", gameSettings.gameSettingsName, e.ToString());
+                }
+            }
         }
     }
 }

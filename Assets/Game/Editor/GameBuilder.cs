@@ -24,15 +24,13 @@ public partial class GameBuilder {
             gameSettingsName = gameSettingsNameArgument;
         }
 
-        // ゲーム設定の適用
+        // ゲーム設定を取得
         // ゲーム設定名を指定しない場合は、現在の設定。
-        var gameSettingsOld = GameSettings.Load(false);
-        var gameSettings    = (gameSettingsName != null)? GameSettings.GetScheme(gameSettingsName) : gameSettingsOld;
+        var gameSettings = (gameSettingsName != null)? GameSettings.GetScheme(gameSettingsName) : GameSettings.Load(false);
         if (gameSettings == null) {
             Debug.LogErrorFormat("ゲーム設定なしまたは未適用 ({0})", gameSettingsName);
             return;
         }
-        gameSettings.Save(false);
 
         // 現在のシーン設定を保存
         var sceneSetup = EditorSceneManager.GetSceneManagerSetup();
@@ -78,16 +76,15 @@ public partial class GameBuilder {
         PlayerSettings.runInBackground         = gameSettings.buildRunInBackground;
         PlayerSettings.SplashScreen.show       = gameSettings.buildShowSplashScreen;
 
+        // ゲーム設定をバックアップして適用
+        GameSettings.Backup();
+        gameSettings.Save(false);
+
         // ビルド
         var result = BuildPipeline.BuildPlayer(levels, outputPath, gameSettings.buildTarget, options);
 
-        // ゲーム設定を元に戻す
-        // 元々無かった場合は消す
-        if (gameSettingsOld != null) {
-            gameSettingsOld.Save(false);
-        } else {
-            GameSettings.Remove();
-        }
+        // ゲーム設定を復元
+        GameSettings.Restore();
 
         // シーン設定を復元
         if (sceneSetup.Length > 0) {

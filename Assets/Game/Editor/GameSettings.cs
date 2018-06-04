@@ -1,5 +1,4 @@
-﻿#if UNITY_EDITOR
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEditor;
 using System;
 using System.IO;
@@ -178,7 +177,7 @@ public partial class GameSettings {
 public partial class GameSettings {
     //-------------------------------------------------------------------------- 定義
     // ゲーム設定ファイルパス
-    public static readonly string GAME_SETTINGS_JSON_PATH = "Assets/GameSettings.json";
+    public static readonly string GAME_SETTINGS_JSON_PATH = GameManager.GAME_SETTINGS_JSON_PATH;
     // mcs.rsp ファイルパス
     public static readonly string MCS_RSP_PATH = "Assets/mcs.rsp";
 
@@ -206,8 +205,6 @@ public partial class GameSettings {
     public void Save(bool recompile = false) {
         WriteJsonFile(GAME_SETTINGS_JSON_PATH, this);
         WriteRspFile(MCS_RSP_PATH, this.buildScriptingDefineSymbols);
-
-        // 再コンパイルあり？
         if (recompile) {
             // NOTE
             // 強制的に再コンパイルを走らせる。
@@ -218,8 +215,12 @@ public partial class GameSettings {
             PlayerSettings.SetScriptingDefineSymbolsForGroup(buildTargetGroup, scriptingDefineSymbols + ";REBUILD");
             PlayerSettings.SetScriptingDefineSymbolsForGroup(buildTargetGroup, scriptingDefineSymbols);
         }
+        AssetDatabase.Refresh();
+    }
 
-        // アセットをリフレッシュ
+    // ゲーム設定のクリーンアップ
+    public static void CleanUp() {
+        RemoveGameSettingsFiles();
         AssetDatabase.Refresh();
     }
 
@@ -239,12 +240,6 @@ public partial class GameSettings {
         Assign(gameSettings);
     }
 
-    // オブジェクトにオーバーライド
-    public void Overwrite(object obj) {
-        var jsonText = JsonUtility.ToJson(this);
-        JsonUtility.FromJsonOverwrite(jsonText, obj);
-    }
-
     // ゲーム設定を取得する
     public static GameSettings Find(string gameSettingsName) {
         foreach (var gameSettings in GameSettingsList) {
@@ -253,11 +248,6 @@ public partial class GameSettings {
             }
         }
         return null;
-    }
-
-    // ゲーム設定の削除
-    public static void Remove() {
-        RemoveGameSettingsFiles();
     }
 
     //-------------------------------------------------------------------------- ファイルの読み書き
@@ -304,13 +294,13 @@ public partial class GameSettings {
         WriteFile(path, text);
     }
 
-    // ゲーム設定の削除
+    // ゲーム設定ファイルの削除
     static void RemoveGameSettingsFiles() {
         RemoveFile(GAME_SETTINGS_JSON_PATH);
         RemoveFile(MCS_RSP_PATH);
-        AssetDatabase.Refresh();
     }
 
+    //-------------------------------------------------------------------------- ファイルの読み書き
     // ファイルの読み込み
     static string ReadFile(string path) {
         try {
@@ -335,4 +325,32 @@ public partial class GameSettings {
         }
     }
 }
-#endif
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+// バックアップと復元
+public partial class GameSettings {
+    //-------------------------------------------------------------------------- 変数
+    static GameSettings gameSettingsBackup = null;
+
+    //-------------------------------------------------------------------------- 操作
+    // 現在のゲーム設定をバックアップする
+    public static void Backup() {
+        Debug.Assert(gameSettingsBackup != null, "既にバックアップしている");
+        gameSettingsBackup = GameSettings.Load(false);
+    }
+
+    // バックアップしたゲーム設定を元に戻す
+    public static void Restore() {
+        Debug.Assert(gameSettingsBackup == null, "バックアップがないので復元不能");
+        var gameSettings = gameSettingsBackup;
+        gameSettingsBackup = null;
+        if (gameSettings == null) {
+            GameSettings.Remove(); // NOTE 元々無かった場合は消す
+            return;
+        }
+        gameSettings.Save(false);
+    }
+}
