@@ -171,14 +171,14 @@ public partial class Lobby {
 
         #if STANDALONE_MODE
         // スタンドアローンモード時
-        if (GameManager.IsStandaloneMode) {
-            GameSceneManager.ChangeScene(GameManager.ServerSceneName);
+        if (StandaloneSimulatorSettings.IsStandaloneMode) {
+            GameSceneManager.ChangeScene(GameSettings.ServerSceneName);
             yield break;
         }
         #endif
 
         // マッチングサーバ接続
-        GameSettingsManager.SetMatchingServerInformation(matchingResponse.matchingServerUrl);
+        GameSettings.SetMatchingServerInformation(matchingResponse.matchingServerUrl);
         GameMatchingManager.Connect();
         while (!GameMatchingManager.IsDisconnected && GameMatchingManager.MatchConnectData == null) {
             yield return null;
@@ -203,7 +203,7 @@ public partial class Lobby {
         var port      = GameMatchingManager.MatchConnectData.serverPort;
         var token     = default(string);    // TODO GameMatchingManager.MatchConnectData.serverToken;
         var sceneName = "MapProvingGround"; // TODO GameMatchingManager.MatchConnectData.serverSceneName;
-        GameSettingsManager.SetServerInformation(address, port, 0, token, sceneName);
+        GameSettings.SetServerInformation(address, port, 0, token, sceneName);
         matchingUI.ChangeScene(sceneName);
     }
 }

@@ -9,8 +9,7 @@ using System.IO;
 using System.Text;
 #endif
 
-// ゲーム設定の適用
-[DefaultExecutionOrder(int.MinValue)]
+// 環境設定の適用
 public partial class GameSettingsApply : MonoBehaviour {
     //-------------------------------------------------------------------------- 変数
     // ゲーム設定を適用するターゲットコンポーネント
@@ -19,24 +18,23 @@ public partial class GameSettingsApply : MonoBehaviour {
     //-------------------------------------------------------------------------- 操作
     // ゲーム設定の適用
     public void Apply() {
-        var runtimeGameSettings = GameSettingsManager.GetRuntimeGameSettings();
         var applied = false;
         if (targetComponent is WebAPIClient) {
             var webapiClient = (WebAPIClient)targetComponent;
-            webapiClient.url = runtimeGameSettings.webapiUrl;
+            webapiClient.url = GameSettings.WebAPIURL;
             applied = true;
         } else if (targetComponent is MindlinkConnector) {
             var mindlinkConnector = (MindlinkConnector)targetComponent;
-            mindlinkConnector.url = runtimeGameSettings.mindlinkUrl;
+            mindlinkConnector.url = GameSettings.MindlinkURL;
             applied = true;
         } else if (targetComponent is GameNetworkManager) {
             var gameNetworkManager = (GameNetworkManager)targetComponent;
-            gameNetworkManager.networkAddress = runtimeGameSettings.serverAddress;
-            gameNetworkManager.networkPort    = runtimeGameSettings.serverPort;
+            gameNetworkManager.networkAddress = GameSettings.ServerAddress;
+            gameNetworkManager.networkPort    = GameSettings.ServerPort;
             applied = true;
         } else if (targetComponent is WebSocketConnector) {
             var webSocketConnector = (WebSocketConnector)targetComponent;
-            webSocketConnector.url = runtimeGameSettings.matchingServerUrl;
+            webSocketConnector.url = GameSettings.MatchingServerUrl;
             applied = true;
         }
         if (applied) {
@@ -53,11 +51,11 @@ public partial class GameSettingsApply : MonoBehaviour {
 public partial class GameSettingsApply {
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     void Awake() {
-        GameSettingsManager.AddUpdateEventListener(Apply);
+        GameSettings.AddUpdateEventListener(Apply);
         Apply();
     }
 
     void OnDestroy() {
-        GameSettingsManager.RemoveUpdateEventListener(Apply);
+        GameSettings.RemoveUpdateEventListener(Apply);
     }
 }

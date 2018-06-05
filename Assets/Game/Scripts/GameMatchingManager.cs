@@ -52,17 +52,13 @@ public partial class GameMatchingManager {
     //-------------------------------------------------------------------------- 接続の開始と停止
     // 接続開始
     IEnumerator StartConnecting() {
-        // コネクタ取得
-        var connector = WebSocketConnector.GetConnector();
-
         // 接続
-        var matchingServerUrl = GameSettingsManager.MatchingServerUrl;
-        Debug.LogFormat("GameMatchingManager: マッチングサーバへ接続 ({0}) ...", matchingServerUrl);
-        connector.url = matchingServerUrl;
+        Debug.LogFormat("GameMatchingManager: マッチングサーバへ接続 ...");
+        var connector = WebSocketConnector.GetConnector();
         connector.Connect();
 
         // 接続を待つ
-        Debug.Log("GameMatchingManager: マッチングサーバへの接続をまっています ...");
+        Debug.Log("GameMatchingManager: マッチングサーバへの接続待ち ...");
         while (!connector.IsConnected) {
             yield return null;
         }

@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 #if UNITY_EDITOR
-using System.IO;
-using System.Text;
 using UnityEditor;
 #endif
 
@@ -15,31 +13,6 @@ using UnityEditor;
 public partial class GameManager : MonoBehaviour {
     // NOTE
     // パーシャルクラスを参照
-}
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
-// スタンドアローンモード情報
-public partial class GameManager {
-    //-------------------------------------------------------------------------- 変数
-    public StandaloneSimulatorProfile standaloneSimulatorProfile = null; // スタンドアローンシミュレータ プロファイル
-
-    // スタンドアローンシミュレータの取得
-    public static StandaloneSimulatorProfile StandaloneSimulatorProfile { get { return instance.standaloneSimulatorProfile; }}
-
-    // スタンドアローンモードかどうか
-    // このフラグの if 文を置くことによって Unreachable コードの警告を回避
-    public static bool IsStandaloneMode {
-        get {
-            #if STANDALONE_MODE
-            return true;
-            #else
-            return false;
-            #endif
-        }
-    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

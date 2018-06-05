@@ -10,9 +10,9 @@ using Services.Protocols.Consts;
 using Services.Protocols.Models;
 #endif
 
-// スタンドアローンシミュレータプロファイル
-[CreateAssetMenu(fileName = "StandaloneSimulatorProfile", menuName = "ScriptableObject/StandaloneSimulatorProfile", order = 1001)]
-public partial class StandaloneSimulatorProfile : ScriptableObject {
+// スタンドアローンシミュレータ設定
+[CreateAssetMenu(fileName = "StandaloneSimulatorSettings", menuName = "ScriptableObject/StandaloneSimulatorSettings", order = 1001)]
+public partial class StandaloneSimulatorSettings : ScriptableObject {
     // NOTE
     // パーシャルクラスを参照
 }
@@ -21,7 +21,7 @@ public partial class StandaloneSimulatorProfile : ScriptableObject {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-public partial class StandaloneSimulatorProfile {
+public partial class StandaloneSimulatorSettings {
     //-------------------------------------------------------------------------- 変数
     public string playerName = "StandaloneSimulatedPlayer"; // プレイヤー名
 
@@ -35,27 +35,30 @@ public partial class StandaloneSimulatorProfile {
 #if STANDALONE_MODE
 
 // WebAPI の処理
-public partial class StandaloneSimulatorProfile {
-    //-------------------------------------------------------------------------- 変数
+public partial class StandaloneSimulatorSettings {
+    //-------------------------------------------------------------------------- 定義
     static readonly float DEBUG_DELAY = 0.5f; // デバッグディレイ
 
     //-------------------------------------------------------------------------- 変数
     WebAPIClient.Request debugRequest = null; // デバッグ中のリクエスト
     float                debugDelay   = 0.0f; // デバッグディレイ
 
+    // スタンドアローンモードかどうか (常に true)
+    public static bool IsStandaloneMode { get { return true; }}
+
     //-------------------------------------------------------------------------- WebAPI エミュレーション
-    public bool SimulateWebAPI(WebAPIClient.Request request, float deltaTime) {
-        if (debugRequest == null) {
-            Debug.LogFormat("StandaloneSimulatorProfile: WebAPI リクエストを処理 ({0})", request.ToString());
-            debugRequest = request;
-            debugDelay   = DEBUG_DELAY;
+    public static bool SimulateWebAPI(WebAPIClient.Request request, float deltaTime) {
+        if (instance.debugRequest == null) {
+            Debug.LogFormat("StandaloneSimulatorSettings: WebAPI リクエストを処理 ({0})", request.ToString());
+            instance.debugRequest = request;
+            instance.debugDelay   = DEBUG_DELAY;
         }
-        if (debugDelay > 0.0f) {//WebAPIっぽい待ちディレイをつけておく
-            debugDelay -= deltaTime;
+        if (instance.debugDelay > 0.0f) {//WebAPIっぽい待ちディレイをつけておく
+            instance.debugDelay -= deltaTime;
             return true;
         }
-        SimulateWebAPIRequest(request);
-        debugRequest = null;
+        instance.SimulateWebAPIRequest(request);
+        instance.debugRequest = null;
         return false;
     }
 
@@ -123,11 +126,11 @@ public partial class StandaloneSimulatorProfile {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-// StandaloneSimulatorProfile 実装
-public partial class StandaloneSimulatorProfile {
+// StandaloneSimulatorSettings 実装
+public partial class StandaloneSimulatorSettings {
     //-------------------------------------------------------------------------- 変数
-    // プロファイル インスタンス
-    static StandaloneSimulatorProfile instance = null;
+    // インスタンス
+    static StandaloneSimulatorSettings instance = null;
 
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     void OnEnable() {

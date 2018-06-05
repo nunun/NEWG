@@ -7,18 +7,18 @@ using UnityEngine;
 public class Boot : MonoBehaviour {
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     void Start() {
-        switch (GameSettingsManager.RuntimeServiceMode) {
-        case GameSettingsManager.ServiceMode.Client:
+        switch (GameSettings.RuntimeServiceMode) {
+        case GameSettings.ServiceMode.Client:
             GameSceneManager.ChangeSceneImmediately("BootClient");
             break;
-        case GameSettingsManager.ServiceMode.Server:
+        case GameSettings.ServiceMode.Server:
             GameSceneManager.ChangeSceneImmediately("BootServer");
             break;
-        case GameSettingsManager.ServiceMode.Host:
+        case GameSettings.ServiceMode.Host:
             GameSceneManager.ChangeSceneImmediately("BootHost");
             break;
         default:
-            GameManager.Abort(string.Format("不明なモード ({0})", GameSettingsManager.RuntimeServiceMode));
+            GameManager.Abort(string.Format("不明なモード ({0})", GameSettings.RuntimeServiceMode));
             break;
         }
     }

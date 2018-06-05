@@ -87,11 +87,11 @@ public partial class MapProvingGround {
 
     void TryStartService(int retryCount) {
         var networkManager         = GameNetworkManager.singleton;
-        var serverAddress          = GameSettingsManager.ServerAddress;
-        var serverPort             = GameSettingsManager.ServerPort;
-        var serverPortRandomRange  = GameSettingsManager.ServerPortRandomRange;
-        var serverDiscoveryAddress = GameSettingsManager.ServerDiscoveryAddress;
-        var serverDiscoveryPort    = GameSettingsManager.ServerDiscoveryPort;
+        var serverAddress          = GameSettings.ServerAddress;
+        var serverPort             = GameSettings.ServerPort;
+        var serverPortRandomRange  = GameSettings.ServerPortRandomRange;
+        var serverDiscoveryAddress = GameSettings.ServerDiscoveryAddress;
+        var serverDiscoveryPort    = GameSettings.ServerDiscoveryPort;
 
         // ポート番号にゼロを指定した場合はランダムポート
         if (serverPortRandomRange > 0) {
@@ -107,16 +107,16 @@ public partial class MapProvingGround {
 
         // サービス開始
         var success = false;
-        switch (GameSettingsManager.RuntimeServiceMode) {
-        case GameSettingsManager.ServiceMode.Client:
+        switch (GameSettings.RuntimeServiceMode) {
+        case GameSettings.ServiceMode.Client:
             Debug.Log("クライアント開始 ...");
             success = (networkManager.StartClient() != null);
             break;
-        case GameSettingsManager.ServiceMode.Server:
+        case GameSettings.ServiceMode.Server:
             Debug.Log("サーバ開始 ...");
             success = networkManager.StartServer();
             break;
-        case GameSettingsManager.ServiceMode.Host:
+        case GameSettings.ServiceMode.Host:
         default:
             Debug.Log("ホスト開始 ...");
             success = (networkManager.StartHost() != null);
@@ -124,7 +124,7 @@ public partial class MapProvingGround {
         }
 
         // クライアントの場合
-        if (GameSettingsManager.RuntimeServiceMode == GameSettingsManager.ServiceMode.Client) {
+        if (GameSettings.RuntimeServiceMode == GameSettings.ServiceMode.Client) {
             if (!success) {
                 GameManager.Abort("サービス開始失敗");
                 return;
@@ -158,16 +158,16 @@ public partial class MapProvingGround {
         var networkManager = GameNetworkManager.singleton;
 
         // サービス停止
-        switch (GameSettingsManager.RuntimeServiceMode) {
-        case GameSettingsManager.ServiceMode.Client:
+        switch (GameSettings.RuntimeServiceMode) {
+        case GameSettings.ServiceMode.Client:
             Debug.Log("クライアント停止 ...");
             networkManager.StopClient();
             break;
-        case GameSettingsManager.ServiceMode.Server:
+        case GameSettings.ServiceMode.Server:
             Debug.Log("サーバ停止 ...");
             networkManager.StopServer();
             break;
-        case GameSettingsManager.ServiceMode.Host:
+        case GameSettings.ServiceMode.Host:
         default:
             Debug.Log("ホスト停止 ...");
             networkManager.StopHost();

@@ -34,6 +34,9 @@ sysinfo.txt
 *.apk
 *.unitypackage
 
+# Game
+tags
+
 # Assets
 Assets/GameSettings.json
 Assets/GameSettings.json.meta

@@ -55,17 +55,13 @@ public partial class GameMindlinkManager {
     //-------------------------------------------------------------------------- 接続と切断
     // 接続開始
     IEnumerator StartConnecting() {
-        // コネクタ取得
-        var connector = MindlinkConnector.GetConnector();
-
         // 接続
-        var mindlinkUrl = GameSettingsManager.MindlinkURL;
-        Debug.LogFormat("GameMindlinkManager: StartConnecting(): マインドリンクへ接続 ({0}) ...", mindlinkUrl);
-        connector.url = mindlinkUrl;
+        Debug.LogFormat("GameMindlinkManager: マインドリンクへ接続 ...");
+        var connector = MindlinkConnector.GetConnector();
         connector.Connect();
 
         // 接続を待つ
-        Debug.Log("GameMindlinkManager:  StartConnecting(): マインドリンクへの接続をまっています ...");
+        Debug.Log("GameMindlinkManager:  マインドリンクへの接続待ち ...");
         while (!connector.IsConnected) {
             yield return null;
         }
