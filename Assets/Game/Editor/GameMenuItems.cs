@@ -57,48 +57,47 @@ public partial class GameMenuItems {
     }
 
     //-------------------------------------------------------------------------- ローカルサービス
-    [MenuItem("Game/ローカルサービス/起動", false, 102)]
+    [MenuItem("Game/サービス/ローカルサービス/起動", false, 102)]
     public static void ServicesUp() {
         var commandProcess = new CommandProcess();
         var env = new Dictionary<string,string>() {{"&NONBLOCK", "1"}};
         commandProcess.Start("docker-compose", "up", "Services", env);
     }
 
-    [MenuItem("Game/ローカルサービス/停止", false, 103)]
+    [MenuItem("Game/サービス/ローカルサービス/停止", false, 103)]
     public static void ServicesDown() {
         var commandProcess = new CommandProcess();
         var env = new Dictionary<string,string>() {{"&NONBLOCK", "1"}};
         commandProcess.Start("docker-compose", "down", "Services", env);
     }
 
-    [MenuItem("Game/ローカルサービス/ビルド", false, 200)]
+    [MenuItem("Game/サービス/ローカルサービス/ビルド", false, 200)]
     public static void ServicesBuild() {
         var commandProcess = new CommandProcess();
         commandProcess.Start("docker-compose", "build", "Services");
     }
 
-    //-------------------------------------------------------------------------- サービスプロトコル
-    [MenuItem("Game/サービスプロトコル/プロトコルコード生成/C# のみ", false, 103)]
+    [MenuItem("Game/サービス/サービスプロトコル/プロトコルコード生成/C# のみ", false, 103)]
     public static void GenerateProtocolsCs() {
         var commandProcess = new CommandProcess();
         commandProcess.Start("docker-compose", "run --rm generator ruby /generate.rb -c /output/cs", "Services/services");
         AssetsUtility.PingDirectory("Assets/Game/Scripts/Services/Protocols");
     }
 
-    [MenuItem("Game/サービスプロトコル/プロトコルコード生成/すべて", false, 104)]
+    [MenuItem("Game/サービス/サービスプロトコル/プロトコルコード生成/すべて", false, 104)]
     public static void GenerateProtocolsAll() {
         var commandProcess = new CommandProcess();
         commandProcess.Start("docker-compose", "run --rm generator ruby /generate.rb -c", "Services/services");
         AssetsUtility.PingDirectory("Assets/Game/Scripts/Services/Protocols");
     }
 
-    [MenuItem("Game/サービスプロトコル/プロトコル定義書を編集", false, 105)]
+    [MenuItem("Game/サービス/サービスプロトコル/プロトコル定義書を編集", false, 104)]
     public static void EditProtocols() {
         AssetsUtility.EditFile("Services/services/specs.yml");
     }
 
     //-------------------------------------------------------------------------- セーブデータ
-    [MenuItem("Game/セーブデータ/セーブデータをクリア", false, 104)]
+    [MenuItem("Game/セーブデータ/セーブデータをクリア", false, 103)]
     public static void ClearSaveData() {
         PlayerPrefs.DeleteAll();
         PlayerPrefs.Save();
@@ -106,7 +105,7 @@ public partial class GameMenuItems {
     }
 
     //-------------------------------------------------------------------------- シーン編集
-    [MenuItem("Game/シーン編集/uGUI/アンカーを現在位置にセット &]", false, 105)]
+    [MenuItem("Game/シーン編集/uGUI/アンカーを現在位置にセット &]", false, 104)]
     public static void SetAnchorToCurrentPosition() {
         var o = Selection.activeGameObject;
         if (o != null && o.GetComponent<RectTransform>() != null) {
@@ -132,7 +131,7 @@ public partial class GameMenuItems {
         }
     }
 
-    [MenuItem("Game/シーン編集/uGUI/アンカーを中心にセット &^", false, 106)]
+    [MenuItem("Game/シーン編集/uGUI/アンカーを中心にセット &^", false, 105)]
     public static void SetAnchorToCenterPosition() {
         var o = Selection.activeGameObject;
         if (o != null && o.GetComponent<RectTransform>() != null) {
