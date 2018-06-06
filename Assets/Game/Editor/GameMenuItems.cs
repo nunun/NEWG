@@ -18,7 +18,7 @@ public partial class GameMenuItems {
     }
 
     //-------------------------------------------------------------------------- ゲーム構成
-    [MenuItem("Game/ゲーム構成 ...", false, 100)]
+    [MenuItem("Game/ゲーム構成...", false, 100)]
     public static void GameConfigurations() {
         // TODO
         //GameConfigurationsWindow.Open();
@@ -105,7 +105,7 @@ public partial class GameMenuItems {
     }
 
     //-------------------------------------------------------------------------- シーン編集
-    [MenuItem("Game/シーン編集/uGUI/アンカーを現在位置にセット &]", false, 104)]
+    [MenuItem("Game/シーン編集/uGUI/アンカーを現在位置にセット &]", false, 200)]
     public static void SetAnchorToCurrentPosition() {
         var o = Selection.activeGameObject;
         if (o != null && o.GetComponent<RectTransform>() != null) {
@@ -131,7 +131,7 @@ public partial class GameMenuItems {
         }
     }
 
-    [MenuItem("Game/シーン編集/uGUI/アンカーを中心にセット &^", false, 105)]
+    [MenuItem("Game/シーン編集/uGUI/アンカーを中心にセット &^", false, 201)]
     public static void SetAnchorToCenterPosition() {
         var o = Selection.activeGameObject;
         if (o != null && o.GetComponent<RectTransform>() != null) {
