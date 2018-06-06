@@ -17,94 +17,100 @@ public partial class GameMenuItems {
         GamePlay.Play();
     }
 
-    //-------------------------------------------------------------------------- ゲーム設定
-    [MenuItem("Game/ゲーム設定", false, 100)]
-    public static void GameSettings() {
-        //GameSettingsWindow.Open();
+    //-------------------------------------------------------------------------- ゲーム構成
+    [MenuItem("Game/ゲーム/ゲーム構成 ...", false, 100)]
+    public static void GameConfigurations() {
+        // TODO
+        //GameConfigurationsWindow.Open();
     }
 
-    //-------------------------------------------------------------------------- ビルド
-    [MenuItem("Game/ビルド/デバッグ クライアント (WebGL)", false, 101)]
+    [MenuItem("Game/ゲーム/ビルド/デバッグ クライアント (WebGL)", false, 200)]
     public static void BuildDebugClientWebGL() {
         GameBuilder.Build("DEBUG_CLIENT"); // TODO ゲーム設定調整
     }
 
-    [MenuItem("Game/ビルド/デバッグ クライアント (スタンドアローン)", false, 102)]
+    [MenuItem("Game/ゲーム/ビルド/デバッグ クライアント (スタンドアローン)", false, 201)]
     public static void BuildDebugClientStandalone() {
         GameBuilder.Build("DEBUG_CLIENT"); // TODO ゲーム設定調整
     }
 
-    [MenuItem("Game/ビルド/デバッグ サーバ (スタンドアローン)", false, 103)]
+    [MenuItem("Game/ゲーム/ビルド/デバッグ サーバ (スタンドアローン)", false, 202)]
     public static void BuildDebugServerStandalone() {
         GameBuilder.Build("DEBUG_SERVER"); // TODO ゲーム設定調整
     }
 
-    [MenuItem("Game/ビルド/公開用クライアント (WebGL)", false, 200)]
+    [MenuItem("Game/ゲーム/ビルド/公開用クライアント (WebGL)", false, 203)]
     public static void BuildReleaseClientWebGL() {
         GameBuilder.Build("RELEASE_CLIENT"); // TODO ゲーム設定調整
     }
 
-    [MenuItem("Game/ビルド/公開用サーバ (Linux ヘッドレス)", false, 201)]
+    [MenuItem("Game/ゲーム/ビルド/公開用サーバ (Linux ヘッドレス)", false, 204)]
     public static void BuildReleaseServerLinuxHeadless() {
         GameBuilder.Build("RELEASE_SERVER"); // TODO ゲーム設定調整
     }
 
-    [MenuItem("Game/ビルド/公開用バイナリを全てビルド", false, 202)]
+    [MenuItem("Game/ゲーム/ビルド/公開用バイナリを全てビルド", false, 205)]
     public static void BuildReleaseAll() {
         BuildReleaseClientWebGL();
         BuildReleaseServerLinuxHeadless();
     }
 
-    //-------------------------------------------------------------------------- セーブデータ
-    [MenuItem("Game/セーブデータ/セーブデータをクリア", false, 102)]
-    public static void ClearSaveData() {
-        PlayerPrefs.DeleteAll();
-        PlayerPrefs.Save();
-        Debug.Log("セーブデータをクリアしました。");
+    //-------------------------------------------------------------------------- サービス構成
+    [MenuItem("Game/サービス/サービス構成 ...", false, 101)]
+    public static void ServicesConfigurations() {
+        // TODO
+        //ServicesConfigurationsWindow.Open();
     }
 
-    //-------------------------------------------------------------------------- サービス構成
-    [MenuItem("Game/サービス構成/ローカルサービス/起動", false, 103)]
+    [MenuItem("Game/サービス/ローカルサービス/起動", false, 200)]
     public static void ServicesUp() {
         var commandProcess = new CommandProcess();
         var env = new Dictionary<string,string>() {{"&NONBLOCK", "1"}};
         commandProcess.Start("docker-compose", "up", "Services", env);
     }
 
-    [MenuItem("Game/サービス構成/ローカルサービス/停止", false, 104)]
+    [MenuItem("Game/サービス/ローカルサービス/停止", false, 201)]
     public static void ServicesDown() {
         var commandProcess = new CommandProcess();
         var env = new Dictionary<string,string>() {{"&NONBLOCK", "1"}};
         commandProcess.Start("docker-compose", "down", "Services", env);
     }
 
-    [MenuItem("Game/サービス構成/ローカルサービス/ビルド", false, 200)]
+    [MenuItem("Game/サービス/ローカルサービス/ビルド", false, 300)]
     public static void ServicesBuild() {
         var commandProcess = new CommandProcess();
         commandProcess.Start("docker-compose", "build", "Services");
     }
 
-    [MenuItem("Game/サービス構成/プロトコルコード生成/C# のみ", false, 300)]
+    [MenuItem("Game/サービス/プロトコル定義/プロトコルコード生成/C# のみ", false, 202)]
     public static void GenerateProtocolsCs() {
         var commandProcess = new CommandProcess();
         commandProcess.Start("docker-compose", "run --rm generator ruby /generate.rb -c /output/cs", "Services/services");
         AssetsUtility.PingDirectory("Assets/Game/Scripts/Services/Protocols");
     }
 
-    [MenuItem("Game/サービス構成/プロトコルコード生成/すべて", false, 301)]
+    [MenuItem("Game/サービス/プロトコル定義/プロトコルコード生成/すべて", false, 202)]
     public static void GenerateProtocolsAll() {
         var commandProcess = new CommandProcess();
         commandProcess.Start("docker-compose", "run --rm generator ruby /generate.rb -c", "Services/services");
         AssetsUtility.PingDirectory("Assets/Game/Scripts/Services/Protocols");
     }
 
-    [MenuItem("Game/サービス構成/プロトコル定義書を編集", false, 302)]
+    [MenuItem("Game/サービス/プロトコル定義/プロトコル定義書を編集", false, 203)]
     public static void EditProtocols() {
         AssetsUtility.EditFile("Services/services/specs.yml");
     }
 
+    //-------------------------------------------------------------------------- セーブデータ
+    [MenuItem("Game/セーブデータ/セーブデータをクリア", false, 200)]
+    public static void ClearSaveData() {
+        PlayerPrefs.DeleteAll();
+        PlayerPrefs.Save();
+        Debug.Log("セーブデータをクリアしました。");
+    }
+
     //-------------------------------------------------------------------------- シーン編集
-    [MenuItem("Game/シーン編集/uGUI/アンカーを現在位置にセット &]", false, 200)]
+    [MenuItem("Game/シーン編集/uGUI/アンカーを現在位置にセット &]", false, 201)]
     public static void SetAnchorToCurrentPosition() {
         var o = Selection.activeGameObject;
         if (o != null && o.GetComponent<RectTransform>() != null) {
@@ -130,7 +136,7 @@ public partial class GameMenuItems {
         }
     }
 
-    [MenuItem("Game/シーン編集/uGUI/アンカーを中心にセット &^", false, 201)]
+    [MenuItem("Game/シーン編集/uGUI/アンカーを中心にセット &^", false, 202)]
     public static void SetAnchorToCenterPosition() {
         var o = Selection.activeGameObject;
         if (o != null && o.GetComponent<RectTransform>() != null) {
