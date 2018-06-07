@@ -1,8 +1,8 @@
 /[Ll]ibrary/
 /[Tt]emp/
 /[Oo]bj/
-#/[Bb]uild/
-#/[Bb]uilds/
+/[Bb]uild/
+/[Bb]uilds/
 /[Bb]uilds/Debug
 /Assets/AssetStoreTools*
 
@@ -34,39 +34,39 @@ sysinfo.txt
 *.apk
 *.unitypackage
 
-# Game
-tags
-
 # Assets
-Assets/GameConfiguration.json
-Assets/GameConfiguration.json.meta
-Assets/Game/Settings/GameSettings.asset
-Assets/Game/Settings/GameSettings.asset.meta
-Assets/mcs.rsp
-Assets/mcs.rsp.meta
-Assets/tags
-Assets/tags.meta
-Assets/InitTestScene*.unity
-Assets/InitTestScene*.unity.meta
+/Assets/GameConfiguration.json
+/Assets/GameConfiguration.json.meta
+/Assets/Game/Settings/GameSettings.asset
+/Assets/Game/Settings/GameSettings.asset.meta
+/Assets/mcs.rsp
+/Assets/mcs.rsp.meta
+/Assets/tags
+/Assets/tags.meta
+/Assets/InitTestScene*.unity
+/Assets/InitTestScene*.unity.meta
 
 # Services
-Services/.run.conf
-Services/.builds
-Services/.certs
-Services/.volumes
-Services/client/Builds
-Services/server/Builds
-Services/matching/node_modules
-Services/matching/services
-Services/api/node_modules
-Services/api/services
-Services/mindlink/node_modules
-Services/mindlink/services
-Services/test/matching/test-matching-client/node_modules
-Services/test/matching/test-matching-client/services
-Services/test/services/test-services-client/node_modules
-Services/test/services/test-services-client/services
-Services/test/services/test-services-server/node_modules
-Services/test/services/test-services-server/services
-Services/test/webapi/test-webapi-client/node_modules
-Services/test/webapi/test-webapi-client/services
+/Services/.run.conf
+/Services/.builds
+/Services/.certs
+/Services/.volumes
+/Services/client/Builds
+/Services/server/Builds
+/Services/matching/node_modules
+/Services/matching/services
+/Services/api/node_modules
+/Services/api/services
+/Services/mindlink/node_modules
+/Services/mindlink/services
+/Services/test/matching/test-matching-client/node_modules
+/Services/test/matching/test-matching-client/services
+/Services/test/services/test-services-client/node_modules
+/Services/test/services/test-services-client/services
+/Services/test/services/test-services-server/node_modules
+/Services/test/services/test-services-server/services
+/Services/test/webapi/test-webapi-client/node_modules
+/Services/test/webapi/test-webapi-client/services
+
+# Others
+/tags

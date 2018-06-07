@@ -18,6 +18,9 @@ public partial class GameConfigurationWindow : EditorWindow {
     // ゲーム設定名一覧
     string[] gameConfigurationNames = null;
 
+    // ゲーム設定表示名一覧
+    string[] gameConfigurationDisplayNames = null;
+
     // スクロール座標
     Vector2 scrollPos = Vector2.zero;
 
@@ -34,7 +37,10 @@ public partial class GameConfigurationWindow : EditorWindow {
         if (gameConfigurationNames == null) {
             gameConfigurationNames = GameConfiguration.GameConfigurationList.Select((c) => c.gameConfigurationName).ToArray();
         }
-
+        // ゲーム設定表示名一覧
+        if (gameConfigurationDisplayNames == null) {
+            gameConfigurationDisplayNames = GameConfiguration.GameConfigurationList.Select((c) => c.gameConfigurationDescription).ToArray();
+        }
         // ゲーム設定初期化
         if (gameConfiguration == null) {
             gameConfiguration = GameConfiguration.Load(true);
@@ -50,7 +56,7 @@ public partial class GameConfigurationWindow : EditorWindow {
             {
                 // ゲーム設定選択ボタン
                 var oldIndex = Array.IndexOf(gameConfigurationNames, gameConfiguration.gameConfigurationName);
-                var newIndex = EditorGUILayout.Popup(Mathf.Max(0, oldIndex), gameConfigurationNames);
+                var newIndex = EditorGUILayout.Popup(Mathf.Max(0, oldIndex), gameConfigurationDisplayNames);
                 if (newIndex != oldIndex) {
                     var gameConfigurationName  = gameConfigurationNames[newIndex];
                     var foundGameConfiguration = GameConfiguration.Find(gameConfigurationName);
@@ -121,12 +127,12 @@ public partial class GameConfigurationWindow {
         //GUILayout.Label(gameConfiguration.gameConfigurationDescription, "BoldLabel");
         GUILayout.BeginVertical("box");
         {
-            GUILayout.BeginVertical("box");
-            {
-                //GUILayout.Label(gameConfiguration.gameConfigurationName);
-                GUILayout.Label(gameConfiguration.gameConfigurationDescription);
-            }
-            GUILayout.EndVertical();
+            //GUILayout.BeginVertical("box");
+            //{
+            //    //GUILayout.Label(gameConfiguration.gameConfigurationName);
+            //    GUILayout.Label(gameConfiguration.gameConfigurationDescription);
+            //}
+            //GUILayout.EndVertical();
 
             var sobj = new SerializedObject(this);
             var iter = sobj.GetIterator();

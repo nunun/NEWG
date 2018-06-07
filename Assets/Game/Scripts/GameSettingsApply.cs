@@ -31,6 +31,7 @@ public partial class GameSettingsApply : MonoBehaviour {
             var gameNetworkManager = (GameNetworkManager)targetComponent;
             gameNetworkManager.networkAddress = GameSettings.ServerAddress;
             gameNetworkManager.networkPort    = GameSettings.ServerPort;
+            gameNetworkManager.useWebSockets  = GameSettings.UseWebSockets;
             applied = true;
         } else if (targetComponent is WebSocketConnector) {
             var webSocketConnector = (WebSocketConnector)targetComponent;

@@ -24,35 +24,61 @@ public partial class GameMenuItems {
     }
 
     //-------------------------------------------------------------------------- ビルド
-    [MenuItem("Game/ビルド/デバッグ クライアント (WebGL)", false, 101)]
-    public static void BuildDebugClientWebGL() {
-        GameBuilder.Build("DEBUG_CLIENT"); // TODO ゲーム設定調整
+    [MenuItem("Game/ビルド/カレント (現在のゲーム構成を使用してビルド)", false, 101)]
+    public static void BuildCurrent() {
+        GameBuilder.Build();
     }
 
-    [MenuItem("Game/ビルド/デバッグ クライアント (スタンドアローン)", false, 102)]
-    public static void BuildDebugClientStandalone() {
-        GameBuilder.Build("DEBUG_CLIENT"); // TODO ゲーム設定調整
+    [MenuItem("Game/ビルド/デバッグホスト (実行可能形式)", false, 200)]
+    public static void BuildDebugHost() {
+        GameBuilder.Build("DEBUG_HOST");
     }
 
-    [MenuItem("Game/ビルド/デバッグ サーバ (スタンドアローン)", false, 103)]
-    public static void BuildDebugServerStandalone() {
-        GameBuilder.Build("DEBUG_SERVER"); // TODO ゲーム設定調整
+    [MenuItem("Game/ビルド/デバッグクライアント (実行可能形式)", false, 201)]
+    public static void BuildDebugClient() {
+        GameBuilder.Build("DEBUG_CLIENT");
     }
 
-    [MenuItem("Game/ビルド/公開用クライアント (WebGL)", false, 200)]
-    public static void BuildReleaseClientWebGL() {
-        GameBuilder.Build("RELEASE_CLIENT"); // TODO ゲーム設定調整
+    [MenuItem("Game/ビルド/デバッグサーバ (実行可能形式)", false, 202)]
+    public static void BuildDebugServer() {
+        GameBuilder.Build("DEBUG_SERVER");
     }
 
-    [MenuItem("Game/ビルド/公開用サーバ (Linux ヘッドレス)", false, 201)]
-    public static void BuildReleaseServerLinuxHeadless() {
-        GameBuilder.Build("RELEASE_SERVER"); // TODO ゲーム設定調整
+    [MenuItem("Game/ビルド/ローカルクライアント (WebGL)", false, 300)]
+    public static void BuildLocalClient() {
+        GameBuilder.Build("LOCAL_CLIENT");
     }
 
-    [MenuItem("Game/ビルド/公開用バイナリを全てビルド", false, 202)]
+    [MenuItem("Game/ビルド/サービス用ローカルクライアント (WebGL)", false, 301)]
+    public static void BuildServicesLocalClient() {
+        GameBuilder.Build("SERVICES_LOCAL_CLIENT");
+    }
+
+    [MenuItem("Game/ビルド/サービス用ローカルサーバ (Linux Headless, Non Host Mode)", false, 302)]
+    public static void BuildServicesLocalServer() {
+        GameBuilder.Build("SERVICES_LOCAL_SERVER");
+    }
+
+    [MenuItem("Game/ビルド/サービス用ローカルバイナリを全てビルド", false, 303)]
+    public static void BuildServicesLocalAll() {
+        BuildServicesLocalClient();
+        BuildServicesLocalServer();
+    }
+
+    [MenuItem("Game/ビルド/サービス用 fu-n.net クライアント (WebGL)", false, 400)]
+    public static void BuildServicesReleaseClient() {
+        GameBuilder.Build("SERVICES_RELEASE_CLIENT");
+    }
+
+    [MenuItem("Game/ビルド/サービス用 fu-n.net サーバ (Linux Headless, Host Mode)", false, 401)]
+    public static void BuildServicesReleaseServer() {
+        GameBuilder.Build("SERVICES_RELEASE_SERVER");
+    }
+
+    [MenuItem("Game/ビルド/サービス用 fu-n.net バイナリを全てビルド", false, 402)]
     public static void BuildReleaseAll() {
-        BuildReleaseClientWebGL();
-        BuildReleaseServerLinuxHeadless();
+        BuildServicesReleaseClient();
+        BuildServicesReleaseServer();
     }
 
     //-------------------------------------------------------------------------- ローカルサービス
