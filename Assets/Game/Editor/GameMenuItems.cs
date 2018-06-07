@@ -19,12 +19,8 @@ public partial class GameMenuItems {
 
     //-------------------------------------------------------------------------- ゲーム構成
     [MenuItem("Game/ゲーム構成...", false, 100)]
-    public static void GameConfigurations() {
-        // TODO
-        //GameConfigurationWindow.Open();
-        //var scriptableObject = GameConfiguration.ReadAssetFile<GameConfiguration>("Assets/GameConfiguration.asset");
-        //GameConfiguration.WriteAssetFile<GameConfiguration>("Assets/GameConfiguration2.asset", scriptableObject);
-        foreach (var gconf in GameConfiguration.List()) { Debug.Log(gconf.name); }
+    public static void GameConfiguration() {
+        GameConfigurationWindow.Open();
     }
 
     //-------------------------------------------------------------------------- ビルド

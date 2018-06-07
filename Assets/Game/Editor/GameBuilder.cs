@@ -10,99 +10,98 @@ using UnityEditor.SceneManagement;
 // ゲームビルダー
 public partial class GameBuilder {
     //-------------------------------------------------------------------------- ビルド
-    public static void Build(string gameSettingsName = null) {
-        // TODO
-        //if (!EditorApplication.isPlaying && !EditorApplication.isPlayingOrWillChangePlaymode) {
-        //    if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) {
-        //        return;
-        //    }
-        //}
-        //
-        //// ゲーム設定名をコマンドライン引数から確認
-        //// 引数で指定されている場合は、そちらを優先的に使用する。
-        //var gameSettingsNameArgument = GetStringArgument("-gameSettingsName");
-        //if (gameSettingsNameArgument != null) {
-        //    gameSettingsName = gameSettingsNameArgument;
-        //}
-        //
-        //// ゲーム設定を取得
-        //// ゲーム設定名を指定しない場合は、現在の設定。
-        //var gameSettings = (gameSettingsName != null)? GameSettings.Find(gameSettingsName) : GameSettings.Load(false);
-        //if (gameSettings == null) {
-        //    Debug.LogErrorFormat("ゲーム設定なしまたは未適用 ({0})", gameSettingsName);
-        //    return;
-        //}
-        //
-        //// 現在のシーン設定を保存
-        //var sceneSetup = EditorSceneManager.GetSceneManagerSetup();
-        //
-        //// ビルド環境
-        //var appext = "";
-        //switch (gameSettings.buildTarget) {
-        //case BuildTarget.StandaloneWindows:
-        //case BuildTarget.StandaloneWindows64:
-        //    appext = ".exe";
-        //    break;
-        //case BuildTarget.StandaloneOSXIntel:
-        //case BuildTarget.StandaloneOSXIntel64:
-        //case BuildTarget.StandaloneOSXUniversal:
-        //    appext = ".app";
-        //    break;
-        //default:
-        //    appext = "";
-        //    break;
-        //}
-        //
-        //// シーン一覧を作成
-        //// 最初はクイックビルドのシーンから起動する。
-        //var scenes = new List<string>();
-        //scenes.AddRange(EditorBuildSettings.scenes.Select(s => s.path));
-        //
-        //// まとめ
-        //var levels     = scenes.ToArray();
-        //var outputPath = gameSettings.outputPath + appext;
-        //var options    = BuildOptions.None;
-        //if (gameSettings.headless) {
-        //    options |= BuildOptions.EnableHeadlessMode;
-        //}
-        //if (gameSettings.autoRun) {
-        //    options |= BuildOptions.AutoRunPlayer;
-        //}
-        //
-        //// ビルド設定
-        //PlayerSettings.displayResolutionDialog = gameSettings.resolutionDialogSetting;
-        //PlayerSettings.defaultScreenWidth      = gameSettings.screenWidth;
-        //PlayerSettings.defaultScreenHeight     = gameSettings.screenHeight;
-        //PlayerSettings.defaultIsFullScreen     = gameSettings.isFullScreen;
-        //PlayerSettings.runInBackground         = gameSettings.runInBackground;
-        //PlayerSettings.SplashScreen.show       = gameSettings.showSplashScreen;
-        //
-        //// ゲーム設定をバックアップ
-        //GameSettings.Backup();
-        //
-        //// ゲーム設定を作成
-        //gameSettings.Save(false);
-        //
-        //// ビルド
-        //var result = BuildPipeline.BuildPlayer(levels, outputPath, gameSettings.buildTarget, options);
-        //
-        //// ゲーム設定を復元
-        //GameSettings.Restore();
-        //
-        //// シーン設定を復元
-        //if (sceneSetup.Length > 0) {
-        //    EditorSceneManager.RestoreSceneManagerSetup(sceneSetup);
-        //}
-        //
-        //// 結果処理
-        //if (!string.IsNullOrEmpty(result)) {
-        //    Debug.LogError(result);
-        //}
-        //
-        //// 成功ならフォルダを開く
-        //if (gameSettings.openFolder) {
-        //    OpenFolder(gameSettings.outputPath);
-        //}
+    public static void Build(string gameConfigurationName = null) {
+        if (!EditorApplication.isPlaying && !EditorApplication.isPlayingOrWillChangePlaymode) {
+            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) {
+                return;
+            }
+        }
+
+        // ゲーム設定名をコマンドライン引数から確認
+        // 引数で指定されている場合は、そちらを優先的に使用する。
+        var gameConfigurationNameArgument = GetStringArgument("-gameConfigurationName");
+        if (gameConfigurationNameArgument != null) {
+            gameConfigurationName = gameConfigurationNameArgument;
+        }
+
+        // ゲーム設定を取得
+        // ゲーム設定名を指定しない場合は、現在の設定。
+        var gameConfiguration = (gameConfigurationName != null)? GameConfiguration.Find(gameConfigurationName) : GameConfiguration.Load(false);
+        if (gameConfiguration == null) {
+            Debug.LogErrorFormat("ゲーム構成なしまたは未適用 ({0})", gameConfigurationName);
+            return;
+        }
+
+        // 現在のシーン設定を保存
+        var sceneSetup = EditorSceneManager.GetSceneManagerSetup();
+
+        // ビルド環境
+        var appext = "";
+        switch (gameConfiguration.buildTarget) {
+        case BuildTarget.StandaloneWindows:
+        case BuildTarget.StandaloneWindows64:
+            appext = ".exe";
+            break;
+        case BuildTarget.StandaloneOSXIntel:
+        case BuildTarget.StandaloneOSXIntel64:
+        case BuildTarget.StandaloneOSXUniversal:
+            appext = ".app";
+            break;
+        default:
+            appext = "";
+            break;
+        }
+
+        // シーン一覧を作成
+        // 最初はクイックビルドのシーンから起動する。
+        var scenes = new List<string>();
+        scenes.AddRange(EditorBuildSettings.scenes.Select(s => s.path));
+
+        // まとめ
+        var levels     = scenes.ToArray();
+        var outputPath = gameConfiguration.outputPath + appext;
+        var options    = BuildOptions.None;
+        if (gameConfiguration.headless) {
+            options |= BuildOptions.EnableHeadlessMode;
+        }
+        if (gameConfiguration.autoRun) {
+            options |= BuildOptions.AutoRunPlayer;
+        }
+
+        // ビルド設定
+        PlayerSettings.displayResolutionDialog = gameConfiguration.resolutionDialogSetting;
+        PlayerSettings.defaultScreenWidth      = gameConfiguration.screenWidth;
+        PlayerSettings.defaultScreenHeight     = gameConfiguration.screenHeight;
+        PlayerSettings.defaultIsFullScreen     = gameConfiguration.isFullScreen;
+        PlayerSettings.runInBackground         = gameConfiguration.runInBackground;
+        PlayerSettings.SplashScreen.show       = gameConfiguration.showSplashScreen;
+
+        // ゲーム設定をバックアップ
+        GameConfiguration.Backup();
+
+        // ゲーム設定を作成
+        gameConfiguration.Save(false);
+
+        // ビルド
+        var result = BuildPipeline.BuildPlayer(levels, outputPath, gameConfiguration.buildTarget, options);
+
+        // ゲーム設定を復元
+        GameConfiguration.Restore();
+
+        // シーン設定を復元
+        if (sceneSetup.Length > 0) {
+            EditorSceneManager.RestoreSceneManagerSetup(sceneSetup);
+        }
+
+        // 結果処理
+        if (!string.IsNullOrEmpty(result)) {
+            Debug.LogError(result);
+        }
+
+        // 成功ならフォルダを開く
+        if (gameConfiguration.openFolder) {
+            OpenFolder(gameConfiguration.outputPath);
+        }
         return;
     }
 

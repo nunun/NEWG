@@ -11,7 +11,7 @@ using Services.Protocols.Models;
 #endif
 
 // スタンドアローンシミュレータ設定
-[CreateAssetMenu(fileName = "StandaloneSimulatorSettings", menuName = "ScriptableObject/StandaloneSimulatorSettings", order = 1002)]
+[CreateAssetMenu(fileName = "StandaloneSimulatorSettings", menuName = "ScriptableObject/StandaloneSimulatorSettings", order = 1001)]
 public partial class StandaloneSimulatorSettings : ScriptableObject {
     // NOTE
     // パーシャルクラスを参照

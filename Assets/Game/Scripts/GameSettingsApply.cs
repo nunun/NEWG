@@ -10,7 +10,7 @@ using System.Text;
 #endif
 
 // ゲーム設定の適用
-public partial class GameSettingApply : MonoBehaviour {
+public partial class GameSettingsApply : MonoBehaviour {
     //-------------------------------------------------------------------------- 変数
     // ゲーム設定を適用するターゲットコンポーネント
     public Component targetComponent = null;
@@ -38,7 +38,7 @@ public partial class GameSettingApply : MonoBehaviour {
             applied = true;
         }
         if (applied) {
-            Debug.LogFormat("GameSettings: コンポーネント '{0}' にゲーム設定を適用しました", targetComponent);
+            Debug.LogFormat("GameSettingsApply: コンポーネント '{0}' にゲーム設定を適用しました", targetComponent);
         }
     }
 }
@@ -48,7 +48,7 @@ public partial class GameSettingApply : MonoBehaviour {
 ////////////////////////////////////////////////////////////////////////////////
 
 // MonoBehaviour 実装
-public partial class GameSettingApply {
+public partial class GameSettingsApply {
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     void Awake() {
         GameSettings.AddUpdateEventListener(Apply);

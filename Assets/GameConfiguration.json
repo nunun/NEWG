@@ -1,0 +1,31 @@
+﻿{
+    "runtimeServiceMode": 2,
+    "serverAddress": "localhost",
+    "serverPort": 7778,
+    "serverPortRandomRange": 0,
+    "serverToken": "",
+    "serverSceneName": "MapProvingGround",
+    "serverDiscoveryAddress": "localhost",
+    "serverDiscoveryPort": 7778,
+    "matchingServerUrl": "ws://localhost:7755",
+    "webapiUrl": "http://localhost:7780",
+    "mindlinkUrl": "ws://localhost:7766",
+    "gameConfigurationName": "DEFAULT",
+    "gameConfigurationDescription": "開発用デフォルト設定",
+    "buildTarget": 19,
+    "outputPath": "Builds/DebugHost",
+    "headless": false,
+    "autoRun": true,
+    "openFolder": false,
+    "resolutionDialogSetting": 0,
+    "screenWidth": 1280,
+    "screenHeight": 720,
+    "isFullScreen": false,
+    "runInBackground": true,
+    "showSplashScreen": false,
+    "scriptingDefineSymbols": [
+        "DEBUG",
+        "SERVER_CODE",
+        "STANDALONE_MODE"
+    ]
+}
