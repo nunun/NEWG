@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 
 // 環境設定
-[CreateAssetMenu(fileName = "GameSettings", menuName = "ScriptableObject/GameSettings", order = 1000)]
+[CreateAssetMenu(fileName = "GameSettings", menuName = "ScriptableObject/GameSettings", order = 1001)]
 public partial class GameSettings : ScriptableObject {
     // NOTE
     // パーシャルクラスを参照

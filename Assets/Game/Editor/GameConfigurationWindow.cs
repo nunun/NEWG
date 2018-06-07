@@ -6,33 +6,34 @@ using System.Text;
 using System.Linq;
 using System.Collections.Generic;
 
-// ゲーム設定ウィンドウ
-public partial class GameSettingsWindow : EditorWindow {
-    //-------------------------------------------------------------------------- 定義 (プロファイル一覧)
-    public static List<GameProfile> gameProfiles = new List<GameProfile>() {
-        new GameProfile() {
-            name                   = "Test Profile",
-            description            = "Test Description",
-            gameSettings           = Test(),
-            scriptingDefineSymbols = new List<string>(),
-        }
-    };
-
-    //-------------------------------------------------------------------------- 定義 (プロファイル)
-    [Serializable]
-    public class GameProfile {
-        public string       name                   = "Game Profile Name";
-        public string       description            = "Game Profile Description";
-        public GameSettings gameSettings           = null;
-        public List<string> scriptingDefineSymbols = new List<string>();
-    }
-
-    //-------------------------------------------------------------------------- ユーティリティ
-    static GameSettings Test() {
-        return ScriptableObject.CreateInstance<GameSettings>();
-    }
+// ゲーム構成ウィンドウ
+public partial class GameConfigurationsWindow : EditorWindow {
+    // TODO
 }
 
+////-------------------------------------------------------------------------- 定義 (プロファイル一覧)
+//public static List<GameProfile> gameProfiles = new List<GameProfile>() {
+//    new GameProfile() {
+//        name                   = "Test Profile",
+//        description            = "Test Description",
+//        gameSettings           = Test(),
+//        scriptingDefineSymbols = new List<string>(),
+//    }
+//};
+//
+////-------------------------------------------------------------------------- 定義 (プロファイル)
+//[Serializable]
+//public class GameProfile {
+//    public string       name                   = "Game Profile Name";
+//    public string       description            = "Game Profile Description";
+//    public GameSettings gameSettings           = null;
+//    public List<string> scriptingDefineSymbols = new List<string>();
+//}
+//
+////-------------------------------------------------------------------------- ユーティリティ
+//static GameSettings Test() {
+//    return ScriptableObject.CreateInstance<GameSettings>();
+//}
 //using UnityEngine;
 //using UnityEditor;
 //using System;
