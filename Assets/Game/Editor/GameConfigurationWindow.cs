@@ -109,18 +109,25 @@ public partial class GameConfigurationWindow {
 
     //-------------------------------------------------------------------------- ゲーム設定 GUI
     void DrawGUI() {
-        //GUILayout.Label("Scheme", "BoldLabel");
-        GUILayout.BeginVertical("box");
-        {
-            //GUILayout.Label(gameConfiguration.gameConfigurationName);
-            GUILayout.Label(gameConfiguration.gameConfigurationDescription);
-        }
-        GUILayout.EndVertical();
+        //GUILayout.BeginVertical("box");
+        //{
+        //    //GUILayout.Label(gameConfiguration.gameConfigurationName);
+        //    GUILayout.Label(gameConfiguration.gameConfigurationDescription);
+        //}
+        //GUILayout.EndVertical();
 
         // ゲーム設定
-        GUILayout.Label("Game Settings", "BoldLabel");
+        //GUILayout.Label("Game Settings", "BoldLabel");
+        //GUILayout.Label(gameConfiguration.gameConfigurationDescription, "BoldLabel");
         GUILayout.BeginVertical("box");
         {
+            GUILayout.BeginVertical("box");
+            {
+                //GUILayout.Label(gameConfiguration.gameConfigurationName);
+                GUILayout.Label(gameConfiguration.gameConfigurationDescription);
+            }
+            GUILayout.EndVertical();
+
             var sobj = new SerializedObject(this);
             var iter = sobj.GetIterator();
             var nest = true;
@@ -136,14 +143,14 @@ public partial class GameConfigurationWindow {
                 EditorGUILayout.PropertyField(iter);
             }
             sobj.ApplyModifiedProperties();
-        }
-        GUILayout.EndVertical();
 
-        // スクリプト定義シンボル
-        GUILayout.Label("Scripting Define Symbols", "BoldLabel");
-        GUILayout.BeginVertical("box");
-        {
-            DrawScriptingDefineSymbolsGUI(gameConfiguration.scriptingDefineSymbols);
+            // スクリプト定義シンボル
+            GUILayout.Label("Scripting Define Symbols", "BoldLabel");
+            //GUILayout.BeginVertical("box");
+            //{
+                DrawScriptingDefineSymbolsGUI(gameConfiguration.scriptingDefineSymbols);
+            //}
+            //GUILayout.EndVertical();
         }
         GUILayout.EndVertical();
     }
