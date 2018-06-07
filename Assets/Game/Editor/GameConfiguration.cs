@@ -252,7 +252,7 @@ public partial class GameConfiguration {
     // ゲーム構成ファイルパス
     static readonly string GAME_CONFIGURATION_JSON_PATH = "Assets/GameConfiguration.json";
     // ゲーム設定ファイルパス
-    static readonly string GAME_SETTINGS_ASSET_PATH = "Assets/Game/Settings/GameSettings.asset";
+    static readonly string GAME_SETTINGS_ASSET_PATH = "Assets/Game/Resources/GameSettings.asset";
     // mcs.rsp ファイルパス
     static readonly string MCS_RSP_PATH = "Assets/mcs.rsp";
 
@@ -262,7 +262,7 @@ public partial class GameConfiguration {
         var gameConfiguration = ReadJsonFile<GameConfiguration>(GAME_CONFIGURATION_JSON_PATH);
         var gameSettings      = ReadAssetFile<GameSettingsAsset>(GAME_SETTINGS_ASSET_PATH);
         var mcsSymbols        = ReadRspFile(MCS_RSP_PATH);
-        if (gameConfiguration == null || gameSettings == null || mcsSymbols != null) {
+        if (gameConfiguration == null || gameSettings == null || mcsSymbols == null) {
             if (!createGameConfiguration) {
                 return null;
             }
@@ -415,14 +415,26 @@ public partial class GameConfiguration {
             using (var sr = new StreamReader(path, Encoding.UTF8)) {
                 return sr.ReadToEnd();
             }
-        } catch {}
+        } catch (Exception e) {
+            Debug.LogError(e);
+        }
         return null;
     }
 
     // ファイルの書き込み
-    static void WriteFile(string path, string text) {
-        using (var sw = new StreamWriter(path, false, Encoding.UTF8)) {
-            sw.Write(text);
+    static void WriteFile(string path, string text, int count = 0) {
+        try {
+            using (var sw = new StreamWriter(path, false, Encoding.UTF8)) {
+                sw.Write(text);
+            }
+        } catch (Exception e) {
+            if (e is IOException) {
+                if (count < 3) { // NOTE ビルド後に IOException が起こっているので数回リトライして回避
+                    EditorApplication.delayCall += () =>  WriteFile(path, text, ++count);
+                    return;
+                }
+            }
+            Debug.LogError(e);
         }
     }
 
@@ -446,13 +458,13 @@ public partial class GameConfiguration {
     //-------------------------------------------------------------------------- 操作
     // 現在のゲーム設定をバックアップする
     public static void Backup() {
-        Debug.Assert(gameConfigurationBackup != null, "既にバックアップしている");
+        Debug.Assert(gameConfigurationBackup == null, "既にバックアップしている");
         gameConfigurationBackup = GameConfiguration.Load(false);
     }
 
     // バックアップしたゲーム設定を元に戻す
     public static void Restore() {
-        Debug.Assert(gameConfigurationBackup == null, "バックアップがないので復元不能");
+        Debug.Assert(gameConfigurationBackup != null, "バックアップがないので復元不能");
         var gameConfiguration = gameConfigurationBackup;
         gameConfigurationBackup = null;
         if (gameConfiguration == null) {

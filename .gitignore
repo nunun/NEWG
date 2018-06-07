@@ -37,8 +37,8 @@ sysinfo.txt
 # Assets
 /Assets/GameConfiguration.json
 /Assets/GameConfiguration.json.meta
-/Assets/Game/Settings/GameSettings.asset
-/Assets/Game/Settings/GameSettings.asset.meta
+/Assets/Game/Resources/GameSettings.asset
+/Assets/Game/Resources/GameSettings.asset.meta
 /Assets/mcs.rsp
 /Assets/mcs.rsp.meta
 /Assets/tags

@@ -259,53 +259,18 @@ public partial class GameSettings {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-// ScriptableObject 連携関連
+// インスタンス関連
 public partial class GameSettings {
     //-------------------------------------------------------------------------- 定義
-    // NOTE
-    // GameSettings が Preload Assets などでロードされたとき
-    // 自動的に GameSettings.instance にインスタンスが設定されるようにする。
+    // ゲーム設定アセット
     public class Asset : ScriptableObject {
         public GameSettings gameSettings = new GameSettings();
-        void OnEnable()   { GameSettings.OnEnable(gameSettings);  }
-        void OnDissable() { GameSettings.OnDisable(gameSettings); }
     }
 
     //-------------------------------------------------------------------------- 変数
-    // 設定インスタンス
-    static GameSettings settingsInstance = null;
+    // 内部インスタンス
+    static GameSettings _instance = null;
 
     // インスタンスの取得
-    static GameSettings instance {
-        get {
-            #if UNITY_EDITOR
-            if (settingsInstance == null) {
-                settingsInstance = AssetDatabase.LoadAssetAtPath<GameSettingsAsset>("Assets/Game/Settings/GameSettings.asset").gameSettings;
-            }
-            #endif
-            return settingsInstance;
-        }
-        set {
-            settingsInstance = value;
-        }
-    }
-
-    //-------------------------------------------------------------------------- 実装 (ScriptableObject)
-    protected static void OnEnable(GameSettings assetInstance) {
-        if (instance != null) {
-            return;
-        }
-        instance = assetInstance;
-
-        // NOTE
-        // 即座に引数をインポート
-        instance.ImportGameArguments();
-    }
-
-    protected static void OnDisable(GameSettings assetInstance) {
-        if (instance != assetInstance) {
-            return;
-        }
-        instance = null;
-    }
+    static GameSettings instance { get { return _instance ?? (_instance = Resources.Load<GameSettingsAsset>("GameSettings").gameSettings); }}
 }

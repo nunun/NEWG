@@ -133,36 +133,9 @@ public partial class StandaloneSimulatorSettings {
 // StandaloneSimulatorSettings 実装
 public partial class StandaloneSimulatorSettings {
     //-------------------------------------------------------------------------- 変数
-    // 設定インスタンス
-    static StandaloneSimulatorSettings settingsInstance = null;
+    // 内部インスタンス
+    static StandaloneSimulatorSettings _instance = null;
 
     // インスタンスの取得
-    static StandaloneSimulatorSettings instance {
-        get {
-            #if UNITY_EDITOR
-            if (settingsInstance == null) {
-                settingsInstance = AssetDatabase.LoadAssetAtPath<StandaloneSimulatorSettings>("Assets/Game/Settings/StandaloneSimulatorSettings.asset");
-            }
-            #endif
-            return settingsInstance;
-        }
-        set {
-            settingsInstance = value;
-        }
-    }
-
-    //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
-    void OnEnable() {
-        if (instance != null) {
-            return;
-        }
-        instance = this;
-    }
-
-    void OnDisable() {
-        if (instance != this) {
-            return;
-        }
-        instance = null;
-    }
+    static StandaloneSimulatorSettings instance { get { return _instance ?? (_instance = Resources.Load<StandaloneSimulatorSettings>("StandaloneSimulatorSettings")); }}
 }
