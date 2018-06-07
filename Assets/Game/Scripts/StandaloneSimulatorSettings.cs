@@ -10,6 +10,10 @@ using Services.Protocols.Consts;
 using Services.Protocols.Models;
 #endif
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 // スタンドアローンシミュレータ設定
 [CreateAssetMenu(fileName = "StandaloneSimulatorSettings", menuName = "ScriptableObject/StandaloneSimulatorSettings", order = 1001)]
 public partial class StandaloneSimulatorSettings : ScriptableObject {
@@ -129,8 +133,23 @@ public partial class StandaloneSimulatorSettings {
 // StandaloneSimulatorSettings 実装
 public partial class StandaloneSimulatorSettings {
     //-------------------------------------------------------------------------- 変数
-    // インスタンス
-    static StandaloneSimulatorSettings instance = null;
+    // 設定インスタンス
+    static StandaloneSimulatorSettings settingsInstance = null;
+
+    // インスタンスの取得
+    static StandaloneSimulatorSettings instance {
+        get {
+            #if UNITY_EDITOR
+            if (settingsInstance == null) {
+                settingsInstance = AssetDatabase.LoadAssetAtPath<StandaloneSimulatorSettings>("Assets/Game/Settings/StandaloneSimulatorSettings.asset");
+            }
+            #endif
+            return settingsInstance;
+        }
+        set {
+            settingsInstance = value;
+        }
+    }
 
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     void OnEnable() {

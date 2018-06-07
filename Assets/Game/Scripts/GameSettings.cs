@@ -4,6 +4,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 // 環境設定
 [Serializable]
 public partial class GameSettings {
@@ -268,8 +272,23 @@ public partial class GameSettings {
     }
 
     //-------------------------------------------------------------------------- 変数
-    // インスタンス
-    static GameSettings instance = null;
+    // 設定インスタンス
+    static GameSettings settingsInstance = null;
+
+    // インスタンスの取得
+    static GameSettings instance {
+        get {
+            #if UNITY_EDITOR
+            if (settingsInstance == null) {
+                settingsInstance = AssetDatabase.LoadAssetAtPath<GameSettingsAsset>("Assets/Game/Settings/GameSettings.asset").gameSettings;
+            }
+            #endif
+            return settingsInstance;
+        }
+        set {
+            settingsInstance = value;
+        }
+    }
 
     //-------------------------------------------------------------------------- 実装 (ScriptableObject)
     protected static void OnEnable(GameSettings assetInstance) {
