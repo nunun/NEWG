@@ -21,19 +21,34 @@ public partial class GameAudio {
     //-------------------------------------------------------------------------- SE
     public static void Play(string seName, GameObject parent = null, bool forceParent = false) {
         var sePlayer = GameObjectTag<SEPlayer>.Find(seName, parent, forceParent);
-        Debug.AssertFormat(sePlayer != null, "SEなし ({0})", seName);
+        if (sePlayer == null) {
+            #if !SERVER_CODE
+            Debug.LogErrorFormat("SEなし ({0})", seName);
+            #endif
+            return;
+        }
         sePlayer.Play();
     }
 
     public static void Play(string seName, ulong delay, GameObject parent = null, bool forceParent = false) {
         var sePlayer = GameObjectTag<SEPlayer>.Find(seName, parent, forceParent);
-        Debug.AssertFormat(sePlayer != null, "SEなし ({0})", seName);
+        if (sePlayer == null) {
+            #if !SERVER_CODE
+            Debug.LogErrorFormat("SEなし ({0})", seName);
+            #endif
+            return;
+        }
         sePlayer.Play(delay);
     }
 
     public static void Stop(string seName, GameObject parent = null, bool forceParent = false) {
         var sePlayer = GameObjectTag<SEPlayer>.Find(seName, parent, forceParent);
-        Debug.AssertFormat(sePlayer != null, "SEなし ({0})", seName);
+        if (sePlayer == null) {
+            #if !SERVER_CODE
+            Debug.LogErrorFormat("SEなし ({0})", seName);
+            #endif
+            return;
+        }
         sePlayer.Stop();
     }
 }
@@ -53,7 +68,12 @@ public partial class GameAudio {
     //-------------------------------------------------------------------------- BGM
     public static void PlayBGM(string bgmName, float fadeTime = 0.5f, float volume = 1.0f) {
         var bgmPlayer = GameObjectTag<BGMPlayer>.Find(bgmName);
-        Debug.AssertFormat(bgmPlayer != null, "BGMなし ({0})", bgmName);
+        if (bgmPlayer == null) {
+            #if !SERVER_CODE
+            Debug.LogErrorFormat("BGMなし ({0})", bgmName);
+            #endif
+            return;
+        }
         if (bgmPlayerList.Count >= 1) {
             for (int i = bgmPlayerList.Count - 1; i >= 0; i--) {
                 var playingBGMPlayer = bgmPlayerList[i];
@@ -73,11 +93,16 @@ public partial class GameAudio {
 
     public static void MixBGM(string bgmName, float fadeTime = 0.5f) {
         Debug.Assert(bgmPlayerList.Count > 0, "BGM が再生されていない");
-        var bgmPlayer    = GameObjectTag<BGMPlayer>.Find(bgmName);
+        var bgmPlayer = GameObjectTag<BGMPlayer>.Find(bgmName);
+        if (bgmPlayer == null) {
+            #if !SERVER_CODE
+            Debug.LogErrorFormat("BGMなし ({0})", bgmName);
+            #endif
+            return;
+        }
         var bgmSource    = GameObjectTag<AudioSource>.Find(bgmName);
         var masterPlayer = bgmPlayerList[0];
         var masterSource = masterPlayer.gameObject.GetComponent<AudioSource>();
-        Debug.AssertFormat(bgmPlayer != null, "BGMなし ({0})", bgmName);
         bgmSource.time = masterSource.time;
         if (bgmPlayerList.IndexOf(bgmPlayer) < 0) {
             bgmPlayerList.Add(bgmPlayer);
@@ -88,7 +113,12 @@ public partial class GameAudio {
 
     public static void StopBGM(string bgmName, float fadeTime = 0.5f) {
         var bgmPlayer = GameObjectTag<BGMPlayer>.Find(bgmName);
-        Debug.AssertFormat(bgmPlayer != null, "BGMなし ({0})", bgmName);
+        if (bgmPlayer == null) {
+            #if !SERVER_CODE
+            Debug.LogErrorFormat("BGMなし ({0})", bgmName);
+            #endif
+            return;
+        }
         bgmPlayerList.Remove(bgmPlayer);
         bgmPlayer.Stop(fadeTime);
         UpdatePlayingBGMVolumes(fadeTime);
@@ -107,7 +137,12 @@ public partial class GameAudio {
 
     public static void SetBGMVolume(string bgmName, float volume, float fadeTime = 0.5f) {
         var bgmPlayer = GameObjectTag<BGMPlayer>.Find(bgmName);
-        Debug.AssertFormat(bgmPlayer != null, "BGMなし ({0})", bgmName);
+        if (bgmPlayer == null) {
+            #if !SERVER_CODE
+            Debug.LogErrorFormat("BGMなし ({0})", bgmName);
+            #endif
+            return;
+        }
         bgmPlayer.SetVolume(volume, fadeTime);
     }
 

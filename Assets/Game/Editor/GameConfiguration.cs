@@ -37,6 +37,7 @@ public partial class GameConfiguration : GameSettings {
             isFullScreen                 = false,
             runInBackground              = true,
             showSplashScreen             = false,
+            developmentBuild             = true,
             scriptingDefineSymbols       = new List<string>() {"DEBUG", "SERVER_CODE"},
         },
         new GameConfiguration() {
@@ -62,6 +63,7 @@ public partial class GameConfiguration : GameSettings {
             isFullScreen                 = false,
             runInBackground              = true,
             showSplashScreen             = false,
+            developmentBuild             = true,
             scriptingDefineSymbols       = new List<string>() {"DEBUG"},
         },
         new GameConfiguration() {
@@ -87,6 +89,7 @@ public partial class GameConfiguration : GameSettings {
             isFullScreen                 = false,
             runInBackground              = true,
             showSplashScreen             = false,
+            developmentBuild             = true,
             scriptingDefineSymbols       = new List<string>() {"DEBUG", "SERVER_CODE"},
         },
         new GameConfiguration() {
@@ -112,6 +115,7 @@ public partial class GameConfiguration : GameSettings {
             isFullScreen                 = false,
             runInBackground              = true,
             showSplashScreen             = false,
+            developmentBuild             = true,
             scriptingDefineSymbols       = new List<string>() {"DEBUG"},
         },
         new GameConfiguration() {
@@ -137,6 +141,7 @@ public partial class GameConfiguration : GameSettings {
             isFullScreen                 = false,
             runInBackground              = true,
             showSplashScreen             = false,
+            developmentBuild             = true,
             scriptingDefineSymbols       = new List<string>() {"DEBUG"},
         },
         new GameConfiguration() {
@@ -162,6 +167,7 @@ public partial class GameConfiguration : GameSettings {
             isFullScreen                 = false,
             runInBackground              = true,
             showSplashScreen             = false,
+            developmentBuild             = true,
             scriptingDefineSymbols       = new List<string>() {"DEBUG", "SERVER_CODE"},
         },
         new GameConfiguration() {
@@ -187,6 +193,7 @@ public partial class GameConfiguration : GameSettings {
             isFullScreen                 = false,
             runInBackground              = true,
             showSplashScreen             = false,
+            developmentBuild             = false,
             scriptingDefineSymbols       = new List<string>() {},
         },
         new GameConfiguration() {
@@ -212,6 +219,7 @@ public partial class GameConfiguration : GameSettings {
             isFullScreen                 = false,
             runInBackground              = true,
             showSplashScreen             = false,
+            developmentBuild             = false,
             scriptingDefineSymbols       = new List<string>() {"SERVER_CODE"},
         },
     };
@@ -239,6 +247,7 @@ public partial class GameConfiguration : GameSettings {
     public bool                    isFullScreen                 = false;
     public bool                    runInBackground              = true;
     public bool                    showSplashScreen             = false;
+    public bool                    developmentBuild             = false;
     public List<string>            scriptingDefineSymbols       = new List<string>();
 }
 

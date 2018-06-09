@@ -57,7 +57,7 @@ public partial class GameBuilder {
         var scenes = new List<string>();
         scenes.AddRange(EditorBuildSettings.scenes.Select(s => s.path));
 
-        // まとめ
+        // ビルドオプション設定
         var levels     = scenes.ToArray();
         var outputPath = gameConfiguration.outputPath + appext;
         var options    = BuildOptions.None;
@@ -67,8 +67,12 @@ public partial class GameBuilder {
         if (gameConfiguration.autoRun) {
             options |= BuildOptions.AutoRunPlayer;
         }
+        if (gameConfiguration.developmentBuild) {
+            options |= BuildOptions.Development;
+            options |= BuildOptions.AllowDebugging;
+        }
 
-        // ビルド設定
+        // プレイヤー設定
         PlayerSettings.displayResolutionDialog = gameConfiguration.resolutionDialogSetting;
         PlayerSettings.defaultScreenWidth      = gameConfiguration.screenWidth;
         PlayerSettings.defaultScreenHeight     = gameConfiguration.screenHeight;
