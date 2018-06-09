@@ -137,5 +137,12 @@ public partial class StandaloneSimulatorSettings {
     static StandaloneSimulatorSettings _instance = null;
 
     // インスタンスの取得
-    static StandaloneSimulatorSettings instance { get { return _instance ?? (_instance = Resources.Load<StandaloneSimulatorSettings>("StandaloneSimulatorSettings")); }}
+    static StandaloneSimulatorSettings instance {
+        get {
+            if (_instance == null) {
+                _instance = Resources.Load<StandaloneSimulatorSettings>("StandaloneSimulatorSettings");
+            }
+            return _instance;
+        }
+    }
 }

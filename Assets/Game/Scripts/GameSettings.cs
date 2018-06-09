@@ -162,9 +162,17 @@ public partial class GameSettings {
 public partial class GameSettings {
     //-------------------------------------------------------------------------- ゲーム引数のインポート
     public void ImportGameArguments() {
-        ImportCommandLineArguments();
+        ImportCommandLineStringArgument("-serverAddress",          ref this.serverAddress);
+        ImportCommandLineIntegerArgument("-serverPort",            ref this.serverPort);
+        ImportCommandLineIntegerArgument("-serverPortRandomRange", ref this.serverPortRandomRange);
+        ImportCommandLineStringArgument("-serverDiscoveryAddress", ref this.serverDiscoveryAddress);
+        ImportCommandLineIntegerArgument("-serverDiscoveryPort",   ref this.serverDiscoveryPort);
+        ImportCommandLineStringArgument("-webapiUrl",              ref this.webapiUrl);
         #if UNITY_WEBGL
-        ImportWebBrowserArguments();
+        var webBrowserHostName = default(string);
+        if (ImportWebBrowserHostName(ref webBrowserHostName)) {
+             this.webapiUrl = string.Format("http://{0}:7780", webBrowserHostName);
+        }
         #endif
     }
 }
@@ -175,39 +183,39 @@ public partial class GameSettings {
 
 // コマンドライン引数のインポート
 public partial class GameSettings {
-    //-------------------------------------------------------------------------- コマンドライン引数のインポート
-    // コマンドライン起動引数を取得
-    void ImportCommandLineArguments() {
-        ImportCommandLineStringArgument(ref  this.serverAddress,          "-serverAddress",          null);
-        ImportCommandLineIntegerArgument(ref this.serverPort,             "-serverPort",             null);
-        ImportCommandLineIntegerArgument(ref this.serverPortRandomRange,  "-serverPortRandomRange",  null);
-        ImportCommandLineStringArgument(ref  this.serverDiscoveryAddress, "-serverDiscoveryAddress", null);
-        ImportCommandLineIntegerArgument(ref this.serverDiscoveryPort,    "-serverDiscoveryPort",    null);
-        ImportCommandLineStringArgument(ref  this.webapiUrl,              "-webapiUrl",              null);
-    }
-
     //-------------------------------------------------------------------------- コマンドライン引数
-    static void ImportCommandLineStringArgument(ref string v, string key, string defval = null) {
-        var val = GetCommandLineArgument(key, defval);
-        if (val != null) {
-            v = val;
+    public static bool ImportCommandLineStringArgument(string key, ref string v) {
+        var s = default(string);
+        if (ImportCommandLineArgument(key, ref s)) {
+            v = s;
+            return true;
         }
+        return false;
     }
 
-    static void ImportCommandLineIntegerArgument(ref int v, string key, string defval = null) {
-        var val = GetCommandLineArgument(key, defval);
-        if (val != null) {
-            v = int.Parse(val);
+    public static bool ImportCommandLineIntegerArgument(string key, ref int v) {
+        var s = default(string);
+        if (ImportCommandLineArgument(key, ref s)) {
+            v = int.Parse(s);
+            return true;
         }
+        return false;
     }
 
-    static string GetCommandLineArgument(string key, string defval = null) {
+    public static bool ImportCommandLineFlagArgument(string key) {
         string[] args = System.Environment.GetCommandLineArgs();
         int index = System.Array.IndexOf(args, key);
-        if (index < 0 || (index + 1) >= args.Length) {
-            return defval;
+        return (index >= 0);
+    }
+
+    public static bool ImportCommandLineArgument(string key, ref string v) {
+        var args  = System.Environment.GetCommandLineArgs();
+        var index = System.Array.IndexOf(args, key);
+        if (index >= 0 && (index + 1) < args.Length) {
+            v = args[index + 1];
+            return true;
         }
-        return args[index + 1];
+        return false;
     }
 }
 
@@ -218,39 +226,38 @@ public partial class GameSettings {
 
 // ウェブブラウザ引数のインポート
 public partial class GameSettings {
-    //-------------------------------------------------------------------------- ウェブブラウザ引数のインポート
-    void ImportWebBrowserArguments() {
-        var hostName = "localhost";
-        ImportWebBrowserHostName(ref hostName);
-        this.webapiUrl = string.Format("http://{0}:7780", hostName);
-    }
-
     //-------------------------------------------------------------------------- ウェブブラウザクエリ引数
-    static void ImportWebBrowserQueryStringArgument(ref string v, string key, string defval = null) {
-        var val = GetWebBrowserQueryArgument(key, defval);
-        if (val != null) {
-            v = val;
+    public static void ImportWebBrowserQueryStringArgument(string key, ref string v) {
+        var q = default(string);
+        if (ImportWebBrowserQueryArgument(key, ref q)) {
+            v = q;
+            return true;
         }
+        return false;
     }
 
-    static void ImportWebBrowserQueryIntegerArgument(ref int v, string key, string defval = null) {
-        var val = GetWebBrowserQueryArgument(key, defval);
-        if (val != null) {
-            v = int.Parse(val);
+    public static bool ImportWebBrowserQueryIntegerArgument(string key, ref int v) {
+        var q = default(string);
+        if (ImportWebBrowserQueryArgument(key, ref q)) {
+            v = int.Parse(q);
+            return true;
         }
+        return false;
     }
 
-    static string GetWebBrowserQueryArgument(string key, string defval = null) {
-        return WebBrowser.GetLocationQuery(key) ?? defval;
+    public static bool ImportWebBrowserQueryArgument(string key, ref string v) {
+        var q = WebBrowser.GetLocationQuery(key);
+        if (q != null) {
+            v = q;
+            return true;
+        }
+        return false;
     }
 
     //-------------------------------------------------------------------------- ウェブブラウザホスト名
-    static void ImportWebBrowserHostName(ref v) {
-        v = GetWebBrowserHostName();
-    }
-
-    static string GetWebBrowserHostName() {
-        return WebBrowser.GetLocationHostName();
+    public static bool ImportWebBrowserHostName(ref v) {
+        v = WebBrowser.GetLocationHostName();
+        return true;
     }
 }
 
@@ -272,5 +279,13 @@ public partial class GameSettings {
     static GameSettings _instance = null;
 
     // インスタンスの取得
-    static GameSettings instance { get { return _instance ?? (_instance = Resources.Load<GameSettingsAsset>("GameSettings").gameSettings); }}
+    static GameSettings instance {
+        get {
+            if (_instance == null) {
+                _instance = Resources.Load<GameSettingsAsset>("GameSettings").gameSettings;
+                _instance.ImportGameArguments();
+            }
+            return _instance;
+        }
+    }
 }

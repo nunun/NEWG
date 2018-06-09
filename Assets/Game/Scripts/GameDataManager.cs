@@ -23,6 +23,12 @@ public partial class GameDataManager : MonoBehaviour {
     void InitializeGameData() {
         // NOTE ゲーム共通のデータ処理はここに追記して下さい。
 
+        // セーブデータのクリアフラグ
+        if (GameSettings.ImportCommandLineFlagArgument("-clearSaveData")) {
+            Debug.Log("セーブデータをクリア");
+            PlayerPrefs.DeleteAll();
+        }
+
         // 認証情報は事前ロード
         GameDataManager.SessionData.Load();
         GameDataManager.CredentialData.Load();
