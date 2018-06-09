@@ -111,7 +111,7 @@ public partial class GameManager {
 // ウェブブラウザ引数のインポート
 public partial class GameManager {
     //-------------------------------------------------------------------------- ウェブブラウザクエリ引数
-    public static void ImportWebBrowserQueryStringArgument(string key, ref string v) {
+    public static bool ImportWebBrowserQueryStringArgument(string key, ref string v) {
         var q = default(string);
         if (ImportWebBrowserQueryArgument(key, ref q)) {
             v = q;
@@ -139,7 +139,7 @@ public partial class GameManager {
     }
 
     //-------------------------------------------------------------------------- ウェブブラウザホスト名
-    public static bool ImportWebBrowserHostName(ref v) {
+    public static bool ImportWebBrowserHostName(ref string v) {
         v = WebBrowser.GetLocationHostName();
         return true;
     }

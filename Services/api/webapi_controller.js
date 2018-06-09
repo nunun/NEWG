@@ -194,7 +194,7 @@ class WebAPIController {
         var middlewares = null;
         switch (name) {
         case 'always':
-            middlewares = [this.checkSessionToken];
+            middlewares = [this.cors, this.checkSessionToken];
             break;
         case 'userSecurity':
             middlewares = [this.userSecurity];
@@ -206,6 +206,13 @@ class WebAPIController {
             break;
         }
         return middlewares;
+    }
+
+    // CORS 許可
+    cors(req, res, next) {
+        res.header("Access-Control-Allow-Origin", "*");
+        res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+        next();
     }
 
     // セッショントークン確認

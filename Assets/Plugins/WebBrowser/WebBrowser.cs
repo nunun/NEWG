@@ -38,7 +38,11 @@ public class WebBrowser {
         #if UNITY_EDITOR
         return "http://localhost/";
         #else
-        return _GetLocationURL();
+        var locationUrl = _GetLocationURL();
+        if (locationUrl.StartsWith("http://") || locationUrl.StartsWith("https://")) {
+            return locationUrl;
+        }
+        return "http://localhost/";
         #endif
     }
 
