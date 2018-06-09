@@ -162,106 +162,21 @@ public partial class GameSettings {
 public partial class GameSettings {
     //-------------------------------------------------------------------------- ゲーム引数のインポート
     public void ImportGameArguments() {
-        ImportCommandLineStringArgument("-serverAddress",          ref this.serverAddress);
-        ImportCommandLineIntegerArgument("-serverPort",            ref this.serverPort);
-        ImportCommandLineIntegerArgument("-serverPortRandomRange", ref this.serverPortRandomRange);
-        ImportCommandLineStringArgument("-serverDiscoveryAddress", ref this.serverDiscoveryAddress);
-        ImportCommandLineIntegerArgument("-serverDiscoveryPort",   ref this.serverDiscoveryPort);
-        ImportCommandLineStringArgument("-webapiUrl",              ref this.webapiUrl);
+        GameManager.ImportCommandLineStringArgument("-serverAddress",          ref this.serverAddress);
+        GameManager.ImportCommandLineIntegerArgument("-serverPort",            ref this.serverPort);
+        GameManager.ImportCommandLineIntegerArgument("-serverPortRandomRange", ref this.serverPortRandomRange);
+        GameManager.ImportCommandLineStringArgument("-serverDiscoveryAddress", ref this.serverDiscoveryAddress);
+        GameManager.ImportCommandLineIntegerArgument("-serverDiscoveryPort",   ref this.serverDiscoveryPort);
+        GameManager.ImportCommandLineStringArgument("-webapiUrl",              ref this.webapiUrl);
         #if UNITY_WEBGL
         var webBrowserHostName = default(string);
-        if (ImportWebBrowserHostName(ref webBrowserHostName)) {
+        if (GameManager.ImportWebBrowserHostName(ref webBrowserHostName)) {
              this.webapiUrl = string.Format("http://{0}:7780", webBrowserHostName);
         }
         #endif
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
-// コマンドライン引数のインポート
-public partial class GameSettings {
-    //-------------------------------------------------------------------------- コマンドライン引数
-    public static bool ImportCommandLineStringArgument(string key, ref string v) {
-        var s = default(string);
-        if (ImportCommandLineArgument(key, ref s)) {
-            v = s;
-            return true;
-        }
-        return false;
-    }
-
-    public static bool ImportCommandLineIntegerArgument(string key, ref int v) {
-        var s = default(string);
-        if (ImportCommandLineArgument(key, ref s)) {
-            v = int.Parse(s);
-            return true;
-        }
-        return false;
-    }
-
-    public static bool ImportCommandLineFlagArgument(string key) {
-        string[] args = System.Environment.GetCommandLineArgs();
-        int index = System.Array.IndexOf(args, key);
-        return (index >= 0);
-    }
-
-    public static bool ImportCommandLineArgument(string key, ref string v) {
-        var args  = System.Environment.GetCommandLineArgs();
-        var index = System.Array.IndexOf(args, key);
-        if (index >= 0 && (index + 1) < args.Length) {
-            v = args[index + 1];
-            return true;
-        }
-        return false;
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-#if UNITY_WEBGL
-
-// ウェブブラウザ引数のインポート
-public partial class GameSettings {
-    //-------------------------------------------------------------------------- ウェブブラウザクエリ引数
-    public static void ImportWebBrowserQueryStringArgument(string key, ref string v) {
-        var q = default(string);
-        if (ImportWebBrowserQueryArgument(key, ref q)) {
-            v = q;
-            return true;
-        }
-        return false;
-    }
-
-    public static bool ImportWebBrowserQueryIntegerArgument(string key, ref int v) {
-        var q = default(string);
-        if (ImportWebBrowserQueryArgument(key, ref q)) {
-            v = int.Parse(q);
-            return true;
-        }
-        return false;
-    }
-
-    public static bool ImportWebBrowserQueryArgument(string key, ref string v) {
-        var q = WebBrowser.GetLocationQuery(key);
-        if (q != null) {
-            v = q;
-            return true;
-        }
-        return false;
-    }
-
-    //-------------------------------------------------------------------------- ウェブブラウザホスト名
-    public static bool ImportWebBrowserHostName(ref v) {
-        v = WebBrowser.GetLocationHostName();
-        return true;
-    }
-}
-
-#endif
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////

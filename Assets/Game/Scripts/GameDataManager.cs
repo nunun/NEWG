@@ -24,7 +24,7 @@ public partial class GameDataManager : MonoBehaviour {
         // NOTE ゲーム共通のデータ処理はここに追記して下さい。
 
         // セーブデータのクリアフラグ
-        if (GameSettings.ImportCommandLineFlagArgument("-clearSaveData")) {
+        if (GameManager.ImportCommandLineFlagArgument("-clearSaveData")) {
             Debug.Log("セーブデータをクリア");
             PlayerPrefs.DeleteAll();
         }

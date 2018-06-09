@@ -20,7 +20,7 @@ public partial class GameBuilder {
         // ゲーム設定名をコマンドライン引数から確認
         // 引数で指定されている場合は、そちらを優先的に使用する。
         var gameConfigurationNameArgument = default(string);
-        if (GameSettings.ImportCommandLineStringArgument("-gameConfigurationName", ref gameConfigurationNameArgument)) {
+        if (GameManager.ImportCommandLineStringArgument("-gameConfigurationName", ref gameConfigurationNameArgument)) {
             gameConfigurationName = gameConfigurationNameArgument;
         }
 
