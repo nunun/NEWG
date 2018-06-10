@@ -13,6 +13,7 @@
 # | 127.0.0.1:15672:15672     | rabbitmq  | http             | webui for rabbitmq      (http://localhost:15672)        | debug port |
 # | 127.0.0.1:15984:5984      | couchdb   | http             | webui for couchdb       (http://localhost:15984/_utils) | debug port |
 # | 127.0.0.1:17766:17766     | mindlink  | http             | webui for mindlink      (http://localhost:17766)        | debug port |
+# | 127.0.0.1:17777:17777     | server    | http             | webui for server        (http://localhost:17777)        | debug port |
 # | 127.0.0.1:17780:17780     | sense     | http             | webui for api           (http://localhost:17780)        | debug port |
 # | 127.0.0.1:19000:9000      | portainer | http             | webui for docker daemon (http://localhost:19000)        | debug port |
 # +---------------------------+-----------+------------------+---------------------------------------------------------+------------+

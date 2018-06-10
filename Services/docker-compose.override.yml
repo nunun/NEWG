@@ -20,9 +20,10 @@ services:
       - FQDN=${ENV_FQDN}
       - LOG_LEVEL=debug
     volumes:
-      - ./server/Builds:/server
+      - ./server:/server
     ports:
-      - 7777:7777
+      - 7777:7777/udp
+      - 127.0.0.1:17777:17777
 
   matching:
     build:

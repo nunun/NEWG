@@ -1,4 +1,7 @@
-FROM guihatano/nginx-ubuntu
+#FROM guihatano/nginx-ubuntu
+FROM ubuntu:16.04
+RUN apt-get update && apt-get -y install ruby
 WORKDIR /server
-ADD Builds /server
-CMD ["./Server"]
+ADD server.rb /server/
+ADD Builds    /server/
+CMD ["ruby", "server.rb"]
