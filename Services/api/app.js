@@ -1,6 +1,7 @@
 var url                 = require('url');
 var util                = require('util');
 var bodyParser          = require('body-parser');
+var cors                = require('cors');
 var config              = require('./services/library/config');
 var logger              = require('./services/library/logger');
 var models              = require('./services/protocols/models');
@@ -49,6 +50,7 @@ webapiServer.setStartEventListener(function() {
 });
 webapiServer.setSetupEventListener(function(express, app) {
     // express のセットアップ
+    app.use(cors());
     app.use(webapiServer.bodyDecrypter());
     app.use(bodyParser.urlencoded({extended: true}));
     app.use(bodyParser.json());

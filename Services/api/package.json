@@ -16,7 +16,8 @@
     "string.prototype.trim": "^1.1.2",
     "uuid": "^3.2.1",
     "ws": "^4.1.0",
-    "yaml": "^0.3.0"
+    "yaml": "^0.3.0",
+    "cors": "*"
   },
   "repository": "",
   "author": "nunun",

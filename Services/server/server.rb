@@ -1,7 +1,9 @@
 require 'webrick'
 require 'thread'
 
-$server_cmd  = './Builds/Server'
+$binary_name = 'Server.x86_64'
+$binary_name = ENV['BINARY_NAME'] if !ENV['BINARY_NAME'].nil?
+$server_cmd  = './Builds/' + $binary_name
 $server_pid  = nil
 $server_stop = 0
 $m           = Mutex.new
