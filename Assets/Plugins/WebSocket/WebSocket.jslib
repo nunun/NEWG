@@ -15,20 +15,27 @@ SocketCreate: function(url)
 
 	socket.socket.onmessage = function (e) {
 		// Todo: handle other data types?
-		if (e.data instanceof Blob)
+		if (typeof e.data == 'string')
 		{
-			var reader = new FileReader();
-			reader.addEventListener("loadend", function() {
-				var array = new Uint8Array(reader.result);
-				socket.messages.push(array);
-			});
-			reader.readAsArrayBuffer(e.data);
+			//var array = new Uint8Array(e.data);
+			//socket.messages.push(array);
+			var s = new String(e.data);
+			socket.messages.push(s);
 		}
-		else if (e.data instanceof ArrayBuffer)
-		{
-			var array = new Uint8Array(e.data);
-			socket.messages.push(array);
-		}
+		//else if (e.data instanceof ArrayBuffer)
+		//{
+		//	var array = new Uint8Array(e.data);
+		//	socket.messages.push(array);
+		//}
+		//else if (e.data instanceof Blob)
+		//{
+		//	var reader = new FileReader();
+		//	reader.addEventListener("loadend", function() {
+		//		var array = new Uint8Array(reader.result);
+		//		socket.messages.push(array);
+		//	});
+		//	reader.readAsArrayBuffer(e.data);
+		//}
 	};
 
 	socket.socket.onclose = function (e) {
@@ -80,7 +87,7 @@ SocketError: function (socketInstance, ptr, bufsize)
  	if (socket.error == null)
  		return 0;
     var str = socket.error.slice(0, Math.max(0, bufsize - 1));
-    writeStringToMemory(str, ptr, false);
+    stringToUTF8(str, ptr, bufsize);
 	return 1;
 },
 
@@ -95,7 +102,7 @@ SocketRecvLength: function(socketInstance)
 	var socket = webSocketInstances[socketInstance];
 	if (socket.messages.length == 0)
 		return 0;
-	return socket.messages[0].length;
+	return socket.messages[0].length + 1;
 },
 
 SocketRecv: function (socketInstance, ptr, length)
@@ -105,7 +112,7 @@ SocketRecv: function (socketInstance, ptr, length)
 		return 0;
 	if (socket.messages[0].length > length)
 		return 0;
-	HEAPU8.set(socket.messages[0], ptr);
+	stringToUTF8(socket.messages[0], ptr, length);
 	socket.messages = socket.messages.slice(1);
 },
 

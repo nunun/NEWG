@@ -51,7 +51,7 @@ public partial class GameConfiguration : GameSettings {
             serverPortRandomRange        = 0,
             serverDiscoveryAddress       = null,
             serverDiscoveryPort          = 0,
-            useWebSockets                = false,
+            useWebSockets                = true,
             webapiUrl                    = "http://localhost:7780",
             mindlinkUrl                  = null,
             buildTarget                  = BuildTarget.StandaloneWindows64,
@@ -162,7 +162,6 @@ public partial class GameConfiguration : GameSettings {
             serverPort                   = 7777,
             serverPortRandomRange        = 0,
             serverDiscoveryAddress       = "localhost",
-            //serverDiscoveryAddress     = "10.0.75.2", // TODO
             serverDiscoveryPort          = 7777,
             useWebSockets                = true,
             webapiUrl                    = "http://api:7780",
@@ -181,8 +180,6 @@ public partial class GameConfiguration : GameSettings {
             developmentBuild             = false,
             localServerStartUrl          = "http://localhost:17777/start",
             localServerStopUrl           = "http://localhost:17777/stop",
-            //localServerStartUrl        = "http://10.0.75.2:17777/start", // TODO
-            //localServerStopUrl         = "http://10.0.75.2:17777/stop",  // TODO
             scriptingDefineSymbols       = new List<string>() {"DEBUG", "SERVER_CODE"},
         },
         new GameConfiguration() {
