@@ -91,6 +91,11 @@ public partial class GameBuilder {
         // ゲーム設定を作成
         gameConfiguration.Save(false);
 
+        // サーバ停止
+        if (!string.IsNullOrEmpty(gameConfiguration.localServerStopUrl)) {
+            SendGetRequest(gameConfiguration.localServerStopUrl);
+        }
+
         // ビルド
         var result = BuildPipeline.BuildPlayer(levels, outputPath, gameConfiguration.buildTarget, options);
 
@@ -102,27 +107,37 @@ public partial class GameBuilder {
             EditorSceneManager.RestoreSceneManagerSetup(sceneSetup);
         }
 
-        // 結果処理
+        // ビルド失敗時
         if (!string.IsNullOrEmpty(result)) {
             Debug.LogError(result);
         }
 
-        // 成功ならフォルダを開く
-        if (gameConfiguration.openFolder) {
-            OpenFolder(gameConfiguration.outputPath);
+        // ビルド成功時
+        if (string.IsNullOrEmpty(result)) {
+            // サーバ再開
+            if (!string.IsNullOrEmpty(gameConfiguration.localServerStartUrl)) {
+                SendGetRequest(gameConfiguration.localServerStartUrl);
+            }
+
+            // フォルダを開く
+            if (gameConfiguration.openFolder) {
+                OpenFolder(gameConfiguration.outputPath);
+            }
         }
         return;
     }
 
     //-------------------------------------------------------------------------- ユーティリティ
-    /// 文字列の引数を取得
-    public static string GetStringArgument(string key, string def = null) {
-        string[] args = System.Environment.GetCommandLineArgs();
-        int index = System.Array.IndexOf(args, key);
-        if (index < 0 || (index + 1) >= args.Length) {
-            return def;
+    // ウェブサーバに GET リクエスト送信
+    static string SendGetRequest(string url) {
+        using(UnityWebRequest request = UnityWebRequest.Get(url)) {
+            request.Send();
+            while (!request.isDone) {}
+            if(request.isError) {
+                return request.error;
+            }
+            return request.downloadHandler.text;
         }
-        return args[index + 1];
     }
 
     // フォルダを開く

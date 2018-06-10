@@ -18,12 +18,12 @@ end
 
 webrick.mount_proc '/start' do |req, res|
   server_start
-  res.body = "ok"
+  res.body = "started"
 end
 
 webrick.mount_proc '/stop' do |req, res|
   server_stop
-  res.body = "ok"
+  res.body = "stopped"
 end
 
 def server_start

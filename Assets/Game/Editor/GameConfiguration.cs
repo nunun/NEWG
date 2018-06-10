@@ -38,6 +38,8 @@ public partial class GameConfiguration : GameSettings {
             runInBackground              = true,
             showSplashScreen             = false,
             developmentBuild             = true,
+            localServerStartUrl          = null,
+            localServerStopUrl           = null,
             scriptingDefineSymbols       = new List<string>() {"DEBUG", "SERVER_CODE"},
         },
         new GameConfiguration() {
@@ -64,6 +66,8 @@ public partial class GameConfiguration : GameSettings {
             runInBackground              = true,
             showSplashScreen             = false,
             developmentBuild             = true,
+            localServerStartUrl          = null,
+            localServerStopUrl           = null,
             scriptingDefineSymbols       = new List<string>() {"DEBUG"},
         },
         new GameConfiguration() {
@@ -90,6 +94,8 @@ public partial class GameConfiguration : GameSettings {
             runInBackground              = true,
             showSplashScreen             = false,
             developmentBuild             = true,
+            localServerStartUrl          = null,
+            localServerStopUrl           = null,
             scriptingDefineSymbols       = new List<string>() {"DEBUG", "SERVER_CODE"},
         },
         new GameConfiguration() {
@@ -116,6 +122,8 @@ public partial class GameConfiguration : GameSettings {
             runInBackground              = true,
             showSplashScreen             = false,
             developmentBuild             = true,
+            localServerStartUrl          = null,
+            localServerStopUrl           = null,
             scriptingDefineSymbols       = new List<string>() {"DEBUG"},
         },
         new GameConfiguration() {
@@ -142,6 +150,8 @@ public partial class GameConfiguration : GameSettings {
             runInBackground              = true,
             showSplashScreen             = false,
             developmentBuild             = true,
+            localServerStartUrl          = null,
+            localServerStopUrl           = null,
             scriptingDefineSymbols       = new List<string>() {"DEBUG"},
         },
         new GameConfiguration() {
@@ -168,6 +178,8 @@ public partial class GameConfiguration : GameSettings {
             runInBackground              = true,
             showSplashScreen             = false,
             developmentBuild             = false,
+            localServerStartUrl          = "http://localhost:17777/start",
+            localServerStopUrl           = "http://localhost:17777/stop",
             scriptingDefineSymbols       = new List<string>() {"DEBUG", "SERVER_CODE"},
         },
         new GameConfiguration() {
@@ -194,6 +206,8 @@ public partial class GameConfiguration : GameSettings {
             runInBackground              = true,
             showSplashScreen             = false,
             developmentBuild             = false,
+            localServerStartUrl          = null,
+            localServerStopUrl           = null,
             scriptingDefineSymbols       = new List<string>() {},
         },
         new GameConfiguration() {
@@ -220,6 +234,8 @@ public partial class GameConfiguration : GameSettings {
             runInBackground              = true,
             showSplashScreen             = false,
             developmentBuild             = false,
+            localServerStartUrl          = null,
+            localServerStopUrl           = null,
             scriptingDefineSymbols       = new List<string>() {"SERVER_CODE"},
         },
     };
@@ -248,6 +264,8 @@ public partial class GameConfiguration : GameSettings {
     public bool                    runInBackground              = true;
     public bool                    showSplashScreen             = false;
     public bool                    developmentBuild             = false;
+    public string                  localServerStartUrl          = null;
+    public string                  localServerStopUrl           = null;
     public List<string>            scriptingDefineSymbols       = new List<string>();
 }
 
