@@ -32,10 +32,13 @@ public partial class GameBuilder {
             return;
         }
 
-        // 現在のシーン設定を保存
-        var sceneSetup = EditorSceneManager.GetSceneManagerSetup();
+        // エラーチェック
+        if (gameConfiguration.headless && gameConfiguration.developmentBuild) {
+            Debug.LogErrorFormat("ヘッドレスかつ開発ビルドはできない ({0})", gameConfigurationName);
+            return;
+        }
 
-        // ビルド環境
+        // ビルドターゲットと拡張子
         var appext = "";
         switch (gameConfiguration.buildTarget) {
         case BuildTarget.StandaloneWindows:
@@ -53,7 +56,6 @@ public partial class GameBuilder {
         }
 
         // シーン一覧を作成
-        // 最初はクイックビルドのシーンから起動する。
         var scenes = new List<string>();
         scenes.AddRange(EditorBuildSettings.scenes.Select(s => s.path));
 
@@ -79,6 +81,9 @@ public partial class GameBuilder {
         PlayerSettings.defaultIsFullScreen     = gameConfiguration.isFullScreen;
         PlayerSettings.runInBackground         = gameConfiguration.runInBackground;
         PlayerSettings.SplashScreen.show       = gameConfiguration.showSplashScreen;
+
+        // 現在のシーン設定を保存
+        var sceneSetup = EditorSceneManager.GetSceneManagerSetup();
 
         // ゲーム設定をバックアップ
         GameConfiguration.Backup();

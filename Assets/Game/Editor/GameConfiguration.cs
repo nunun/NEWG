@@ -104,7 +104,7 @@ public partial class GameConfiguration : GameSettings {
             useWebSockets                = true,
             webapiUrl                    = "http://localhost:7780",
             mindlinkUrl                  = null,
-            buildTarget                  = BuildTarget.StandaloneWindows64,
+            buildTarget                  = BuildTarget.WebGL,
             outputPath                   = "Builds/Local.Client",
             headless                     = false,
             autoRun                      = true,
@@ -167,7 +167,7 @@ public partial class GameConfiguration : GameSettings {
             isFullScreen                 = false,
             runInBackground              = true,
             showSplashScreen             = false,
-            developmentBuild             = true,
+            developmentBuild             = false,
             scriptingDefineSymbols       = new List<string>() {"DEBUG", "SERVER_CODE"},
         },
         new GameConfiguration() {
