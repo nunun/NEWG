@@ -12,11 +12,11 @@ services:
         constraints:
           - node.role == worker
 
-  # TODO
-  # host network mode
   server:
     environment:
       - FQDN=${ENV_FQDN}
+    networks:
+      - outside
     deploy:
       mode: replicated
       replicas: 1
@@ -125,4 +125,9 @@ volumes:
   couchdb_data:
   redis_data:
   portainer_data:
+
+networks:
+  outside:
+    external:
+      name: "host"
 
