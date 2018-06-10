@@ -165,8 +165,8 @@ public partial class GameConfiguration : GameSettings {
             //serverDiscoveryAddress     = "10.0.75.2", // TODO
             serverDiscoveryPort          = 7777,
             useWebSockets                = true,
-            webapiUrl                    = "http://localhost:7780",
-            mindlinkUrl                  = "ws://localhost:7766",
+            webapiUrl                    = "http://api:7780",
+            mindlinkUrl                  = "ws://mindlink:7766",
             buildTarget                  = BuildTarget.StandaloneLinuxUniversal,
             outputPath                   = "Services/server/Builds/Server",
             headless                     = true,
