@@ -74,12 +74,16 @@ public partial class GameSettings {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-// NetworkManager がウェブソケットを使うかどうか
+// NetworkManager 設定関連
 public partial class GameSettings {
     //-------------------------------------------------------------------------- 変数
-    public bool useWebSockets = true;
+    public bool                  bindIp        = false;
+    public bool                  useWebSockets = true;
+    public LogFilter.FilterLevel logLevel      = LogFilter.FilterLevel.Debug;
 
-    public static bool UseWebSockets { get { return instance.useWebSockets; }}
+    public static bool                  BindIP        { get { return instance.bindIp;        }}
+    public static bool                  UseWebSockets { get { return instance.useWebSockets; }}
+    public static LogFilter.FilterLevel LogLevel      { get { return instance.logLevel;      }}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

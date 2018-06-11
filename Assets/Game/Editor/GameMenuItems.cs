@@ -29,32 +29,37 @@ public partial class GameMenuItems {
         GameBuilder.Build();
     }
 
-    [MenuItem("Game/ビルド/デバッグホスト (実行可能形式)", false, 200)]
+    [MenuItem("Game/ビルド/デバッグホスト (実行可能形式, UDP)", false, 200)]
     public static void BuildDebugHost() {
         GameBuilder.Build("DEBUG_HOST");
     }
 
-    [MenuItem("Game/ビルド/デバッグクライアント (実行可能形式)", false, 201)]
+    [MenuItem("Game/ビルド/デバッグクライアント (実行可能形式, UDP)", false, 201)]
     public static void BuildDebugClient() {
         GameBuilder.Build("DEBUG_CLIENT");
     }
 
-    [MenuItem("Game/ビルド/デバッグサーバ (実行可能形式)", false, 202)]
+    [MenuItem("Game/ビルド/デバッグサーバ (実行可能形式, UDP)", false, 202)]
     public static void BuildDebugServer() {
         GameBuilder.Build("DEBUG_SERVER");
     }
 
-    [MenuItem("Game/ビルド/ローカルクライアント (WebGL)", false, 300)]
+    [MenuItem("Game/ビルド/サービス用デバッグサーバ (Linux Headless, Non Host Mode, UDP)", false, 203)]
+    public static void BuildServicesDebugServer() {
+        GameBuilder.Build("SERVICES_DEBUG_SERVER");
+    }
+
+    [MenuItem("Game/ビルド/ローカルクライアント (WebGL, TCP WebSocket)", false, 300)]
     public static void BuildLocalClient() {
         GameBuilder.Build("LOCAL_CLIENT");
     }
 
-    [MenuItem("Game/ビルド/サービス用ローカルクライアント (WebGL)", false, 301)]
+    [MenuItem("Game/ビルド/サービス用ローカルクライアント (WebGL, TCP WebSocket)", false, 301)]
     public static void BuildServicesLocalClient() {
         GameBuilder.Build("SERVICES_LOCAL_CLIENT");
     }
 
-    [MenuItem("Game/ビルド/サービス用ローカルサーバ (Linux Headless, Non Host Mode)", false, 302)]
+    [MenuItem("Game/ビルド/サービス用ローカルサーバ (Linux Headless, Non Host Mode, TCP WebSocket)", false, 302)]
     public static void BuildServicesLocalServer() {
         GameBuilder.Build("SERVICES_LOCAL_SERVER");
     }
@@ -65,12 +70,12 @@ public partial class GameMenuItems {
         BuildServicesLocalServer();
     }
 
-    [MenuItem("Game/ビルド/サービス用 fu-n.net クライアント (WebGL)", false, 400)]
+    [MenuItem("Game/ビルド/サービス用 fu-n.net クライアント (WebGL, TCP WebSocket)", false, 400)]
     public static void BuildServicesReleaseClient() {
         GameBuilder.Build("SERVICES_RELEASE_CLIENT");
     }
 
-    [MenuItem("Game/ビルド/サービス用 fu-n.net サーバ (Linux Headless, Host Mode)", false, 401)]
+    [MenuItem("Game/ビルド/サービス用 fu-n.net サーバ (Linux Headless, Host Mode, TCP WebSocket)", false, 401)]
     public static void BuildServicesReleaseServer() {
         GameBuilder.Build("SERVICES_RELEASE_SERVER");
     }

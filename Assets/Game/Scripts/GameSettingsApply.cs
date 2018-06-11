@@ -29,9 +29,12 @@ public partial class GameSettingsApply : MonoBehaviour {
             applied = true;
         } else if (targetComponent is GameNetworkManager) {
             var gameNetworkManager = (GameNetworkManager)targetComponent;
-            gameNetworkManager.networkAddress = GameSettings.ServerAddress;
-            gameNetworkManager.networkPort    = GameSettings.ServerPort;
-            gameNetworkManager.useWebSockets  = GameSettings.UseWebSockets;
+            gameNetworkManager.networkAddress    = GameSettings.ServerAddress;
+            gameNetworkManager.networkPort       = GameSettings.ServerPort;
+            gameNetworkManager.serverBindAddress = GameSettings.ServerAddress;
+            gameNetworkManager.serverBindToIP    = GameSettings.BindIP;
+            gameNetworkManager.useWebSockets     = GameSettings.UseWebSockets;
+            gameNetworkManager.logLevel          = GameSettings.LogLevel;
             applied = true;
         } else if (targetComponent is WebSocketConnector) {
             var webSocketConnector = (WebSocketConnector)targetComponent;

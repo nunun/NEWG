@@ -23,9 +23,8 @@ services:
       - ./server:/server
     ports:
       - 7777:7777
+      - 7778:7778/udp
       - 127.0.0.1:17777:17777
-    # TODO
-    #network_mode: host
 
   matching:
     build:
