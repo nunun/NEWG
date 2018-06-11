@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
@@ -60,9 +61,7 @@ public partial class GameBuilder {
         scenes.AddRange(EditorBuildSettings.scenes.Select(s => s.path));
 
         // ビルドオプション設定
-        var levels     = scenes.ToArray();
-        var outputPath = gameConfiguration.outputPath + appext;
-        var options    = BuildOptions.None;
+        var options = BuildOptions.None;
         if (gameConfiguration.headless) {
             options |= BuildOptions.EnableHeadlessMode;
         }
@@ -96,8 +95,17 @@ public partial class GameBuilder {
             SendGetRequest(gameConfiguration.localServerStopUrl);
         }
 
+        // 出力先調整
+        var outputPath = gameConfiguration.outputPath;
+        CreateOutputDirectory(outputPath);
+        CleanOutputFiles(outputPath);
+
         // ビルド
-        var result = BuildPipeline.BuildPlayer(levels, outputPath, gameConfiguration.buildTarget, options);
+        var buildScenes     = scenes.ToArray();
+        var buildOutputPath = outputPath + appext;
+        var buildTarget     = gameConfiguration.buildTarget;
+        var buildOptions    = options;
+        var result = BuildPipeline.BuildPlayer(buildScenes, buildOutputPath, buildTarget, buildOptions);
 
         // ゲーム設定を復元
         GameConfiguration.Restore();
@@ -128,6 +136,36 @@ public partial class GameBuilder {
     }
 
     //-------------------------------------------------------------------------- ユーティリティ
+    // 出力ディレクトリ作成
+    static void CreateOutputDirectory(string outputPath) {
+        var outputDir = Path.GetDirectoryName(outputPath);
+        if (!Directory.Exists(outputDir)) {
+            Directory.CreateDirectory(outputDir);
+        }
+    }
+
+    // 出力ファイルクリーン
+    static void CleanOutputFiles(string outputPath) {
+        var outputDir = Path.GetDirectoryName(outputPath);
+        if (Directory.Exists(outputDir)) {
+            var files = Directory.GetFiles(outputDir, Path.GetFileName(outputPath) + ".*");
+            foreach (var file in files) {
+                var filePath = file.Replace(@"\", @"/");
+                var fileExt  = Path.GetExtension(filePath);
+                if ((outputPath + fileExt) == filePath) {
+                    File.Delete(filePath);
+                }
+            }
+        }
+        if (Directory.Exists(outputPath)) {
+            Directory.Delete(outputPath, true);
+        }
+        var dataPath = outputPath + "_Data";
+        if (Directory.Exists(dataPath)) {
+            Directory.Delete(dataPath, true);
+        }
+    }
+
     // ウェブサーバに GET リクエスト送信
     static string SendGetRequest(string url) {
         using(UnityWebRequest request = UnityWebRequest.Get(url)) {
@@ -142,8 +180,11 @@ public partial class GameBuilder {
 
     // フォルダを開く
     static void OpenFolder(string path) {
+        if (File.Exists(path)) {
+            path = Path.GetDirectoryName(path);
+        }
         if (Application.platform == RuntimePlatform.WindowsEditor) {
-            System.Diagnostics.Process.Start("explorer.exe", "/select," + path.Replace(@"/", @"\"));//Windows
+            System.Diagnostics.Process.Start("explorer.exe", path.Replace(@"/", @"\"));//Windows
         } else {
             System.Diagnostics.Process.Start("open", path);//Mac
         }
