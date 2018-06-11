@@ -14,16 +14,9 @@ SocketCreate: function(url)
 	socket.socket.binaryType = 'arraybuffer';
 
 	socket.socket.onmessage = function (e) {
-		// Todo: handle other data types?
-		if (typeof e.data == 'string')
-		{
-			//var array = new Uint8Array(e.data);
-			//socket.messages.push(array);
-			var s = new String(e.data);
-			socket.messages.push(s);
-		}
-		//else if (e.data instanceof ArrayBuffer)
-		//{
+		// NOTE
+		// 文字列のみ必要なので以下はコメントアウト
+		//if (e.data instanceof ArrayBuffer) {
 		//	var array = new Uint8Array(e.data);
 		//	socket.messages.push(array);
 		//}
@@ -36,6 +29,15 @@ SocketCreate: function(url)
 		//	});
 		//	reader.readAsArrayBuffer(e.data);
 		//}
+		if (typeof e.data == 'string')
+		{
+			// NOTE
+			// Recv() 時に最後の文字が切れるので延長。
+			// おそらく Recv() でバッファに詰め込む際
+			// '\0' 分の長さが足りないので切れていると思われる。
+			var s = new String(e.data) + '\0';
+			socket.messages.push(s);
+		}
 	};
 
 	socket.socket.onclose = function (e) {
@@ -102,7 +104,7 @@ SocketRecvLength: function(socketInstance)
 	var socket = webSocketInstances[socketInstance];
 	if (socket.messages.length == 0)
 		return 0;
-	return socket.messages[0].length + 1;
+	return socket.messages[0].length;
 },
 
 SocketRecv: function (socketInstance, ptr, length)
