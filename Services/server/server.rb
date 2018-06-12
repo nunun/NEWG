@@ -48,7 +48,7 @@ def server_stop
     pid = $server_pid
     $server_pid  = nil
     $server_stop = 0
-    Process.detach(pid)
+    Process.kill("KILL", pid)
   end
 end
 
