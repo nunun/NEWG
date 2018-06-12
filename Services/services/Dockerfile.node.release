@@ -4,4 +4,5 @@ ADD . /app
 RUN rm -rf services node_modules
 RUN mv /services /app/services
 RUN npm install
-CMD node ./app.js
+RUN npm install -g forever
+CMD forever ./app.js
