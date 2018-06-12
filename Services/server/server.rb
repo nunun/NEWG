@@ -1,12 +1,13 @@
 require 'webrick'
 require 'thread'
 
-$binary_name = 'Server.x86_64'
-$binary_name = ENV['BINARY_NAME'] if !ENV['BINARY_NAME'].nil?
-$server_cmd  = './Builds/' + $binary_name
-$server_pid  = nil
-$server_stop = 0
-$m           = Mutex.new
+$binary_name      = ENV['BINARY_NAME']      || "Server.x86_64"
+$player_log_path  = ENV['PLAYER_LOG_PATH']  || "DefaultCompany/NEWG/Player.log"
+$unity3d_log_path = ENV['UNITY3D_LOG_PATH'] || "#{ENV['HOME']}/.config/unity3d"
+$server_cmd       = './Builds/' + $binary_name
+$server_pid       = nil
+$server_stop      = 0
+$m                = Mutex.new
 
 webrick = WEBrick::HTTPServer.new({
   DocumentRoot:   './',
@@ -59,11 +60,32 @@ trap(:SIGCHLD) do |sig|
   $server_pid = nil
 end
 
+# log loop
 Thread.new do
   loop do
     sleep 1
-    next if server_running
-    next if $server_stop <= 0
+    begin
+      f = open(File.join($unity3d_log_path, $player_log_path))
+      f.sysseek(-32, IO::SEEK_END) rescue f.sysseek(0, IO::SEEK_SET)
+      loop do
+        begin
+          print f.sysread(10)
+        rescue => e
+          raise e if !e.is_a?(EOFError)
+        end
+      end
+    rescue => e
+      p e
+      next
+    end
+  end
+end
+
+# server restart loop
+Thread.new do
+  loop do
+    sleep 1
+    next if server_running || $server_stop <= 0
     $server_stop -= 1
     server_start if $server_stop <= 0
   end
