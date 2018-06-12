@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -95,10 +96,14 @@ public partial class GameBuilder {
             SendGetRequest(gameConfiguration.localServerStopUrl);
         }
 
-        // 出力先調整
+        // 出力先ディレクトリ作成
         var outputPath = gameConfiguration.outputPath;
         CreateOutputDirectory(outputPath);
-        CleanOutputFiles(outputPath);
+
+        // 出力先ファイルのクリーン
+        if (gameConfiguration.cleanBuild) {
+            CleanOutputFiles(outputPath);
+        }
 
         // ビルド
         var buildScenes     = scenes.ToArray();
@@ -136,16 +141,20 @@ public partial class GameBuilder {
     }
 
     //-------------------------------------------------------------------------- ユーティリティ
-    // 出力ディレクトリ作成
+    // 出力先ディレクトリ作成
     static void CreateOutputDirectory(string outputPath) {
         var outputDir = Path.GetDirectoryName(outputPath);
         if (!Directory.Exists(outputDir)) {
+            Debug.LogFormat("出力先ディレクトリ作成 ({0})", outputDir);
             Directory.CreateDirectory(outputDir);
         }
     }
 
-    // 出力ファイルクリーン
+    // 出力先ファイルのクリーン
     static void CleanOutputFiles(string outputPath) {
+        Debug.Log("出力先ファイルのクリーン開始 ...");
+        var sb = new StringBuilder();
+        sb.AppendLine("出力先ファイルのクリーン完了");
         var outputDir = Path.GetDirectoryName(outputPath);
         if (Directory.Exists(outputDir)) {
             var files = Directory.GetFiles(outputDir, Path.GetFileName(outputPath) + ".*");
@@ -154,16 +163,20 @@ public partial class GameBuilder {
                 var fileExt  = Path.GetExtension(filePath);
                 if ((outputPath + fileExt) == filePath) {
                     File.Delete(filePath);
+                    sb.AppendLine(filePath);
                 }
             }
         }
         if (Directory.Exists(outputPath)) {
             Directory.Delete(outputPath, true);
+            sb.AppendLine(outputPath);
         }
         var dataPath = outputPath + "_Data";
         if (Directory.Exists(dataPath)) {
             Directory.Delete(dataPath, true);
+            sb.AppendLine(dataPath);
         }
+        Debug.Log(sb.ToString());
     }
 
     // ウェブサーバに GET リクエスト送信

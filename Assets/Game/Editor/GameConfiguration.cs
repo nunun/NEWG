@@ -31,6 +31,7 @@ public partial class GameConfiguration : GameSettings {
             mindlinkUrl                  = "ws://localhost:7766",
             buildTarget                  = BuildTarget.StandaloneWindows64,
             outputPath                   = "Builds/Debug.Host",
+            cleanBuild                   = false,
             headless                     = false,
             autoRun                      = true,
             openFolder                   = false,
@@ -62,6 +63,7 @@ public partial class GameConfiguration : GameSettings {
             mindlinkUrl                  = null,
             buildTarget                  = BuildTarget.StandaloneWindows64,
             outputPath                   = "Builds/Debug.Client",
+            cleanBuild                   = false,
             headless                     = false,
             autoRun                      = true,
             openFolder                   = false,
@@ -93,6 +95,7 @@ public partial class GameConfiguration : GameSettings {
             mindlinkUrl                  = "ws://localhost:7766",
             buildTarget                  = BuildTarget.StandaloneWindows64,
             outputPath                   = "Builds/Debug.Server",
+            cleanBuild                   = false,
             headless                     = false,
             autoRun                      = true,
             openFolder                   = false,
@@ -124,6 +127,7 @@ public partial class GameConfiguration : GameSettings {
             mindlinkUrl                  = "ws://localhost:7766",
             buildTarget                  = BuildTarget.StandaloneLinuxUniversal,
             outputPath                   = "Services/server/Builds/Server",
+            cleanBuild                   = true,
             headless                     = true,
             autoRun                      = false,
             openFolder                   = true,
@@ -155,6 +159,7 @@ public partial class GameConfiguration : GameSettings {
             mindlinkUrl                  = null,
             buildTarget                  = BuildTarget.WebGL,
             outputPath                   = "Builds/Local.Client",
+            cleanBuild                   = false,
             headless                     = false,
             autoRun                      = true,
             openFolder                   = false,
@@ -186,6 +191,7 @@ public partial class GameConfiguration : GameSettings {
             mindlinkUrl                  = null,
             buildTarget                  = BuildTarget.WebGL,
             outputPath                   = "Services/client/Builds/Client",
+            cleanBuild                   = true,
             headless                     = false,
             autoRun                      = false,
             openFolder                   = true,
@@ -217,6 +223,7 @@ public partial class GameConfiguration : GameSettings {
             mindlinkUrl                  = "ws://mindlink:7766",
             buildTarget                  = BuildTarget.StandaloneLinuxUniversal,
             outputPath                   = "Services/server/Builds/Server",
+            cleanBuild                   = true,
             headless                     = true,
             autoRun                      = false,
             openFolder                   = true,
@@ -248,6 +255,7 @@ public partial class GameConfiguration : GameSettings {
             mindlinkUrl                  = null,
             buildTarget                  = BuildTarget.WebGL,
             outputPath                   = "Services/client/Builds/Client",
+            cleanBuild                   = true,
             headless                     = false,
             autoRun                      = false,
             openFolder                   = true,
@@ -279,6 +287,7 @@ public partial class GameConfiguration : GameSettings {
             mindlinkUrl                  = "ws://localhost:7766",
             buildTarget                  = BuildTarget.StandaloneLinuxUniversal,
             outputPath                   = "Services/server/Builds/Server",
+            cleanBuild                   = true,
             headless                     = true,
             autoRun                      = false,
             openFolder                   = true,
@@ -309,6 +318,7 @@ public partial class GameConfiguration : GameSettings {
     public string                  gameConfigurationDescription = "Game Configuration Description";
     public BuildTarget             buildTarget                  = BuildTarget.StandaloneWindows64;
     public string                  outputPath                   = "Builds/DebugLocal";
+    public bool                    cleanBuild                   = false;
     public bool                    headless                     = false;
     public bool                    autoRun                      = true;
     public bool                    openFolder                   = false;
