@@ -177,7 +177,7 @@ matchingQueue.setAbortEventListener((err, task) => {
 // マッチングブレインID生成用
 var matchingBrainIdCounter = 0;
 
-// マッチングID生成用
+// マッチID生成用
 var matchIdCounter = 0;
 
 // マッチングブレイン供給タイマー
@@ -185,7 +185,7 @@ var matchingBrainSupplyTimer = null;
 
 // NOTE
 // マッチングブレイン供給開始
-// マインドリンクに接続した時点で開始。
+// マインドリンクに接続した時点で開始する。
 // 定期的にマッチングブレインを供給し続ける。
 function startMatchingBrainSupply() {
     if (matchingBrainSupplyTimer) {
@@ -204,7 +204,7 @@ function startMatchingBrainSupply() {
 
 // NOTE
 // マッチングブレイン供給停止
-// マインドリンクに接続した時点で停止。
+// マインドリンクから切断した時点で停止される。
 function stopMatchingBrainSupply() {
     if (!matchingBrainSupplyTimer) {
         matchingBrainQueue.logger.error("matchingBrainSupplyTimer does not started yet.");
@@ -220,8 +220,9 @@ function stopMatchingBrainSupply() {
 }
 
 // マッチングブレインキュー
-// マッチングキューを監視して、
-// ユーザにマッチング結果を通知します。
+// 参加できそうなサーバに目星を付けた後、
+// マッチングキューを監視してユーザのマッチングを行い、
+// マッチングしたユーザに結果を通知します。
 var matchingBrainQueue = new TaskQueue(config.matchingBrainQueue, logger.matchingBrainQueue);
 matchingBrainQueue.setAddEventListener((task) => {
     matchingBrainQueue.logger.debug("task added.");
@@ -356,7 +357,7 @@ async function waitForSetupResponse(task) {
     return sendMatchConnectData;
 }
 
-// マッチ完了を通知
+// セットアップアイテムに記録された全ユーザにマッチ完了を通知
 async function sendMatchConnectData(task) {
     setupQueue.logger.debug("send match connect data.");
     var matchingClients = task.matchingClients;
