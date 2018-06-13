@@ -193,7 +193,7 @@ public partial class GameBuilder {
 
     // フォルダを開く
     static void OpenFolder(string path) {
-        if (File.Exists(path)) {
+        if (!Directory.Exists(path)) {
             path = Path.GetDirectoryName(path);
         }
         if (Application.platform == RuntimePlatform.WindowsEditor) {

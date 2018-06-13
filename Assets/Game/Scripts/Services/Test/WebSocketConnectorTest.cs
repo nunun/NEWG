@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#if UNITY_EDITOR
+using UnityEngine;
 using UnityEngine.TestTools;
 using NUnit.Framework;
 using System;
@@ -69,3 +70,4 @@ public class WebSocketConnectorTest : WebSocketConnector, IMonoBehaviourTest {
         Disconnect();
     }
 }
+#endif

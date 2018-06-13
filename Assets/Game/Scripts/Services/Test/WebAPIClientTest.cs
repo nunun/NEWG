@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#if UNITY_EDITOR
+using UnityEngine;
 using UnityEngine.TestTools;
 using NUnit.Framework;
 using System;
@@ -39,3 +40,4 @@ public class WebAPIClientTest : WebAPIClient, IMonoBehaviourTest {
         IsTestFinished = true;
     }
 }
+#endif
