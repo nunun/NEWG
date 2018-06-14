@@ -51,7 +51,7 @@ namespace Services.Protocols.Models {
         }
     }
     // MatchingData
-    // マッチングデータ。マッチングするユーザ一覧などの情報。
+    // マッチングデータ。APIサーバが作成しマッチングサーバが確認する内部連携データ。
     [Serializable]
     public class MatchingData : ModelData {
         public string matchingId; // マッチングID
@@ -61,34 +61,49 @@ namespace Services.Protocols.Models {
             users = new string[0]; // マッチングするユーザID一覧
         }
     }
-    // MatchData
-    // マッチデータ。マッチングなどで確定したマッチの情報。
-    [Serializable]
-    public class MatchData : ModelData {
-        public string matchId; // マッチID
-        public string matchState; // マッチ状態 (standby, ready, started, ended)
-        public string serverAddress; // 接続先のゲームサーバアドレス
-        public int serverPort; // 接続先のゲームサーバポート
-        public string[] users; // このマッチに参加する全てのユーザID一覧
-        protected override void Clear() {
-            matchId = null; // マッチID
-            matchState = "standby"; // マッチ状態 (standby, ready, started, ended)
-            serverAddress = "localhost"; // 接続先のゲームサーバアドレス
-            serverPort = 7777; // 接続先のゲームサーバポート
-            users = new string[0]; // このマッチに参加する全てのユーザID一覧
-        }
-    }
     // MatchConnectData
-    // マッチ接続データ。この情報をもってゲームサーバに接続。
+    // マッチ接続データ。マッチングサーバがクライアントに返却するデータ。この情報をもってゲームサーバに接続。
     [Serializable]
     public class MatchConnectData : ModelData {
+        public string matchId; // マッチID
         public string serverAddress; // 接続先のゲームサーバアドレス
         public int serverPort; // 接続先のゲームサーバポート
-        public string matchId; // マッチID
+        public int serverToken; // 接続先に必要なサーバトークン
+        public string serverSceneName; // 接続先のゲームサーバシーン名
         protected override void Clear() {
+            matchId = null; // マッチID
             serverAddress = "localhost"; // 接続先のゲームサーバアドレス
             serverPort = 7777; // 接続先のゲームサーバポート
-            matchId = null; // マッチID
+            serverToken = 7777; // 接続先に必要なサーバトークン
+            serverSceneName = null; // 接続先のゲームサーバシーン名
+        }
+    }
+    // JoinRequestMessage
+    // 参加リクエストメッセージ。マッチングサーバがゲームサーバに送信します。
+    [Serializable]
+    public class JoinRequestMessage : ModelData {
+        public string joinId; // 参加ID
+        public string sceneName; // 起動を希望するシーン名
+        public string[] users; // 参加を希望するユーザ情報
+        protected override void Clear() {
+            joinId = null; // 参加ID
+            sceneName = null; // 起動を希望するシーン名
+            users = new string[0]; // 参加を希望するユーザ情報
+        }
+    }
+    // JoinResponseMessage
+    // 参加レスポンスメッセージ。ゲームサーバがマッチングサーバに返信します。
+    [Serializable]
+    public class JoinResponseMessage : ModelData {
+        public string joinId; // 参加ID
+        public string serverToken; // サーバトークン
+        public string serverSceneName; // サーバシーン名
+        public string error; // 参加エラー
+        protected override void Clear() {
+            joinId = null; // 参加ID
+            serverToken = null; // サーバトークン
+            serverSceneName = null; // サーバシーン名
+            error = null; // 参加エラー
         }
     }
     // APIServerStatusData
@@ -154,35 +169,6 @@ namespace Services.Protocols.Models {
             code = 0; // エラーコード
             message = null; // エラーメッセージ
             stack = null; // スタックトレース
-        }
-    }
-    // ServerSetupRequestMessage
-    // サーバセットアップリクエストメッセージ。API サーバが Unity サーバに対してサーバインスタンスをセットアップしたいときに送信。
-    [Serializable]
-    public class ServerSetupRequestMessage : ModelData {
-        public string matchId; // サーバ起動をリクエストしたマッチID
-        public string sceneName; // 起動するシーン名
-        protected override void Clear() {
-            matchId = null; // サーバ起動をリクエストしたマッチID
-            sceneName = null; // 起動するシーン名
-        }
-    }
-    // ServerSetupResponseMessage
-    // サーバセットアップレスポンスメッセージ。ServerSetupRequest のレスポンス。
-    [Serializable]
-    public class ServerSetupResponseMessage : ModelData {
-        public string matchId; // サーバ起動をリクエストしたマッチID
-        protected override void Clear() {
-            matchId = null; // サーバ起動をリクエストしたマッチID
-        }
-    }
-    // ServerSetupDoneMessage
-    // サーバセットアップ完了メッセージ。Unity サーバが API サーバに対してクライアント接続可能状態を通知するときに送信。
-    [Serializable]
-    public class ServerSetupDoneMessage : ModelData {
-        public string matchId; // サーバ起動をリクエストしたマッチID
-        protected override void Clear() {
-            matchId = null; // サーバ起動をリクエストしたマッチID
         }
     }
     // UniqueKeyData

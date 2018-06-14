@@ -64,7 +64,7 @@ CredentialData.prototype.clear = function() {
 }
 models.CredentialData = CredentialData;
 // MatchingData
-// マッチングデータ。マッチングするユーザ一覧などの情報。
+// マッチングデータ。APIサーバが作成しマッチングサーバが確認する内部連携データ。
 function MatchingData() {
     this.init();
 }
@@ -78,26 +78,8 @@ MatchingData.prototype.clear = function() {
     this.users = []; // マッチングするユーザID一覧
 }
 models.MatchingData = MatchingData;
-// MatchData
-// マッチデータ。マッチングなどで確定したマッチの情報。
-function MatchData() {
-    this.init();
-}
-util.inherits(MatchData, ModelData);
-ModelData.setupType(MatchData, 'MatchData', 'db_match_data');
-MatchData.prototype.init = function() {
-    MatchData.super_.prototype.init.call(this);
-};
-MatchData.prototype.clear = function() {
-    this.matchId = null; // マッチID
-    this.matchState = "standby"; // マッチ状態 (standby, ready, started, ended)
-    this.serverAddress = "localhost"; // 接続先のゲームサーバアドレス
-    this.serverPort = 7777; // 接続先のゲームサーバポート
-    this.users = []; // このマッチに参加する全てのユーザID一覧
-}
-models.MatchData = MatchData;
 // MatchConnectData
-// マッチ接続データ。この情報をもってゲームサーバに接続。
+// マッチ接続データ。マッチングサーバがクライアントに返却するデータ。この情報をもってゲームサーバに接続。
 function MatchConnectData() {
     this.init();
 }
@@ -107,11 +89,46 @@ MatchConnectData.prototype.init = function() {
     MatchConnectData.super_.prototype.init.call(this);
 };
 MatchConnectData.prototype.clear = function() {
+    this.matchId = null; // マッチID
     this.serverAddress = "localhost"; // 接続先のゲームサーバアドレス
     this.serverPort = 7777; // 接続先のゲームサーバポート
-    this.matchId = null; // マッチID
+    this.serverToken = 7777; // 接続先に必要なサーバトークン
+    this.serverSceneName = null; // 接続先のゲームサーバシーン名
 }
 models.MatchConnectData = MatchConnectData;
+// JoinRequestMessage
+// 参加リクエストメッセージ。マッチングサーバがゲームサーバに送信します。
+function JoinRequestMessage() {
+    this.init();
+}
+util.inherits(JoinRequestMessage, ModelData);
+ModelData.setupType(JoinRequestMessage, 'JoinRequestMessage', 'db_join_request_message');
+JoinRequestMessage.prototype.init = function() {
+    JoinRequestMessage.super_.prototype.init.call(this);
+};
+JoinRequestMessage.prototype.clear = function() {
+    this.joinId = null; // 参加ID
+    this.sceneName = null; // 起動を希望するシーン名
+    this.users = []; // 参加を希望するユーザ情報
+}
+models.JoinRequestMessage = JoinRequestMessage;
+// JoinResponseMessage
+// 参加レスポンスメッセージ。ゲームサーバがマッチングサーバに返信します。
+function JoinResponseMessage() {
+    this.init();
+}
+util.inherits(JoinResponseMessage, ModelData);
+ModelData.setupType(JoinResponseMessage, 'JoinResponseMessage', 'db_join_response_message');
+JoinResponseMessage.prototype.init = function() {
+    JoinResponseMessage.super_.prototype.init.call(this);
+};
+JoinResponseMessage.prototype.clear = function() {
+    this.joinId = null; // 参加ID
+    this.serverToken = null; // サーバトークン
+    this.serverSceneName = null; // サーバシーン名
+    this.error = null; // 参加エラー
+}
+models.JoinResponseMessage = JoinResponseMessage;
 // APIServerStatusData
 // API サーバ状態データ。API サーバの状態を示すデータ。
 function APIServerStatusData() {
@@ -192,49 +209,6 @@ ErrorDescriptionData.prototype.clear = function() {
     this.stack = null; // スタックトレース
 }
 models.ErrorDescriptionData = ErrorDescriptionData;
-// ServerSetupRequestMessage
-// サーバセットアップリクエストメッセージ。API サーバが Unity サーバに対してサーバインスタンスをセットアップしたいときに送信。
-function ServerSetupRequestMessage() {
-    this.init();
-}
-util.inherits(ServerSetupRequestMessage, ModelData);
-ModelData.setupType(ServerSetupRequestMessage, 'ServerSetupRequestMessage', 'db_server_setup_request_message');
-ServerSetupRequestMessage.prototype.init = function() {
-    ServerSetupRequestMessage.super_.prototype.init.call(this);
-};
-ServerSetupRequestMessage.prototype.clear = function() {
-    this.matchId = null; // サーバ起動をリクエストしたマッチID
-    this.sceneName = null; // 起動するシーン名
-}
-models.ServerSetupRequestMessage = ServerSetupRequestMessage;
-// ServerSetupResponseMessage
-// サーバセットアップレスポンスメッセージ。ServerSetupRequest のレスポンス。
-function ServerSetupResponseMessage() {
-    this.init();
-}
-util.inherits(ServerSetupResponseMessage, ModelData);
-ModelData.setupType(ServerSetupResponseMessage, 'ServerSetupResponseMessage', 'db_server_setup_response_message');
-ServerSetupResponseMessage.prototype.init = function() {
-    ServerSetupResponseMessage.super_.prototype.init.call(this);
-};
-ServerSetupResponseMessage.prototype.clear = function() {
-    this.matchId = null; // サーバ起動をリクエストしたマッチID
-}
-models.ServerSetupResponseMessage = ServerSetupResponseMessage;
-// ServerSetupDoneMessage
-// サーバセットアップ完了メッセージ。Unity サーバが API サーバに対してクライアント接続可能状態を通知するときに送信。
-function ServerSetupDoneMessage() {
-    this.init();
-}
-util.inherits(ServerSetupDoneMessage, ModelData);
-ModelData.setupType(ServerSetupDoneMessage, 'ServerSetupDoneMessage', 'db_server_setup_done_message');
-ServerSetupDoneMessage.prototype.init = function() {
-    ServerSetupDoneMessage.super_.prototype.init.call(this);
-};
-ServerSetupDoneMessage.prototype.clear = function() {
-    this.matchId = null; // サーバ起動をリクエストしたマッチID
-}
-models.ServerSetupDoneMessage = ServerSetupDoneMessage;
 // UniqueKeyData
 // 固有キー生成用データ。CouchDB のキー重複制限を使って固有キーを生成するために使用。
 function UniqueKeyData() {

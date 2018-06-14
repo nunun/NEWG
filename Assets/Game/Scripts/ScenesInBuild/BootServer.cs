@@ -37,11 +37,11 @@ public class BootServer : GameScene {
             yield return null;
         }
 
-        // セットアップリクエスト待ち
-        while (GameMindlinkManager.SetupRequest == null) {
+        // 参加リクエスト待ち
+        while (GameMindlinkManager.JoinRequestMessage == null) {
             yield return null;
         }
-        sceneName = GameMindlinkManager.SetupRequest.sceneName;
+        sceneName = GameMindlinkManager.JoinRequestMessage.sceneName;
 
         // シーン切り替え
         Debug.Log("シーンを切り替え (" + sceneName + ") ...");

@@ -39,27 +39,27 @@ public partial class GameSettings {
     //-------------------------------------------------------------------------- 変数
     public string serverAddress          = "localhost";
     public int    serverPort             = 7777;
-    public int    serverPortRandomRange  = 0;
     public string serverToken            = null;
     public string serverSceneName        = "MapProvingGround";
     public string serverDiscoveryAddress = "localhost";
     public int    serverDiscoveryPort    = 7777;
+    public int    serverPortRandomRange  = 0;
 
     public static string ServerAddress          { get { return instance.serverAddress;          }}
     public static int    ServerPort             { get { return instance.serverPort;             }}
-    public static int    ServerPortRandomRange  { get { return instance.serverPortRandomRange;  }}
     public static string ServerToken            { get { return instance.serverToken;            }}
     public static string ServerSceneName        { get { return instance.serverSceneName;        }}
     public static string ServerDiscoveryAddress { get { return instance.serverDiscoveryAddress; }}
     public static int    ServerDiscoveryPort    { get { return instance.serverDiscoveryPort;    }}
+    public static int    ServerPortRandomRange  { get { return instance.serverPortRandomRange;  }}
 
     //-------------------------------------------------------------------------- 設定
-    public static void SetServerInformation(string address, int port, int portRandomRange, string token, string sceneName) {
+    public static void SetServerInformation(string address, int port, string token, string sceneName, int portRandomRange) {
         instance.serverAddress         = address;
         instance.serverPort            = port;
-        instance.serverPortRandomRange = portRandomRange;
         instance.serverToken           = token;
         instance.serverSceneName       = sceneName;
+        instance.serverPortRandomRange = portRandomRange;
         instance.InvokeUpdateEvent();
     }
 

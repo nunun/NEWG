@@ -110,7 +110,7 @@ specs:
               value: (null)
 
         - name: MatchingData
-          desc: マッチングデータ。マッチングするユーザ一覧などの情報。
+          desc: マッチングデータ。APIサーバが作成しマッチングサーバが確認する内部連携データ。
           properties:
             - name:    matchingId
               desc:    マッチングID
@@ -122,34 +122,13 @@ specs:
               subtype: string
               value:   (empty)
 
-        - name: MatchData
-          desc: マッチデータ。マッチングなどで確定したマッチの情報。
-          properties:
-            - name:    matchId
-              desc:    マッチID
-              type:    string
-              value:   (null)
-            - name:    matchState
-              desc:    マッチ状態 (standby, ready, started, ended)
-              type:    string
-              value:   standby
-            - name:    serverAddress
-              desc:    接続先のゲームサーバアドレス
-              type:    string
-              value:   localhost
-            - name:    serverPort
-              desc:    接続先のゲームサーバポート
-              type:    int
-              value:   7777
-            - name:    users
-              desc:    このマッチに参加する全てのユーザID一覧
-              type:    array
-              subtype: string
-              value:   (empty)
-
         - name: MatchConnectData
-          desc: マッチ接続データ。この情報をもってゲームサーバに接続。
+          desc: マッチ接続データ。マッチングサーバがクライアントに返却するデータ。この情報をもってゲームサーバに接続。
           properties:
+            - name:  matchId
+              desc:  マッチID
+              type:  string
+              value: (null)
             - name:  serverAddress
               desc:  接続先のゲームサーバアドレス
               type:  string
@@ -158,8 +137,49 @@ specs:
               desc:  接続先のゲームサーバポート
               type:  int
               value: 7777
-            - name:  matchId
-              desc:  マッチID
+            - name:  serverToken
+              desc:  接続先に必要なサーバトークン
+              type:  int
+              value: 7777
+            - name:  serverSceneName
+              desc:  接続先のゲームサーバシーン名
+              type:  string
+              value: (null)
+
+        - name: JoinRequestMessage
+          desc: 参加リクエストメッセージ。マッチングサーバがゲームサーバに送信します。
+          properties:
+            - name:    joinId
+              desc:    参加ID
+              type:    string
+              value:   (null)
+            - name:    sceneName
+              desc:    起動を希望するシーン名
+              type:    string
+              value:   (null)
+            - name:    users
+              desc:    参加を希望するユーザ情報
+              type:    array
+              subtype: string
+              value:   (empty)
+
+        - name: JoinResponseMessage
+          desc: 参加レスポンスメッセージ。ゲームサーバがマッチングサーバに返信します。
+          properties:
+            - name:  joinId
+              desc:  参加ID
+              type:  string
+              value: (null)
+            - name:  serverToken
+              desc:  サーバトークン
+              type:  string
+              value: (null)
+            - name:  serverSceneName
+              desc:  サーバシーン名
+              type:  string
+              value: (null)
+            - name:  error
+              desc:  参加エラー
               type:  string
               value: (null)
 
@@ -218,34 +238,6 @@ specs:
               desc:  サーバエイリアス
               type:  string
               value: server
-
-        - name: ServerSetupRequestMessage
-          desc: サーバセットアップリクエストメッセージ。API サーバが Unity サーバに対してサーバインスタンスをセットアップしたいときに送信。
-          properties:
-            - name:  matchId
-              desc:  サーバ起動をリクエストしたマッチID
-              type:  string
-              value: (null)
-            - name:  sceneName
-              desc:  起動するシーン名
-              type:  string
-              value: (null)
-
-        - name: ServerSetupResponseMessage
-          desc: サーバセットアップレスポンスメッセージ。ServerSetupRequest のレスポンス。
-          properties:
-            - name:  matchId
-              desc:  サーバ起動をリクエストしたマッチID
-              type:  string
-              value: (null)
-
-        - name: ServerSetupDoneMessage
-          desc: サーバセットアップ完了メッセージ。Unity サーバが API サーバに対してクライアント接続可能状態を通知するときに送信。
-          properties:
-            - name:  matchId
-              desc:  サーバ起動をリクエストしたマッチID
-              type:  string
-              value: (null)
 
         - name: ErrorData
           desc: エラーデータ。WebAPI やメッセージングでエラーになった場合のレスポンスデータ。

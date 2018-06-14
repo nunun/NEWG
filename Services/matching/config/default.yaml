@@ -18,10 +18,10 @@ matchingServer:
   port:    [7755,        "${PORT}"]
   timeout: [300000,      "${TIMEOUT}"]
 
-# join queue
-joinQueue:
-  capacity: [32, "${JOIN_QUEUE_CAPACITY}"]
-  parallel: [1,  "${JOIN_QUEUE_PARALLEL}"]
+# connecting queue
+connectingQueue:
+  capacity: [32, "${CONNECTING_QUEUE_CAPACITY}"]
+  parallel: [1,  "${CONNECTING_QUEUE_PARALLEL}"]
 
 # matching queue
 matchingQueue:
@@ -33,20 +33,10 @@ matchingBrainQueue:
   capacity: [1, "${MATCHING_BRAIN_QUEUE_CAPACITY}"]
   parallel: [1, "${MATCHING_BRAIN_QUEUE_PARALLEL}"]
 
-# setup queue
-setupQueue:
-  capacity: [1, "${SETUP_QUEUE_CAPACITY}"]
-  parallel: [1, "${SETUP_QUEUE_PARALLEL}"]
-
 # error queue
 errorQueue:
   capacity: [-1, "${ERROR_QUEUE_CAPACITY}"]
   parallel: [16, "${ERROR_QUEUE_PARALLEL}"]
-
-# setup error queue
-setupErrorQueue:
-  capacity: [-1, "${SETUP_ERROR_QUEUE_CAPACITY}"]
-  parallel: [16, "${SETUP_ERROR_QUEUE_PARALLEL}"]
 
 # log4js
 log4js:
@@ -69,7 +59,7 @@ log4js:
     matchingServer:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
-    joinQueue:
+    connectingQueue:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
     matchingQueue:
@@ -78,13 +68,7 @@ log4js:
     matchingBrainQueue:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
-    setupQueue:
-      appenders: [console]
-      level: [info, "${LOG_LEVEL}"]
     errorQueue:
-      appenders: [console]
-      level: [info, "${LOG_LEVEL}"]
-    setupErrorQueue:
       appenders: [console]
       level: [info, "${LOG_LEVEL}"]
 

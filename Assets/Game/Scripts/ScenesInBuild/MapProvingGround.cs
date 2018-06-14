@@ -89,9 +89,9 @@ public partial class MapProvingGround {
         var networkManager         = GameNetworkManager.singleton;
         var serverAddress          = GameSettings.ServerAddress;
         var serverPort             = GameSettings.ServerPort;
-        var serverPortRandomRange  = GameSettings.ServerPortRandomRange;
         var serverDiscoveryAddress = GameSettings.ServerDiscoveryAddress;
         var serverDiscoveryPort    = GameSettings.ServerDiscoveryPort;
+        var serverPortRandomRange  = GameSettings.ServerPortRandomRange;
 
         // ポート番号にゼロを指定した場合はランダムポート
         if (serverPortRandomRange > 0) {

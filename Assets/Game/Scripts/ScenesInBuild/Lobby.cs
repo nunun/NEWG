@@ -201,9 +201,9 @@ public partial class Lobby {
         // 接続情報を設定してシーン切り替え
         var address   = GameMatchingManager.MatchConnectData.serverAddress;
         var port      = GameMatchingManager.MatchConnectData.serverPort;
-        var token     = default(string);    // TODO GameMatchingManager.MatchConnectData.serverToken;
-        var sceneName = "MapProvingGround"; // TODO GameMatchingManager.MatchConnectData.serverSceneName;
-        GameSettings.SetServerInformation(address, port, 0, token, sceneName);
+        var token     = GameMatchingManager.MatchConnectData.serverToken;
+        var sceneName = GameMatchingManager.MatchConnectData.serverSceneName;
+        GameSettings.SetServerInformation(address, port, token, sceneName, 0);
         matchingUI.ChangeScene(sceneName);
     }
 }
