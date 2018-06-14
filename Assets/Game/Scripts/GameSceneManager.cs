@@ -27,6 +27,7 @@ public class GameSceneManager : MonoBehaviour {
     // シーン変更
     public static void ChangeScene(string sceneName, string uiEffectName = null) {
         Debug.Assert(currentCoroutine == null);
+        Debug.Assert(sceneName != null);
         currentCoroutine = instance.StartCoroutine(instance.DoChangeScene(sceneName, uiEffectName));
     }
 

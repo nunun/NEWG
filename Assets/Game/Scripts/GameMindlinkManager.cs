@@ -27,22 +27,22 @@ public partial class GameMindlinkManager {
     //-------------------------------------------------------------------------- 変数
     ConnectState       connectState       = ConnectState.Disconnected; // 現在の状態
     string             connectError       = null;                      // エラー
-    JoinRequestMessage joinRequsetMessage = null;                      // 受信した参加リクエスト (TODO 恐らくキューになる)
+    JoinRequestMessage joinRequestMessage = null;                      // 受信した参加リクエスト (TODO 恐らくキューになる)
 
     public static bool               IsDisconnected     { get { return (instance.connectState == ConnectState.Disconnected); }}
     public static bool               IsConnecting       { get { return (instance.connectState == ConnectState.Connecting);   }}
     public static bool               IsConnected        { get { return (instance.connectState == ConnectState.Connected);    }}
     public static string             ConnectError       { get { return instance.connectError; }}
-    public static JoinRequestMessage JoinRequestMessage { get { return instance.joinRequsetMessage; }}
+    public static JoinRequestMessage JoinRequestMessage { get { return instance.joinRequestMessage; }}
 
     //-------------------------------------------------------------------------- 接続と切断
     // 接続開始
     public static void Connect() {
         Debug.Assert(instance              != null,                      "GameMindlinkManager がいない");
         Debug.Assert(instance.connectState == ConnectState.Disconnected, "既に接続中");
-        instance.connectState = ConnectState.Connecting;
-        instance.connectError = null;
-        instance.setupRequest = null;
+        instance.connectState       = ConnectState.Connecting;
+        instance.connectError       = null;
+        instance.joinRequestMessage = null;
         instance.StartCoroutine("StartConnecting");
     }
 
@@ -76,9 +76,9 @@ public partial class GameMindlinkManager {
             Debug.LogError(error);
         }
         StopCoroutine("StartConnecting");
-        connectState   = ConnectState.Disconnected;
-        connectError   = error;
-        //setupRequest = null;
+        connectState         = ConnectState.Disconnected;
+        connectError         = error;
+        //joinRequestMessage = null;
 
         // NOTE
         // マインドリンクからの切断は強制終了
@@ -97,11 +97,11 @@ public partial class GameMindlinkManager {
         });
         connector.SetDataFromRemoteEventListener<JoinRequestMessage,JoinResponseMessage>(0, (req,res) => {
             Debug.Log("GameMindlinkManager: 参加リクエストメッセージ受信");
-            joinRequsetMessage = req;//リクエストを記録
-            var joinResponseMessage = new JoinRequestMessage();
+            joinRequestMessage = req;//リクエストを記録
+            var joinResponseMessage = new JoinResponseMessage();
             joinResponseMessage.joinId          = joinRequestMessage.joinId;
             joinResponseMessage.serverToken     = null;                         // TODO サーバトークン
-            joinResponseMessage.serverSceneName = joinRequsetMessage.sceneName; // TODO サーバシーン名
+            joinResponseMessage.serverSceneName = joinRequestMessage.sceneName; // TODO サーバシーン名
             joinResponseMessage.error           = null;                         // TODO 満員とゲーム開始済エラー
             res.Send(joinResponseMessage);
         });

@@ -1,19 +1,20 @@
-var url                       = require('url');
-var util                      = require('util');
-var config                    = require('./services/library/config');
-var logger                    = require('./services/library/logger');
-var models                    = require('./services/protocols/models');
-var couchClient               = require('./services/library/couch_client').activate(config.couchClient, logger.couchClient);
-var redisClient               = require('./services/library/redis_client').activate(config.redisClient, logger.redisClient);
-var mindlinkClient            = require('./services/library/mindlink_client').activate(config.mindlinkClient, logger.mindlinkClient);
-var matchingServer            = require('./services/library/websocket_server').activate(config.matchingServer, logger.matchingServer);
-var TaskQueue                 = require('./task_queue');
-var UserData                  = models.UserData;
-var MatchingData              = models.MatchingData;
-var MatchConnectData          = models.MatchConnectData;
-var MatchingServerStatusData  = models.MatchingServerStatusData;
-var ServerSetupRequestMessage = models.ServerSetupRequestMessage;
-var statusData                = new MatchingServerStatusData();
+var url                      = require('url');
+var util                     = require('util');
+var config                   = require('./services/library/config');
+var logger                   = require('./services/library/logger');
+var models                   = require('./services/protocols/models');
+var couchClient              = require('./services/library/couch_client').activate(config.couchClient, logger.couchClient);
+var redisClient              = require('./services/library/redis_client').activate(config.redisClient, logger.redisClient);
+var mindlinkClient           = require('./services/library/mindlink_client').activate(config.mindlinkClient, logger.mindlinkClient);
+var matchingServer           = require('./services/library/websocket_server').activate(config.matchingServer, logger.matchingServer);
+var TaskQueue                = require('./task_queue');
+var UserData                 = models.UserData;
+var MatchingData             = models.MatchingData;
+var MatchConnectData         = models.MatchConnectData;
+var MatchingServerStatusData = models.MatchingServerStatusData;
+var JoinRequestMessage       = models.JoinRequestMessage;
+var statusData               = new MatchingServerStatusData();
+
 
 // couch client
 couchClient.setConnectEventListener(function() {
@@ -244,7 +245,7 @@ async function makeMatching(task) {
     for (var i = 0; i < l; i++) {
         var matchingTask = matchingQueue.getTaskAt(i);
         if (matchingTask.lockId) {
-            if (matchingBrainTask.indexOfKey(matchingTask.lockId) < 0) {
+            if (matchingBrainQueue.indexOfKey(matchingTask.lockId) < 0) {
                 matchingTask.lockId = null;//ロックID無効につき解除
             }
         }
@@ -324,7 +325,7 @@ async function waitForJoinResponse(task) {
 
     // なんと、エラーだった
     // ユーザには通知せずにマッチングを中断
-    if (!task.joinResponseMessage.error) {
+    if (task.joinResponseMessage.error) {
         matchingBrainQueue.logger.debug(task.joinResponseMessage.error);
         return abortMatching;
     }
@@ -335,7 +336,7 @@ async function waitForJoinResponse(task) {
     matchConnectData.serverAddress   = task.service.serverAddress;
     matchConnectData.serverPort      = task.service.serverPort;
     matchConnectData.serverToken     = task.joinResponseMessage.serverToken;
-    matchConnectData.serverSceneName = task.joinResponseMessage.sceneName;
+    matchConnectData.serverSceneName = task.joinResponseMessage.serverSceneName;
     task.matchConnectData = matchConnectData;
     return sendMatchConnectData;
 }

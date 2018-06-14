@@ -68,13 +68,13 @@ namespace Services.Protocols.Models {
         public string matchId; // マッチID
         public string serverAddress; // 接続先のゲームサーバアドレス
         public int serverPort; // 接続先のゲームサーバポート
-        public int serverToken; // 接続先に必要なサーバトークン
+        public string serverToken; // 接続先に必要なサーバトークン
         public string serverSceneName; // 接続先のゲームサーバシーン名
         protected override void Clear() {
             matchId = null; // マッチID
             serverAddress = "localhost"; // 接続先のゲームサーバアドレス
             serverPort = 7777; // 接続先のゲームサーバポート
-            serverToken = 7777; // 接続先に必要なサーバトークン
+            serverToken = null; // 接続先に必要なサーバトークン
             serverSceneName = null; // 接続先のゲームサーバシーン名
         }
     }

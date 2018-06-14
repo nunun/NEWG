@@ -92,7 +92,7 @@ MatchConnectData.prototype.clear = function() {
     this.matchId = null; // マッチID
     this.serverAddress = "localhost"; // 接続先のゲームサーバアドレス
     this.serverPort = 7777; // 接続先のゲームサーバポート
-    this.serverToken = 7777; // 接続先に必要なサーバトークン
+    this.serverToken = null; // 接続先に必要なサーバトークン
     this.serverSceneName = null; // 接続先のゲームサーバシーン名
 }
 models.MatchConnectData = MatchConnectData;

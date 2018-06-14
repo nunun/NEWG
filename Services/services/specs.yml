@@ -139,8 +139,8 @@ specs:
               value: 7777
             - name:  serverToken
               desc:  接続先に必要なサーバトークン
-              type:  int
-              value: 7777
+              type:  string
+              value: (null)
             - name:  serverSceneName
               desc:  接続先のゲームサーバシーン名
               type:  string
