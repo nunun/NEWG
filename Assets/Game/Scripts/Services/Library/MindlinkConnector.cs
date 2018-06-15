@@ -87,6 +87,15 @@ public partial class MindlinkConnector : WebSocketConnector {
     }
 
     //-------------------------------------------------------------------------- 送信とキャンセル
+    // リモートに送信
+    public bool SendToRemote<TSend>(string to, int type, TSend data) {
+        var error = TransmitToRemote<TSend>(to, type, data);
+        if (error != null) {
+            return false;
+        }
+        return true;
+    }
+
     // リモートに送信 (リクエスト)
     public int SendToRemote<TSend,TRecv>(string to, int type, TSend data, Action<string,TRecv> callback, float timeout = 10.0f) {
         var requestId = requestContext.NextRequestId();
@@ -105,15 +114,15 @@ public partial class MindlinkConnector : WebSocketConnector {
     }
 
     //-------------------------------------------------------------------------- イベントリスナ
-    public void SetDataFromRemoteEventListener<TRecv>(int type, Action<TRecv> eventListener) { // NOTE レスポンスしないデータイベントリスナ
+    public void SetDataFromRemoteEventListener<TRecv>(int type, Action<TRecv,string> eventListener) { // NOTE レスポンスしないデータイベントリスナ
         if (eventListener == null) {
             dataFromRemoteEventListener.Remove(type);
             return;
         }
         dataFromRemoteEventListener[type] = (message) => {
             try {
-                var recvData = JsonUtility.FromJson<RecvData<TRecv>>(message);
-                eventListener(recvData.data);
+                var recvData = JsonUtility.FromJson<RecvDataFromRemote<TRecv>>(message);
+                eventListener(recvData.data, recvData.remote.from);
             } catch (Exception e) {
                 Debug.LogError(e.ToString());
                 return;

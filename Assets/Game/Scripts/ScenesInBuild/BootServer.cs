@@ -38,10 +38,10 @@ public class BootServer : GameScene {
         }
 
         // 参加リクエスト待ち
-        while (GameMindlinkManager.JoinRequestMessage == null) {
+        while (string.IsNullOrEmpty(GameMindlinkManager.RecommendedSceneName)) {
             yield return null;
         }
-        sceneName = GameMindlinkManager.JoinRequestMessage.sceneName;
+        sceneName = GameMindlinkManager.RecommendedSceneName;
 
         // シーン切り替え
         Debug.Log("シーンを切り替え (" + sceneName + ") ...");
