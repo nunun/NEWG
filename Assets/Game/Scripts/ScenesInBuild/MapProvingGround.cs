@@ -129,6 +129,7 @@ public partial class MapProvingGround {
                 GameManager.Abort("サービス開始失敗");
                 return;
             }
+            StartHandleJoin();//参加開始
             isReady = true;//レディ
             return;
         }
@@ -149,6 +150,7 @@ public partial class MapProvingGround {
         GameMindlinkManager.ServerStatusData.serverAddress = serverDiscoveryAddress;
         GameMindlinkManager.ServerStatusData.serverPort    = serverDiscoveryPort;
         GameMindlinkManager.SendServerStatusData(() => {
+            StartHandleJoin();//参加停止
             isReady = true;//レディ
         });
     }
@@ -173,5 +175,30 @@ public partial class MapProvingGround {
             networkManager.StopHost();
             break;
         }
+
+        // 参加ハンドラ停止
+        StopHandleJoin();
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+// 参加ハンドリング
+public partial class MapProvingGround {
+    //------------------------------------------------------------------------- 内部処理
+    void StartHandleJoin() {
+        GameMindlinkManager.SetJoinRequestMessageHandler(HandleJoin);
+    }
+
+    void StopHandleJoin() {
+        GameMindlinkManager.SetJoinRequestMessageHandler(null);
+    }
+
+    //------------------------------------------------------------------------- 参加ハンドリング
+    IEnumerator HandleJoin(string[] users, Action<string> next) {
+        // TODO
+        yield break;
     }
 }

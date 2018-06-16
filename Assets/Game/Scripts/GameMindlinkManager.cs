@@ -126,12 +126,12 @@ public partial class GameMindlinkManager {
     Coroutine                                 joinRequestHandlerRunning = null; // 現在走っているハンドラコルーチン
 
     //-------------------------------------------------------------------------- メッセージハンドラ関連
-    public void SetJoinRequestMessageHandler(Func<string[],Action<string>,IEnumerator> handler) {
-        if (joinRequestHandlerRunning != null) {
-            StopCoroutine(joinRequestHandlerRunning);
-            joinRequestHandlerRunning = null;
+    public static void SetJoinRequestMessageHandler(Func<string[],Action<string>,IEnumerator> handler) {
+        if (instance.joinRequestHandlerRunning != null) {
+            instance.StopCoroutine(instance.joinRequestHandlerRunning);
+            instance.joinRequestHandlerRunning = null;
         }
-        joinRequestHandler = handler;
+        instance.joinRequestHandler = handler;
     }
 
     //-------------------------------------------------------------------------- 内部操作
