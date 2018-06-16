@@ -85,8 +85,8 @@ public partial class GameMindlinkManager {
         GameManager.Quit();
     }
 
-    //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
-    void Start() {
+    //-------------------------------------------------------------------------- 初期化と更新
+    void StartConnector() {
         var connector = MindlinkConnector.GetConnector();
         connector.AddConnectEventListner(() => {
             Debug.Log("GameMindlinkManager: マインドリンク接続完了");
@@ -121,11 +121,11 @@ public partial class GameMindlinkManager {
     }
 
     //-------------------------------------------------------------------------- 変数
-    Queue<JoinRequest>                        joinRequestQueue          = null; // 受信した参加リクエストメッセージのキュー
-    Func<string[],Action<string>,IEnumerator> joinRequestHandler        = null; // 参加リクエストメッセージハンドラメソッド
-    Coroutine                                 joinRequestHandlerRunning = null; // 現在走っているハンドラコルーチン
+    Queue<JoinRequest>                        joinRequestQueue          = new Queue<JoinRequest>(); // 受信した参加リクエストメッセージのキュー
+    Func<string[],Action<string>,IEnumerator> joinRequestHandler        = null;                     // 参加リクエストメッセージハンドラメソッド
+    Coroutine                                 joinRequestHandlerRunning = null;                     // 現在走っているハンドラコルーチン
 
-    //-------------------------------------------------------------------------- メッセージハンドラ関連
+    //-------------------------------------------------------------------------- 操作
     public static void SetJoinRequestMessageHandler(Func<string[],Action<string>,IEnumerator> handler) {
         if (instance.joinRequestHandlerRunning != null) {
             instance.StopCoroutine(instance.joinRequestHandlerRunning);
@@ -142,22 +142,22 @@ public partial class GameMindlinkManager {
         });
     }
 
-    void HandleNextJsonRequestMessage(JoinRequest joinRequest, string error) {
+    void HandleNextJoinRequest(JoinRequest joinRequest, string error) {
         if (joinRequestHandlerRunning != null) {
             StopCoroutine(joinRequestHandlerRunning);
             joinRequestHandlerRunning = null;
         }
-        var connector = MindlinkConnector.GetConnector();
         var joinResponseMessage = new JoinResponseMessage();
         joinResponseMessage.joinId          = joinRequest.message.joinId;
         joinResponseMessage.serverToken     = joinRequest.serverToken;
         joinResponseMessage.serverSceneName = joinRequest.message.sceneName;
         joinResponseMessage.error           = error;
+        var connector = MindlinkConnector.GetConnector();
         connector.SendToRemote<JoinResponseMessage>(joinRequest.responseTo, 0, joinResponseMessage);
     }
 
-    //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
-    void Update() {
+    //-------------------------------------------------------------------------- 初期化と更新
+    void UpdateHandleJoinRequest() {
         if (joinRequestHandlerRunning != null) {
             return;//既にコルーチンが走っている
         }
@@ -169,7 +169,7 @@ public partial class GameMindlinkManager {
         }
         var joinRequest = joinRequestQueue.Dequeue();
         joinRequestHandlerRunning = StartCoroutine(joinRequestHandler(joinRequest.message.users, (error) => {
-            HandleNextJsonRequestMessage(joinRequest, error);
+            HandleNextJoinRequest(joinRequest, error);
         }));
     }
 }
@@ -233,5 +233,13 @@ public partial class GameMindlinkManager {
             return;
         }
         instance = null;
+    }
+
+    void Start() {
+        StartConnector();
+    }
+
+    void Update() {
+        UpdateHandleJoinRequest();
     }
 }

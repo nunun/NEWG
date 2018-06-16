@@ -201,6 +201,7 @@ public partial class MapProvingGround {
         // NOTE
         // 今は単に参加できるようにしておく。
         // 今後、人数などを見てエラーを返すように修正する。
+        Debug.LogFormat("参加をハンドリング ({0}) ...", users.Length);
         next(null);
         yield break;
     }

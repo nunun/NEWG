@@ -44,7 +44,7 @@ public partial class GameConfiguration : GameSettings {
             developmentBuild             = true,
             localServerStartUrl          = null,
             localServerStopUrl           = null,
-            scriptingDefineSymbols       = new List<string>() {"DEBUG", "SERVER_CODE"},
+            scriptingDefineSymbols       = new List<string>() {"DEBUG", "SERVER_CODE", "HOST_CODE"},
         },
 
         new GameConfiguration() {
@@ -309,6 +309,7 @@ public partial class GameConfiguration : GameSettings {
     public static readonly Dictionary<string,string[]> ScriptingDefineSymbols = new Dictionary<string,string[]>() {
         { "DEBUG",           null }, // デバッグコードをバイナリに含めるかどうか
         { "SERVER_CODE",     null }, // サーバコードをバイナリに含めるかどうか
+        { "HOST_CODE",       null }, // ホストコードをバイナリに含めるかどうか
         { "STANDALONE_MODE", null }, // スタンドアローンモード
         //{ "ACCESS_SERVER", new string[] {"DEVELOP", "STAGING", "RELEASE"}},
     };

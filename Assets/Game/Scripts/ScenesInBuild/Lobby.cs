@@ -177,6 +177,15 @@ public partial class Lobby {
         }
         #endif
 
+        #if HOST_CODE
+        // NOTE
+        // ホストモードだとロビー画面で参加ハンドルしないと次に進めないので、
+        // 開始時にデフォルトの参加ハンドラーを設定しておく。
+        if (GameSettings.RuntimeServiceMode == GameSettings.ServiceMode.Host) {
+            GameMindlinkManager.SetJoinRequestMessageHandler(DefaultJoinRequestHandler);
+        }
+        #endif
+
         // マッチングサーバ接続
         GameSettings.SetMatchingServerInformation(matchingResponse.matchingServerUrl);
         GameMatchingManager.Connect();
@@ -206,6 +215,15 @@ public partial class Lobby {
         GameSettings.SetServerInformation(address, port, token, sceneName, 0);
         matchingUI.ChangeScene(sceneName);
     }
+
+    //-------------------------------------------------------------------------- ホストモード用
+    #if HOST_CODE
+    IEnumerator DefaultJoinRequestHandler(string[] users, Action<string> next) {
+        Debug.LogFormat("ホストモードで参加ハンドリング ({0}) ...", users.Length);
+        next(null);
+        yield break;
+    }
+    #endif
 }
 
 //using (var wait = UIWait.RentFromPool()) {

@@ -15,7 +15,6 @@ var MatchingServerStatusData = models.MatchingServerStatusData;
 var JoinRequestMessage       = models.JoinRequestMessage;
 var statusData               = new MatchingServerStatusData();
 
-
 // couch client
 couchClient.setConnectEventListener(function() {
     redisClient.start();
