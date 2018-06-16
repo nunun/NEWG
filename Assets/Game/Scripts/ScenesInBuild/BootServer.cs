@@ -12,8 +12,8 @@ public class BootServer : GameScene {
         var sceneName = GameSettings.ServerSceneName;
 
         #if STANDALONE_MODE
-        // ネットワークエミュレーションモード時
-        if (StandaloneSimulatorSettings.IsStandaloneMode) {
+        // スタンドアローンモード時
+        if (GameSettings.IsStandaloneMode) {
             GameSceneManager.ChangeSceneImmediately(sceneName);
             yield break;
         }

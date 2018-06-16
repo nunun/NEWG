@@ -345,7 +345,7 @@ public partial class GameConfiguration {
     // ゲーム構成ファイルパス
     static readonly string GAME_CONFIGURATION_JSON_PATH = "Assets/GameConfiguration.json";
     // ゲーム設定ファイルパス
-    static readonly string GAME_SETTINGS_ASSET_PATH = "Assets/Game/Resources/GameSettings.asset";
+    static readonly string GAME_SETTINGS_ASSET_PATH = GameSettings.ASSET_PATH;
     // mcs.rsp ファイルパス
     static readonly string MCS_RSP_PATH = "Assets/mcs.rsp";
 

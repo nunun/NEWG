@@ -8,7 +8,13 @@ using UnityEngine.Networking;
 using UnityEditor;
 #endif
 
-// 環境設定
+#if STANDALONE_MODE
+using Services.Protocols;
+using Services.Protocols.Consts;
+using Services.Protocols.Models;
+#endif
+
+// ゲーム設定
 [Serializable]
 public partial class GameSettings {
     // NOTE
@@ -131,6 +137,100 @@ public partial class GameSettings {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
+#if STANDALONE_MODE
+
+// スタンドアローンモード設定
+public partial class GameSettings {
+    //-------------------------------------------------------------------------- 定義
+    static readonly float DEBUG_DELAY = 0.5f; // デバッグディレイ
+
+    //-------------------------------------------------------------------------- 変数
+    WebAPIClient.Request debugRequest = null; // デバッグ中のリクエスト
+    float                debugDelay   = 0.0f; // デバッグディレイ
+
+    // スタンドアローンモードかどうか (常に true)
+    public static bool IsStandaloneMode { get { return true; }}
+
+    //-------------------------------------------------------------------------- WebAPI エミュレーション
+    public static bool SimulateWebAPI(WebAPIClient.Request request, float deltaTime) {
+        if (instance.debugRequest == null) {
+            Debug.LogFormat("StandaloneSimulatorSettings: WebAPI リクエストを処理 ({0})", request.ToString());
+            instance.debugRequest = request;
+            instance.debugDelay   = DEBUG_DELAY;
+        }
+        if (instance.debugDelay > 0.0f) {//WebAPIっぽい待ちディレイをつけておく
+            instance.debugDelay -= deltaTime;
+            return true;
+        }
+        instance.SimulateWebAPIRequest(request);
+        instance.debugRequest = null;
+        return false;
+    }
+
+    //-------------------------------------------------------------------------- WebAPI エミュレーションの処理
+    void SimulateWebAPIRequest(WebAPIClient.Request request) {
+        switch (request.APIPath) {
+        case "/signup"://サインアップ
+            {
+                //var req = JsonUtility.FromJson<WebAPI.SignupRequest>(request.Parameters.GetText());
+
+                var playerData = new PlayerData();
+                playerData.playerId   = "(dummy playerId)";
+                playerData.playerName = "(dummy player)";
+
+                var sessionData = new SessionData();
+                sessionData.sessionToken = "(dummy sessionToken)";
+
+                var credentialData = new CredentialData();
+                credentialData.signinToken = "(dummy signinToken)";
+
+                var playerDataJson     = string.Format("\"playerData\":{{\"active\":true,\"data\":{0}}}",     JsonUtility.ToJson(playerData));
+                var sessionDataJson    = string.Format("\"sessionData\":{{\"active\":true,\"data\":{0}}}",    JsonUtility.ToJson(sessionData));
+                var credentialDataJson = string.Format("\"credentialData\":{{\"active\":true,\"data\":{0}}}", JsonUtility.ToJson(credentialData));
+                var response = string.Format("{{\"activeData\":{{{0},{1},{2}}}}}", playerDataJson, sessionDataJson, credentialDataJson);
+                request.SetResponse(null, response);
+            }
+            break;
+        case "/signin"://サインイン
+            {
+                //var req = JsonUtility.FromJson<WebAPI.SignupRequest>(request.Parameters.GetText());
+
+                var playerData = new PlayerData();
+                playerData.playerId   = "(dummy playerId)";
+                playerData.playerName = "(dummy player)";
+
+                var sessionData = new SessionData();
+                sessionData.sessionToken = "(dummy sessionToken)";
+
+                var playerDataJson  = string.Format("\"playerData\":{{\"active\":true,\"data\":{0}}}",  JsonUtility.ToJson(playerData));
+                var sessionDataJson = string.Format("\"sessionData\":{{\"active\":true,\"data\":{0}}}", JsonUtility.ToJson(sessionData));
+                var response = string.Format("{{\"activeData\":{{{0},{1}}}}}", playerDataJson, sessionDataJson);
+                request.SetResponse(null, response);
+            }
+            break;
+        case "/matching"://マッチング
+            {
+                //var req = JsonUtility.FromJson<WebAPI.SignupRequest>(request.Parameters.GetText());
+
+                var matchingResponse = new WebAPI.MatchingResponse();
+                matchingResponse.matchingServerUrl = "ws//localhost:7755?matchingId=dummy_token";
+
+                var matchingResponseJson = JsonUtility.ToJson(matchingResponse);
+                var response = string.Format("{0}", matchingResponseJson);
+                request.SetResponse(null, response);
+            }
+            break;
+        default:
+            Debug.LogErrorFormat("スタンドアローンデバッグで処理できない API パス ({0})", request.APIPath);
+            break;
+        }
+    }
+}
+
+#endif
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 // ゲーム設定更新イベント
 public partial class GameSettings {
@@ -185,15 +285,21 @@ public partial class GameSettings {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-// インスタンス関連
+// 設定インスタンス
 public partial class GameSettings {
     //-------------------------------------------------------------------------- 定義
     // ゲーム設定アセット
     public class Asset : ScriptableObject {
         public GameSettings gameSettings = new GameSettings();
+        protected void OnEnable()  { GameSettings.SetInstance(gameSettings);   }
+        protected void OnDisable() { GameSettings.UnsetInstance(gameSettings); }
     }
 
-    //-------------------------------------------------------------------------- 変数
+    #if UNITY_EDITOR
+    public static readonly string ASSET_PATH = "Assets/Game/Settings/GameSettings.asset";
+    #endif
+
+    //-------------------------------------------------------------------------- 初期化
     // 内部インスタンス
     static GameSettings _instance = null;
 
@@ -201,10 +307,34 @@ public partial class GameSettings {
     static GameSettings instance {
         get {
             if (_instance == null) {
-                _instance = Resources.Load<GameSettingsAsset>("GameSettings").gameSettings;
-                _instance.ImportGameArguments();
+                #if UNITY_EDITOR
+                var gameSettings = ((Asset)AssetDatabase.LoadAssetAtPath(ASSET_PATH, typeof(Asset))).gameSettings;
+                SetInstance(gameSettings);
+                #else
+                Debug.LogError("GameSettings が Preload Assets にない");
+                #endif
             }
             return _instance;
         }
+    }
+
+    // インスタンス設定
+    static void SetInstance(GameSettings instance) {
+        if (_instance != null) {
+            return;
+        }
+        _instance = instance;
+
+        // NOTE
+        // ここで引数をインポート
+        _instance.ImportGameArguments();
+    }
+
+    // インスタンス解除
+    static void UnsetInstance(GameSettings instance) {
+        if (_instance != instance) {
+            return;
+        }
+        _instance = null;
     }
 }

@@ -171,7 +171,7 @@ public partial class Lobby {
 
         #if STANDALONE_MODE
         // スタンドアローンモード時
-        if (StandaloneSimulatorSettings.IsStandaloneMode) {
+        if (GameSettings.IsStandaloneMode) {
             GameSceneManager.ChangeScene(GameSettings.ServerSceneName);
             yield break;
         }
