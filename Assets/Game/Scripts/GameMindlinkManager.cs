@@ -95,11 +95,11 @@ public partial class GameMindlinkManager {
             Debug.Log("GameMindlinkManager: マインドリンク切断");
             StopConnect(error);
         });
-        connector.SetDataFromRemoteEventListener<JoinRequest>(0, (req, reqFrom) => {
+        connector.SetDataFromRemoteEventListener<JoinRequestMessage>(0, (req, reqFrom) => {
             Debug.Log("GameMindlinkManager: 参加リクエストメッセージ受信");
             EnqueueJoinRequestMessage(reqFrom, req);//リクエストを記録
             if (recommendedSceneName == null) {
-                recommendedSceneName = joinRequestMessage.sceneName;//推薦シーン名だけは記録
+                recommendedSceneName = req.sceneName;//推薦シーン名だけは記録
             }
         });
     }
@@ -115,9 +115,9 @@ public partial class GameMindlinkManager {
 public partial class GameMindlinkManager {
     //-------------------------------------------------------------------------- 定義
     public class JoinRequest {
-        public string      responseTo  = null;
-        public string      serverToken = null;
-        public JoinRequest message     = null;
+        public string             responseTo  = null;
+        public string             serverToken = null;
+        public JoinRequestMessage message     = null;
     }
 
     //-------------------------------------------------------------------------- 変数
@@ -135,7 +135,7 @@ public partial class GameMindlinkManager {
     }
 
     //-------------------------------------------------------------------------- 内部操作
-    void EnqueueJoinRequestMessage(string responseTo, JoinRequest message) {
+    void EnqueueJoinRequestMessage(string responseTo, JoinRequestMessage message) {
         joinRequestQueue.Enqueue(new JoinRequest() {
             responseTo = responseTo,
             message    = message,
@@ -151,9 +151,9 @@ public partial class GameMindlinkManager {
         var joinResponseMessage = new JoinResponseMessage();
         joinResponseMessage.joinId          = joinRequest.message.joinId;
         joinResponseMessage.serverToken     = joinRequest.serverToken;
-        joinResponseMessage.serverSceneName = joinRequest.message.serverSceneName;
+        joinResponseMessage.serverSceneName = joinRequest.message.sceneName;
         joinResponseMessage.error           = error;
-        connector.SendToRemote<JoinResponseMessage>(joinRequest.responseTo, joinResponseMessage);
+        connector.SendToRemote<JoinResponseMessage>(joinRequest.responseTo, 0, joinResponseMessage);
     }
 
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
