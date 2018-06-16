@@ -179,10 +179,10 @@ public partial class Lobby {
 
         #if HOST_CODE
         // NOTE
-        // ホストモードだとロビー画面で参加ハンドルしないと次に進めないので、
-        // 開始時にデフォルトの参加ハンドラーを設定しておく。
+        // ホストモードだとロビー画面で予約ハンドラを設定しないと進めないので
+        // デフォルトのハンドラを設定しておく。
         if (GameSettings.RuntimeServiceMode == GameSettings.ServiceMode.Host) {
-            GameMindlinkManager.SetJoinRequestMessageHandler(DefaultJoinRequestHandler);
+            GameMindlinkManager.SetReserveRequestMessageHandler(DefaultReserveRequestHandler);
         }
         #endif
 
@@ -218,8 +218,8 @@ public partial class Lobby {
 
     //-------------------------------------------------------------------------- ホストモード用
     #if HOST_CODE
-    IEnumerator DefaultJoinRequestHandler(string[] users, Action<string> next) {
-        Debug.LogFormat("ホストモードで参加ハンドリング ({0}) ...", users.Length);
+    IEnumerator DefaultReserveRequestHandler(string[] users, Action<string> next) {
+        Debug.LogFormat("ホストモード予約 ({0}) ...", users.Length);
         next(null);
         yield break;
     }

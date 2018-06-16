@@ -12,7 +12,7 @@ var UserData                 = models.UserData;
 var MatchingData             = models.MatchingData;
 var MatchConnectData         = models.MatchConnectData;
 var MatchingServerStatusData = models.MatchingServerStatusData;
-var JoinRequestMessage       = models.JoinRequestMessage;
+var ReserveRequestMessage    = models.ReserveRequestMessage;
 var statusData               = new MatchingServerStatusData();
 
 // couch client
@@ -55,14 +55,14 @@ mindlinkClient.setDisconnectEventListener(function() {
     stopMatchingBrainSupply();
 });
 mindlinkClient.setDataFromRemoteEventListener(0, (data,res) => {
-    var task = matchingBrainQueue.getTaskAtKey(data.joinId);
+    var task = matchingBrainQueue.getTaskAtKey(data.reserveId);
     if (!task) {
-        var errorMessage = 'joinId not found? (' + data.joinId + ')';
+        var errorMessage = 'reserveId not found? (' + data.reserveId + ')';
         logger.matchingServer.debug(errorMessage);
         mindlinkClient.sendToRemote(res.to, 0, {err:new Error(errorMessage)});
         return;
     }
-    task.joinResponseMessage = data;
+    task.reserveResponseMessage = data;
 });
 
 // matching server
@@ -175,8 +175,8 @@ matchingQueue.setAbortEventListener((err, task) => {
 // マッチングブレイン供給タイマー
 var matchingBrainSupplyTimer = null;
 
-// 参加ID生成用
-var joinIdCounter = 0;
+// 予約ID生成用
+var reserveIdCounter = 0;
 
 // NOTE
 // マッチングブレイン供給開始
@@ -191,7 +191,7 @@ function startMatchingBrainSupply() {
     matchingBrainSupplyTimer = setInterval(() => {
         if (!matchingBrainQueue.isFull()) {
             matchingBrainQueue.logger.debug("supplying new matchingBrain ...");
-            var matchingBrainTask = TaskQueue.createTaskFromKey(++joinIdCounter);
+            var matchingBrainTask = TaskQueue.createTaskFromKey(++reserveIdCounter);
             matchingBrainQueue.add(matchingBrainTask);
         }
     }, 1000);
@@ -216,7 +216,7 @@ function stopMatchingBrainSupply() {
 
 // マッチングブレインキュー
 // マッチングキューを監視してユーザのマッチングを行い、
-// 参加できそうなサーバに目星を付けた後、サーバのセットアップを行い
+// 予約できそうなサーバに目星を付けた後、サーバのセットアップを行い
 // マッチング結果をユーザに通知します。
 var matchingBrainQueue = new TaskQueue(config.matchingBrainQueue, logger.matchingBrainQueue);
 matchingBrainQueue.setAddEventListener((task) => {
@@ -267,19 +267,19 @@ async function makeMatching(task) {
         matchingUsers.push(matchingTask.userId);
     }
 
-    // 参加リクエスト準備
-    var joinRequestMessage = new JoinRequestMessage();
-    joinRequestMessage.joinId    = task._key;
-    joinRequestMessage.sceneName = "MapProvingGround"; // TODO マップ選択
-    joinRequestMessage.users     = matchingUsers;
+    // 予約リクエスト準備
+    var reserveRequestMessage = new ReserveRequestMessage();
+    reserveRequestMessage.reserveId = task._key;
+    reserveRequestMessage.sceneName = "MapProvingGround"; // TODO マップ選択
+    reserveRequestMessage.users     = matchingUsers;
 
     // セットアップ開始
     task.matchingTasks      = matchingTasks;
-    task.joinRequestMessage = joinRequestMessage;
+    task.reserveRequestMessage = reserveRequestMessage;
     return findServer;
 }
 
-// 参加できそうなサーバを探す
+// 予約できそうなサーバを探す
 function findServer(task) {
     matchingBrainQueue.logger.debug("find server.");
     return new Promise((resolved, reject) => {
@@ -295,27 +295,27 @@ function findServer(task) {
             }
             task.service = services[0];
             matchingBrainQueue.logger.debug('server found: service[' + util.inspect(task.service, {depth:null,breakLength:Infinity}) + ']');
-            resolved(joinRequest);
+            resolved(reserveRequest);
         });
     });
 }
 
-// 参加リクエスト
-async function joinRequest(task) {
-    matchingBrainQueue.logger.debug("join request.");
-    mindlinkClient.sendToRemote(task.service.clientUuid, 0, task.joinRequestMessage);
-    return waitForJoinResponse;
+// 予約リクエスト
+async function reserveRequest(task) {
+    matchingBrainQueue.logger.debug("reserve request.");
+    mindlinkClient.sendToRemote(task.service.clientUuid, 0, task.reserveRequestMessage);
+    return waitForReserveResponse;
 }
 
-// 参加レスポンス待ち
-async function waitForJoinResponse(task) {
+// 予約レスポンス待ち
+async function waitForReserveResponse(task) {
     if (task._count == 0) {
-        matchingBrainQueue.logger.debug("wait for join response.");
+        matchingBrainQueue.logger.debug("wait for reserve response.");
         task.waitCount = 0;
     }
 
     // メッセージ来た？
-    if (!task.joinResponseMessage) {
+    if (!task.reserveResponseMessage) {
         if (task.waitCount++ >= 30) {
             return abortMatching;
         }
@@ -324,18 +324,18 @@ async function waitForJoinResponse(task) {
 
     // なんと、エラーだった
     // ユーザには通知せずにマッチングを中断
-    if (task.joinResponseMessage.error) {
-        matchingBrainQueue.logger.debug(task.joinResponseMessage.error);
+    if (task.reserveResponseMessage.error) {
+        matchingBrainQueue.logger.debug(task.reserveResponseMessage.error);
         return abortMatching;
     }
 
-    // セットアップが完了したらしいので
+    // 予約が完了したらしいので
     // 各ユーザにマッチ完了を通知
     var matchConnectData = new MatchConnectData();
     matchConnectData.serverAddress   = task.service.serverAddress;
     matchConnectData.serverPort      = task.service.serverPort;
-    matchConnectData.serverToken     = task.joinResponseMessage.serverToken;
-    matchConnectData.serverSceneName = task.joinResponseMessage.serverSceneName;
+    matchConnectData.serverToken     = task.reserveResponseMessage.serverToken;
+    matchConnectData.serverSceneName = task.reserveResponseMessage.serverSceneName;
     task.matchConnectData = matchConnectData;
     return sendMatchConnectData;
 }

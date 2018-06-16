@@ -96,39 +96,39 @@ MatchConnectData.prototype.clear = function() {
     this.serverSceneName = null; // 接続先のゲームサーバシーン名
 }
 models.MatchConnectData = MatchConnectData;
-// JoinRequestMessage
-// 参加リクエストメッセージ。マッチングサーバがゲームサーバに送信します。
-function JoinRequestMessage() {
+// ReserveRequestMessage
+// 予約リクエストメッセージ。マッチングサーバがゲームサーバに送信します。
+function ReserveRequestMessage() {
     this.init();
 }
-util.inherits(JoinRequestMessage, ModelData);
-ModelData.setupType(JoinRequestMessage, 'JoinRequestMessage', 'db_join_request_message');
-JoinRequestMessage.prototype.init = function() {
-    JoinRequestMessage.super_.prototype.init.call(this);
+util.inherits(ReserveRequestMessage, ModelData);
+ModelData.setupType(ReserveRequestMessage, 'ReserveRequestMessage', 'db_reserve_request_message');
+ReserveRequestMessage.prototype.init = function() {
+    ReserveRequestMessage.super_.prototype.init.call(this);
 };
-JoinRequestMessage.prototype.clear = function() {
-    this.joinId = null; // 参加ID
+ReserveRequestMessage.prototype.clear = function() {
+    this.reserveId = null; // 予約ID
     this.sceneName = null; // 起動を希望するシーン名
     this.users = []; // 参加を希望するユーザ情報
 }
-models.JoinRequestMessage = JoinRequestMessage;
-// JoinResponseMessage
-// 参加レスポンスメッセージ。ゲームサーバがマッチングサーバに返信します。
-function JoinResponseMessage() {
+models.ReserveRequestMessage = ReserveRequestMessage;
+// ReserveResponseMessage
+// 予約レスポンスメッセージ。ゲームサーバがマッチングサーバに返信します。
+function ReserveResponseMessage() {
     this.init();
 }
-util.inherits(JoinResponseMessage, ModelData);
-ModelData.setupType(JoinResponseMessage, 'JoinResponseMessage', 'db_join_response_message');
-JoinResponseMessage.prototype.init = function() {
-    JoinResponseMessage.super_.prototype.init.call(this);
+util.inherits(ReserveResponseMessage, ModelData);
+ModelData.setupType(ReserveResponseMessage, 'ReserveResponseMessage', 'db_reserve_response_message');
+ReserveResponseMessage.prototype.init = function() {
+    ReserveResponseMessage.super_.prototype.init.call(this);
 };
-JoinResponseMessage.prototype.clear = function() {
-    this.joinId = null; // 参加ID
+ReserveResponseMessage.prototype.clear = function() {
+    this.reserveId = null; // 予約ID
     this.serverToken = null; // サーバトークン
     this.serverSceneName = null; // サーバシーン名
     this.error = null; // 参加エラー
 }
-models.JoinResponseMessage = JoinResponseMessage;
+models.ReserveResponseMessage = ReserveResponseMessage;
 // APIServerStatusData
 // API サーバ状態データ。API サーバの状態を示すデータ。
 function APIServerStatusData() {

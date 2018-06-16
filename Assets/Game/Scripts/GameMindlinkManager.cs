@@ -25,15 +25,15 @@ public partial class GameMindlinkManager {
     public enum ConnectState { Disconnected, Connecting, Connected };
 
     //-------------------------------------------------------------------------- 変数
-    ConnectState connectState         = ConnectState.Disconnected; // 現在の状態
-    string       connectError         = null;                      // エラー
-    string       recommendedSceneName = null;                      // 推薦シーン名
+    ConnectState connectState      = ConnectState.Disconnected; // 現在の状態
+    string       connectError      = null;                      // エラー
+    string       reservedSceneName = null;                      // 推薦シーン名
 
     public static bool   IsDisconnected       { get { return (instance.connectState == ConnectState.Disconnected); }}
     public static bool   IsConnecting         { get { return (instance.connectState == ConnectState.Connecting);   }}
     public static bool   IsConnected          { get { return (instance.connectState == ConnectState.Connected);    }}
     public static string ConnectError         { get { return instance.connectError; }}
-    public static string RecommendedSceneName { get { return instance.recommendedSceneName; }}
+    public static string RecommendedSceneName { get { return instance.reservedSceneName; }}
 
     //-------------------------------------------------------------------------- 接続と切断
     // 接続開始
@@ -42,7 +42,7 @@ public partial class GameMindlinkManager {
         Debug.Assert(instance.connectState == ConnectState.Disconnected, "既に接続中");
         instance.connectState         = ConnectState.Connecting;
         instance.connectError         = null;
-        instance.recommendedSceneName = null;
+        instance.reservedSceneName = null;
         instance.StartCoroutine("StartConnecting");
     }
 
@@ -78,7 +78,7 @@ public partial class GameMindlinkManager {
         StopCoroutine("StartConnecting");
         connectState           = ConnectState.Disconnected;
         connectError           = error;
-        //recommendedSceneName = null;
+        //reservedSceneName = null;
 
         // NOTE
         // マインドリンクからの切断は強制終了
@@ -95,11 +95,11 @@ public partial class GameMindlinkManager {
             Debug.Log("GameMindlinkManager: マインドリンク切断");
             StopConnect(error);
         });
-        connector.SetDataFromRemoteEventListener<JoinRequestMessage>(0, (req, reqFrom) => {
-            Debug.Log("GameMindlinkManager: 参加リクエストメッセージ受信");
-            EnqueueJoinRequestMessage(reqFrom, req);//リクエストを記録
-            if (recommendedSceneName == null) {
-                recommendedSceneName = req.sceneName;//推薦シーン名だけは記録
+        connector.SetDataFromRemoteEventListener<ReserveRequestMessage>(0, (req, reqFrom) => {
+            Debug.Log("GameMindlinkManager: 予約リクエストメッセージ受信");
+            EnqueueReserveRequestMessage(reqFrom, req);//リクエストを記録
+            if (reservedSceneName == null) {
+                reservedSceneName = req.sceneName;//予約シーン名だけは記録
             }
         });
     }
@@ -109,67 +109,67 @@ public partial class GameMindlinkManager {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-// 参加リクエストキューの処理
-// サーバに対する参加メッセージがキューに溜まるので、
-// コルーチンを設定すると、そのコルーチンで参加メッセージを処理できます。
+// 予約リクエストキューの処理
+// サーバに対する予約リクエストがキューに溜まるので、
+// コルーチンを設定すると、そのコルーチンで予約メッセージを処理できます。
 public partial class GameMindlinkManager {
     //-------------------------------------------------------------------------- 定義
-    public class JoinRequest {
-        public string             responseTo  = null;
-        public string             serverToken = null;
-        public JoinRequestMessage message     = null;
+    public class ReserveRequest {
+        public string                responseTo  = null;
+        public string                serverToken = null;
+        public ReserveRequestMessage message     = null;
     }
 
     //-------------------------------------------------------------------------- 変数
-    Queue<JoinRequest>                        joinRequestQueue          = new Queue<JoinRequest>(); // 受信した参加リクエストメッセージのキュー
-    Func<string[],Action<string>,IEnumerator> joinRequestHandler        = null;                     // 参加リクエストメッセージハンドラメソッド
-    Coroutine                                 joinRequestHandlerRunning = null;                     // 現在走っているハンドラコルーチン
+    Queue<ReserveRequest>                     reserveRequestQueue          = new Queue<ReserveRequest>(); // 受信した予約リクエストのキュー
+    Func<string[],Action<string>,IEnumerator> reserveRequestHandler        = null;                        // 予約リクエストハンドラメソッド
+    Coroutine                                 reserveRequestHandlerRunning = null;                        // 現在走っているハンドラコルーチン
 
     //-------------------------------------------------------------------------- 操作
-    public static void SetJoinRequestMessageHandler(Func<string[],Action<string>,IEnumerator> handler) {
-        if (instance.joinRequestHandlerRunning != null) {
-            instance.StopCoroutine(instance.joinRequestHandlerRunning);
-            instance.joinRequestHandlerRunning = null;
+    public static void SetReserveRequestMessageHandler(Func<string[],Action<string>,IEnumerator> handler) {
+        if (instance.reserveRequestHandlerRunning != null) {
+            instance.StopCoroutine(instance.reserveRequestHandlerRunning);
+            instance.reserveRequestHandlerRunning = null;
         }
-        instance.joinRequestHandler = handler;
+        instance.reserveRequestHandler = handler;
     }
 
     //-------------------------------------------------------------------------- 内部操作
-    void EnqueueJoinRequestMessage(string responseTo, JoinRequestMessage message) {
-        joinRequestQueue.Enqueue(new JoinRequest() {
+    void EnqueueReserveRequestMessage(string responseTo, ReserveRequestMessage message) {
+        reserveRequestQueue.Enqueue(new ReserveRequest() {
             responseTo = responseTo,
             message    = message,
         });
     }
 
-    void HandleNextJoinRequest(JoinRequest joinRequest, string error) {
-        if (joinRequestHandlerRunning != null) {
-            StopCoroutine(joinRequestHandlerRunning);
-            joinRequestHandlerRunning = null;
+    void HandleNextReserveRequest(ReserveRequest reserveRequest, string error) {
+        if (reserveRequestHandlerRunning != null) {
+            StopCoroutine(reserveRequestHandlerRunning);
+            reserveRequestHandlerRunning = null;
         }
-        var joinResponseMessage = new JoinResponseMessage();
-        joinResponseMessage.joinId          = joinRequest.message.joinId;
-        joinResponseMessage.serverToken     = joinRequest.serverToken;
-        joinResponseMessage.serverSceneName = joinRequest.message.sceneName;
-        joinResponseMessage.error           = error;
+        var reserveResponseMessage = new ReserveResponseMessage();
+        reserveResponseMessage.reserveId       = reserveRequest.message.reserveId;
+        reserveResponseMessage.serverToken     = reserveRequest.serverToken;
+        reserveResponseMessage.serverSceneName = reserveRequest.message.sceneName;
+        reserveResponseMessage.error           = error;
         var connector = MindlinkConnector.GetConnector();
-        connector.SendToRemote<JoinResponseMessage>(joinRequest.responseTo, 0, joinResponseMessage);
+        connector.SendToRemote<ReserveResponseMessage>(reserveRequest.responseTo, 0, reserveResponseMessage);
     }
 
     //-------------------------------------------------------------------------- 初期化と更新
-    void UpdateHandleJoinRequest() {
-        if (joinRequestHandlerRunning != null) {
+    void UpdateHandleReserveRequest() {
+        if (reserveRequestHandlerRunning != null) {
             return;//既にコルーチンが走っている
         }
-        if (joinRequestHandler == null) {
+        if (reserveRequestHandler == null) {
             return;//ハンドラの指定がない
         }
-        if (joinRequestQueue.Count <= 0) {
-            return;//参加メッセージなし
+        if (reserveRequestQueue.Count <= 0) {
+            return;//予約メッセージなし
         }
-        var joinRequest = joinRequestQueue.Dequeue();
-        joinRequestHandlerRunning = StartCoroutine(joinRequestHandler(joinRequest.message.users, (error) => {
-            HandleNextJoinRequest(joinRequest, error);
+        var reserveRequest = reserveRequestQueue.Dequeue();
+        reserveRequestHandlerRunning = StartCoroutine(reserveRequestHandler(reserveRequest.message.users, (error) => {
+            HandleNextReserveRequest(reserveRequest, error);
         }));
     }
 }
@@ -240,6 +240,6 @@ public partial class GameMindlinkManager {
     }
 
     void Update() {
-        UpdateHandleJoinRequest();
+        UpdateHandleReserveRequest();
     }
 }

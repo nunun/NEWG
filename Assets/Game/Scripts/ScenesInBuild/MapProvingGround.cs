@@ -129,7 +129,6 @@ public partial class MapProvingGround {
                 GameManager.Abort("サービス開始失敗");
                 return;
             }
-            StartHandleJoin();//参加開始
             isReady = true;//レディ
             return;
         }
@@ -150,7 +149,7 @@ public partial class MapProvingGround {
         GameMindlinkManager.ServerStatusData.serverAddress = serverDiscoveryAddress;
         GameMindlinkManager.ServerStatusData.serverPort    = serverDiscoveryPort;
         GameMindlinkManager.SendServerStatusData(() => {
-            StartHandleJoin();//参加停止
+            StartHandleReserve();//予約開始
             isReady = true;//レディ
         });
     }
@@ -176,8 +175,8 @@ public partial class MapProvingGround {
             break;
         }
 
-        // 参加ハンドラ停止
-        StopHandleJoin();
+        // 予約停止
+        StopHandleReserve();
     }
 }
 
@@ -188,20 +187,20 @@ public partial class MapProvingGround {
 // 参加ハンドリング
 public partial class MapProvingGround {
     //------------------------------------------------------------------------- 内部処理
-    void StartHandleJoin() {
-        GameMindlinkManager.SetJoinRequestMessageHandler(HandleJoin);
+    void StartHandleReserve() {
+        GameMindlinkManager.SetReserveRequestMessageHandler(HandleReserve);
     }
 
-    void StopHandleJoin() {
-        GameMindlinkManager.SetJoinRequestMessageHandler(null);
+    void StopHandleReserve() {
+        GameMindlinkManager.SetReserveRequestMessageHandler(null);
     }
 
     //------------------------------------------------------------------------- 参加ハンドリング
-    IEnumerator HandleJoin(string[] users, Action<string> next) {
+    IEnumerator HandleReserve(string[] users, Action<string> next) {
         // NOTE
-        // 今は単に参加できるようにしておく。
+        // 今は単に予約できるようにしておく。
         // 今後、人数などを見てエラーを返すように修正する。
-        Debug.LogFormat("参加をハンドリング ({0}) ...", users.Length);
+        Debug.LogFormat("予約 ({0}) ...", users.Length);
         next(null);
         yield break;
     }

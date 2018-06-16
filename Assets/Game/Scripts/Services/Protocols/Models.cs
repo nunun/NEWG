@@ -78,29 +78,29 @@ namespace Services.Protocols.Models {
             serverSceneName = null; // 接続先のゲームサーバシーン名
         }
     }
-    // JoinRequestMessage
-    // 参加リクエストメッセージ。マッチングサーバがゲームサーバに送信します。
+    // ReserveRequestMessage
+    // 予約リクエストメッセージ。マッチングサーバがゲームサーバに送信します。
     [Serializable]
-    public class JoinRequestMessage : ModelData {
-        public string joinId; // 参加ID
+    public class ReserveRequestMessage : ModelData {
+        public string reserveId; // 予約ID
         public string sceneName; // 起動を希望するシーン名
         public string[] users; // 参加を希望するユーザ情報
         protected override void Clear() {
-            joinId = null; // 参加ID
+            reserveId = null; // 予約ID
             sceneName = null; // 起動を希望するシーン名
             users = new string[0]; // 参加を希望するユーザ情報
         }
     }
-    // JoinResponseMessage
-    // 参加レスポンスメッセージ。ゲームサーバがマッチングサーバに返信します。
+    // ReserveResponseMessage
+    // 予約レスポンスメッセージ。ゲームサーバがマッチングサーバに返信します。
     [Serializable]
-    public class JoinResponseMessage : ModelData {
-        public string joinId; // 参加ID
+    public class ReserveResponseMessage : ModelData {
+        public string reserveId; // 予約ID
         public string serverToken; // サーバトークン
         public string serverSceneName; // サーバシーン名
         public string error; // 参加エラー
         protected override void Clear() {
-            joinId = null; // 参加ID
+            reserveId = null; // 予約ID
             serverToken = null; // サーバトークン
             serverSceneName = null; // サーバシーン名
             error = null; // 参加エラー
