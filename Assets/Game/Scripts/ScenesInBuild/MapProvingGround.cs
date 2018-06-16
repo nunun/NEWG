@@ -198,7 +198,10 @@ public partial class MapProvingGround {
 
     //------------------------------------------------------------------------- 参加ハンドリング
     IEnumerator HandleJoin(string[] users, Action<string> next) {
-        // TODO
+        // NOTE
+        // 今は単に参加できるようにしておく。
+        // 今後、人数などを見てエラーを返すように修正する。
+        next(null);
         yield break;
     }
 }
