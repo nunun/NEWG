@@ -4,12 +4,11 @@ using UnityEngine;
 using UnityEngine.Networking;
 
 // ネットワークプレイヤー
-public class NetworkPlayer : Player.NetworkPlayerBase {
+public class NetworkPlayer : Player.NetworkPlayerBehaviour {
     //-------------------------------------------------------------------------- 変数
     public GameObject playerPrefab = null; // プレイヤーのプレハブ
 
     // このネットワークプレイヤーが操作しているプレイヤーオブジェクト
-    // (Player.NetworkPlayerBase の実装)
     public override Player player { get; protected set; }
 
     // 自分のインスタンス
@@ -35,15 +34,13 @@ public class NetworkPlayer : Player.NetworkPlayerBase {
 
     void OnDestroy() {
         instances.Remove(this);
-        if (instance == this) {
-            instance = null;
-        }
-
-        // NOTE
-        // プレイヤーが残っていたら消しておく
         if (player != null) {
-            GameObject.Destroy(player.gameObject);
+            GameObject.Destroy(player.gameObject);//NOTE プレイヤーが残っていたら消しておく
         }
+        if (instance != this) {
+            return;
+        }
+        instance = null;
     }
 
     void Start() {
@@ -52,7 +49,7 @@ public class NetworkPlayer : Player.NetworkPlayerBase {
         // 初期化は Player の Start() 内で行われる。
         var playerObject = GameObject.Instantiate(playerPrefab);
         player = playerObject.GetComponent<Player>();
-        Debug.Assert(player != null, "プレハブに Player スクリプトが含まれていない?");
+        Debug.Assert(player != null, "プレハブに Player コンポーネントが含まれていない?");
     }
 
     //-------------------------------------------------------------------------- ユーティリティ
@@ -89,34 +86,3 @@ public class NetworkPlayer : Player.NetworkPlayerBase {
         return null;
     }
 }
-
-////-------------------------------------------------------------------------- スポーン
-//// TODO
-//// これは Player に移しておく。
-//// [C 1-> S] スポーンをリクエスト
-//public void Spawn() {
-//    Debug.Assert(this.isLocalPlayer, "ローカル限定です");
-//    CmdSpawn(); // TODO
-//}
-//
-//// [S ->* C] スポーンをばらまき
-//[Command]
-//public void CmdSpawn() {
-//    Debug.Assert(this.isServer, "サーバ限定です");
-//    var position = Vector3.zero;
-//    var rotation = Quaternion.identity;
-//    SpawnPoint.GetRandomSpawnPoint(out position, out rotation);
-//    RpcSpawn(position, rotation);
-//}
-//
-//[ClientRpc]
-//public void RpcSpawn(Vector3 position, Quaternion rotation) {
-//    player.transform.position = position;
-//    player.transform.rotation = rotation;
-//    var rigidbody = player.GetComponent<Rigidbody>();
-//    rigidbody.velocity        = new Vector3(0f,0f,0f);
-//    rigidbody.angularVelocity = new Vector3(0f,0f,0f);
-//    if (this.isLocalPlayer) {
-//        GameCamera.Instance.SetBattleMode(player);
-//    }
-//}

@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
-// プレイヤーの実装
+// プレイヤー
 public partial class Player : MonoBehaviour {
     //-------------------------------------------------------------------------- 定義
-    // ネットワークプレイヤー基本クラス
-    public abstract partial class NetworkPlayerBase : NetworkBehaviour {
+    // ネットワークプレイヤー挙動クラス
+    public abstract partial class NetworkPlayerBehaviour : NetworkBehaviour {
         public abstract Player player { get; protected set; }
     }
 
@@ -165,7 +165,7 @@ public partial class Player {
     }
 
     //------------------------------------------------------------------------- 同期
-    public partial class NetworkPlayerBase {
+    public partial class NetworkPlayerBehaviour {
         // [C 1-> S] 位置と向きの同期を発行
         public void SyncMove(Vector3 position, Vector3 aim, Vector3 look) {
             Debug.Assert(this.isLocalPlayer, "ローカル限定です");
@@ -222,7 +222,7 @@ public partial class Player {
     }
 
     //------------------------------------------------------------------------- 同期
-    public partial class NetworkPlayerBase {
+    public partial class NetworkPlayerBehaviour {
         // [C 1-> S] 発砲の同期を発行
         public void SyncFire(bool isFire) {
             Debug.Assert(this.isLocalPlayer, "ローカル限定です");
@@ -306,7 +306,7 @@ public partial class Player {
     }
 
     //------------------------------------------------------------------------- 同期
-    public partial class NetworkPlayerBase {
+    public partial class NetworkPlayerBehaviour {
         // [C 1-> S] 投擲をリクエスト
         public void SyncThrow(Vector3 throwPosition, Vector3 throwVector) {
             Debug.Assert(this.isLocalPlayer, "ローカル限定です");
@@ -388,7 +388,7 @@ public partial class Player {
     }
 
     //------------------------------------------------------------------------- 同期
-    public partial class NetworkPlayerBase {
+    public partial class NetworkPlayerBehaviour {
         // [C 1-> S] ダメージを発行
         public void SyncDealDamage(NetworkInstanceId targetNetId, int damage, NetworkInstanceId shooterNetId) {
             Debug.Assert(this.isLocalPlayer, "ローカル限定です");
@@ -428,7 +428,7 @@ public partial class Player {
     }
 
     //-------------------------------------------------------------------------- 同期
-    public partial class NetworkPlayerBase {
+    public partial class NetworkPlayerBehaviour {
         // [C 1-> S] スポーンをリクエスト
         public void SyncSpawn() {
             Debug.Assert(this.isLocalPlayer, "ローカル限定です");
@@ -500,7 +500,7 @@ public partial class Player {
     }
 
     //-------------------------------------------------------------------------- 同期
-    public partial class NetworkPlayerBase {
+    public partial class NetworkPlayerBehaviour {
         // [S ->* C] 死を宣告
         [ClientRpc]
         public void RpcDeath(NetworkInstanceId shooterNetId) {
@@ -534,5 +534,35 @@ public partial class Player {
 //    time -= Time.deltaTime;
 //    if (time <= 0) {
 //        DealDamage(this, 10);
+//    }
+//}
+////-------------------------------------------------------------------------- スポーン
+//// TODO
+//// これは Player に移しておく。
+//// [C 1-> S] スポーンをリクエスト
+//public void Spawn() {
+//    Debug.Assert(this.isLocalPlayer, "ローカル限定です");
+//    CmdSpawn(); // TODO
+//}
+//
+//// [S ->* C] スポーンをばらまき
+//[Command]
+//public void CmdSpawn() {
+//    Debug.Assert(this.isServer, "サーバ限定です");
+//    var position = Vector3.zero;
+//    var rotation = Quaternion.identity;
+//    SpawnPoint.GetRandomSpawnPoint(out position, out rotation);
+//    RpcSpawn(position, rotation);
+//}
+//
+//[ClientRpc]
+//public void RpcSpawn(Vector3 position, Quaternion rotation) {
+//    player.transform.position = position;
+//    player.transform.rotation = rotation;
+//    var rigidbody = player.GetComponent<Rigidbody>();
+//    rigidbody.velocity        = new Vector3(0f,0f,0f);
+//    rigidbody.angularVelocity = new Vector3(0f,0f,0f);
+//    if (this.isLocalPlayer) {
+//        GameCamera.Instance.SetBattleMode(player);
 //    }
 //}
