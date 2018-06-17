@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 
 // プレイヤー
+// プレイヤーの入力や更新を制御します。
 public partial class Player : MonoBehaviour {
     //-------------------------------------------------------------------------- 定義
     // ネットワークプレイヤー挙動クラス

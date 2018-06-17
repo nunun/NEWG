@@ -17,13 +17,22 @@ public class GameNetworkManager : NetworkManager {
     //-------------------------------------------------------------------------- 変数
     public ServerSpawnInfo serverSpawnInfo = new ServerSpawnInfo(); // サーバスポーン情報
 
+    // サーバインスタンス (初期化確認用)
+    GameObject server = null;
+
     //-------------------------------------------------------------------------- 実装 (UnityEngine.Networking.NetworkManager)
-    public override void OnStartServer() {
-        Debug.Log("GameNetworkManager: サーバ開始");
+    public override void OnServerReady(NetworkConnection conn) {
+        base.OnServerReady(conn);
+
+        // NOTE
+        // 以下は OnStartServer においていたが
+        // OnStartServer では Spawn できないのでここに書く。
         if (serverSpawnInfo.autoCreateServer) {
-            var server = GameObject.Instantiate(serverSpawnInfo.serverPrefab);
-            UnityEngine.Networking.NetworkServer.Spawn(server);
+            if (server == null) {
+                Debug.Log("GameNetworkManager: サーバ生成");
+                server = GameObject.Instantiate(serverSpawnInfo.serverPrefab);
+                UnityEngine.Networking.NetworkServer.Spawn(server);
+            }
         }
-        base.OnStartServer();
     }
 }

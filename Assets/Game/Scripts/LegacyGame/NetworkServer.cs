@@ -4,6 +4,8 @@ using UnityEngine;
 using UnityEngine.Networking;
 
 // ネットワークサーバ
+// サーバが起動するとすべてのクライアントで生成されるネットワークオブジェクトです。
+// ネットワークサーバはサーバオブジェクトを生成して保持します。
 public class NetworkServer : Server.NetworkServerBehaviour {
     //-------------------------------------------------------------------------- 変数
     public GameObject serverPrefab = null; // サーバのプレハブ

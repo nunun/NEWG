@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 
 // サーバ
+// ゲームの進行やルールを制御します。
 public partial class Server : MonoBehaviour {
     //-------------------------------------------------------------------------- 定義
     // ネットワークサーバ挙動クラス

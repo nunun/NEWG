@@ -4,6 +4,8 @@ using UnityEngine;
 using UnityEngine.Networking;
 
 // ネットワークプレイヤー
+// プレイヤーが接続するとすべてのクライアントで生成されるネットワークオブジェクトです。
+// ネットワークプレイヤーはプレイヤーオブジェクトを生成して保持します。
 public class NetworkPlayer : Player.NetworkPlayerBehaviour {
     //-------------------------------------------------------------------------- 変数
     public GameObject playerPrefab = null; // プレイヤーのプレハブ
