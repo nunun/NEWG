@@ -285,23 +285,20 @@ public partial class GameSettings {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-// NOTE
 // 設定インスタンス
-// BuildSettings > PlayerSettings の "Preload Assets" に設定して
-// ScriptableObject の OnEnable から起動時に読み込まれる前提だが、
-// これはエディタ上では読み込まれないことがあるので
-// その場合は AssetDatabase から直接ロードする。
 public partial class GameSettings {
     //-------------------------------------------------------------------------- 定義
     // ゲーム設定アセット
     public class Asset : ScriptableObject {
         public GameSettings gameSettings = new GameSettings();
-        protected void OnEnable()  { GameSettings.SetInstance(gameSettings);   }
-        protected void OnDisable() { GameSettings.UnsetInstance(gameSettings); }
     }
 
+    // 設定のリソースパス
+    public static readonly string RESOURCES_PATH = "GameSettings";
+
     #if UNITY_EDITOR
-    public static readonly string ASSET_PATH = "Assets/Game/Settings/GameSettings.asset";
+    // 設定のアセットパス
+    public static readonly string ASSET_PATH = "Assets/Game/Resources/GameSettings.asset";
     #endif
 
     //-------------------------------------------------------------------------- 初期化
@@ -309,37 +306,5 @@ public partial class GameSettings {
     static GameSettings _instance = null;
 
     // インスタンスの取得
-    static GameSettings instance {
-        get {
-            if (_instance == null) {
-                #if UNITY_EDITOR
-                var gameSettings = ((Asset)AssetDatabase.LoadAssetAtPath(ASSET_PATH, typeof(Asset))).gameSettings;
-                SetInstance(gameSettings);
-                #else
-                Debug.LogError("GameSettings が Preload Assets にない");
-                #endif
-            }
-            return _instance;
-        }
-    }
-
-    // インスタンス設定
-    static void SetInstance(GameSettings instance) {
-        if (_instance != null) {
-            return;
-        }
-        _instance = instance;
-
-        // NOTE
-        // ここで引数をインポート
-        _instance.ImportGameArguments();
-    }
-
-    // インスタンス解除
-    static void UnsetInstance(GameSettings instance) {
-        if (_instance != instance) {
-            return;
-        }
-        _instance = null;
-    }
+    static GameSettings instance { get { return _instance ?? (_instance = Resources.Load<GameSettingsAsset>(RESOURCES_PATH).gameSettings); }}
 }
