@@ -149,7 +149,6 @@ public partial class MapProvingGround {
         GameMindlinkManager.ServerStatusData.serverAddress = serverDiscoveryAddress;
         GameMindlinkManager.ServerStatusData.serverPort    = serverDiscoveryPort;
         GameMindlinkManager.SendServerStatusData(() => {
-            StartHandleReserve();//予約開始
             isReady = true;//レディ
         });
     }
@@ -174,34 +173,5 @@ public partial class MapProvingGround {
             networkManager.StopHost();
             break;
         }
-
-        // 予約停止
-        StopHandleReserve();
-    }
-}
-
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-
-// 予約ハンドリング
-public partial class MapProvingGround {
-    //------------------------------------------------------------------------- 内部処理
-    void StartHandleReserve() {
-        GameMindlinkManager.SetReserveRequestMessageHandler(HandleReserve);
-    }
-
-    void StopHandleReserve() {
-        GameMindlinkManager.SetReserveRequestMessageHandler(null);
-    }
-
-    //------------------------------------------------------------------------- 参加ハンドリング
-    IEnumerator HandleReserve(string[] users, Action<string> next) {
-        // NOTE
-        // 今は単に予約できるようにしておく。
-        // 今後、人数などを見てエラーを返すように修正する。
-        Debug.LogFormat("予約 ({0}) ...", users.Length);
-        next(null);
-        yield break;
     }
 }

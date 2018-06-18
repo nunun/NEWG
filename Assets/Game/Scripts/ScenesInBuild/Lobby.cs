@@ -179,10 +179,15 @@ public partial class Lobby {
 
         #if HOST_CODE
         // NOTE
-        // ホストモードだとロビー画面で予約ハンドラを設定しないと進めないので
-        // デフォルトのハンドラを設定しておく。
+        // ホストモードだと次の画面へ進まないと予約をハンドルできないので、
+        // 少々手荒だが、マッチングしつつ次のシーンへ進む。
+        // ただし、マッチング結果は利用出来ないので飛び先のシーンは
+        // ゲーム設定のものを使う。
         if (GameSettings.RuntimeServiceMode == GameSettings.ServiceMode.Host) {
-            GameMindlinkManager.SetReserveRequestMessageHandler(DefaultReserveRequestHandler);
+            GameSettings.SetMatchingServerInformation(matchingResponse.matchingServerUrl);
+            GameMatchingManager.Connect();
+            GameSceneManager.ChangeScene(GameSettings.ServerSceneName);
+            yield break;
         }
         #endif
 
@@ -215,15 +220,6 @@ public partial class Lobby {
         GameSettings.SetServerInformation(address, port, token, sceneName, 0);
         matchingUI.ChangeScene(sceneName);
     }
-
-    //-------------------------------------------------------------------------- ホストモード用
-    #if HOST_CODE
-    IEnumerator DefaultReserveRequestHandler(string[] users, Action<string> next) {
-        Debug.LogFormat("ホストモード予約 ({0}) ...", users.Length);
-        next(null);
-        yield break;
-    }
-    #endif
 }
 
 //using (var wait = UIWait.RentFromPool()) {

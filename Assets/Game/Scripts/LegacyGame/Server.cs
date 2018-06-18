@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -14,24 +15,156 @@ public partial class Server : MonoBehaviour {
 
     //-------------------------------------------------------------------------- 変数
     // このプレイヤーが使用するネットワークプレイヤー
-    // TODO
-    //NetworkServer networkServer = null;
+    NetworkServer networkServer = null;
 
     //-------------------------------------------------------------------------- 実装 (NetworkBehaviour)
     void Start() {
-        // TODO
-        //networkServer = NetworkServer.Instance;
+        networkServer = NetworkServer.Instance;
+        #if SERVER_CODE
+        if (networkServer.isServer) {
+            InitReservation();
+            StartGameProgress();
+        }
+        #endif
     }
 
-    // TODO
-    //void Update() {
-    //    UpdateXXX();
-    //}
+    void OnDestroy() {
+        #if SERVER_CODE
+        if (networkServer.isServer) {
+            DestroyReservation();
+        }
+        #endif
+    }
 
-    // TODO
-    //void LateUpdate() {
-    //    UpdateXXX();
-    //}
+    void Update() {
+        #if SERVER_CODE
+        if (networkServer.isServer) {
+            UpdateGameProgress();
+        }
+        #endif
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+// ゲームプログレスの更新
+public partial class Server {
+    //-------------------------------------------------------------------------- 定義
+    // ゲーム進行状態
+    public enum GameProgress {
+        Waiting  = 0, // プレイヤー参加待ち
+        Starting = 1, // カウントダウン中
+        Started  = 2, // ゲーム開始済
+        End      = 3, // ゲーム終了
+        Ended    = 4, // ゲーム終了済
+    };
+
+    // カウントダウンを開始するプレイヤー数
+    public static readonly int START_COUNTDOWN_RESERVED_COUNT = 1;
+
+    //-------------------------------------------------------------------------- 変数
+    GameProgress gameProgress = GameProgress.Waiting; // 待ち中
+    //float      startTime    = 0.0f;                 // 開始カウントダウン
+
+    //-------------------------------------------------------------------------- 初期化と更新
+    void StartGameProgress() {
+        gameProgress = GameProgress.Waiting;
+        //startTime  = 0.0f;
+    }
+
+    void UpdateGameProgress() {
+        // TODO
+        switch (gameProgress) {
+        case GameProgress.Waiting:
+            break;
+        case GameProgress.Starting:
+            break;
+        case GameProgress.Started:
+            break;
+        case GameProgress.End:
+            break;
+        case GameProgress.Ended:
+            break;
+        default:
+            Debug.LogErrorFormat("Unknown GameProgress ({0})", gameProgress);
+            break;
+        }
+    }
+
+    //-------------------------------------------------------------------------- ゲーム進行状態の変更
+    void ChangeGameProgress(GameProgress gameProgress) {
+        Debug.Assert(networkServer.isServer, "サーバ限定です");
+        Debug.LogFormat("Server: ゲーム進捗変更 ({0})", gameProgress);
+        networkServer.SyncGameProgress(gameProgress);
+    }
+
+    void OnChangeGameProgress(GameProgress gameProgress) {
+        // TODO
+        // UI 切り替え
+        Debug.LogFormat("Server: サーバ進捗が変更された ({0})", gameProgress);
+    }
+
+    //------------------------------------------------------------------------- 同期
+    public partial class NetworkServerBehaviour {
+        // [S -> C] ゲーム進捗をバラマキ
+        public void SyncGameProgress(Server.GameProgress gameProgress) {
+            Debug.Assert(this.isServer, "サーバ限定です");
+            syncGameProgress = (int)gameProgress;
+        }
+
+        // ゲーム進捗を受信
+        public void OnSyncGameProgress(int value) {
+            if (server != null) {
+                server.OnChangeGameProgress((Server.GameProgress)value);
+            }
+        }
+
+        [HideInInspector, SyncVar(hook="OnSyncGameProgress")] public int syncGameProgress = (int)Server.GameProgress.Waiting;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+// 予約の受付
+public partial class Server {
+    //-------------------------------------------------------------------------- 定義
+    // 最大予約数
+    public static readonly int MAX_RESERERVED_COUNT = 30;
+
+    //-------------------------------------------------------------------------- 変数
+    int reservedCount = 0; // 予約数
+
+    //-------------------------------------------------------------------------- 開始と停止と更新
+    void InitReservation() {
+        Debug.Log("Server: 予約開始");
+        GameMindlinkManager.SetReserveRequestMessageHandler(HandleReserve);
+    }
+
+    void DestroyReservation() {
+        Debug.Log("Server: 予約停止");
+        GameMindlinkManager.SetReserveRequestMessageHandler(null);
+    }
+
+    //-------------------------------------------------------------------------- 予約のハンドル
+    IEnumerator HandleReserve(string[] users, Action<string> next) {
+        Debug.LogFormat("Server: 予約 ({0}) ...", users.Length);
+        var reserveCount = users.Length;
+
+        // 人数オーバー？
+        if ((reservedCount + reserveCount) >= MAX_RESERERVED_COUNT) {
+            next("server full");
+            yield break;
+        }
+        reservedCount += reserveCount;
+
+        // ユーザ予約成功！
+        next(null);
+        yield break;
+    }
 }
 
 //// サーバ

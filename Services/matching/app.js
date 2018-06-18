@@ -132,7 +132,7 @@ async function identifyUser(task) {
     connectingQueue.logger.debug('matchingId = ' + task.matchingId);
     var matchingData = await MatchingData.promiseGetCache(task.matchingId);
     if (!matchingData) {
-        throw new Erorr("invalid matchingId");
+        throw new Error("invalid matchingId");
     }
     task.userId = matchingData.users[0];
 
