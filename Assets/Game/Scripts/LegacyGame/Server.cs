@@ -20,28 +20,29 @@ public partial class Server : MonoBehaviour {
     //-------------------------------------------------------------------------- 実装 (NetworkBehaviour)
     void Start() {
         networkServer = NetworkServer.Instance;
-        #if SERVER_CODE
         if (networkServer.isServer) {
+            #if SERVER_CODE
             InitReservation();
-            StartGameProgress();
+            InitGameProgress();
+            #endif
         }
-        #endif
     }
 
     void OnDestroy() {
-        #if SERVER_CODE
         if (networkServer.isServer) {
+            #if SERVER_CODE
             DestroyReservation();
+            #endif
         }
-        #endif
     }
 
     void Update() {
-        #if SERVER_CODE
         if (networkServer.isServer) {
-            UpdateGameProgress();
+            #if SERVER_CODE
+            UpdateGameProgressServer();
+            #endif
         }
-        #endif
+        UpdateGameProgress();
     }
 }
 
@@ -49,37 +50,61 @@ public partial class Server : MonoBehaviour {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-// ゲームプログレスの更新
+// ゲームプログレス同期
 public partial class Server {
     //-------------------------------------------------------------------------- 定義
     // ゲーム進行状態
     public enum GameProgress {
-        Waiting  = 0, // プレイヤー参加待ち
-        Starting = 1, // カウントダウン中
-        Started  = 2, // ゲーム開始済
-        End      = 3, // ゲーム終了
-        Ended    = 4, // ゲーム終了済
+        Waiting   = 0, // プレイヤー参加待ち
+        Countdown = 1, // カウントダウン中
+        Starting  = 2, // ゲーム開始中
+        Started   = 3, // ゲーム開始済
+        End       = 4, // ゲーム終了
+        Ended     = 5, // ゲーム終了済
     };
 
     // カウントダウンを開始するプレイヤー数
     public static readonly int START_COUNTDOWN_RESERVED_COUNT = 1;
 
+    // カウントダウン秒数
+    public static readonly float COUNTDOWN_TIME = 30.0f;
+
     //-------------------------------------------------------------------------- 変数
-    GameProgress gameProgress = GameProgress.Waiting; // 待ち中
-    //float      startTime    = 0.0f;                 // 開始カウントダウン
+    GameProgress gameProgress                  = GameProgress.Waiting; // ゲーム進捗
+    int          updateGameProgressServerCount = 0;                    // ゲーム進捗更新カウント (サーバ)
+    int          updateGameProgressCount       = 0;                    // ゲーム進捗更新カウント (共通)
+    float        countdownTime                 = COUNTDOWN_TIME;       // 開始カウントダウン
 
     //-------------------------------------------------------------------------- 初期化と更新
-    void StartGameProgress() {
-        gameProgress = GameProgress.Waiting;
-        //startTime  = 0.0f;
+    void InitGameProgress() {
+        gameProgress  = GameProgress.Waiting;
+        countdownTime = COUNTDOWN_TIME;
     }
 
-    void UpdateGameProgress() {
-        // TODO
+    void UpdateGameProgressServer() {
+        updateGameProgressServerCount++;
         switch (gameProgress) {
         case GameProgress.Waiting:
+            if (reservedCount >= START_COUNTDOWN_RESERVED_COUNT) {
+                ChangeGameProgress(GameProgress.Countdown);
+            }
+            break;
+        case GameProgress.Countdown:
+            if (updateGameProgressServerCount == 1) {
+                countdownTime = COUNTDOWN_TIME;
+            }
+            var countdownTimeOld = countdownTime;
+            countdownTime = Mathf.Max(0.0f, countdownTime - Time.deltaTime);
+            if ((int)Mathf.Floor(countdownTime / 3.0f) != (int)Mathf.Floor(countdownTimeOld / 3.0f)) {
+                networkServer.SyncCountdown(countdownTime);
+            }
+            if (countdownTime <= 0) {
+                ChangeGameProgress(GameProgress.Starting);
+            }
             break;
         case GameProgress.Starting:
+            // TODO
+            // プレイヤーを飛ばす
             break;
         case GameProgress.Started:
             break;
@@ -93,20 +118,32 @@ public partial class Server {
         }
     }
 
+    void UpdateGameProgress() {
+        // TODO
+        // 定期的な UI 更新など (カウントダウン)
+        //updateGameProgressCount++;
+        //switch (gameProgress) {
+        //default:
+        //    break;
+        //}
+    }
+
     //-------------------------------------------------------------------------- ゲーム進行状態の変更
     void ChangeGameProgress(GameProgress gameProgress) {
         Debug.Assert(networkServer.isServer, "サーバ限定です");
         Debug.LogFormat("Server: ゲーム進捗変更 ({0})", gameProgress);
         networkServer.SyncGameProgress(gameProgress);
+        OnChangeGameProgress(gameProgress); // NOTE サーバは即座に受け取り
     }
 
     void OnChangeGameProgress(GameProgress gameProgress) {
-        // TODO
-        // UI 切り替え
         Debug.LogFormat("Server: サーバ進捗が変更された ({0})", gameProgress);
+        this.gameProgress                  = gameProgress;
+        this.gameProgressUpdateCountServer = 0;
+        this.updateGameProgressCount       = 0;
     }
 
-    //------------------------------------------------------------------------- 同期
+    //------------------------------------------------------------------------- 同期 (ゲーム進捗)
     public partial class NetworkServerBehaviour {
         // [S -> C] ゲーム進捗をバラマキ
         public void SyncGameProgress(Server.GameProgress gameProgress) {
@@ -116,12 +153,34 @@ public partial class Server {
 
         // ゲーム進捗を受信
         public void OnSyncGameProgress(int value) {
-            if (server != null) {
-                server.OnChangeGameProgress((Server.GameProgress)value);
+            if (!this.isServer) { // NOTE クライアントのみ処理。サーバ自身は受け取らない。
+                if (server != null) {
+                    server.OnChangeGameProgress((Server.GameProgress)value);
+                }
             }
         }
 
         [HideInInspector, SyncVar(hook="OnSyncGameProgress")] public int syncGameProgress = (int)Server.GameProgress.Waiting;
+    }
+
+    //------------------------------------------------------------------------- 同期 (カウントダウン)
+    public partial class NetworkServerBehaviour {
+        // [S -> C] カウントダウン時間をバラマキ
+        public void SyncCountdown(float countdownTime) {
+            Debug.Assert(this.isServer, "サーバ限定です");
+            syncCountdownTime = countdownTime;
+        }
+
+        // カウントダウン時間を受信
+        public void OnSyncCountdownTime(float value) {
+            if (!this.isServer) { // NOTE クライアントのみ処理。サーバ自身は受け取らない。
+                if (server != null) {
+                    server.OnChangeGameProgress(value);
+                }
+            }
+        }
+
+        [HideInInspector, SyncVar(hook="OnSyncCountdownTime")] public float syncCountdownTime = Server.COUNTDOWN_TIME;
     }
 }
 
