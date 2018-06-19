@@ -136,6 +136,7 @@ public partial class GameMindlinkManager {
 
     //-------------------------------------------------------------------------- 内部操作
     void EnqueueReserveRequestMessage(string responseTo, ReserveRequestMessage message) {
+        Debug.Log("GameMindlinkManager: 予約リクエストメッセージ受信");
         reserveRequestQueue.Enqueue(new ReserveRequest() {
             responseTo = responseTo,
             message    = message,

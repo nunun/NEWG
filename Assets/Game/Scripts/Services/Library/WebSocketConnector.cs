@@ -121,6 +121,15 @@ public partial class WebSocketConnector : MonoBehaviour {
             }
         }
 
+        // NOTE
+        // 上位 WebSocket クラスは "エラーが発生すると切断" という動作のため
+        // 切断時によくあるエラーはここで正常切断 (null) に変える。
+        // ただしエラーログをデバッグログとして出しておく。
+        if (error == "An exception has occurred while receiving a message.") {
+            Debug.LogFormat("WebSocketConnector: 正常切断と判定 ({0}) ...", error);
+            error = null;
+        }
+
         // 切断
         if (eventListener != null) {
             eventListener(error);

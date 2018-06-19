@@ -57,12 +57,31 @@ public partial class MapProvingGround {
             yield return null;
         }
 
-        // TODO
-        // ロード処理
-        yield return new WaitForSeconds(3.0f);
+        // ネットワークプレイヤー作成待ち
+        if (   GameSettings.RuntimeServiceMode == GameSettings.ServiceMode.Host
+            || GameSettings.RuntimeServiceMode == GameSettings.ServiceMode.Client) {
+            while (NetworkPlayer.Instance == null) {
+                yield return null;
+            }
+
+            // TODO
+            // 切断検出を開始
+            StartCoroutine("WatchConnection");
+        }
 
         // スタンバイ完了
         standbyUI.Close();
+    }
+
+    // TODO
+    // 切断検出
+    // ここでコルーチンをまわし続けるのは停止したい可能性があるので無理がある。
+    // 停止も含めて制御できるようにする仕組みを導入する必要がある。
+    IEnumerator WatchConnection() {
+        while (NetworkPlayer.Instance != null) {
+            yield return null;
+        }
+        GameSceneManager.ChangeScene("Lobby");
     }
 }
 

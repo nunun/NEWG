@@ -421,12 +421,15 @@ public partial class Player {
         [Command]
         public void CmdSyncDealDamage(NetworkInstanceId targetNetId, int damage, NetworkInstanceId shooterNetId) {
             Debug.Assert(this.isServer, "サーバ限定です");
+            if (!NetworkServer.Instance.server.IsGameStarted) {
+                return; // NOTE ゲーム開始していなければダメージにならない
+            }
             var networkPlayer = NetworkPlayer.FindByNetId(targetNetId);
             if (networkPlayer != null) {
                 networkPlayer.syncHitPoint -= damage;
                 if (networkPlayer.syncHitPoint <= 0) {
                     networkPlayer.RpcDeath(shooterNetId);
-                    NetworkServer.Instance.InformDeath(networkPlayer);
+                    NetworkServer.Instance.server.InformDeath(networkPlayer.player);
                 }
             }
         }
@@ -488,8 +491,8 @@ public partial class Player {
         // NOTE
         // スポーンしたらカメラをバトルモードに変える
         if (networkPlayer.isLocalPlayer) {
+            // TODO
             GameCamera.Instance.SetBattleMode(this);
-            //GameMain.Instance.battleUI.SetKillPoint(player.killPoint); // TODO
         }
     }
 
@@ -551,19 +554,16 @@ public partial class Player {
 
                 // キルポイント表示変更
                 if (shooterNetworkPlayer.isLocalPlayer) {
-                    //GameMain.Instance.battleUI.SetKillPoint(player.killPoint); // TODO
+                    // TODO
+                    //GameMain.Instance.battleUI.SetKillPoint(player.killPoint);
                 }
             }
         }
 
-        // 自分がやられたら結果表示
+        // 自分がやられたら結果表示して終わり
         if (networkPlayer.isLocalPlayer) {
             // TODO
-            //var killPoint = 0;
-            //if (networkPlayer.player != null) {
-            //    killPoint = networkPlayer.player.killPoint;
-            //}
-            //GameMain.Instance.StartResult(killPoint); // TODO
+            GameCamera.Instance.SetMenuMode();
         }
     }
 
@@ -598,43 +598,3 @@ public partial class Player {
         //head.transform.rotation = Quaternion.LookRotation(currentLook);
     }
 }
-
-//float time = 5.0f;
-//void UpdateHitPoint() {
-//    // TODO
-//    // 将来的にここで無敵状態とかやる
-//    time -= Time.deltaTime;
-//    if (time <= 0) {
-//        DealDamage(this, 10);
-//    }
-//}
-////-------------------------------------------------------------------------- スポーン
-//// TODO
-//// これは Player に移しておく。
-//// [C 1-> S] スポーンをリクエスト
-//public void Spawn() {
-//    Debug.Assert(this.isLocalPlayer, "ローカル限定です");
-//    CmdSpawn(); // TODO
-//}
-//
-//// [S ->* C] スポーンをばらまき
-//[Command]
-//public void CmdSpawn() {
-//    Debug.Assert(this.isServer, "サーバ限定です");
-//    var position = Vector3.zero;
-//    var rotation = Quaternion.identity;
-//    SpawnPoint.GetRandomSpawnPoint(out position, out rotation);
-//    RpcSpawn(position, rotation);
-//}
-//
-//[ClientRpc]
-//public void RpcSpawn(Vector3 position, Quaternion rotation) {
-//    player.transform.position = position;
-//    player.transform.rotation = rotation;
-//    var rigidbody = player.GetComponent<Rigidbody>();
-//    rigidbody.velocity        = new Vector3(0f,0f,0f);
-//    rigidbody.angularVelocity = new Vector3(0f,0f,0f);
-//    if (this.isLocalPlayer) {
-//        GameCamera.Instance.SetBattleMode(player);
-//    }
-//}
