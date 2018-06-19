@@ -98,17 +98,26 @@ public partial class Server {
             if ((int)Mathf.Floor(countdownTime / 3.0f) != (int)Mathf.Floor(countdownTimeOld / 3.0f)) {
                 networkServer.SyncCountdown(countdownTime);
             }
-            if (countdownTime <= 0) {
+            if (countdownTime <= 0.0f) {
+                SetAliveCount(reservedCount);
                 ChangeGameProgress(GameProgress.Starting);
             }
             break;
         case GameProgress.Starting:
-            // TODO
-            // プレイヤーを飛ばす
+            foreach (var networkPlayer in NetworkPlayer.Instances) {
+                networkServer.RpcDeparture(new Vector3(0.0f, 0.0f, 0.0f), Quaternion.identity); // NOTE プレイヤーを飛ばす。どこに飛ばすかは仮。
+            }
+            ChangeGameProgress(GameProgress.Started);
             break;
         case GameProgress.Started:
+            if (aliveCount <= 1) { // NOTE 最後は一人とは限らないのでいずれ直す
+                ChangeGameProgress(GameProgress.End);
+            }
             break;
         case GameProgress.End:
+            // TODO
+            // 結果を記録
+            ChangeGameProgress(GameProgress.Ended);
             break;
         case GameProgress.Ended:
             break;
@@ -119,13 +128,41 @@ public partial class Server {
     }
 
     void UpdateGameProgress() {
-        // TODO
-        // 定期的な UI 更新など (カウントダウン)
-        //updateGameProgressCount++;
-        //switch (gameProgress) {
-        //default:
-        //    break;
-        //}
+        updateGameProgressCount++;
+        switch (gameProgress) {
+        case GameProgress.Waiting:
+            if (updateGameProgressCount == 1) {
+                // TODO UI 更新
+            }
+            break;
+        case GameProgress.Countdown:
+            if (updateGameProgressCount == 1) {
+                // TODO UI 更新
+            }
+            break;
+        case GameProgress.Starting:
+            if (updateGameProgressCount == 1) {
+                // TODO UI 更新
+            }
+            break;
+        case GameProgress.Started:
+            if (updateGameProgressCount == 1) {
+                // TODO UI 更新
+            }
+            break;
+        case GameProgress.End:
+            if (updateGameProgressCount == 1) {
+                // TODO UI 更新
+            }
+            break;
+        case GameProgress.Ended:
+            if (updateGameProgressCount == 1) {
+                // TODO UI 更新
+            }
+            break;
+        default:
+            break;
+        }
     }
 
     //-------------------------------------------------------------------------- ゲーム進行状態の変更
@@ -143,7 +180,7 @@ public partial class Server {
         this.updateGameProgressCount       = 0;
     }
 
-    //------------------------------------------------------------------------- 同期 (ゲーム進捗)
+    //-------------------------------------------------------------------------- 同期 (ゲーム進捗)
     public partial class NetworkServerBehaviour {
         // [S -> C] ゲーム進捗をバラマキ
         public void SyncGameProgress(Server.GameProgress gameProgress) {
@@ -163,7 +200,7 @@ public partial class Server {
         [HideInInspector, SyncVar(hook="OnSyncGameProgress")] public int syncGameProgress = (int)Server.GameProgress.Waiting;
     }
 
-    //------------------------------------------------------------------------- 同期 (カウントダウン)
+    //-------------------------------------------------------------------------- 同期 (カウントダウン)
     public partial class NetworkServerBehaviour {
         // [S -> C] カウントダウン時間をバラマキ
         public void SyncCountdown(float countdownTime) {
@@ -181,6 +218,67 @@ public partial class Server {
         }
 
         [HideInInspector, SyncVar(hook="OnSyncCountdownTime")] public float syncCountdownTime = Server.COUNTDOWN_TIME;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+// 生存者
+public partial class Server {
+    //-------------------------------------------------------------------------- 変数
+    int aliveCount = 0; // 生存者数
+
+    //-------------------------------------------------------------------------- 初期化と操作
+    void InitAliveCount() {
+        aliveCount = 0;
+    }
+
+    void SetAliveCount(int aliveCount) {
+        Debug.Assert(networkPlayer.isServer, "サーバ限定です");
+        this.aliveCount = aliveCount;
+        networkPlayer.SyncAliveCount(this.aliveCount);
+        OnAliveCount(this.aliveCount);
+    }
+
+    public void InformDeath(Player player) {
+        // NOTE
+        // 今はなんでもデクリメント。
+        // ちゃんとプレイヤーのチェックを入れる。
+        Debug.Assert(networkPlayer.isServer, "サーバ限定です");
+        this.aliveCount = Mathf.Max(0, this.aliveCount - 1);
+        networkPlayer.SyncAliveCount(this.aliveCount);
+        OnAliveCount(this.aliveCount);
+    }
+
+    void OnAliveCount(int aliveCount) {
+        Debug.LogFormat("Server: 生存者数 ({0})", aliveCount);
+        this.aliveCount = aliveCount;
+
+        // TODO
+        // UI 更新
+        // 生存者テキスト更新
+    }
+
+    //-------------------------------------------------------------------------- 同期 (生存者数)
+    public partial class NetworkServerBehaviour {
+        // [S -> C] 生存者数をバラマキ
+        public void SyncAliveCount(int aliveCount) {
+            Debug.Assert(this.isServer, "サーバ限定です");
+            syncAliveCount = aliveCount;
+        }
+
+        // 生存者数を受信
+        public void OnSyncAliveCount(int value) {
+            if (!this.isServer) { // NOTE クライアントのみ処理。サーバ自身は受け取らない。
+                if (server != null) {
+                    server.OnAliveCount(value);
+                }
+            }
+        }
+
+        [HideInInspector, SyncVar(hook="OnSyncAliveCount")] public int syncAliveCount = 0;
     }
 }
 
@@ -211,9 +309,15 @@ public partial class Server {
     //-------------------------------------------------------------------------- 予約のハンドル
     IEnumerator HandleReserve(string[] users, Action<string> next) {
         Debug.LogFormat("Server: 予約 ({0}) ...", users.Length);
-        var reserveCount = users.Length;
+
+        // ゲーム開始しているので
+        if (gameProgress = GameProgress.Started) {
+            next("already started.");
+            yield break;
+        }
 
         // 人数オーバー？
+        var reserveCount = users.Length;
         if ((reservedCount + reserveCount) >= MAX_RESERERVED_COUNT) {
             next("server full");
             yield break;

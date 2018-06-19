@@ -333,6 +333,7 @@ public partial class Player {
             RpcThrow(throwPosition, throwVector, throwerNetId);
         }
 
+        // 投げを受信
         [ClientRpc]
         public void RpcThrow(Vector3 throwPosition, Vector3 throwVector, NetworkInstanceId throwerNetId) {
             var networkPlayer = NetworkPlayer.FindByNetId(throwerNetId);
@@ -425,6 +426,7 @@ public partial class Player {
                 networkPlayer.syncHitPoint -= damage;
                 if (networkPlayer.syncHitPoint <= 0) {
                     networkPlayer.RpcDeath(shooterNetId);
+                    NetworkServer.Instance.InformDeath(networkPlayer);
                 }
             }
         }
@@ -444,12 +446,51 @@ public partial class Player {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
+// 出発 (カウントダウン後のゲーム開始)
+public partial class Player {
+    //-------------------------------------------------------------------------- 制御
+    public void OnDeparture(Vector3 position, Quaternion rotation) {
+        // NOTE
+        // 今の所処理なし
+    }
+
+    //-------------------------------------------------------------------------- 同期
+    public partial class NetworkPlayerBehaviour {
+        // 出発を受信
+        [ClientRpc]
+        public void RpcDeparture(Vector3 position, Quaternion rotation) {
+            var playerRididbody = player.playerRididbody;
+            playerRididbody.velocity        = new Vector3(0f,0f,0f);
+            playerRididbody.angularVelocity = new Vector3(0f,0f,0f);
+            playerRididbody.useGravity      = true;
+            player.transform.position = position;
+            player.transform.rotation = rotation;
+            syncPosition = position;
+            syncAim      = Vector3.forward;
+            player.OnDeparture(position, rotation);
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
 // スポーン
 public partial class Player {
     //-------------------------------------------------------------------------- 制御
     public void Spawn() {
         enabled = false;
         networkPlayer.SyncSpawn();
+    }
+
+    public void OnSpawn(Vector3 position, Quaternion rotation) {
+        // NOTE
+        // スポーンしたらカメラをバトルモードに変える
+        if (networkPlayer.isLocalPlayer) {
+            GameCamera.Instance.SetBattleMode(this);
+            //GameMain.Instance.battleUI.SetKillPoint(player.killPoint); // TODO
+        }
     }
 
     //-------------------------------------------------------------------------- 同期
@@ -471,6 +512,7 @@ public partial class Player {
             RpcSpawn(position, rotation);
         }
 
+        // スポーンを受信
         [ClientRpc]
         public void RpcSpawn(Vector3 position, Quaternion rotation) {
             var playerRididbody = player.playerRididbody;
@@ -482,11 +524,8 @@ public partial class Player {
             syncPosition = position;
             syncAim      = Vector3.forward;
             player.killPoint = 0;
-            player.enabled = true;
-            if (this.isLocalPlayer) {
-                GameCamera.Instance.SetBattleMode(player);
-                //GameMain.Instance.battleUI.SetKillPoint(player.killPoint); // TODO
-            }
+            player.enabled   = true;
+            player.OnSpawn(position, rotation);
         }
     }
 }
