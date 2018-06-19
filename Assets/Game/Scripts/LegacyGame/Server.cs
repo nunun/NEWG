@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.Networking;
 
 // サーバ
@@ -134,24 +135,36 @@ public partial class Server {
     void UpdateGameProgress() {
         updateGameProgressCount++;
         if (updateGameProgressCount == 1) {
-            // TODO
-            // UI 更新
-            //switch (gameProgress) {
-            //case GameProgress.Waiting:
-            //    break;
-            //case GameProgress.Countdown:
-            //    break;
-            //case GameProgress.Starting:
-            //    break;
-            //case GameProgress.Started:
-            //    break;
-            //case GameProgress.End:
-            //    break;
-            //case GameProgress.Ended:
-            //    break;
-            //default:
-            //    break;
-            //}
+            switch (gameProgress) {
+            case GameProgress.Waiting:
+                {
+                    var text = GameObjectTag<Text>.Find("GameText");
+                    text.text = "プレイヤーを待っています...";
+                }
+                break;
+            case GameProgress.Countdown:
+                {
+                    var text = GameObjectTag<Text>.Find("GameText");
+                    text.text = "カウントダウン";
+                }
+                break;
+            case GameProgress.Starting:
+            case GameProgress.Started:
+            case GameProgress.End:
+                {
+                    var text = GameObjectTag<Text>.Find("GameText");
+                    text.text = "";
+                }
+                break;
+            case GameProgress.Ended:
+                {
+                    var text = GameObjectTag<Text>.Find("GameText");
+                    text.text = "ゲーム終了";
+                }
+                break;
+            default:
+                break;
+            }
         }
     }
 

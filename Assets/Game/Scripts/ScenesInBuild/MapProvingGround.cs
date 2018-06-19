@@ -10,6 +10,7 @@ public partial class MapProvingGround : GameScene {
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     void Awake() {
         InitStandby();
+        InitBattle();
     }
 
     void OnDestroy() {
@@ -31,17 +32,12 @@ public partial class MapProvingGround : GameScene {
 public partial class MapProvingGround {
     //-------------------------------------------------------------------------- 変数
     [SerializeField] SceneUI standbyUI  = null;
-    [SerializeField] SceneUI exitUI     = null;
-    [SerializeField] Button  exitButton = null;
 
     //-------------------------------------------------------------------------- ロビーの初期化、開始、停止、更新
     void InitStandby() {
         Debug.Assert(standbyUI  != null, "standbyUI がない");
-        Debug.Assert(exitUI     != null, "exitUI がない");
-        Debug.Assert(exitButton != null, "exitButton がない");
         standbyUI.onOpen.AddListener(() => { StartCoroutine("UpdateStandby"); });
         standbyUI.onClose.AddListener(() => { StopCoroutine("UpdateStandby"); });
-        exitButton.onClick.AddListener(() => { GameSceneManager.ChangeScene("Lobby"); });
     }
 
     IEnumerator UpdateStandby() {
@@ -57,27 +53,42 @@ public partial class MapProvingGround {
             yield return null;
         }
 
-        // ネットワークプレイヤー作成待ち
-        if (   GameSettings.RuntimeServiceMode == GameSettings.ServiceMode.Host
-            || GameSettings.RuntimeServiceMode == GameSettings.ServiceMode.Client) {
-            while (NetworkPlayer.Instance == null) {
-                yield return null;
-            }
-
-            // TODO
-            // 切断検出を開始
-            StartCoroutine("WatchConnection");
-        }
+        // しばらくまつ
+        yield return new WaitForSeconds(1.0f);
 
         // スタンバイ完了
-        standbyUI.Close();
+        standbyUI.Change(battleUI);
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+// バトル処理
+public partial class MapProvingGround {
+    //-------------------------------------------------------------------------- 変数
+    [SerializeField] SceneUI battleUI   = null;
+    [SerializeField] SceneUI exitUI     = null;
+    [SerializeField] Button  exitButton = null;
+
+    //-------------------------------------------------------------------------- ロビーの初期化、開始、停止、更新
+    void InitBattle() {
+        Debug.Assert(battleUI   != null, "battleUI がない");
+        Debug.Assert(exitUI     != null, "exitUI がない");
+        Debug.Assert(exitButton != null, "exitButton がない");
+        standbyUI.onOpen.AddListener(() => { StartCoroutine("UpdateBattle"); });
+        standbyUI.onClose.AddListener(() => { StopCoroutine("UpdateBattle"); });
+        exitButton.onClick.AddListener(() => { GameSceneManager.ChangeScene("Lobby"); });
     }
 
-    // TODO
-    // 切断検出
-    // ここでコルーチンをまわし続けるのは停止したい可能性があるので無理がある。
-    // 停止も含めて制御できるようにする仕組みを導入する必要がある。
-    IEnumerator WatchConnection() {
+    IEnumerator UpdateBattle() {
+        if (GameSettings.RuntimeServiceMode == GameSettings.ServiceMode.Server) {
+            yield break;
+        }
+        while (NetworkPlayer.Instance == null) {
+            yield return null;
+        }
         while (NetworkPlayer.Instance != null) {
             yield return null;
         }
