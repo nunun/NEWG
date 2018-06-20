@@ -15,23 +15,37 @@ public partial class Server : MonoBehaviour {
     }
 
     //-------------------------------------------------------------------------- 変数
+    Text    gameText = null; // ゲームテキスト
+    SceneUI exitUI   = null; // 退出 UI
+
     // このプレイヤーが使用するネットワークプレイヤー
     NetworkServer networkServer = null;
 
     //-------------------------------------------------------------------------- 実装 (NetworkBehaviour)
     void Start() {
+        // インスタンス取得
         networkServer = NetworkServer.Instance;
+
+        // 初期化
         if (networkServer.isServer) {
             #if SERVER_CODE
             InitReservation();
             InitGameProgress();
             #endif
         }
+
+        // 各種UI取得
+        gameText = GameObjectTag<TextBuilder>.Find("GameText");
+        exitUI   = GameObjectTag<SceneUI>.Find("ExitUI");
+        Debug.Assert(gameText != null, "ゲームテキストがシーンにいない");
+        Debug.Assert(exitUI   != null, "ゲームテキストがシーンにいない");
     }
 
     void OnDestroy() {
-        if (   networkServer != null
-            && networkServer.isServer) {
+        if (networkServer == null) {
+            return;
+        }
+        if (networkServer.isServer) {
             #if SERVER_CODE
             DestroyReservation();
             #endif
@@ -134,37 +148,27 @@ public partial class Server {
 
     void UpdateGameProgress() {
         updateGameProgressCount++;
-        if (updateGameProgressCount == 1) {
-            switch (gameProgress) {
-            case GameProgress.Waiting:
-                {
-                    var text = GameObjectTag<Text>.Find("GameText");
-                    text.text = "プレイヤーを待っています...";
-                }
-                break;
-            case GameProgress.Countdown:
-                {
-                    var text = GameObjectTag<Text>.Find("GameText");
-                    text.text = "カウントダウン";
-                }
-                break;
-            case GameProgress.Starting:
-            case GameProgress.Started:
-            case GameProgress.End:
-                {
-                    var text = GameObjectTag<Text>.Find("GameText");
-                    text.text = "";
-                }
-                break;
-            case GameProgress.Ended:
-                {
-                    var text = GameObjectTag<Text>.Find("GameText");
-                    text.text = "ゲーム終了";
-                }
-                break;
-            default:
-                break;
+        switch (gameProgress) {
+        case GameProgress.Waiting:
+            gameText.Begin("プレイヤーを待っています ... ").Append(reservedCount).Append(" 人").Apply();
+            break;
+        case GameProgress.Countdown:
+            gameText.Begin("ゲームを開始します ... 残り ").Append((int)countdownTime).Append(" 秒").Apply();
+            break;
+        case GameProgress.Starting:
+        case GameProgress.Started:
+        case GameProgress.End:
+            if (updateGameProgressCount == 1) {
+                gameText.Begin("").Apply();
             }
+            break;
+        case GameProgress.Ended:
+            if (updateGameProgressCount == 1) {
+                gameText.Begin("ゲーム終了！").Apply();
+            }
+            break;
+        default:
+            break;
         }
     }
 

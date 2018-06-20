@@ -39,8 +39,10 @@ public partial class Player : MonoBehaviour {
         Debug.Assert(aimPivot        != null, "視線の始点の設定なし");
         Debug.Assert(explosionPrefab != null, "爆発プレハブの設定なし");
 
+        // インスタンス取得
         networkPlayer = NetworkPlayer.FindByPlayer(this);
 
+        // 初期化
         InitMove();
         InitFire();
         InitThrow();
