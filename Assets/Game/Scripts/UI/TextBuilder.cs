@@ -47,7 +47,7 @@ public class TextBuilder : MonoBehaviour {
         return this;
     }
 
-    public TextBuilder Apply(bool forceUpdate = false) {
+    public void Apply(bool forceUpdate = false) {
         // 更新が必要か？
         if (!forceUpdate && stringBuilder.Equals(lastStringBuilder)) {
             return;

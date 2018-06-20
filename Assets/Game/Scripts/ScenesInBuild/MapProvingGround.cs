@@ -77,8 +77,8 @@ public partial class MapProvingGround {
         Debug.Assert(battleUI   != null, "battleUI がない");
         Debug.Assert(exitUI     != null, "exitUI がない");
         Debug.Assert(exitButton != null, "exitButton がない");
-        standbyUI.onOpen.AddListener(() => { StartCoroutine("UpdateBattle"); });
-        standbyUI.onClose.AddListener(() => { StopCoroutine("UpdateBattle"); });
+        battleUI.onOpen.AddListener(() => { StartCoroutine("UpdateBattle"); });
+        battleUI.onClose.AddListener(() => { StopCoroutine("UpdateBattle"); });
         exitButton.onClick.AddListener(() => { GameSceneManager.ChangeScene("Lobby"); });
     }
 

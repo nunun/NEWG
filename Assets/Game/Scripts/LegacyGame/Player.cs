@@ -26,6 +26,11 @@ public partial class Player : MonoBehaviour {
     public float      jumpPower       = 190.0f; // ジャンプ力
     public int        killPoint       = 0;      // キル数
 
+    // 各種 UI
+    TextBuilder hitPointText  = null; // ヒットポイントテキスト
+    TextBuilder killPointText = null; // キルポイントテキスト
+    SceneUI     exitUI        = null; // ExitUI
+
     // 地面レイヤマスク
     int groundLayerMask = 0;
 
@@ -49,6 +54,14 @@ public partial class Player : MonoBehaviour {
         InitAnimation();
         InitHitPoint();
         InitIK();
+
+        // 各種UI取得
+        hitPointText  = GameObjectTag<TextBuilder>.Find("HitPointText");
+        killPointText = GameObjectTag<TextBuilder>.Find("KillPointText");
+        exitUI        = GameObjectTag<SceneUI>.Find("ExitUI");
+        Debug.Assert(hitPointText  != null, "ヒットポイントテキストがシーンにない");
+        Debug.Assert(killPointText != null, "キルポイントテキストがシーンにない");
+        Debug.Assert(exitUI        != null, "ExitUI がシーンにない");
 
         // 地面レイヤを取得
         var groundLayerNo = LayerMask.NameToLayer("Ground");
@@ -407,7 +420,7 @@ public partial class Player {
     void OnSyncHitPoint(int value) {
         hitPoint = value;
         if (networkPlayer.isLocalPlayer) {
-            //GameMain.Instance.battleUI.SetHitPoint(hitPoint); // TODO
+            hitPointText.Begin(hitPoint).Apply();
         }
     }
 
@@ -556,16 +569,15 @@ public partial class Player {
 
                 // キルポイント表示変更
                 if (shooterNetworkPlayer.isLocalPlayer) {
-                    // TODO
-                    //GameMain.Instance.battleUI.SetKillPoint(player.killPoint);
+                    killPointText.Begin(player.killPoint).Apply();
                 }
             }
         }
 
         // 自分がやられたら結果表示して終わり
         if (networkPlayer.isLocalPlayer) {
-            // TODO
             GameCamera.Instance.SetMenuMode();
+            exitUI.Open();
         }
     }
 
