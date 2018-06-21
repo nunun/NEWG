@@ -25,6 +25,12 @@ public class NetworkServer : Server.NetworkServerBehaviour {
             return;
         }
         instance = this;
+
+        // NOTE
+        // サーバ作成
+        var serverObject = GameObject.Instantiate(serverPrefab);
+        server = serverObject.GetComponent<Server>();
+        this.Link(server);
     }
 
     void OnDestroy() {
@@ -35,14 +41,5 @@ public class NetworkServer : Server.NetworkServerBehaviour {
             return;
         }
         instance = null;
-    }
-
-    void Start() {
-        // NOTE
-        // ネットワークプレイヤーの作成と同時に、必ずプレイヤーを作成する。
-        // 初期化は Player の Start() 内で行われる。
-        var serverObject = GameObject.Instantiate(serverPrefab);
-        server = serverObject.GetComponent<Server>();
-        Debug.Assert(server != null, "プレハブに Server コンポーネントが含まれていない?");
     }
 }

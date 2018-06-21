@@ -28,10 +28,12 @@ public class NetworkPlayer : Player.NetworkPlayerBehaviour {
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     void Awake() {
         instances.Add(this);
-    }
 
-    public override void OnStartLocalPlayer() {
-        instance = this;
+        // NOTE
+        // プレイヤーを作成
+        var playerObject = GameObject.Instantiate(playerPrefab);
+        player = playerObject.GetComponent<Player>();
+        this.Link(player);
     }
 
     void OnDestroy() {
@@ -44,13 +46,9 @@ public class NetworkPlayer : Player.NetworkPlayerBehaviour {
         }
     }
 
-    void Start() {
-        // NOTE
-        // ネットワークプレイヤーの作成と同時に、必ずプレイヤーを作成する。
-        // 初期化は Player の Start() 内で行われる。
-        var playerObject = GameObject.Instantiate(playerPrefab);
-        player = playerObject.GetComponent<Player>();
-        Debug.Assert(player != null, "プレハブに Player コンポーネントが含まれていない?");
+    //-------------------------------------------------------------------------- 実装 (NetworkBehaviour)
+    public override void OnStartLocalPlayer() {
+        instance = this;
     }
 
     //-------------------------------------------------------------------------- ユーティリティ

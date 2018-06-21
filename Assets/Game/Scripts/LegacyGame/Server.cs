@@ -12,6 +12,7 @@ public partial class Server : MonoBehaviour {
     // ネットワークサーバ挙動クラス
     public abstract partial class NetworkServerBehaviour : NetworkBehaviour {
         public abstract Server server { get; protected set; }
+        protected void Link(Server server) { server.networkServer = this as NetworkServer; }
     }
 
     //-------------------------------------------------------------------------- 変数
@@ -24,13 +25,7 @@ public partial class Server : MonoBehaviour {
 
     //-------------------------------------------------------------------------- 実装 (NetworkBehaviour)
     void Start() {
-        // インスタンス取得
-        networkServer = NetworkServer.Instance;
-
         // 初期化
-        InitGameProgress();
-        InitAliveCount();
-        InitReservedCount();
         if (networkServer.isServer) {
             #if SERVER_CODE
             InitReservation();
@@ -91,7 +86,7 @@ public partial class Server {
     // カウントダウン同期秒数
     public static readonly float COUNTDOWN_SYNC_TIME = 3.0f;
     // ゲーム終了からシャットダウンまでの秒数
-    public static readonly float COUNTDOWN_SYNC_TIME = 30.0f;
+    public static readonly float SHUTDOWN_TIME = 30.0f;
 
     //-------------------------------------------------------------------------- 変数
     GameProgress gameProgress                  = GameProgress.Waiting; // ゲーム進捗
@@ -116,7 +111,7 @@ public partial class Server {
         updateGameProgressServerCount++;
         switch (gameProgress) {
         case GameProgress.Waiting:
-            if (reservedCount >= START_COUNTDOWN_RESERVED_COUNT) {
+            if (NetworkPlayer.GetAliveCount() >= START_COUNTDOWN_RESERVED_COUNT) {
                 ChangeGameProgress(GameProgress.Countdown);
             }
             break;
@@ -131,7 +126,6 @@ public partial class Server {
                 countdownSyncTime = COUNTDOWN_SYNC_TIME;
             }
             if (countdownTime <= 0.0f) {
-                SetAliveCount(GetAliveCount());
                 ChangeGameProgress(GameProgress.Starting);
             }
             break;
@@ -145,7 +139,7 @@ public partial class Server {
             // NOTE
             // 現在は最後の一人になるまでだが
             // チーム戦だとそうとは限らないのでいずれ直す
-            if (Player.GetAliveCount() <= 1) {
+            if (NetworkPlayer.GetAliveCount() <= 1) {
                 ChangeGameProgress(GameProgress.End);
             }
             break;
@@ -177,7 +171,7 @@ public partial class Server {
                 exitUI.Open();
             }
             gameText.Begin("プレイヤーを待っています ... ").Apply();
-            aliveCountText.Begin(Player.GetAliveCount()).Apply();
+            aliveCountText.Begin(NetworkPlayer.GetAliveCount()).Apply();
             break;
         case GameProgress.Countdown:
             if (updateGameProgressCount == 1) {
@@ -185,16 +179,15 @@ public partial class Server {
             }
             countdownTime = Mathf.Max(0.0f, countdownTime - Time.deltaTime);
             gameText.Begin("ゲームを開始します ... ").Append((int)countdownTime).Apply();
-            aliveCountText.Begin(Player.GetAliveCount()).Apply();
+            aliveCountText.Begin(NetworkPlayer.GetAliveCount()).Apply();
             break;
         case GameProgress.Starting:
         case GameProgress.Started:
         case GameProgress.End:
             if (updateGameProgressCount == 1) {
                 gameText.Begin("").Apply();
-                exitUI.Close();
             }
-            aliveCountText.Begin(Plaer.GetAliveCount()).Apply();
+            aliveCountText.Begin(NetworkPlayer.GetAliveCount()).Apply();
             break;
         case GameProgress.Ended:
             if (updateGameProgressCount == 1) {
@@ -275,69 +268,6 @@ public partial class Server {
         }
 
         [HideInInspector, SyncVar(hook="OnSyncCountdownTime")] public float syncCountdownTime = Server.COUNTDOWN_TIME;
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
-// 生存者
-public partial class Server {
-    //-------------------------------------------------------------------------- 変数
-    int aliveCount = 0; // 生存者数
-
-    //-------------------------------------------------------------------------- 初期化と操作
-    void InitAliveCount() {
-        aliveCount = 0;
-        networkServer.InitAliveCount();
-    }
-
-    void SetAliveCount(int aliveCount) {
-        Debug.Assert(networkServer.isServer, "サーバ限定です");
-        this.aliveCount = aliveCount;
-        networkServer.SyncAliveCount(this.aliveCount);
-        OnAliveCount(this.aliveCount);
-    }
-
-    public void InformDeath(Player player) {
-        // NOTE
-        // 今はなんでもデクリメント。
-        // ちゃんとプレイヤーのチェックを入れる。
-        Debug.Assert(networkServer.isServer, "サーバ限定です");
-        this.aliveCount = Mathf.Max(0, this.aliveCount - 1);
-        networkServer.SyncAliveCount(this.aliveCount);
-        OnAliveCount(this.aliveCount);
-    }
-
-    void OnAliveCount(int aliveCount) {
-        Debug.LogFormat("Server: 生存者数 ({0})", aliveCount);
-        this.aliveCount = aliveCount;
-    }
-
-    //-------------------------------------------------------------------------- 同期 (生存者数)
-    public partial class NetworkServerBehaviour {
-        // 初期化
-        public void InitAliveCount() {
-            OnSyncAliveCount(syncAliveCount);
-        }
-
-        // [S -> C] 生存者数をバラマキ
-        public void SyncAliveCount(int aliveCount) {
-            Debug.Assert(this.isServer, "サーバ限定です");
-            syncAliveCount = aliveCount;
-        }
-
-        // 生存者数を受信
-        public void OnSyncAliveCount(int value) {
-            if (!this.isServer) { // NOTE クライアントのみ処理。サーバ自身は受け取らない。
-                if (server != null) {
-                    server.OnAliveCount(value);
-                }
-            }
-        }
-
-        [HideInInspector, SyncVar(hook="OnSyncAliveCount")] public int syncAliveCount = 0;
     }
 }
 
