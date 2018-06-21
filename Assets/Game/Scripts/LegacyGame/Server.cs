@@ -86,12 +86,12 @@ public partial class Server {
 
     // カウントダウンを開始するプレイヤー数
     public static readonly int START_COUNTDOWN_RESERVED_COUNT = 2;
-
     // カウントダウン秒数
     public static readonly float COUNTDOWN_TIME = 15.0f;
-
     // カウントダウン同期秒数
     public static readonly float COUNTDOWN_SYNC_TIME = 3.0f;
+    // ゲーム終了からシャットダウンまでの秒数
+    public static readonly float COUNTDOWN_SYNC_TIME = 30.0f;
 
     //-------------------------------------------------------------------------- 変数
     GameProgress gameProgress                  = GameProgress.Waiting; // ゲーム進捗
@@ -99,6 +99,7 @@ public partial class Server {
     int          updateGameProgressServerCount = 0;                    // ゲーム進捗更新カウント (サーバ)
     float        countdownTime                 = COUNTDOWN_TIME;       // 開始カウントダウン時間
     float        countdownSyncTime             = COUNTDOWN_SYNC_TIME;  // 開始カウントダウン同期時間
+    float        shutdownTime                  = SHUTDOWN_TIME;        // ゲーム終了からシャットダウンまでの時間
 
     public bool IsGameStarted { get { return gameProgress == GameProgress.Started; }}
 
@@ -130,7 +131,7 @@ public partial class Server {
                 countdownSyncTime = COUNTDOWN_SYNC_TIME;
             }
             if (countdownTime <= 0.0f) {
-                SetAliveCount(GetReservedCount()); // TODO 現在の予約数を生存者数に設定 (要検討)
+                SetAliveCount(GetAliveCount());
                 ChangeGameProgress(GameProgress.Starting);
             }
             break;
@@ -141,7 +142,10 @@ public partial class Server {
             ChangeGameProgress(GameProgress.Started);
             break;
         case GameProgress.Started:
-            if (aliveCount <= 1) { // NOTE 最後は一人とは限らないのでいずれ直す
+            // NOTE
+            // 現在は最後の一人になるまでだが
+            // チーム戦だとそうとは限らないのでいずれ直す
+            if (Player.GetAliveCount() <= 1) {
                 ChangeGameProgress(GameProgress.End);
             }
             break;
@@ -151,6 +155,13 @@ public partial class Server {
             ChangeGameProgress(GameProgress.Ended);
             break;
         case GameProgress.Ended:
+            if (updateGameProgressServerCount == 1) {
+                shutdownTime = SHUTDOWN_TIME;
+            }
+            shutdownTime -= Time.deltaTime;
+            if (shutdownTime <= 0.0f) {
+                GameManager.Quit();
+            }
             break;
         default:
             Debug.LogErrorFormat("Unknown GameProgress ({0})", gameProgress);
@@ -166,7 +177,7 @@ public partial class Server {
                 exitUI.Open();
             }
             gameText.Begin("プレイヤーを待っています ... ").Apply();
-            aliveCountText.Begin(reservedCount).Apply();
+            aliveCountText.Begin(Player.GetAliveCount()).Apply();
             break;
         case GameProgress.Countdown:
             if (updateGameProgressCount == 1) {
@@ -174,7 +185,7 @@ public partial class Server {
             }
             countdownTime = Mathf.Max(0.0f, countdownTime - Time.deltaTime);
             gameText.Begin("ゲームを開始します ... ").Append((int)countdownTime).Apply();
-            aliveCountText.Begin(reservedCount).Apply();
+            aliveCountText.Begin(Player.GetAliveCount()).Apply();
             break;
         case GameProgress.Starting:
         case GameProgress.Started:
@@ -183,7 +194,7 @@ public partial class Server {
                 gameText.Begin("").Apply();
                 exitUI.Close();
             }
-            aliveCountText.Begin(aliveCount).Apply();
+            aliveCountText.Begin(Plaer.GetAliveCount()).Apply();
             break;
         case GameProgress.Ended:
             if (updateGameProgressCount == 1) {
@@ -333,62 +344,6 @@ public partial class Server {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-
-// 予約数の同期
-public partial class Server {
-    //-------------------------------------------------------------------------- 変数
-    int reservedCount = 0; // 予約数
-
-    //-------------------------------------------------------------------------- 初期化と操作
-    void InitReservedCount() {
-        networkServer.InitReservedCount();
-    }
-
-    void AddReservedCount(int reserveCount) {
-        Debug.Assert(networkServer.isServer, "サーバ限定です");
-        reservedCount += reserveCount;
-        networkServer.SyncReservedCount(reservedCount);
-    }
-
-    int GetReservedCount() {
-        Debug.Assert(networkServer.isServer, "サーバ限定です");
-        return reservedCount;
-    }
-
-    void OnReservedCount(int reservedCount) {
-        Debug.LogFormat("Server: 予約数 ({0})", reservedCount);
-        this.reservedCount = reservedCount;
-    }
-
-    //-------------------------------------------------------------------------- 同期 (生存者数)
-    public partial class NetworkServerBehaviour {
-        // 初期化
-        public void InitReservedCount() {
-            OnSyncReservedCount(syncReservedCount);
-        }
-
-        // [S -> C] 予約数をバラマキ
-        public void SyncReservedCount(int reservedCount) {
-            Debug.Assert(this.isServer, "サーバ限定です");
-            syncReservedCount = reservedCount;
-        }
-
-        // 予約数を受信
-        public void OnSyncReservedCount(int value) {
-            if (!this.isServer) { // NOTE クライアントのみ処理。サーバ自身は受け取らない。
-                if (server != null) {
-                    server.OnReservedCount(value);
-                }
-            }
-        }
-
-        [HideInInspector, SyncVar(hook="OnSyncReservedCount")] public int syncReservedCount = 0;
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
 #if SERVER_CODE
 
 // 予約の受付
@@ -396,6 +351,9 @@ public partial class Server {
     //-------------------------------------------------------------------------- 定義
     // 最大予約数
     public static readonly int MAX_RESERERVED_COUNT = 30;
+
+    //-------------------------------------------------------------------------- 定義
+    int reservedCount = 0; // 予約数
 
     //-------------------------------------------------------------------------- 開始と停止と更新
     void InitReservation() {
@@ -420,11 +378,11 @@ public partial class Server {
 
         // 人数オーバー？
         var reserveCount = users.Length;
-        if ((GetReservedCount() + reserveCount) >= MAX_RESERERVED_COUNT) {
+        if ((reservedCount + reserveCount) >= MAX_RESERERVED_COUNT) {
             next("server full");
             yield break;
         }
-        AddReservedCount(reserveCount);
+        reservedCount += reserveCount;
 
         // ユーザ予約成功！
         Debug.LogFormat("Server: 予約成功 ({0})", reservedCount);

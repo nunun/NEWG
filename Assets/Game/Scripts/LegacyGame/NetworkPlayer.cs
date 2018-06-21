@@ -37,12 +37,11 @@ public class NetworkPlayer : Player.NetworkPlayerBehaviour {
     void OnDestroy() {
         instances.Remove(this);
         if (player != null) {
-            GameObject.Destroy(player.gameObject);//NOTE プレイヤーが残っていたら消しておく
+            GameObject.Destroy(player.gameObject);
         }
-        if (instance != this) {
-            return;
+        if (instance == this) {
+            instance = null;
         }
-        instance = null;
     }
 
     void Start() {

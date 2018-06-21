@@ -37,7 +37,33 @@ public partial class Player : MonoBehaviour {
     // このプレイヤーが使用するネットワークプレイヤー
     NetworkPlayer networkPlayer = null;
 
+    // 自分のインスタンス
+    static Player instance = null;
+
+    // 存在する全てのプレイヤーのインスタンス
+    static List<Player> instances = new List<NetworkPlayer>();
+
+    // 自分のインスタンスの取得
+    public static Player Instance { get { return instance; }}
+
+    // 自分のインスタンスの取得
+    public static List<Player> Instances { get { return instances; }}
+
     //-------------------------------------------------------------------------- 実装 (NetworkBehaviour)
+    void Awake() {
+        instances.Add(this);
+        if (networkPlayer.isLocalPlayer) {
+            instance = this;
+        }
+    }
+
+    void OnDestroy() {
+        instances.Remove(this);
+        if (instance == this) {
+            instance = null;
+        }
+    }
+
     void Start() {
         Debug.Assert(gun             != null, "銃の設定なし");
         Debug.Assert(head            != null, "頭の設定なし");
@@ -555,10 +581,18 @@ public partial class Player {
 // 死
 public partial class Player {
     //-------------------------------------------------------------------------- 変数
-    // サーバからの死の宣告を受けたとき
+    bool isDead = false; // 死亡フラグ
+
+    //-------------------------------------------------------------------------- 制御
     void OnDeath(NetworkInstanceId shooterNetId) {
         GameObject.Instantiate(explosionPrefab, transform.position, transform.rotation);
         this.transform.position = new Vector3(0.0f, -1000.0f, 0.0f);
+
+        // NOTE
+        // 死亡フラグを立てる
+        // 今はリスポーンがないのでフラグを立てるだけ...
+        player.isDead = true;
+        SetDirtyAliveCount();
 
         // 得点追加
         var shooterNetworkPlayer = NetworkPlayer.FindByNetId(shooterNetId);
@@ -590,6 +624,44 @@ public partial class Player {
                 player.OnDeath(shooterNetId);
             }
         }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+// 生存者数
+public partial class Player {
+    //-------------------------------------------------------------------------- 変数
+    static int  playerCountCache       = 0;    // プレイヤー数キャッシュ
+    static int  aliveCountCache        = 0;    // 生存者数キャッシュ
+    static bool isDirtyAliveCountCache = true; // 生存者数キャッシュに変更あり
+
+    //-------------------------------------------------------------------------- 制御
+    public static int GetAliveCount() {
+        if (!isDirtyAliveCountCache) {
+            if (playerCountCache != Player.Instances.Count) {
+                playerCountCache = Player.Instances.Count;
+                isDirtyAliveCountCache = true;
+            }
+        }
+        if (isDirtyAliveCountCache) {
+            var a = 0;
+            var l = Player.Instances.Count;
+            for (int i = 0; i < l; i++) {
+                var player = Player.Instances[i];
+                if (!player.isDead) {
+                    a++;
+                }
+            }
+            aliveCountCache = a;
+        }
+        return aliveCountCache;
+    }
+
+    void SetDirtyAliveCount() {
+        isDirtyAliveCountCache = true;
     }
 }
 
