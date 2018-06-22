@@ -67,8 +67,12 @@ public partial class UIObject : MonoBehaviour {
     //------------------------------------------------------------------------- 開く、閉じる、完了
     // 開く
     public void Open() {
-        if (IsOpen) {
+        if (IsOpening || IsOpened) {
             return; // 既に開いている
+        }
+        if (IsClosing) {
+            Debug.LogError("閉じ中に開いた");
+            Hide();
         }
         SetActive(true);
         if (uiEffect != null) {
@@ -78,10 +82,17 @@ public partial class UIObject : MonoBehaviour {
 
     // 閉じる
     public void Close() {
-        if (IsClosing) {
+        if (IsClosing || IsClosed) {
             return; // 既に閉じている
         }
+        if (IsOpening) {
+            Debug.LogError("閉き中に閉じた");
+            Show();
+        }
         if (uiEffect != null) {
+            if (IsOpening) {
+                uiEffect.Effected();
+            }
             uiEffect.Uneffect();
         } else {
             Done();

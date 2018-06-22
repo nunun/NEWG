@@ -186,6 +186,7 @@ public partial class Server {
         case GameProgress.End:
             if (updateGameProgressCount == 1) {
                 gameText.Begin("").Apply();
+                exitUI.Close();
             }
             aliveCountText.Begin(NetworkPlayer.GetAliveCount()).Apply();
             break;
