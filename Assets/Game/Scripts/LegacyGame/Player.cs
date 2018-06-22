@@ -26,6 +26,7 @@ public partial class Player : MonoBehaviour {
     public Rigidbody  playerRididbody = null;   // このキャラのリジッドボディ
     public float      jumpPower       = 190.0f; // ジャンプ力
     public int        killPoint       = 0;      // キル数
+    public float      gunDistance     = 0.52f;  // 銃までの距離
 
     // 各種 UI
     TextBuilder hitPointText  = null; // ヒットポイントテキスト
@@ -51,7 +52,6 @@ public partial class Player : MonoBehaviour {
         InitThrow();
         InitAnimation();
         InitHitPoint();
-        InitIK();
 
         // 各種UI取得
         hitPointText  = GameObjectTag<TextBuilder>.Find("HitPointText");
@@ -86,7 +86,7 @@ public partial class Player : MonoBehaviour {
         UpdateHitPoint();
     }
 
-    void LateUpdate() {
+    void OnAnimatorIK(int layerIndex) {
         UpdateIK();
     }
 }
@@ -128,11 +128,12 @@ public partial class Player {
         var jumpInput = GameInputManager.IsJump;
 
         // 視線を作成する
-        var target = forward;
+        var look = forward;
+        var aim  = look;
         if (gameCamera != null) {
             var hit = default(RaycastHit);
             if (Physics.Raycast(gameCamera.transform.position + (gameCamera.transform.forward * 2.5f), gameCamera.transform.forward, out hit)) {
-                target = (hit.point - gun.transform.position).normalized;
+                aim = (hit.point - aimPivot.transform.position).normalized;
             }
         }
 
@@ -143,12 +144,14 @@ public partial class Player {
         // 位置と向きを更新
         var position  = transform.position + (move * deltaTime);
         var direction = (new Vector3(forward.x, 0.0f, forward.z)).normalized;
-        var aim       = target;
-        var look      = forward;
-        transform.position      = position;
-        transform.rotation      = Quaternion.LookRotation(direction);
-        gun.transform.rotation  = Quaternion.LookRotation(aim);
-        head.transform.rotation = Quaternion.LookRotation(look);
+        transform.position = position;
+        transform.rotation = Quaternion.LookRotation(direction);
+
+        // 銃の位置と向きを調整
+        var gunPosition  = aimPivot.transform.position + (aim * gunDistance);
+        var gunDirection = aim;
+        gun.transform.position = gunPosition;
+        gun.transform.rotation = Quaternion.LookRotation(gunDirection);
 
         // ジャンプを更新
         if (jumpInput) {
@@ -174,12 +177,15 @@ public partial class Player {
         // 位置と向きを更新
         var position  = Vector3.Lerp(transform.position, networkPlayer.syncPosition, deltaTime * SYNC_POSITION_LERP_RATE);
         var direction = (new Vector3(networkPlayer.syncAim.x, 0.0f, networkPlayer.syncAim.z)).normalized;
-        var aim       = networkPlayer.syncAim;
-        var look      = networkPlayer.syncLook;
-        transform.position      = position;
-        transform.rotation      = Quaternion.LookRotation(direction);
-        gun.transform.rotation  = Quaternion.LookRotation(aim);
-        head.transform.rotation = Quaternion.LookRotation(look);
+        transform.position = position;
+        transform.rotation = Quaternion.LookRotation(direction);
+
+        // 銃の位置と向きを調整
+        var aim = networkPlayer.syncAim;
+        var gunPosition  = aimPivot.transform.position + (aim * gunDistance);
+        var gunDirection = aim;
+        gun.transform.position = gunPosition;
+        gun.transform.rotation = Quaternion.LookRotation(gunDirection);
     }
 
     //------------------------------------------------------------------------- 同期
@@ -388,6 +394,22 @@ public partial class Player {
         // アニメーション速度も変えておく
         var animationSpeed = (currentMoveSpeed >= 0.0001f)? currentMoveSpeed * MOVE_ANIMATION_SPEED : 1.0f;
         animator.speed = animationSpeed;
+    }
+
+    void UpdateIK() {
+        if (!animator) {
+           return;
+        }
+        animator.SetLookAtWeight(1.0f, 0.0f, 1.0f, 0.0f, 0f);
+        animator.SetLookAtPosition(gun.transform.position);
+        animator.SetIKPositionWeight(AvatarIKGoal.LeftHand, 1.0f);
+        animator.SetIKRotationWeight(AvatarIKGoal.LeftHand, 1.0f);
+        animator.SetIKPosition(AvatarIKGoal.LeftHand, gun.leftHandle.transform.position);
+        animator.SetIKRotation(AvatarIKGoal.LeftHand, gun.leftHandle.transform.rotation);
+        animator.SetIKPositionWeight(AvatarIKGoal.RightHand, 1.0f);
+        animator.SetIKRotationWeight(AvatarIKGoal.RightHand, 1.0f);
+        animator.SetIKPosition(AvatarIKGoal.RightHand, gun.rightHandle.transform.position);
+        animator.SetIKRotation(AvatarIKGoal.RightHand, gun.rightHandle.transform.rotation);
     }
 }
 
@@ -627,25 +649,5 @@ public partial class Player {
         public static void SetDirtyAliveCount() {
             isDirtyAliveCountCache = true;
         }
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
-// IK
-public partial class Player {
-    //-------------------------------------------------------------------------- 制御
-    void InitIK() {
-        // NOTE
-        // 今のところ処理なし
-    }
-
-    void UpdateIK() {
-        // NOTE
-        // 将来的にここで IK する
-        //gun.transform.rotation  = Quaternion.LookRotation(currentAim);
-        //head.transform.rotation = Quaternion.LookRotation(currentLook);
     }
 }
