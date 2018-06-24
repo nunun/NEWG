@@ -29,7 +29,7 @@ public partial class Server : MonoBehaviour {
         if (networkServer.isServer) {
             #if SERVER_CODE
             InitReservation();
-            InitPlayerInfo();
+            InitPlayers();
             #endif
         }
 
@@ -57,7 +57,7 @@ public partial class Server : MonoBehaviour {
         if (networkServer.isServer) {
             #if SERVER_CODE
             UpdateGameProgressServer();
-            UpdatePlayerInfo();
+            UpdatePlayers();
             #endif
         }
         UpdateGameProgress();
@@ -295,6 +295,9 @@ public partial class Server {
     // 不信なユーザをキックする時間 [秒]
     public static readonly float UNTRUSTED_KICK_TIME = 5.0f;
 
+    // プレイヤーを場外判定する深さ
+    public static readonly float OUTOFAREA_Y = -2.0f;
+
     //-------------------------------------------------------------------------- 変数
     static List<UntrustedPlayerInfo> untrustedPlayerList = new List<UntrustedPlayerInfo>();
 
@@ -316,16 +319,17 @@ public partial class Server {
     }
 
     //-------------------------------------------------------------------------- 制御
-    void InitPlayerInfo() {
+    void InitPlayers() {
         // NOTE
         // 特に処理なし
     }
 
-    void UpdatePlayerInfo() {
+    void UpdatePlayers() {
         UpdateUntrustedPlayerInfo();
+        UpdateOutOfArea();
     }
 
-    //-------------------------------------------------------------------------- 制御 (不信なプレイヤー)
+    //-------------------------------------------------------------------------- 更新 (不信なプレイヤー)
     void UpdateUntrustedPlayerInfo() {
         var time = Time.deltaTime;
         for (int i = untrustedPlayerList.Count - 1; i >= 0; i--) {
@@ -348,6 +352,23 @@ public partial class Server {
                     networkPlayer.Kick(); // NOTE 不信なユーザは切断！
                 }
                 continue;
+            }
+        }
+    }
+
+    //-------------------------------------------------------------------------- 更新 (場外)
+    void UpdateOutOfArea() {
+        for (var i = NetworkPlayer.Instances.Count - 1; i >= 0; i--) {
+            var networkPlayer = NetworkPlayer.Instances[i];
+            var player        = networkPlayer.player;
+            if (player == null) {
+                continue;
+            }
+            if (player.transform.position.y <= OUTOFAREA_Y) {
+                var position = Vector3.zero;
+                var rotation = Quaternion.identity;
+                SpawnPoint.GetRandomSpawnPoint(out position, out rotation);
+                networkPlayer.RpcDeparture(position, rotation);
             }
         }
     }
