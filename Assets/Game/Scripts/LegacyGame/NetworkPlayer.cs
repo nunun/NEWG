@@ -51,6 +51,11 @@ public class NetworkPlayer : Player.NetworkPlayerBehaviour {
         instance = this;
     }
 
+    //-------------------------------------------------------------------------- 操作
+    public void Kick() {
+        this.GetComponent<NetworkIdentity>().connectionToClient.Disconnect();
+    }
+
     //-------------------------------------------------------------------------- ユーティリティ
     // プレイヤーからインスタンスを探す
     public static NetworkPlayer FindByPlayer(Player player) {

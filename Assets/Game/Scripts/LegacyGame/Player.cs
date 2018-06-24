@@ -27,6 +27,8 @@ public partial class Player : MonoBehaviour {
     public float      jumpPower       = 190.0f; // ジャンプ力
     public int        killPoint       = 0;      // キル数
     public float      gunDistance     = 0.52f;  // 銃までの距離
+    public string     playerId        = "";     // プレイヤーID
+    public string     playerName      = "";     // プレイヤー名
 
     // 各種 UI
     TextBuilder hitPointText  = null; // ヒットポイントテキスト
@@ -52,6 +54,7 @@ public partial class Player : MonoBehaviour {
         InitThrow();
         InitAnimation();
         InitHitPoint();
+        InitPlayerInfo();
 
         // 各種UI取得
         hitPointText  = GameObjectTag<TextBuilder>.Find("HitPointText");
@@ -66,10 +69,22 @@ public partial class Player : MonoBehaviour {
         groundLayerMask = 1 << groundLayerNo;
 
         // NOTE
-        // 即座にスポーンをリクエスト
+        // 即座に自分の情報とスポーンをリクエスト
+        // プレイヤー情報を送った後にスポーンしてもいいかもしれない。
         if (networkPlayer.isLocalPlayer) {
+            SendPlayerInfo();
             Spawn();
         }
+
+        #if SERVER_CODE
+        Server.AddPlayer(this);
+        #endif
+    }
+
+    void OnDestroy() {
+        #if SERVER_CODE
+        Server.RemovePlayer(this);
+        #endif
     }
 
     void Update() {
@@ -649,5 +664,67 @@ public partial class Player {
         public static void SetDirtyAliveCount() {
             isDirtyAliveCountCache = true;
         }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+// プレイヤー情報の宣言と同期
+public partial class Player {
+    //-------------------------------------------------------------------------- 制御
+    void InitPlayerInfo() {
+        if (networkPlayer.isLocalPlayer) {
+            playerId   = GameDataManager.PlayerData.playerId;
+            playerName = GameDataManager.PlayerData.playerName;
+        }
+    }
+
+    void SendPlayerInfo() {
+        Debug.Assert(networkPlayer.isLocalPlayer, "ローカル限定です");
+        networkPlayer.SyncPlayerInfo(playerId, playerName);
+    }
+
+    void OnSyncPlayerId(string playerId) {
+        this.playerId = playerId;
+    }
+
+    void OnSyncPlayerName(string playerName) {
+        this.playerName = playerName;
+    }
+
+    //-------------------------------------------------------------------------- 同期
+    public partial class NetworkPlayerBehaviour {
+        // [C 1-> S] プレイヤー情報を同期
+        public void SyncPlayerInfo(string playerId, string playerName) {
+            Debug.Assert(this.isLocalPlayer, "ローカル限定です");
+            CmdSyncPlayerInfo(playerId, playerName);
+        }
+
+        // [S ->* C] プレイヤー情報をばらまき
+        [Command]
+        public void CmdSyncPlayerInfo(string playerId, string playerName) {
+            Debug.Assert(this.isServer, "サーバ限定です");
+            syncPlayerId   = playerId;
+            syncPlayerName = playerName;
+        }
+
+        // プレイヤー ID を受信
+        public void OnSyncPlayerId(string value) {
+            if (player != null) {
+                player.OnSyncPlayerId(value);
+            }
+        }
+
+        // プレイヤー名を受信
+        public void OnSyncPlayerName(string value) {
+            if (player != null) {
+                player.OnSyncPlayerName(value);
+            }
+        }
+
+        [HideInInspector, SyncVar(hook="OnSyncPlayerId")]   public string syncPlayerId   = null;
+        [HideInInspector, SyncVar(hook="OnSyncPlayerName")] public string syncPlayerName = null;
     }
 }

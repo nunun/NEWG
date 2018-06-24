@@ -29,6 +29,7 @@ public partial class Server : MonoBehaviour {
         if (networkServer.isServer) {
             #if SERVER_CODE
             InitReservation();
+            InitPlayerInfo();
             #endif
         }
 
@@ -56,6 +57,7 @@ public partial class Server : MonoBehaviour {
         if (networkServer.isServer) {
             #if SERVER_CODE
             UpdateGameProgressServer();
+            UpdatePlayerInfo();
             #endif
         }
         UpdateGameProgress();
@@ -98,7 +100,7 @@ public partial class Server {
 
     public bool IsGameStarted { get { return gameProgress == GameProgress.Started; }}
 
-    //-------------------------------------------------------------------------- 初期化と更新
+    //-------------------------------------------------------------------------- 制御
     void InitGameProgress() {
         gameProgress      = GameProgress.Waiting;
         countdownTime     = COUNTDOWN_TIME;
@@ -130,8 +132,12 @@ public partial class Server {
             }
             break;
         case GameProgress.Starting:
+            var sequenceIndex = 0;
             foreach (var networkPlayer in NetworkPlayer.Instances) {
-                networkPlayer.RpcDeparture(new Vector3(0.0f, 100.0f, 0.0f), Quaternion.identity); // NOTE プレイヤーを飛ばす。どこに飛ばすかは仮。
+                var position = Vector3.zero;
+                var rotation = Quaternion.identity;
+                SpawnPoint.GetRandomSpawnPoint(out position, out rotation, sequenceIndex++);
+                networkPlayer.RpcDeparture(position, rotation);
             }
             ChangeGameProgress(GameProgress.Started);
             break;
@@ -277,16 +283,92 @@ public partial class Server {
 ////////////////////////////////////////////////////////////////////////////////
 #if SERVER_CODE
 
+// プレイヤー情報と同期処理
+public partial class Server {
+    //-------------------------------------------------------------------------- 定義
+    // 不信なユーザ情報
+    public class UntrustedPlayerInfo {
+        public Player player = null;
+        public float  timer  = 0.0f;
+    }
+
+    // 不信なユーザをキックする時間 [秒]
+    public static readonly float UNTRUSTED_KICK_TIME = 5.0f;
+
+    //-------------------------------------------------------------------------- 変数
+    static List<UntrustedPlayerInfo> untrustedPlayerList = new List<UntrustedPlayerInfo>();
+
+    //-------------------------------------------------------------------------- プレイヤーの追加と削除
+    public static void AddPlayer(Player player) {
+        var untrustedPlayerInfo = new UntrustedPlayerInfo();
+        untrustedPlayerInfo.player = player;
+        untrustedPlayerInfo.timer  = UNTRUSTED_KICK_TIME;
+        untrustedPlayerList.Add(untrustedPlayerInfo);
+    }
+
+    public static void RemovePlayer(Player player) {
+        for (int i = untrustedPlayerList.Count - 1; i >= 0; i--) {
+            var untrustedPlayerInfo = untrustedPlayerList[i];
+            if (untrustedPlayerInfo.player == player) {
+                untrustedPlayerList.RemoveAt(i);
+            }
+        }
+    }
+
+    //-------------------------------------------------------------------------- 制御
+    void InitPlayerInfo() {
+        // NOTE
+        // 特に処理なし
+    }
+
+    void UpdatePlayerInfo() {
+        UpdateUntrustedPlayerInfo();
+    }
+
+    //-------------------------------------------------------------------------- 制御 (不信なプレイヤー)
+    void UpdateUntrustedPlayerInfo() {
+        var time = Time.deltaTime;
+        for (int i = untrustedPlayerList.Count - 1; i >= 0; i--) {
+            var untrustedPlayerInfo = untrustedPlayerList[i];
+            if (untrustedPlayerInfo.player == null) {
+                untrustedPlayerList.RemoveAt(i);
+                continue;
+            }
+            var playerId = untrustedPlayerInfo.player.playerId;
+            if (!string.IsNullOrEmpty(playerId)) {
+                Debug.LogFormat("信用 ({0})", playerId);
+                untrustedPlayerList.RemoveAt(i);
+                continue;
+            }
+            untrustedPlayerInfo.timer -= time;
+            if (untrustedPlayerInfo.timer <= 0.0f) {
+                untrustedPlayerList.RemoveAt(i);
+                var networkPlayer = NetworkPlayer.FindByPlayer(untrustedPlayerInfo.player);
+                if (networkPlayer != null) {
+                    networkPlayer.Kick(); // NOTE 不信なユーザは切断！
+                }
+                continue;
+            }
+        }
+    }
+}
+
+#endif
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+#if SERVER_CODE
+
 // 予約の受付
 public partial class Server {
     //-------------------------------------------------------------------------- 定義
     // 最大予約数
-    public static readonly int MAX_RESERERVED_COUNT = 30;
+    public static readonly int MAX_RESERERVED_COUNT = 10;
 
     //-------------------------------------------------------------------------- 定義
     int reservedCount = 0; // 予約数
 
-    //-------------------------------------------------------------------------- 開始と停止と更新
+    //-------------------------------------------------------------------------- 制御
     void InitReservation() {
         Debug.Log("Server: 予約開始");
         GameMindlinkManager.SetReserveRequestMessageHandler(HandleReserve);
