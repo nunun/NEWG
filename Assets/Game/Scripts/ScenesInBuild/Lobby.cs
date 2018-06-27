@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using Services.Protocols;
 
 // ロビー
@@ -90,9 +91,8 @@ public partial class Lobby {
             subject.Dispose();
         }
 
-        // TODO
-        // サインイン結果
-        Debug.Log("Player Name = " + GameDataManager.PlayerData.playerName);
+        // プレイヤー名
+        playerNameField.text = GameDataManager.PlayerData.playerName;
 
         // ロビーへ
         signinUI.Change(lobbyUI);
@@ -106,8 +106,9 @@ public partial class Lobby {
 // ロビー処理
 public partial class Lobby {
     //-------------------------------------------------------------------------- 変数
-    [SerializeField] SceneUI lobbyUI         = null;
-    [SerializeField] Button  gameStartButton = null;
+    [SerializeField] SceneUI     lobbyUI         = null;
+    [SerializeField] Button      gameStartButton = null;
+    [SerializeField] InputField  playerNameField = null;
 
     //-------------------------------------------------------------------------- ロビーの初期化、開始、停止、更新
     void InitLobby() {
@@ -116,6 +117,16 @@ public partial class Lobby {
         lobbyUI.onOpen.AddListener(() => { StartCoroutine("UpdateLobby"); });
         lobbyUI.onClose.AddListener(() => { StopCoroutine("UpdateLobby"); });
         gameStartButton.onClick.AddListener(() => { lobbyUI.Change(matchingUI); });
+
+        // プレイヤー名等
+        playerNameField = GameObjectTag<InputField>.Find("PlayerNameField");
+        playerNameField.onEndEdit.AddListener((playerName) => {
+            var subject = StatusLine.Observe();
+            subject.message = "設定中 ...";
+            WebAPI.Rename(playerName, (err,res) => {
+                subject.Dispose();
+            });
+        });
     }
 
     IEnumerator UpdateLobby() {
