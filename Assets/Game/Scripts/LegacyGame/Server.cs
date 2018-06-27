@@ -184,7 +184,7 @@ public partial class Server {
                 exitUI.Close();
             }
             countdownTime = Mathf.Max(0.0f, countdownTime - Time.deltaTime);
-            gameText.Begin("ゲームを開始します ... ").Append((int)countdownTime).Apply();
+            gameText.Begin("試合を開始します ... ").Append((int)countdownTime).Apply();
             aliveCountText.Begin(NetworkPlayer.GetAliveCount()).Apply();
             break;
         case GameProgress.Starting:
@@ -198,7 +198,7 @@ public partial class Server {
             break;
         case GameProgress.Ended:
             if (updateGameProgressCount == 1) {
-                gameText.Begin("ゲーム終了！").Apply();
+                gameText.Begin("試合終了！").Apply();
                 exitUI.Open();
             }
             break;
@@ -364,7 +364,7 @@ public partial class Server {
             if (player == null) {
                 continue;
             }
-            if (player.transform.position.y <= OUTOFAREA_Y) {
+            if (!player.IsDead && player.transform.position.y <= OUTOFAREA_Y) {
                 var position = Vector3.zero;
                 var rotation = Quaternion.identity;
                 SpawnPoint.GetRandomSpawnPoint(out position, out rotation);

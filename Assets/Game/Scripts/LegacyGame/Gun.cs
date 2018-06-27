@@ -7,11 +7,12 @@ using UnityEngine.Networking;
 // 銃の実装
 public partial class Gun : MonoBehaviour {
     //-------------------------------------------------------------------------- 変数
-    public GameObject muzzle       = null;  // 銃口の設定
-    public GameObject bulletPrefab = null;  // 弾の設定
-    public GameObject leftHandle   = null;  // 左手の位置
-    public GameObject rightHandle  = null;  // 右ての位置
-    public float      fireRate     = 10.0f; // 秒間発射
+    public GameObject  muzzle       = null;  // 銃口の設定
+    public GameObject  bulletPrefab = null;  // 弾の設定
+    public GameObject  leftHandle   = null;  // 左手の位置
+    public GameObject  rightHandle  = null;  // 右ての位置
+    public float       fireRate     = 10.0f; // 秒間発射
+    public AudioSource fireAudio    = null;  // 発射時の音
 
     float fireInterval = 0.0f; // 発射間隔
 
@@ -33,6 +34,9 @@ public partial class Gun : MonoBehaviour {
             var bullet = bulletObject.GetComponent<Bullet>();
             if (bullet != null) {
                 bullet.shooter = shooter;
+            }
+            if (fireAudio != null) {
+                fireAudio.Play();
             }
         }
     }

@@ -8,7 +8,9 @@ using UnityEngine.UI;
 // テキストビルダー
 public class TextBuilder : MonoBehaviour {
     //------------------------------------------------------------------------- 変数
-    public Text text = null; // ビルド対象のテキスト
+    public Text  text = null; // ビルド対象のテキスト
+
+    float time = 0.0f; // 表示時間
 
     StringBuilder stringBuilder     = new StringBuilder(64, 2048);
     StringBuilder lastStringBuilder = new StringBuilder(64, 2048);
@@ -47,10 +49,10 @@ public class TextBuilder : MonoBehaviour {
         return this;
     }
 
-    public void Apply(bool forceUpdate = false) {
+    public TextBuilder Apply(bool forceUpdate = false) {
         // 更新が必要か？
         if (!forceUpdate && stringBuilder.Equals(lastStringBuilder)) {
-            return;
+            return this;
         }
 
         // テキスト更新
@@ -65,10 +67,30 @@ public class TextBuilder : MonoBehaviour {
         // 最後の文字列を更新
         lastStringBuilder.Length   = 0;
         lastStringBuilder.Append(text);
+        return this;
+    }
+
+    public TextBuilder For(float time) {
+        this.time    = time;
+        this.enabled = true;
+        return this;
     }
 
     //------------------------------------------------------------------------- 実装 (MonoBehaviour)
     void Awake() {
         Debug.Assert(text != null, "テキストの設定なし");
+    }
+
+    void Start() {
+        this.enabled = (time > 0.0f);
+    }
+
+    void Update() {
+        time -= Time.deltaTime;
+        if (time <= 0.0f) {
+            Begin("").Apply(true);
+            enabled = false;
+            return;
+        }
     }
 }

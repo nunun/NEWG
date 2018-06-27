@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.Networking;
 
 // プレイヤー
@@ -12,6 +13,9 @@ public partial class Player : MonoBehaviour {
         public abstract Player player { get; protected set; }
         protected void Link(Player player) { player.networkPlayer = this as NetworkPlayer; }
     }
+
+    // 最大ヒットポイント
+    public static readonly int MAX_HITPOINT = 100;
 
     //-------------------------------------------------------------------------- 変数
     public Gun        gun             = null;   // 銃の設定
@@ -32,7 +36,9 @@ public partial class Player : MonoBehaviour {
 
     // 各種 UI
     TextBuilder hitPointText  = null; // ヒットポイントテキスト
+    Slider      hitPointGauge = null; // ヒットポイントゲージ
     TextBuilder killPointText = null; // キルポイントテキスト
+    TextBuilder messageText   = null; // メッセージテキスト
     SceneUI     exitUI        = null; // ExitUI
 
     // 地面レイヤマスク
@@ -58,10 +64,14 @@ public partial class Player : MonoBehaviour {
 
         // 各種UI取得
         hitPointText  = GameObjectTag<TextBuilder>.Find("HitPointText");
+        hitPointGauge = GameObjectTag<Slider>.Find("HitPointGauge");
         killPointText = GameObjectTag<TextBuilder>.Find("KillPointText");
+        messageText   = GameObjectTag<TextBuilder>.Find("MessageText");
         exitUI        = GameObjectTag<SceneUI>.Find("ExitUI");
         Debug.Assert(hitPointText  != null, "ヒットポイントテキストがシーンにない");
+        Debug.Assert(hitPointGauge != null, "ヒットポイントゲージがシーンにない");
         Debug.Assert(killPointText != null, "キルポイントテキストがシーンにない");
+        Debug.Assert(messageText   != null, "メッセージテキストがシーンにない");
         Debug.Assert(exitUI        != null, "ExitUI がシーンにない");
 
         // 地面レイヤを取得
@@ -456,6 +466,8 @@ public partial class Player {
         hitPoint = value;
         if (networkPlayer.isLocalPlayer) {
             hitPointText.Begin(hitPoint).Apply();
+            hitPointGauge.value = Mathf.Clamp(((float)hitPoint / MAX_HITPOINT), 0.0f, 1.0f);
+            hitPointGauge.fillRect.gameObject.SetActive(hitPoint > 0); // NOTE 最後の 1 ミリが消えないのでワークアラウンド。後々スライダー側に処理を移す。
         }
     }
 
@@ -591,27 +603,40 @@ public partial class Player {
     //-------------------------------------------------------------------------- 変数
     bool isDead = false; // 死亡フラグ
 
+    // 死亡フラグの取得
+    public bool IsDead { get { return isDead; }}
+
     //-------------------------------------------------------------------------- 制御
     void OnDeath(NetworkInstanceId shooterNetId) {
         GameObject.Instantiate(explosionPrefab, transform.position, transform.rotation);
-        this.transform.position = new Vector3(0.0f, -1000.0f, 0.0f);
 
         // NOTE
-        // 死亡フラグを立てる
-        // 今はリスポーンがないのでフラグを立てるだけ...
+        // 死亡フラグを立ててどこかに飛ばす
+        // リスポーンする場合はこのあたりに処理を追加する
         this.isDead = true;
+        this.transform.position = new Vector3(0.0f, -1000.0f, 0.0f);
         NetworkPlayer.SetDirtyAliveCount();
 
         // 得点追加
         var shooterNetworkPlayer = NetworkPlayer.FindByNetId(shooterNetId);
         if (shooterNetworkPlayer != null) {
-            var player = shooterNetworkPlayer.player;
-            if (player != null) {
-                player.killPoint++;
+            var shooterPlayer = shooterNetworkPlayer.player;
+            if (shooterPlayer != null) {
+                shooterPlayer.killPoint++;
 
                 // キルポイント表示変更
                 if (shooterNetworkPlayer.isLocalPlayer) {
-                    killPointText.Begin(player.killPoint).Apply();
+                    killPointText.Begin(shooterPlayer.killPoint).Apply();
+                }
+
+                // 倒されたメッセージ
+                if (this.networkPlayer.isLocalPlayer) {
+                    messageText.Begin(shooterPlayer.playerName).Append(" に倒されました").Apply();
+                }
+
+                // 倒したメッセージ
+                if (shooterNetworkPlayer.isLocalPlayer) {
+                    messageText.Begin(this.playerName).Append(" を倒しました").Apply().For(3.0f);
                 }
             }
         }
@@ -678,6 +703,14 @@ public partial class Player {
         if (networkPlayer.isLocalPlayer) {
             playerId   = GameDataManager.PlayerData.playerId;
             playerName = GameDataManager.PlayerData.playerName;
+        } else {
+            // NOTE
+            // クライアントがサーバに接続する場合、
+            // SyncVar は同期されるが、Hook は呼ばれないので
+            // networkPlayer から書き戻す。
+            // 他にも書き戻しが必要なメンバ変数がないか確認する。
+            playerId   = networkPlayer.syncPlayerId;
+            playerName = networkPlayer.syncPlayerName;
         }
     }
 
@@ -692,6 +725,11 @@ public partial class Player {
 
     void OnSyncPlayerName(string playerName) {
         this.playerName = playerName;
+        if (this.networkPlayer.isLocalPlayer) {
+            messageText.Begin("あなた がゲームに参加しました").Apply().For(3.0f);
+        } else {
+            messageText.Begin(playerName).Append(" がゲームに参加しました").Apply().For(3.0f);
+        }
     }
 
     //-------------------------------------------------------------------------- 同期
@@ -724,7 +762,7 @@ public partial class Player {
             }
         }
 
-        [HideInInspector, SyncVar(hook="OnSyncPlayerId")]   public string syncPlayerId   = null;
-        [HideInInspector, SyncVar(hook="OnSyncPlayerName")] public string syncPlayerName = null;
+        [/*HideInInspector,*/ SyncVar(hook="OnSyncPlayerId")]   public string syncPlayerId   = null;
+        [/*HideInInspector,*/ SyncVar(hook="OnSyncPlayerName")] public string syncPlayerName = null;
     }
 }

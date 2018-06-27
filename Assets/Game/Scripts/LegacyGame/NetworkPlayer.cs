@@ -47,11 +47,17 @@ public class NetworkPlayer : Player.NetworkPlayerBehaviour {
     }
 
     //-------------------------------------------------------------------------- 実装 (NetworkBehaviour)
+    // ローカルプレイヤ開始時
     public override void OnStartLocalPlayer() {
         instance = this;
     }
 
+    // クライアント同期完了時
+    //public override void OnStartClient() {
+    //}
+
     //-------------------------------------------------------------------------- 操作
+    // このプレイヤーを切断
     public void Kick() {
         this.GetComponent<NetworkIdentity>().connectionToClient.Disconnect();
     }
