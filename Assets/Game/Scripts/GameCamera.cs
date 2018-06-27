@@ -116,8 +116,13 @@ public partial class GameCamera {
 // 結果モードに移行
 public partial class GameCamera {
     //-------------------------------------------------------------------------- 操作
+    public GameObject resultPosition = null;
+
+    //-------------------------------------------------------------------------- 操作
     public void SetResultMode() {
-        mode = Mode.Menu;
+        mode = Mode.Result;
+        transform.position = resultPosition.transform.position;
+        transform.rotation = resultPosition.transform.rotation;
         tpsCamera.enabled = false;
         GameInputManager.IsEnabled = false;
         Cursor.lockState = CursorLockMode.None;

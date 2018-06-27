@@ -335,7 +335,9 @@ namespace UnityStandardAssets.Water
 
         WaterMode FindHardwareWaterSupport()
         {
+            #pragma warning disable 0618
             if (!SystemInfo.supportsRenderTextures || !GetComponent<Renderer>())
+            #pragma warning restore 0618
             {
                 return WaterMode.Simple;
             }

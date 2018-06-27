@@ -18,21 +18,22 @@ public partial class Player : MonoBehaviour {
     public static readonly int MAX_HITPOINT = 100;
 
     //-------------------------------------------------------------------------- 変数
-    public Gun        gun             = null;   // 銃の設定
-    public GameObject head            = null;   // 頭の設定
-    public GameObject aimPivot        = null;   // 射線の始点の設定 (右目とか頭とか)
-    public GameObject throwPoint      = null;   // 投擲物発生位置
-    public float      throwPower      = 350.0f; // 投擲力
-    public float      throwCooldown   = 10.0f;  // 投擲間隔時間
-    public GameObject grenadePrefab   = null;   // グレネードのプレハブ
-    public GameObject explosionPrefab = null;   // 爆発のプレハブ   (死亡時)
-    public int        hitPoint        = 100;    // ヒットポイント
-    public Rigidbody  playerRididbody = null;   // このキャラのリジッドボディ
-    public float      jumpPower       = 190.0f; // ジャンプ力
-    public int        killPoint       = 0;      // キル数
-    public float      gunDistance     = 0.52f;  // 銃までの距離
-    public string     playerId        = "";     // プレイヤーID
-    public string     playerName      = "";     // プレイヤー名
+    public Gun         gun             = null;   // 銃の設定
+    public GameObject  head            = null;   // 頭の設定
+    public GameObject  aimPivot        = null;   // 射線の始点の設定 (右目とか頭とか)
+    public GameObject  throwPoint      = null;   // 投擲物発生位置
+    public float       throwPower      = 350.0f; // 投擲力
+    public float       throwCooldown   = 10.0f;  // 投擲間隔時間
+    public GameObject  grenadePrefab   = null;   // グレネードのプレハブ
+    public GameObject  explosionPrefab = null;   // 爆発のプレハブ   (死亡時)
+    public AudioSource throwAudio      = null;   // 投げの音
+    public int         hitPoint        = 100;    // ヒットポイント
+    public Rigidbody   playerRididbody = null;   // このキャラのリジッドボディ
+    public float       jumpPower       = 190.0f; // ジャンプ力
+    public int         killPoint       = 0;      // キル数
+    public float       gunDistance     = 0.52f;  // 銃までの距離
+    public string      playerId        = "";     // プレイヤーID
+    public string      playerName      = "";     // プレイヤー名
 
     // 各種 UI
     TextBuilder hitPointText  = null; // ヒットポイントテキスト
@@ -52,7 +53,9 @@ public partial class Player : MonoBehaviour {
         Debug.Assert(gun             != null, "銃の設定なし");
         Debug.Assert(head            != null, "頭の設定なし");
         Debug.Assert(aimPivot        != null, "視線の始点の設定なし");
+        Debug.Assert(grenadePrefab   != null, "グレネードプレハブの設定なし");
         Debug.Assert(explosionPrefab != null, "爆発プレハブの設定なし");
+        Debug.Assert(throwAudio      != null, "投げの設定なし");
 
         // 初期化
         InitMove();
@@ -334,6 +337,9 @@ public partial class Player {
             if (grenadeRigidbody != null) {
                 grenadeRigidbody.AddForce(throwVector * throwPower);
             }
+            if (throwAudio != null) {
+                throwAudio.Play();
+            }
             throwInterval = throwCooldown;
 
             // NOTE
@@ -359,6 +365,9 @@ public partial class Player {
         var grenadeRigidbody = grenadeObject.GetComponent<Rigidbody>();
         if (grenadeRigidbody != null) {
             grenadeRigidbody.AddForce(throwVector * throwPower);
+        }
+        if (throwAudio != null) {
+            throwAudio.Play();
         }
     }
 
@@ -643,7 +652,7 @@ public partial class Player {
 
         // 自分がやられたら結果表示して終わり
         if (networkPlayer.isLocalPlayer) {
-            GameCamera.Instance.SetMenuMode();
+            GameCamera.Instance.SetResultMode();
             exitUI.Open();
         }
     }
