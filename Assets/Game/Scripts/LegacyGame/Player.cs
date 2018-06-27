@@ -18,6 +18,7 @@ public partial class Player : MonoBehaviour {
     public static readonly int MAX_HITPOINT = 100;
 
     //-------------------------------------------------------------------------- 変数
+    public Rigidbody   playerRididbody = null;   // このプレイヤーのリジッドボディ
     public Gun         gun             = null;   // 銃の設定
     public GameObject  head            = null;   // 頭の設定
     public GameObject  aimPivot        = null;   // 射線の始点の設定 (右目とか頭とか)
@@ -28,7 +29,6 @@ public partial class Player : MonoBehaviour {
     public GameObject  explosionPrefab = null;   // 爆発のプレハブ   (死亡時)
     public AudioSource throwAudio      = null;   // 投げの音
     public int         hitPoint        = 100;    // ヒットポイント
-    public Rigidbody   playerRididbody = null;   // このキャラのリジッドボディ
     public float       jumpPower       = 190.0f; // ジャンプ力
     public int         killPoint       = 0;      // キル数
     public float       gunDistance     = 0.52f;  // 銃までの距離
@@ -59,6 +59,7 @@ public partial class Player : MonoBehaviour {
 
         // 初期化
         InitMove();
+        InitLook();
         InitFire();
         InitThrow();
         InitAnimation();
@@ -102,16 +103,24 @@ public partial class Player : MonoBehaviour {
 
     void Update() {
         if (networkPlayer.isLocalPlayer) {
-            MoveLocal();
+            LookLocal();
             FireLocal();
             ThrowLocal();
         } else {
-            MoveNetwork();
+            LookNetwork();
             FireNetwork();
             ThrowNetwork();
         }
         UpdateAnimation();
         UpdateHitPoint();
+    }
+
+    void FixedUpdate() {
+        if (networkPlayer.isLocalPlayer) {
+            MoveLocal();
+        } else {
+            MoveNetwork();
+        }
     }
 
     void OnAnimatorIK(int layerIndex) {
@@ -132,7 +141,7 @@ public partial class Player {
     //-------------------------------------------------------------------------- 変数
     float currentMoveSpeed = 0.0f; // 現在の移動速度
 
-    //-------------------------------------------------------------------------- 制御
+    //-------------------------------------------------------------------------- 制御 (移動)
     // 移動の初期化
     void InitMove() {
         currentMoveSpeed = 0.0f;
@@ -159,27 +168,19 @@ public partial class Player {
         var look = forward;
         var aim  = look;
         if (gameCamera != null) {
-            var hit = default(RaycastHit);
-            if (Physics.Raycast(gameCamera.transform.position + (gameCamera.transform.forward * 2.5f), gameCamera.transform.forward, out hit)) {
-                aim = (hit.point - aimPivot.transform.position).normalized;
-            }
+           var hit = default(RaycastHit);
+           if (Physics.Raycast(gameCamera.transform.position + (gameCamera.transform.forward * 6.5f), gameCamera.transform.forward, out hit)) {
+               aim = (hit.point - aimPivot.transform.position).normalized;
+           }
         }
 
         // 移動速度
         var move = moveInput * MOVE_SPEED;
         currentMoveSpeed = (move.sqrMagnitude >= 0.0001f)? MOVE_SPEED : 0.0f;
 
-        // 位置と向きを更新
+        // 位置を更新
         var position  = transform.position + (move * deltaTime);
-        var direction = (new Vector3(forward.x, 0.0f, forward.z)).normalized;
-        transform.position = position;
-        transform.rotation = Quaternion.LookRotation(direction);
-
-        // 銃の位置と向きを調整
-        var gunPosition  = aimPivot.transform.position + (aim * gunDistance);
-        var gunDirection = aim;
-        gun.transform.position = gunPosition;
-        gun.transform.rotation = Quaternion.LookRotation(gunDirection);
+        playerRididbody.MovePosition(position);
 
         // ジャンプを更新
         if (jumpInput) {
@@ -204,8 +205,51 @@ public partial class Player {
 
         // 位置と向きを更新
         var position  = Vector3.Lerp(transform.position, networkPlayer.syncPosition, deltaTime * SYNC_POSITION_LERP_RATE);
-        var direction = (new Vector3(networkPlayer.syncAim.x, 0.0f, networkPlayer.syncAim.z)).normalized;
         transform.position = position;
+    }
+
+    //-------------------------------------------------------------------------- 制御 (視線)
+    // 視線の初期化
+    void InitLook() {
+        // NOTE
+        // 今のところ特になし
+    }
+
+    // ローカル視線
+    void LookLocal() {
+        var gameCamera = GameCamera.Instance;
+
+        // 前方を取得
+        var forward = (gameCamera == null)? Vector3.forward : gameCamera.transform.forward;
+
+        // 視線を作成する
+        var look = forward;
+        var aim  = look;
+        if (gameCamera != null) {
+            var hit = default(RaycastHit);
+            if (Physics.Raycast(gameCamera.transform.position + (gameCamera.transform.forward * 6.5f), gameCamera.transform.forward, out hit)) {
+                aim = (hit.point - aimPivot.transform.position).normalized;
+            }
+        }
+
+        // 向き調整
+        var direction = (new Vector3(forward.x, 0.0f, forward.z)).normalized;
+        transform.rotation = Quaternion.LookRotation(direction);
+
+        // 銃の位置と向きを調整
+        var gunPosition  = aimPivot.transform.position + (aim * gunDistance);
+        var gunDirection = aim;
+        gun.transform.position = gunPosition;
+        gun.transform.rotation = Quaternion.LookRotation(gunDirection);
+
+        // NOTE
+        // 同期送信は MoveLocal で行う
+    }
+
+    // ネットワーク視線
+    void LookNetwork() {
+        // 向きを更新
+        var direction = (new Vector3(networkPlayer.syncAim.x, 0.0f, networkPlayer.syncAim.z)).normalized;
         transform.rotation = Quaternion.LookRotation(direction);
 
         // 銃の位置と向きを調整
@@ -238,6 +282,14 @@ public partial class Player {
         [HideInInspector, SyncVar] public Vector3 syncLook     = Vector3.forward;
     }
 }
+
+
+
+
+
+
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -771,7 +823,7 @@ public partial class Player {
             }
         }
 
-        [/*HideInInspector,*/ SyncVar(hook="OnSyncPlayerId")]   public string syncPlayerId   = null;
-        [/*HideInInspector,*/ SyncVar(hook="OnSyncPlayerName")] public string syncPlayerName = null;
+        [HideInInspector, SyncVar(hook="OnSyncPlayerId")]   public string syncPlayerId   = null;
+        [HideInInspector, SyncVar(hook="OnSyncPlayerName")] public string syncPlayerName = null;
     }
 }
