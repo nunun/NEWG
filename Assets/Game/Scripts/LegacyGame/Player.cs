@@ -57,15 +57,6 @@ public partial class Player : MonoBehaviour {
         Debug.Assert(explosionPrefab != null, "爆発プレハブの設定なし");
         Debug.Assert(throwAudio      != null, "投げの設定なし");
 
-        // 初期化
-        InitMove();
-        InitLook();
-        InitFire();
-        InitThrow();
-        InitAnimation();
-        InitHitPoint();
-        InitPlayerInfo();
-
         // 各種UI取得
         hitPointText  = GameObjectTag<TextBuilder>.Find("HitPointText");
         hitPointGauge = GameObjectTag<Slider>.Find("HitPointGauge");
@@ -77,6 +68,15 @@ public partial class Player : MonoBehaviour {
         Debug.Assert(killPointText != null, "キルポイントテキストがシーンにない");
         Debug.Assert(messageText   != null, "メッセージテキストがシーンにない");
         Debug.Assert(exitUI        != null, "ExitUI がシーンにない");
+
+        // 初期化
+        InitMove();
+        InitLook();
+        InitFire();
+        InitThrow();
+        InitAnimation();
+        InitHitPoint();
+        InitPlayerInfo();
 
         // 地面レイヤを取得
         var groundLayerNo = LayerMask.NameToLayer("Ground");
@@ -282,14 +282,6 @@ public partial class Player {
         [HideInInspector, SyncVar] public Vector3 syncLook     = Vector3.forward;
     }
 }
-
-
-
-
-
-
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -553,6 +545,12 @@ public partial class Player {
                 if (networkPlayer.syncHitPoint <= 0) {
                     networkPlayer.RpcDeath(shooterNetId);
                 }
+
+                // NOTE
+                // サーバ側で SyncVar フック呼び出し
+                if (this.isServer) {
+                    networkPlayer.OnSyncHitPoint(networkPlayer.syncHitPoint);
+                }
             }
         }
 
@@ -766,17 +764,15 @@ public partial class Player {
             playerName = GameDataManager.PlayerData.playerName;
         } else {
             // NOTE
-            // クライアントがサーバに接続する場合、
-            // SyncVar は同期されるが、Hook は呼ばれないので
-            // networkPlayer から書き戻す。
-            // 他にも書き戻しが必要なメンバ変数がないか確認する。
-            playerId   = networkPlayer.syncPlayerId;
-            playerName = networkPlayer.syncPlayerName;
+            // クライアント接続時に SyncVar フック呼び出し
+            networkPlayer.OnSyncPlayerId(networkPlayer.syncPlayerId);
+            networkPlayer.OnSyncPlayerName(networkPlayer.syncPlayerName);
         }
     }
 
     void SendPlayerInfo() {
         Debug.Assert(networkPlayer.isLocalPlayer, "ローカル限定です");
+        Debug.LogFormat("プレイヤー情報送信 (playerId = {0}, playerName = {1})", playerId, playerName);
         networkPlayer.SyncPlayerInfo(playerId, playerName);
     }
 
@@ -805,22 +801,30 @@ public partial class Player {
         [Command]
         public void CmdSyncPlayerInfo(string playerId, string playerName) {
             Debug.Assert(this.isServer, "サーバ限定です");
+            Debug.LogFormat("プレイヤー情報受信 (playerId = {0}, playerName = {1})", playerId, playerName);
             syncPlayerId   = playerId;
             syncPlayerName = playerName;
+
+            // NOTE
+            // サーバ側で SyncVar フック呼び出し
+            if (this.isServer) {
+                OnSyncPlayerId(syncPlayerId);
+                OnSyncPlayerName(syncPlayerName);
+            }
         }
 
         // プレイヤー ID を受信
         public void OnSyncPlayerId(string value) {
-            if (player != null) {
-                player.OnSyncPlayerId(value);
-            }
+            Debug.Assert(player != null, "プレイヤーなし");
+            Debug.LogFormat("プレイヤーID受信 ({0})", value);
+            player.OnSyncPlayerId(value);
         }
 
         // プレイヤー名を受信
         public void OnSyncPlayerName(string value) {
-            if (player != null) {
-                player.OnSyncPlayerName(value);
-            }
+            Debug.Assert(player != null, "プレイヤーなし");
+            Debug.LogFormat("プレイヤー名受信 ({0})", value);
+            player.OnSyncPlayerName(value);
         }
 
         [HideInInspector, SyncVar(hook="OnSyncPlayerId")]   public string syncPlayerId   = null;

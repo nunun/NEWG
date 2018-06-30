@@ -21,12 +21,18 @@ public class GameNetworkManager : NetworkManager {
     GameObject server = null;
 
     //-------------------------------------------------------------------------- 実装 (UnityEngine.Networking.NetworkManager)
-    public override void OnServerReady(NetworkConnection conn) {
-        base.OnServerReady(conn);
+    public override void OnStartServer() {
+        base.OnStartServer();
+        CheckActiveServer();
+    }
 
-        // NOTE
-        // 以下は OnStartServer においていたが
-        // OnStartServer では Spawn できないのでここに書く。
+    //-------------------------------------------------------------------------- 制御
+    // サーバ起動チェック
+    void CheckActiveServer() {
+        if (!this.isNetworkActive) {
+            Invoke("CheckActiveServer", 0.1f);// NOTE 繰り返し
+            return;
+        }
         if (serverSpawnInfo.autoCreateServer) {
             if (server == null) {
                 Debug.Log("GameNetworkManager: サーバ生成");

@@ -27,7 +27,7 @@ public class NetworkServer : Server.NetworkServerBehaviour {
         instance = this;
 
         // NOTE
-        // サーバ作成
+        // サーバオブジェクト作成
         var serverObject = GameObject.Instantiate(serverPrefab);
         server = serverObject.GetComponent<Server>();
         this.Link(server);
@@ -35,7 +35,7 @@ public class NetworkServer : Server.NetworkServerBehaviour {
 
     void OnDestroy() {
         if (server != null) {
-            GameObject.Destroy(server.gameObject);//NOTE プレイヤーが残っていたら消しておく
+            GameObject.Destroy(server.gameObject);//NOTE サーバが残っていたら消しておく
         }
         if (instance != this) {
             return;

@@ -30,7 +30,7 @@ public class NetworkPlayer : Player.NetworkPlayerBehaviour {
         instances.Add(this);
 
         // NOTE
-        // プレイヤーを作成
+        // プレイヤーオブジェクト作成
         var playerObject = GameObject.Instantiate(playerPrefab);
         player = playerObject.GetComponent<Player>();
         this.Link(player);
@@ -39,7 +39,7 @@ public class NetworkPlayer : Player.NetworkPlayerBehaviour {
     void OnDestroy() {
         instances.Remove(this);
         if (player != null) {
-            GameObject.Destroy(player.gameObject);
+            GameObject.Destroy(player.gameObject);//NOTE プレイヤーが残っていたら消しておく
         }
         if (instance == this) {
             instance = null;

@@ -307,10 +307,10 @@ public partial class GameConfiguration : GameSettings {
     // シンボル一覧の定義
     // NOTE 追加のシンボルをここに定義してください。
     public static readonly Dictionary<string,string[]> ScriptingDefineSymbols = new Dictionary<string,string[]>() {
-        { "DEBUG",           null }, // デバッグコードをバイナリに含めるかどうか
-        { "SERVER_CODE",     null }, // サーバコードをバイナリに含めるかどうか
-        { "HOST_CODE",       null }, // ホストコードをバイナリに含めるかどうか
-        { "STANDALONE_MODE", null }, // スタンドアローンモード
+        { "DEBUG",            null }, // デバッグコードをバイナリに含めるかどうか
+        { "SERVER_CODE",      null }, // サーバコードをバイナリに含めるかどうか
+        { "HOST_CODE",        null }, // ホストコードをバイナリに含めるかどうか
+        { "STANDALONE_MODE",  null }, // スタンドアローンモード
         //{ "ACCESS_SERVER", new string[] {"DEVELOP", "STAGING", "RELEASE"}},
     };
 

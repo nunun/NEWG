@@ -25,14 +25,6 @@ public partial class Server : MonoBehaviour {
 
     //-------------------------------------------------------------------------- 実装 (NetworkBehaviour)
     void Start() {
-        // 初期化
-        if (networkServer.isServer) {
-            #if SERVER_CODE
-            InitReservation();
-            InitPlayers();
-            #endif
-        }
-
         // 各種UI取得
         aliveCountText = GameObjectTag<TextBuilder>.Find("AliveCountText");
         gameText       = GameObjectTag<TextBuilder>.Find("GameText");
@@ -40,6 +32,14 @@ public partial class Server : MonoBehaviour {
         Debug.Assert(aliveCountText != null, "生存者数テキストがシーンにいない");
         Debug.Assert(gameText       != null, "ゲームテキストがシーンにいない");
         Debug.Assert(exitUI         != null, "ExitUI がシーンにいない");
+
+        // 初期化
+        if (networkServer.isServer) {
+            #if SERVER_CODE
+            InitReservation();
+            InitPlayers();
+            #endif
+        }
     }
 
     void OnDestroy() {
@@ -349,6 +349,7 @@ public partial class Server {
                 untrustedPlayerList.RemoveAt(i);
                 var networkPlayer = NetworkPlayer.FindByPlayer(untrustedPlayerInfo.player);
                 if (networkPlayer != null) {
+                    Debug.LogFormat("不信 ({0})", playerId);
                     networkPlayer.Kick(); // NOTE 不信なユーザは切断！
                 }
                 continue;
