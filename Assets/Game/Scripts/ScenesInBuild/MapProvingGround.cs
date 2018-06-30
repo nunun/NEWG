@@ -68,18 +68,21 @@ public partial class MapProvingGround {
 // バトル処理
 public partial class MapProvingGround {
     //-------------------------------------------------------------------------- 変数
-    [SerializeField] SceneUI battleUI   = null;
-    [SerializeField] SceneUI exitUI     = null;
-    [SerializeField] Button  exitButton = null;
+    [SerializeField] SceneUI battleUI      = null;
+    [SerializeField] SceneUI exitUI        = null;
+    [SerializeField] Button  exitButton    = null;
+    [SerializeField] Button  optionsButton = null;
 
     //-------------------------------------------------------------------------- ロビーの初期化、開始、停止、更新
     void InitBattle() {
         Debug.Assert(battleUI   != null, "battleUI がない");
         Debug.Assert(exitUI     != null, "exitUI がない");
         Debug.Assert(exitButton != null, "exitButton がない");
+        Debug.Assert(optionsButton != null, "optionsButton がない");
         battleUI.onOpen.AddListener(() => { StartCoroutine("UpdateBattle"); });
         battleUI.onClose.AddListener(() => { StopCoroutine("UpdateBattle"); });
         exitButton.onClick.AddListener(() => { GameSceneManager.ChangeScene("Lobby"); });
+        optionsButton.onClick.AddListener(() => { OptionsScreen.OpenScreen(); });
     }
 
     IEnumerator UpdateBattle() {

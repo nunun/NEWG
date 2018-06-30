@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-// シーンで使われる UI の実装
-public class ConfigScreen : UIComponent {
+// 設定オプションスクリーン
+public class OptionsScreen : UIComponent {
     //-------------------------------------------------------------------------- 変数
     [SerializeField] Slider      mouseSensitivitySlider = null;
     [SerializeField] TextBuilder mouseSensitivityText   = null;
@@ -13,9 +13,9 @@ public class ConfigScreen : UIComponent {
     [SerializeField] Button      closeButton            = null;
 
     //-------------------------------------------------------------------------- インスタンスの確保と解放
-    public static ConfigScreen OpenScreen() {
-        var component = GameObjectTag<ConfigScreen>.Find("ConfigScreen");
-        Debug.Assert(component != null, "ConfigScreen がない");
+    public static OptionsScreen OpenScreen() {
+        var component = GameObjectTag<OptionsScreen>.Find("OptionsScreen");
+        Debug.Assert(component != null, "OptionsScreen がない");
         component.Open();
         return component;
     }

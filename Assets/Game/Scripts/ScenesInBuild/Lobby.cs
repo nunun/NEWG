@@ -106,17 +106,20 @@ public partial class Lobby {
 // ロビー処理
 public partial class Lobby {
     //-------------------------------------------------------------------------- 変数
-    [SerializeField] SceneUI     lobbyUI         = null;
-    [SerializeField] Button      gameStartButton = null;
-    [SerializeField] InputField  playerNameField = null;
+    [SerializeField] SceneUI    lobbyUI         = null;
+    [SerializeField] Button     gameStartButton = null;
+    [SerializeField] Button     optionsButton   = null;
+    [SerializeField] InputField playerNameField = null;
 
     //-------------------------------------------------------------------------- ロビーの初期化、開始、停止、更新
     void InitLobby() {
         Debug.Assert(lobbyUI         != null, "lobbyUI がない");
         Debug.Assert(gameStartButton != null, "gameStartButton がない");
+        Debug.Assert(optionsButton   != null, "optionsButton がない");
         lobbyUI.onOpen.AddListener(() => { StartCoroutine("UpdateLobby"); });
         lobbyUI.onClose.AddListener(() => { StopCoroutine("UpdateLobby"); });
         gameStartButton.onClick.AddListener(() => { lobbyUI.Change(matchingUI); });
+        optionsButton.onClick.AddListener(() => { OptionsScreen.OpenScreen(); });
 
         // プレイヤー名等
         playerNameField = GameObjectTag<InputField>.Find("PlayerNameField");

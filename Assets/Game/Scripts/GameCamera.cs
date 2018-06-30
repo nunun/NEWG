@@ -102,7 +102,7 @@ public partial class GameCamera {
             if (GameInputManager.IsEnabled) {
                 GameInputManager.IsEnabled = false;
             }
-            var refocusInput = Input.GetButton("Fire1");
+            var refocusInput = GameInputManager.IsFocus;
             if (refocusInput) {
                 if (EventSystem.current.IsPointerOverGameObject()) {
                     return; // NOTE UI をクリックした場合はそのまま

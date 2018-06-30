@@ -15,6 +15,7 @@ public partial class GameInputManager : MonoBehaviour {
     static bool  isFire         = false;
     static bool  isThrow        = false;
     static bool  isJump         = false;
+    static bool  isFocus        = false;
 
     public static float MoveHorizontal { get { return moveHorizontal; }}
     public static float MoveVertical   { get { return moveVertical;   }}
@@ -23,6 +24,7 @@ public partial class GameInputManager : MonoBehaviour {
     public static bool  IsFire         { get { return isFire;         }}
     public static bool  IsThrow        { get { return isThrow;        }}
     public static bool  IsJump         { get { return isJump;         }}
+    public static bool  IsFocus        { get { return isFocus;        }}
 
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     void Start() {
@@ -41,6 +43,7 @@ public partial class GameInputManager : MonoBehaviour {
             isFire         = Input.GetButton("Fire1");
             isThrow        = Input.GetKeyDown(KeyCode.Q);
             isJump         = Input.GetKeyDown(KeyCode.Space);
+            isFocus        = false;
         } else {
             moveHorizontal = 0.0f;
             moveVertical   = 0.0f;
@@ -49,6 +52,7 @@ public partial class GameInputManager : MonoBehaviour {
             isFire         = false;
             isThrow        = false;
             isJump         = false;
+            isFocus        = Input.GetButton("Fire1");
         }
     }
 }
