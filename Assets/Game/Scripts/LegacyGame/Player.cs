@@ -310,6 +310,7 @@ public partial class Player {
         if (isFire != isFireInput) {
             isFire = isFireInput;
             networkPlayer.SyncFire(isFire);
+            gun.MuzzleFlash(isFire);
         }
     }
 
@@ -318,6 +319,7 @@ public partial class Player {
         isFire = networkPlayer.syncFire;
         if (isFire) {
             gun.Fire(this);
+            gun.MuzzleFlash(isFire);
         }
     }
 
