@@ -251,7 +251,7 @@ public partial class GameConfiguration : GameSettings {
             bindIp                       = false,
             useWebSockets                = true,
             logLevel                     = LogFilter.FilterLevel.Info,
-            webapiUrl                    = "http://localhost:7780",
+            webapiUrl                    = "http://fu-n.net:7780",
             mindlinkUrl                  = null,
             buildTarget                  = BuildTarget.WebGL,
             outputPath                   = "Services/client/Builds/Client",

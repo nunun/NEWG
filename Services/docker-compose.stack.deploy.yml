@@ -5,6 +5,8 @@ services:
       - FQDN=${ENV_FQDN}
     ports:
       - 7080:80
+    networks:
+      - inside
     deploy:
       mode: replicated
       replicas: 1
@@ -15,8 +17,9 @@ services:
   server:
     environment:
       - FQDN=${ENV_FQDN}
-    #networks:
-    #  - outside
+    networks:
+      - inside
+      #- outside
     deploy:
       mode: replicated
       replicas: 1
@@ -27,8 +30,11 @@ services:
   matching:
     environment:
       - FQDN=${ENV_FQDN}
+      - LOG_LEVEL=debug
     ports:
       - 7755:7755
+    networks:
+      - inside
     deploy:
       mode: replicated
       replicas: 1
@@ -39,8 +45,11 @@ services:
   api:
     environment:
       - FQDN=${ENV_FQDN}
+      - LOG_LEVEL=debug
     ports:
       - 7780:7780
+    networks:
+      - inside
     deploy:
       mode: replicated
       replicas: 1
@@ -51,8 +60,11 @@ services:
   mindlink:
     environment:
       - DEBUG_HTTP_CHANNEL_ENABLE=1
+      - LOG_LEVEL=debug
     ports:
       - 127.0.0.1:17766:17766
+    networks:
+      - inside
     deploy:
       mode: replicated
       replicas: 1
@@ -62,9 +74,11 @@ services:
 
   rabbitmq:
     volumes:
-      - redis_data:/opt/couchdb/data/mnesia
+      - rabbitmq_data:/opt/couchdb/data/mnesia
     ports:
       - 127.0.0.1:15672:15672
+    networks:
+      - inside
     deploy:
       mode: replicated
       replicas: 1
@@ -74,9 +88,11 @@ services:
 
   couchdb:
     volumes:
-      - redis_data:/opt/couchdb/data
+      - couchdb_data:/opt/couchdb/data
     ports:
       - 127.0.0.1:15984:5984
+    networks:
+      - inside
     deploy:
       mode: replicated
       replicas: 1
@@ -87,6 +103,8 @@ services:
   redis:
     volumes:
       - redis_data:/data
+    networks:
+      - inside
     deploy:
       mode: replicated
       replicas: 1
@@ -99,6 +117,8 @@ services:
       - DEST=http://api:7780
     ports:
       - 127.0.0.1:17780:80
+    networks:
+      - inside
     deploy:
       mode: replicated
       replicas: 1
@@ -113,6 +133,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - 127.0.0.1:19000:9000
+    networks:
+      - inside
     deploy:
       mode: replicated
       replicas: 1
@@ -126,7 +148,8 @@ volumes:
   redis_data:
   portainer_data:
 
-#networks:
-#  outside:
-#    external:
-#      name: "host"
+networks:
+  inside:
+  #outside:
+  #  external:
+  #    name: "host"
