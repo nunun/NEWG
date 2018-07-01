@@ -13,7 +13,9 @@ public partial class GameInputManager : MonoBehaviour {
     static float lookHorizontal = 0.0f;
     static float lookVertical   = 0.0f;
     static bool  isFire         = false;
+    static bool  isGangsta      = false;
     static bool  isThrow        = false;
+    static bool  isSprint       = false;
     static bool  isJump         = false;
     static bool  isFocus        = false;
 
@@ -22,9 +24,20 @@ public partial class GameInputManager : MonoBehaviour {
     public static float LookHorizontal { get { return lookHorizontal; }}
     public static float LookVertical   { get { return lookVertical;   }}
     public static bool  IsFire         { get { return isFire;         }}
+    public static bool  IsGangsta      { get { return isGangsta;      }}
     public static bool  IsThrow        { get { return isThrow;        }}
+    public static bool  IsSprint       { get { return isSprint;       }}
     public static bool  IsJump         { get { return isJump;         }}
     public static bool  IsFocus        { get { return isFocus;        }}
+
+    // NOTE
+    // 既読フラグ (FixedUpdate用)
+    static bool markAsRead = false;
+
+    //-------------------------------------------------------------------------- 制御
+    public static void MarkAsRead() {
+        markAsRead = true;
+    }
 
     //-------------------------------------------------------------------------- 実装 (MonoBehaviour)
     void Start() {
@@ -34,15 +47,17 @@ public partial class GameInputManager : MonoBehaviour {
     }
 
     void Update() {
-        // 入力の設定
         if (isEnabled) {
+            var isJumpDown = Input.GetKeyDown(KeyCode.Space);
             moveHorizontal = Input.GetAxis("Horizontal");
             moveVertical   = Input.GetAxis("Vertical");
             lookHorizontal = Input.GetAxis("Mouse X") * (mouseSensitivity / 100.0f);
             lookVertical   = Input.GetAxis("Mouse Y") * (mouseSensitivity / 100.0f) * ((invertMouse)? -1 : 1);
             isFire         = Input.GetButton("Fire1");
+            isGangsta      = Input.GetKeyDown(KeyCode.E);
             isThrow        = Input.GetKeyDown(KeyCode.Q);
-            isJump         = Input.GetKeyDown(KeyCode.Space);
+            isSprint       = Input.GetKey(KeyCode.LeftShift);
+            isJump         = (markAsRead)? isJumpDown : (isJump | isJumpDown);
             isFocus        = false;
         } else {
             moveHorizontal = 0.0f;
@@ -50,10 +65,13 @@ public partial class GameInputManager : MonoBehaviour {
             lookHorizontal = 0.0f;
             lookVertical   = 0.0f;
             isFire         = false;
+            isGangsta      = false;
             isThrow        = false;
+            isSprint       = false;
             isJump         = false;
             isFocus        = Input.GetButton("Fire1");
         }
+        markAsRead = false;
     }
 }
 

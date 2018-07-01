@@ -18,22 +18,27 @@ public partial class Player : MonoBehaviour {
     public static readonly int MAX_HITPOINT = 100;
 
     //-------------------------------------------------------------------------- 変数
-    public Rigidbody   playerRididbody = null;   // このプレイヤーのリジッドボディ
-    public Gun         gun             = null;   // 銃の設定
-    public GameObject  head            = null;   // 頭の設定
-    public GameObject  aimPivot        = null;   // 射線の始点の設定 (右目とか頭とか)
-    public GameObject  throwPoint      = null;   // 投擲物発生位置
-    public float       throwPower      = 350.0f; // 投擲力
-    public float       throwCooldown   = 10.0f;  // 投擲間隔時間
-    public GameObject  grenadePrefab   = null;   // グレネードのプレハブ
-    public GameObject  explosionPrefab = null;   // 爆発のプレハブ   (死亡時)
-    public AudioSource throwAudio      = null;   // 投げの音
-    public int         hitPoint        = 100;    // ヒットポイント
-    public float       jumpPower       = 190.0f; // ジャンプ力
-    public int         killPoint       = 0;      // キル数
-    public float       gunDistance     = 0.52f;  // 銃までの距離
-    public string      playerId        = "";     // プレイヤーID
-    public string      playerName      = "";     // プレイヤー名
+    public Rigidbody   playerRididbody  = null;   // このプレイヤーのリジッドボディ
+    public Gun         gun              = null;   // 銃の設定
+    public GameObject  head             = null;   // 頭の設定
+    public GameObject  aimPivot         = null;   // 射線の始点の設定 (右目とか頭とか)
+    public GameObject  throwPoint       = null;   // 投擲物発生位置
+    public float       throwPower       = 350.0f; // 投擲力
+    public float       throwCooldown    = 10.0f;  // 投擲間隔時間
+    public GameObject  grenadePrefab    = null;   // グレネードのプレハブ
+    public GameObject  explosionPrefab  = null;   // 爆発のプレハブ   (死亡時)
+    public AudioSource throwAudio       = null;   // 投げの音
+    public int         hitPoint         = 100;    // ヒットポイント
+    public float       gunDistance      = 0.52f;  // 銃までの距離 (固定エイム用)
+    public float       gunGangstaTime   = 0.03f;  // ギャングスタ切り替え時間
+    public float       gunGangstaUp     = -0.3f;  // ギャングスタ (上下)
+    public float       gunGangstaRight  = 0.25f;  // ギャングスタ位置 (水平)
+    public float       jumpPower        = 8.0f;   // ジャンプ力
+    public float       jumpGroundHeight = 0.54f;  // ジャンプ接地判定高さ
+    public bool        isGrounded       = false;  // 接地しているかどうか
+    public int         killPoint        = 0;      // キル数
+    public string      playerId         = "";     // プレイヤーID
+    public string      playerName       = "";     // プレイヤー名
 
     // 各種 UI
     TextBuilder hitPointText  = null; // ヒットポイントテキスト
@@ -73,6 +78,7 @@ public partial class Player : MonoBehaviour {
         InitMove();
         InitLook();
         InitFire();
+        InitGangsta();
         InitThrow();
         InitAnimation();
         InitHitPoint();
@@ -105,10 +111,12 @@ public partial class Player : MonoBehaviour {
         if (networkPlayer.isLocalPlayer) {
             LookLocal();
             FireLocal();
+            GangstaLocal();
             ThrowLocal();
         } else {
             LookNetwork();
             FireNetwork();
+            GangstaNetwork();
             ThrowNetwork();
         }
         UpdateAnimation();
@@ -135,7 +143,8 @@ public partial class Player : MonoBehaviour {
 // 位置と向きの同期
 public partial class Player {
     //-------------------------------------------------------------------------- 定義
-    public const float MOVE_SPEED              = 2.5f;  // 移動速度 (m/s)
+    public const float MOVE_SPEED              = 2.8f;  // 移動速度 (m/s)
+    public const float SPRINT_SPEED            = 4.3f;  // スプリント速度 (m/s)
     public const float SYNC_POSITION_LERP_RATE = 15.0f; // 位置補完レート
 
     //-------------------------------------------------------------------------- 変数
@@ -152,6 +161,9 @@ public partial class Player {
         var deltaTime  = Time.deltaTime;
         var gameCamera = GameCamera.Instance;
 
+        // 入力を既読に設定
+        GameInputManager.MarkAsRead();
+
         // 移動入力
         var horizontal = GameInputManager.MoveHorizontal;
         var vertical   = GameInputManager.MoveVertical;
@@ -161,10 +173,8 @@ public partial class Player {
         moveInput.y = 0.0f; // NOTE 入力から Y 成分を消す
         moveInput = moveInput.normalized;
 
-        // ジャンプ入力
-        var jumpInput = GameInputManager.IsJump;
-
-        // 視線を作成する
+        // NOTE
+        // 視線を作成する (同期用)
         var look = forward;
         var aim  = look;
         if (gameCamera != null) {
@@ -174,20 +184,23 @@ public partial class Player {
            }
         }
 
-        // 移動速度
-        var move = moveInput * MOVE_SPEED;
-        currentMoveSpeed = (move.sqrMagnitude >= 0.0001f)? MOVE_SPEED : 0.0f;
+        // スプリント入力
+        var sprintInput = GameInputManager.IsSprint;
+        var isSprint    = (sprintInput && vertical > 0.0f && (horizontal > -0.0001f && horizontal < 0.0001f));
+
+        // 移動速度を更新
+        var moveSpeed = (isSprint)? SPRINT_SPEED : MOVE_SPEED;
+        var move = moveInput * moveSpeed;
+        currentMoveSpeed = (move.sqrMagnitude >= 0.0001f)? moveSpeed : 0.0f;
 
         // 位置を更新
         var position  = transform.position + (move * deltaTime);
         playerRididbody.MovePosition(position);
 
-        // ジャンプを更新
-        if (jumpInput) {
-            var hit = default(RaycastHit);
-            if (Physics.Raycast(transform.position + Vector3.up, -Vector3.up, out hit, 10.0f, groundLayerMask) && hit.distance < 1.001f) {
-                playerRididbody.AddForce(transform.up * jumpPower);
-            }
+        // ジャンプ入力
+        var jumpInput = GameInputManager.IsJump;
+        if (jumpInput && isGrounded) {
+            playerRididbody.AddForce(transform.up * jumpPower, ForceMode.Impulse);
         }
 
         // NOTE
@@ -220,6 +233,8 @@ public partial class Player {
         var gameCamera = GameCamera.Instance;
 
         // 前方を取得
+        var up    = (gameCamera == null)? Vector3.right   : gameCamera.transform.up;
+        var right = (gameCamera == null)? Vector3.right   : gameCamera.transform.right;
         var forward = (gameCamera == null)? Vector3.forward : gameCamera.transform.forward;
 
         // 視線を作成する
@@ -241,6 +256,9 @@ public partial class Player {
         var gunDirection = aim;
         gun.transform.position = gunPosition;
         gun.transform.rotation = Quaternion.LookRotation(gunDirection);
+
+        // ギャングスタ！
+        gun.transform.position += ((right * gunGangstaRight) + (up * gunGangstaUp)) * gangstaWeight;
 
         // NOTE
         // 同期送信は MoveLocal で行う
@@ -339,6 +357,73 @@ public partial class Player {
         }
 
         [HideInInspector, SyncVar] public bool syncFire = false;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+// ギャングスタの同期
+public partial class Player {
+    //-------------------------------------------------------------------------- 変数
+    bool  isGangsta     = false; // ギャングスタかどうか
+    float gangstaWeight = 0.0f;  // ギャングスタウェイト
+    float gangstaTime   = 0.0f;  // ギャングスタ時間
+
+    //-------------------------------------------------------------------------- 制御
+    // 銃の初期化
+    void InitGangsta() {
+        isGangsta = false;
+    }
+
+    // ローカルギャングスタ
+    void GangstaLocal() {
+        var isGangstaInput = GameInputManager.IsGangsta;
+
+        // NOTE
+        // 状態が変わったら同期
+        if (isGangstaInput) {
+            isGangsta = !isGangsta;
+            networkPlayer.SyncGangsta(isGangsta);
+        }
+
+        // ギャングスタウェイト算出
+        CalcGangstaWeight();
+    }
+
+    // ネットワークギャングスタ
+    void GangstaNetwork() {
+        isGangsta = networkPlayer.syncGangsta;
+        CalcGangstaWeight();
+    }
+
+    // ギャングスタウエイト算出
+    void CalcGangstaWeight() {
+        if (isGangsta) {
+            gangstaTime = Mathf.Min(gangstaTime + Time.deltaTime, gunGangstaTime);
+        } else {
+            gangstaTime = Mathf.Max(gangstaTime - Time.deltaTime, 0.0f);
+        }
+        gangstaWeight = gangstaTime / gunGangstaTime;
+    }
+
+    //------------------------------------------------------------------------- 同期
+    public partial class NetworkPlayerBehaviour {
+        // [C 1-> S] 発砲の同期を発行
+        public void SyncGangsta(bool isGangsta) {
+            Debug.Assert(this.isLocalPlayer, "ローカル限定です");
+            CmdSyncGangsta(isGangsta);
+        }
+
+        // [S ->* C] 発砲状態をバラマキ
+        [Command]
+        public void CmdSyncGangsta(bool isGangsta) {
+            Debug.Assert(this.isServer, "サーバ限定です");
+            syncGangsta = isGangsta;
+        }
+
+        [HideInInspector, SyncVar] public bool syncGangsta = false;
     }
 }
 
@@ -474,6 +559,12 @@ public partial class Player {
         // アニメーション速度も変えておく
         var animationSpeed = (currentMoveSpeed >= 0.0001f)? currentMoveSpeed * MOVE_ANIMATION_SPEED : 1.0f;
         animator.speed = animationSpeed;
+
+        // 接地しているかどうか
+        var hit = default(RaycastHit);
+        Physics.Raycast(transform.position + Vector3.up, -Vector3.up, out hit, 10.0f, groundLayerMask);
+        isGrounded = (hit.distance < (jumpGroundHeight + 1.001f));
+        animator.SetBool("IsGrounded", isGrounded);
     }
 
     void UpdateIK() {
@@ -482,8 +573,8 @@ public partial class Player {
         }
         animator.SetLookAtWeight(1.0f, 0.0f, 1.0f, 0.0f, 0f);
         animator.SetLookAtPosition(gun.transform.position);
-        animator.SetIKPositionWeight(AvatarIKGoal.LeftHand, 1.0f);
-        animator.SetIKRotationWeight(AvatarIKGoal.LeftHand, 1.0f);
+        animator.SetIKPositionWeight(AvatarIKGoal.LeftHand, 0.3f);
+        animator.SetIKRotationWeight(AvatarIKGoal.LeftHand, 0.3f);
         animator.SetIKPosition(AvatarIKGoal.LeftHand, gun.leftHandle.transform.position);
         animator.SetIKRotation(AvatarIKGoal.LeftHand, gun.leftHandle.transform.rotation);
         animator.SetIKPositionWeight(AvatarIKGoal.RightHand, 1.0f);
@@ -785,9 +876,9 @@ public partial class Player {
     void OnSyncPlayerName(string playerName) {
         this.playerName = playerName;
         if (this.networkPlayer.isLocalPlayer) {
-            messageText.Begin("あなた がゲームに参加しました").Apply().For(3.0f);
+            messageText.Begin("あなた が試合に参加しました").Apply().For(3.0f);
         } else {
-            messageText.Begin(playerName).Append(" がゲームに参加しました").Apply().For(3.0f);
+            messageText.Begin(playerName).Append(" が試合に参加しました").Apply().For(3.0f);
         }
     }
 
