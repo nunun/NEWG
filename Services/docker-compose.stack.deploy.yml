@@ -4,7 +4,7 @@ services:
     environment:
       - FQDN=${ENV_FQDN}
     ports:
-      - 80:80
+      - 7080:80
     deploy:
       mode: replicated
       replicas: 1
@@ -15,8 +15,8 @@ services:
   server:
     environment:
       - FQDN=${ENV_FQDN}
-    networks:
-      - outside
+    #networks:
+    #  - outside
     deploy:
       mode: replicated
       replicas: 1
@@ -126,8 +126,7 @@ volumes:
   redis_data:
   portainer_data:
 
-networks:
-  outside:
-    external:
-      name: "host"
-
+#networks:
+#  outside:
+#    external:
+#      name: "host"

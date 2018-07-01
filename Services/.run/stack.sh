@@ -174,8 +174,11 @@ update_certs() {
                         deliverous/certbot certonly ${DRY_RUN} \
                         --standalone --renew-by-default --non-interactive \
                         --agree-tos --preferred-challenges http \
-                        -certs_dir "${ENV_SECRET_CERT_FQDN}" \
+                        --domain "${ENV_SECRET_CERT_FQDN}" \
                         --email "${ENV_SECRET_CERT_EMAIL}"
+                docker run --rm -p "80:80" \
+                        -v `ospath ${certs_dir}`:/etc/letsencrypt \
+                        alpine chmod -R 777 /etc/letsencrypt
                 cert_pem_file="${certs_dir}/live/${ENV_FQDN}/cert.pem"
                 chain_pem_file="${certs_dir}/live/${ENV_FQDN}/chain.pem"
                 fullchain_pem_file="${certs_dir}/live/${ENV_FQDN}/fullchain.pem"
@@ -252,7 +255,7 @@ secret_create_from_file() {
 }
 
 secret_rm() {
-        if [ "${1}" -a `secret_exists ${1}` ]; then
+        if [ "${1}" -a "`secret_exists ${1}`" ]; then
                 echo_info "remove docker secret '${1}' ..."
                 docker secret rm "${1}"
         fi

@@ -5,6 +5,7 @@
 # . "`dirname ${0}`/.docker-composer/scripts/task.sh" ${*}
 set -e
 cd `dirname ${0}`
+RUN_OUTPUT_LEVEL=3 # fatal=0, error=1, warn=2, info=3, debug=4, develop=5
 
 # run_root_dir
 run_root_dir() {
@@ -191,7 +192,6 @@ abort() {
 RUN_DIR=`pwd`
 RUN_ROOT_DIR=`run_root_dir`
 RUN_DOTRUN_DIR="${RUN_ROOT_DIR}/.run"
-RUN_OUTPUT_LEVEL=3 # fatal=0, error=1, warn=2, info=3, debug=4, develop=5
 
 # parse options
 while getopts "vqb" OPT; do

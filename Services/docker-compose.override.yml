@@ -10,7 +10,7 @@ services:
     volumes:
       - ./client/Builds/Client:/usr/share/nginx/html
     ports:
-      - 80:80
+      - 7080:80
 
   server:
     build:
