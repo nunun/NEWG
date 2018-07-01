@@ -156,9 +156,9 @@ update_certs() {
         selfsigned)
                 local crt_file="${certs_dir}/domain.crt"
                 local key_file="${certs_dir}/domain.key"
-                local subj="C=JP/CN=${ENV_SECRET_CERT_FQDN}"
-                local subj="${subj}/O=${ENV_SECRET_CERT_FQDN}"
-                local subj="${subj}/emailAddress=${ENV_SECRET_CERT_EMAIL}"
+                local subj="//C=JP\\CN=${ENV_SECRET_CERT_FQDN}"
+                local subj="${subj}\\O=${ENV_SECRET_CERT_FQDN}"
+                local subj="${subj}\\emailAddress=${ENV_SECRET_CERT_EMAIL}"
                 openssl req -x509 -nodes -days 365 -newkey rsa:2048  \
                         -subj "${subj}" \
                         -out "${crt_file}" -keyout "${key_file}"
