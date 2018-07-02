@@ -2,9 +2,11 @@ require 'webrick'
 require 'thread'
 
 $binary_name      = ENV['BINARY_NAME']      || "Server.x86_64"
+$server_args      = ENV['SERVER_ARGS']      || nil
 $player_log_path  = ENV['PLAYER_LOG_PATH']  || "DefaultCompany/NEWG/Player.log"
 $unity3d_log_path = ENV['UNITY3D_LOG_PATH'] || "#{ENV['HOME']}/.config/unity3d"
 $server_cmd       = './Builds/' + $binary_name
+$server_cmd      += ' ' + $server_args if !$server_args.nil?
 $server_pid       = nil
 $server_stop      = 0
 $m                = Mutex.new
