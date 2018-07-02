@@ -17,6 +17,8 @@ services:
   server:
     environment:
       - FQDN=${ENV_FQDN}
+    ports:
+      - 7777:7777
     networks:
       - inside
       #- outside
