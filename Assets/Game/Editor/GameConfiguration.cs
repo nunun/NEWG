@@ -278,7 +278,7 @@ public partial class GameConfiguration : GameSettings {
             serverAddress                = "0.0.0.0",
             serverPort                   = 7777,
             serverPortRandomRange        = 0,
-            serverDiscoveryAddress       = "localhost",
+            serverDiscoveryAddress       = "fu-n.net",
             serverDiscoveryPort          = 7777,
             bindIp                       = false,
             useWebSockets                = true,
