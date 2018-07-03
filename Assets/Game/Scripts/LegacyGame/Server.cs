@@ -88,7 +88,7 @@ public partial class Server {
     // カウントダウン同期秒数
     public static readonly float COUNTDOWN_SYNC_TIME = 3.0f;
     // ゲーム終了からシャットダウンまでの秒数
-    public static readonly float SHUTDOWN_TIME = 30.0f;
+    public static readonly float SHUTDOWN_TIME = 12.0f;
 
     //-------------------------------------------------------------------------- 変数
     GameProgress gameProgress                  = GameProgress.Waiting; // ゲーム進捗
