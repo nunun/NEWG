@@ -286,7 +286,12 @@ function findServer(task) {
         var cond = ".*{.alias == \"server\" && (.serverState == \"standby\" || .serverState == \"ready\") && .load < 1.0}";
         mindlinkClient.sendQuery(cond, function(err,services) {
             if (err) {
-                resolved(abortMatching);//送信エラー
+                // TODO
+                // しばらくすると接続できなくなる問題のワークアラウンド
+                // 強制的に exit するが、要修正。
+                //resolved(abortMatching);//送信エラー
+                console.log("mindlink error? matching exit ...");
+                process.exit(1);
                 return;
             }
             if (!services || services.length <= 0) {
