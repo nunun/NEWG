@@ -205,7 +205,7 @@ public partial class Player {
 
         // NOTE
         // ローカルの位置と向きを同期
-        networkPlayer.SyncMove(transform.position, aim, look);
+        networkPlayer.SyncMove(transform.position, aim, look, isSprint);
     }
 
     // ネットワーク移動
@@ -214,7 +214,7 @@ public partial class Player {
 
         // 移動速度
         var move = transform.position - networkPlayer.syncPosition;
-        currentMoveSpeed = (move.sqrMagnitude >= 0.0001f)? MOVE_SPEED : 0.0f;
+        currentMoveSpeed = (move.sqrMagnitude >= 0.0001f)? ((networkPlayer.syncIsSprint)? SPRINT_SPEED : MOVE_SPEED) : 0.0f;
 
         // 位置と向きを更新
         var position  = Vector3.Lerp(transform.position, networkPlayer.syncPosition, deltaTime * SYNC_POSITION_LERP_RATE);
@@ -281,23 +281,25 @@ public partial class Player {
     //------------------------------------------------------------------------- 同期
     public partial class NetworkPlayerBehaviour {
         // [C 1-> S] 位置と向きの同期を発行
-        public void SyncMove(Vector3 position, Vector3 aim, Vector3 look) {
+        public void SyncMove(Vector3 position, Vector3 aim, Vector3 look, bool isSprint) {
             Debug.Assert(this.isLocalPlayer, "ローカル限定です");
-            CmdSyncMove(position, aim, look);
+            CmdSyncMove(position, aim, look, isSprint);
         }
 
         // [S ->* C] 位置と向きをバラマキ
         [Command]
-        public void CmdSyncMove(Vector3 position, Vector3 aim, Vector3 look) {
+        public void CmdSyncMove(Vector3 position, Vector3 aim, Vector3 look, bool isSprint) {
             Debug.Assert(this.isServer, "サーバ限定です");
             syncPosition = position;
             syncAim      = aim;
             syncLook     = look;
+            syncIsSprint = isSprint;
         }
 
         [HideInInspector, SyncVar] public Vector3 syncPosition = Vector3.zero;
         [HideInInspector, SyncVar] public Vector3 syncAim      = Vector3.forward;
         [HideInInspector, SyncVar] public Vector3 syncLook     = Vector3.forward;
+        [HideInInspector, SyncVar] public bool    syncIsSprint = false;
     }
 }
 
@@ -311,7 +313,7 @@ public partial class Player {
     bool isFire = false; // 現在発射中かどうか
 
     //-------------------------------------------------------------------------- 制御
-    // 銃の初期化
+    // 発砲の初期化
     void InitFire() {
         isFire = false;
     }
@@ -322,9 +324,6 @@ public partial class Player {
         if (isFireInput) {
             gun.Fire(this);
         }
-
-        // NOTE
-        // 状態が変わったら同期
         if (isFire != isFireInput) {
             isFire = isFireInput;
             networkPlayer.SyncFire(isFire);
@@ -334,9 +333,13 @@ public partial class Player {
 
     // ネットワーク発砲
     void FireNetwork() {
-        isFire = networkPlayer.syncFire;
+        var isFireOld  = isFire;
+        var isFireSync = networkPlayer.syncFire;
+        isFire = isFireSync;
         if (isFire) {
             gun.Fire(this);
+        }
+        if (isFire != isFireOld) {
             gun.MuzzleFlash(isFire);
         }
     }
@@ -636,6 +639,7 @@ public partial class Player {
             if (networkPlayer != null) {
                 networkPlayer.syncHitPoint -= damage;
                 if (networkPlayer.syncHitPoint <= 0) {
+                    networkPlayer.player.isDead = true; // NOTE サーバ上でも死亡をマーク
                     networkPlayer.RpcDeath(shooterNetId);
                 }
 

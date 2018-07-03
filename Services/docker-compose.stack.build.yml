@@ -13,20 +13,17 @@ services:
   matching:
     build:
       context: ./matching
-      dockerfile: ./../services/Dockerfile.node.develop
-      #dockerfile: ./../services/Dockerfile.node.release
+      dockerfile: ./../services/Dockerfile.node.release
 
   api:
     build:
       context: ./api
-      dockerfile: ./../services/Dockerfile.node.develop
-      #dockerfile: ./../services/Dockerfile.node.release
+      dockerfile: ./../services/Dockerfile.node.release
 
   mindlink:
     build:
       context: ./mindlink
-      dockerfile: ./../services/Dockerfile.node.develop
-      #dockerfile: ./../services/Dockerfile.node.release
+      dockerfile: ./../services/Dockerfile.node.release
 
   rabbitmq: {}
 

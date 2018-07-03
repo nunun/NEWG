@@ -84,7 +84,7 @@ public partial class Server {
     // カウントダウンを開始するプレイヤー数
     public static readonly int START_COUNTDOWN_RESERVED_COUNT = 2;
     // カウントダウン秒数
-    public static readonly float COUNTDOWN_TIME = 15.0f;
+    public static readonly float COUNTDOWN_TIME = 30.0f;
     // カウントダウン同期秒数
     public static readonly float COUNTDOWN_SYNC_TIME = 3.0f;
     // ゲーム終了からシャットダウンまでの秒数
@@ -198,7 +198,21 @@ public partial class Server {
             break;
         case GameProgress.Ended:
             if (updateGameProgressCount == 1) {
-                gameText.Begin("試合終了！").Apply();
+                if (!NetworkPlayer.Instance.player.IsDead) {
+                    gameText.Begin("勝った！勝った！夕飯は勝丼だ！").Apply();
+                } else {
+                    var alivePlayer = default(Player);
+                    foreach (var networkPlayer in NetworkPlayer.Instances) {
+                        if (!networkPlayer.player.IsDead) {
+                            alivePlayer = networkPlayer.player;
+                        }
+                    }
+                    if (alivePlayer != null) {
+                        gameText.Begin(alivePlayer.playerName).Append(" さんの勝ち！").Apply();
+                    } else {
+                        gameText.Begin("試合終了！").Apply();
+                    }
+                }
                 exitUI.Open();
             }
             break;
@@ -406,7 +420,8 @@ public partial class Server {
         Debug.LogFormat("Server: 予約 ({0}) ...", users.Length);
 
         // ゲーム開始しているので
-        if (gameProgress == GameProgress.Started) {
+        if (   gameProgress != GameProgress.Waiting
+            && gameProgress != GameProgress.Countdown) {
             next("already started.");
             yield break;
         }

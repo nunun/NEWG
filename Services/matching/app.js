@@ -326,7 +326,7 @@ async function waitForReserveResponse(task) {
     // ユーザには通知せずにマッチングを中断
     if (task.reserveResponseMessage.error) {
         matchingBrainQueue.logger.debug(task.reserveResponseMessage.error);
-        return abortMatching;
+        return waitAndAbortMatching;
     }
 
     // 予約が完了したらしいので
@@ -365,6 +365,14 @@ async function waitForMatchingDisconnect(task) {
     }
     matchingBrainQueue.remove(task);
     return null;
+}
+
+// 待ってから中断
+async function waitAndAbortMatching(task) {
+    if (task._count == 0) {
+        return 1500;
+    }
+    return abortMatching;
 }
 
 // マッチング中断
